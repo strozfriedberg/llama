@@ -1,10 +1,10 @@
-#include <scope/test.h>
+#include <catch2/catch_test_macros.hpp>
 
 #include <stdexcept>
 
 #include "tskimgassembler.h"
 
-SCOPE_TEST(testTskImgAssemblerAddImgVolumeSystemVolumeFS) {
+TEST_CASE("testTskImgAssemblerAddImgVolumeSystemVolumeFS") {
   TskImgAssembler a;
 
   a.addImage(jsoncons::json(
@@ -85,10 +85,10 @@ SCOPE_TEST(testTskImgAssemblerAddImgVolumeSystemVolumeFS) {
     }
   );
 
-  SCOPE_ASSERT_EQUAL(exp, a.dump());
+  REQUIRE(exp == a.dump());
 }
 
-SCOPE_TEST(testTskImgCollectorAddImgFS) {
+TEST_CASE("testTskImgCollectorAddImgFS") {
   TskImgAssembler a;
 
   a.addImage(jsoncons::json(
@@ -120,67 +120,67 @@ SCOPE_TEST(testTskImgCollectorAddImgFS) {
     }
   );
 
-  SCOPE_ASSERT_EQUAL(exp, a.dump());
+  REQUIRE(exp == a.dump());
 }
 
-SCOPE_TEST(testTskImgCollectorIllegalTransitionInitToVol) {
+TEST_CASE("testTskImgCollectorIllegalTransitionInitToVol") {
   // INIT -> VOL
   TskImgAssembler a;
-  SCOPE_EXPECT(a.addVolumeSystem(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addVolumeSystem(jsoncons::json()), std::runtime_error);
 }
 
-SCOPE_TEST(testTskImgCollectorIllegalTransitionInitToVS) {
+TEST_CASE("testTskImgCollectorIllegalTransitionInitToVS") {
   // INIT -> VS
   TskImgAssembler a;
-  SCOPE_EXPECT(a.addVolumeSystem(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addVolumeSystem(jsoncons::json()), std::runtime_error);
 }
 
-SCOPE_TEST(testTskImgCollectorIllegalTransitionInitToFS) {
+TEST_CASE("testTskImgCollectorIllegalTransitionInitToFS") {
   // INIT -> { IMG_FS, VOL_FS }
   TskImgAssembler a;
-  SCOPE_EXPECT(a.addFileSystem(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addFileSystem(jsoncons::json()), std::runtime_error);
 }
 
-SCOPE_TEST(testTskImgCollectorIllegalTransitionImgToImg) {
+TEST_CASE("testTskImgCollectorIllegalTransitionImgToImg") {
   // IMG -> IMG
   TskImgAssembler a;
   a.addImage(jsoncons::json());
-  SCOPE_EXPECT(a.addImage(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addImage(jsoncons::json()), std::runtime_error);
 }
 
-SCOPE_TEST(testTskImgCollectorIllegalTransitionImgToVol) {
+TEST_CASE("testTskImgCollectorIllegalTransitionImgToVol") {
   // IMG -> VOL
   TskImgAssembler a;
   a.addImage(jsoncons::json());
-  SCOPE_EXPECT(a.addVolume(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addVolume(jsoncons::json()), std::runtime_error);
 }
 
-SCOPE_TEST(testTskImgCollectorIllegalTransitionVSToVS) {
+TEST_CASE("testTskImgCollectorIllegalTransitionVSToVS") {
   // VS -> VS
   TskImgAssembler a;
   a.addImage(jsoncons::json());
   a.addVolumeSystem(jsoncons::json());
-  SCOPE_EXPECT(a.addVolumeSystem(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addVolumeSystem(jsoncons::json()), std::runtime_error);
 }
 
-SCOPE_TEST(testTskImgCollectorIllegalTransitionVSToImg) {
+TEST_CASE("testTskImgCollectorIllegalTransitionVSToImg") {
   // VS -> IMG
   TskImgAssembler a;
   a.addImage(jsoncons::json());
   a.addVolumeSystem(jsoncons::json());
-  SCOPE_EXPECT(a.addImage(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addImage(jsoncons::json()), std::runtime_error);
 }
 
 
-SCOPE_TEST(testTskImgCollectorIllegalTransitionVSToFS) {
+TEST_CASE("testTskImgCollectorIllegalTransitionVSToFS") {
   // VS -> { IMG_FS, VOL_FS }
   TskImgAssembler a;
   a.addImage(jsoncons::json());
   a.addVolumeSystem(jsoncons::json());
-  SCOPE_EXPECT(a.addFileSystem(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addFileSystem(jsoncons::json()), std::runtime_error);
 }
 
-SCOPE_TEST(testTskImgCollectorIllegalTransitionVolToImg) {
+TEST_CASE("testTskImgCollectorIllegalTransitionVolToImg") {
   // VOL -> IMG
   TskImgAssembler a;
   a.addImage(jsoncons::json());
@@ -193,10 +193,10 @@ SCOPE_TEST(testTskImgCollectorIllegalTransitionVolToImg) {
     )
   );
   a.addVolume(jsoncons::json());
-  SCOPE_EXPECT(a.addImage(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addImage(jsoncons::json()), std::runtime_error);
 }
 
-SCOPE_TEST(testTskImgCollectorIllegalTransitionVolToVS) {
+TEST_CASE("testTskImgCollectorIllegalTransitionVolToVS") {
   // VOL -> VS
   TskImgAssembler a;
   a.addImage(jsoncons::json());
@@ -209,42 +209,42 @@ SCOPE_TEST(testTskImgCollectorIllegalTransitionVolToVS) {
     )
   );
   a.addVolume(jsoncons::json());
-  SCOPE_EXPECT(a.addVolumeSystem(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addVolumeSystem(jsoncons::json()), std::runtime_error);
 }
 
-SCOPE_TEST(testTskImgCollectorIllegalTransitionImgFSToImgFS) {
+TEST_CASE("testTskImgCollectorIllegalTransitionImgFSToImgFS") {
   // IMG_FS -> { VOL_FS, IMG_FS }
   TskImgAssembler a;
   a.addImage(jsoncons::json());
   a.addFileSystem(jsoncons::json());
-  SCOPE_EXPECT(a.addFileSystem(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addFileSystem(jsoncons::json()), std::runtime_error);
 }
 
-SCOPE_TEST(testTskImgCollectorIllegalTransitionImgFSToImg) {
+TEST_CASE("testTskImgCollectorIllegalTransitionImgFSToImg") {
   // IMG_FS -> IMG
   TskImgAssembler a;
   a.addImage(jsoncons::json());
   a.addFileSystem(jsoncons::json());
-  SCOPE_EXPECT(a.addImage(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addImage(jsoncons::json()), std::runtime_error);
 }
 
-SCOPE_TEST(testTskImgCollectorIllegalTransitionImgFSToVS) {
+TEST_CASE("testTskImgCollectorIllegalTransitionImgFSToVS") {
   // IMG_FS -> VS
   TskImgAssembler a;
   a.addImage(jsoncons::json());
   a.addFileSystem(jsoncons::json());
-  SCOPE_EXPECT(a.addVolumeSystem(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addVolumeSystem(jsoncons::json()), std::runtime_error);
 }
 
-SCOPE_TEST(testTskImgCollectorIllegalTransitionImgFSToVol) {
+TEST_CASE("testTskImgCollectorIllegalTransitionImgFSToVol") {
   // IMG_FS -> VOL
   TskImgAssembler a;
   a.addImage(jsoncons::json());
   a.addFileSystem(jsoncons::json());
-  SCOPE_EXPECT(a.addVolume(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addVolume(jsoncons::json()), std::runtime_error);
 }
 
-SCOPE_TEST(testTskImgCollectorIllegalTransitionVolFSToVolFS) {
+TEST_CASE("testTskImgCollectorIllegalTransitionVolFSToVolFS") {
   // VOL_FS -> { VOL_FS, IMG_FS }
   TskImgAssembler a;
   a.addImage(jsoncons::json());
@@ -258,10 +258,10 @@ SCOPE_TEST(testTskImgCollectorIllegalTransitionVolFSToVolFS) {
   );
   a.addVolume(jsoncons::json());
   a.addFileSystem(jsoncons::json());
-  SCOPE_EXPECT(a.addFileSystem(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addFileSystem(jsoncons::json()), std::runtime_error);
 }
 
-SCOPE_TEST(testTskImgCollectorIllegalTransitionVolFSToImg) {
+TEST_CASE("testTskImgCollectorIllegalTransitionVolFSToImg") {
   // VOL_FS -> IMG
   TskImgAssembler a;
   a.addImage(jsoncons::json());
@@ -275,10 +275,10 @@ SCOPE_TEST(testTskImgCollectorIllegalTransitionVolFSToImg) {
   );
   a.addVolume(jsoncons::json());
   a.addFileSystem(jsoncons::json());
-  SCOPE_EXPECT(a.addImage(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addImage(jsoncons::json()), std::runtime_error);
 }
 
-SCOPE_TEST(testTskImgCollectorIllegalTransitionVolFSToVS) {
+TEST_CASE("testTskImgCollectorIllegalTransitionVolFSToVS") {
   // VOL_FS -> VS
   TskImgAssembler a;
   a.addImage(jsoncons::json());
@@ -292,5 +292,5 @@ SCOPE_TEST(testTskImgCollectorIllegalTransitionVolFSToVS) {
   );
   a.addVolume(jsoncons::json());
   a.addFileSystem(jsoncons::json());
-  SCOPE_EXPECT(a.addVolumeSystem(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addVolumeSystem(jsoncons::json()), std::runtime_error);
 }

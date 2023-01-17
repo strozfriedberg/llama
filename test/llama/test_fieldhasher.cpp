@@ -1,8 +1,8 @@
-#include <scope/test.h>
+#include <catch2/catch_test_macros.hpp>
 
 #include "fieldhasher.h"
 
-SCOPE_TEST(testHash) {
+TEST_CASE("testHash") {
   const FieldHash exp{{
     0xb0, 0xa3, 0xf8, 0xf8, 0x32, 0x2c, 0xd7, 0xe6,
     0x59, 0x02, 0x48, 0x01, 0xd0, 0xea, 0x72, 0x04,
@@ -18,8 +18,8 @@ SCOPE_TEST(testHash) {
   hasher.hash_it("foo");
   hasher.hash_it(std::string("bar"));
   hasher.hash_it(-0.35);
-  SCOPE_ASSERT_EQUAL(exp, hasher.get_hash());
+  REQUIRE(exp == hasher.get_hash());
 
   // all in one go
-  SCOPE_ASSERT_EQUAL(exp, hasher.hash(1, 26, "foo", std::string("bar"), -0.35));
+  REQUIRE(exp == hasher.hash(1, 26, "foo", std::string("bar"), -0.35));
 }

@@ -1,4 +1,4 @@
-#include <scope/test.h>
+#include <catch2/catch_test_macros.hpp>
 
 #include <array>
 #include <cstring>
@@ -26,7 +26,7 @@ public:
   }
 };
 
-SCOPE_TEST(testHandleAttrs) {
+TEST_CASE("testHandleAttrs") {
   std::array<TSK_FS_ATTR, 5> attr;
   std::memset(&attr, 0, sizeof(attr));
 
@@ -94,7 +94,7 @@ SCOPE_TEST(testHandleAttrs) {
     }
   );
 
-  SCOPE_ASSERT_EQUAL(exp, jattrs);
+  REQUIRE(exp == jattrs);
 }
 
 class FakeHandleRunsTsk: public DummyTsk {
@@ -109,7 +109,7 @@ public:
   }
 };
 
-SCOPE_TEST(testHandleRunsFiller) {
+TEST_CASE("testHandleRunsFiller") {
   const uint64_t fsOffset = 12;
   const uint64_t blockSize = 3;
   const uint64_t inum = 42;
@@ -161,10 +161,10 @@ SCOPE_TEST(testHandleRunsFiller) {
     }
   );
 
-  SCOPE_ASSERT_EQUAL(exp, jnrd_runs);
+  REQUIRE(exp == jnrd_runs);
 }
 
-SCOPE_TEST(testHandleRunsEndHasNextWtf) {
+TEST_CASE("testHandleRunsEndHasNextWtf") {
   const uint64_t fsOffset = 12;
   const uint64_t blockSize = 3;
   const uint64_t inum = 42;
@@ -202,11 +202,11 @@ SCOPE_TEST(testHandleRunsEndHasNextWtf) {
     }
   );
 
-  SCOPE_ASSERT_EQUAL(exp, jnrd_runs);
+  REQUIRE(exp == jnrd_runs);
 }
 
 /*
-SCOPE_TEST(testHandleRunsNoSkipDataNoSlack) {
+TEST_CASE("testHandleRunsNoSkipDataNoSlack") {
   const uint64_t fsOffset = 12;
   const uint64_t blockSize = 3;
   const uint64_t inum = 42;
@@ -295,6 +295,6 @@ SCOPE_TEST(testHandleRunsNoSkipDataNoSlack) {
     }
   );
 
-  SCOPE_ASSERT_EQUAL(exp, jnrd_runs);
+  REQUIRE(exp == jnrd_runs);
 }
 */

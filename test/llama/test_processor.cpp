@@ -1,3 +1,5 @@
+#include <catch2/catch_test_macros.hpp>
+
 #include "processor.h"
 
 #include "lightgrep/api.h"
@@ -5,14 +7,13 @@
 #include "mockoutputhandler.h"
 
 #include <hasher/api.h>
-#include <scope/test.h>
 
 #include <vector>
 
 #include "boost_asio.h"
 
 /*
-SCOPE_TEST(TestSizeMatch) {
+TEST_CASE("TestSizeMatch") {
   std::shared_ptr<ProgramHandle> lg;
   Processor proc(lg);
 
@@ -20,7 +21,7 @@ SCOPE_TEST(TestSizeMatch) {
   FileRecord rec1;
 
   proc.process(rec1, mock);
-  SCOPE_ASSERT_EQUAL(1u, mock.Inodes.size());
+  REQUIRE(1u == mock.Inodes.size());
   SCOPE_ASSERT_EQUAL({0xd8, 0x69, 0xdb, 0x7f, 0xe6, 0x2f, 0xb0, 0x7c, 0x25, 0xa0, 0x40, 0x3e, 0xca, 0xea, 0x55, 0x03, 0x17, 0x44, 0xb5, 0xfb},
                       mock.Inodes[0].Hashes.Sha1);
   SCOPE_ASSERT_EQUAL({0x00, 0x8c, 0x59, 0x26, 0xca, 0x86, 0x10, 0x23, 0xc1, 0xd2, 0xa3, 0x66, 0x53, 0xfd, 0x88, 0xe2},
@@ -30,7 +31,7 @@ SCOPE_TEST(TestSizeMatch) {
   std::fill_n(&rec2.Hashes.Md5[0], 16, 0);
   std::fill_n(&rec2.Hashes.Sha1[0], 20, 0);
   proc.process(rec2, mock);
-  SCOPE_ASSERT_EQUAL(2u, mock.Inodes.size());
+  REQUIRE(2u == mock.Inodes.size());
 
   SCOPE_ASSERT_EQUAL(
     {
@@ -51,7 +52,7 @@ SCOPE_TEST(TestSizeMatch) {
   std::fill_n(&rec3.Hashes.Md5[0], 16, 0);
   std::fill_n(&rec3.Hashes.Sha1[0], 20, 0);
   proc.process(rec3, mock);
-  SCOPE_ASSERT_EQUAL(3u, mock.Inodes.size());
+  REQUIRE(3u == mock.Inodes.size());
 
   SCOPE_ASSERT_EQUAL(
     {
@@ -70,7 +71,7 @@ SCOPE_TEST(TestSizeMatch) {
 }
 */
 
-SCOPE_TEST(testBoostThreadPool) {
+TEST_CASE("testBoostThreadPool") {
   unsigned int count = 0;
   boost::asio::thread_pool pool;
   boost::asio::post(pool, [&]() {
@@ -81,5 +82,5 @@ SCOPE_TEST(testBoostThreadPool) {
     });
   });
   pool.join();
-  SCOPE_ASSERT_EQUAL(2u, count);
+  REQUIRE(2u == count);
 }

@@ -1,4 +1,4 @@
-#include <scope/test.h>
+#include <catch2/catch_test_macros.hpp>
 
 #include <cstring>
 #include <stdexcept>
@@ -98,7 +98,7 @@ public:
   }
 };
 
-SCOPE_TEST(testTskReaderVolumeSystem) {
+TEST_CASE("testTskReaderVolumeSystem") {
   TskReader<FakeTskWithVolumeSystem> r("bogus.E01");
 
   auto ih = std::shared_ptr<MockInputHandler>(new MockInputHandler());
@@ -107,10 +107,10 @@ SCOPE_TEST(testTskReaderVolumeSystem) {
   auto oh = std::shared_ptr<MockOutputHandler>(new MockOutputHandler());
   r.setOutputHandler(std::static_pointer_cast<OutputHandler>(oh));
 
-  SCOPE_ASSERT(r.open());
-  SCOPE_ASSERT(r.startReading());
+  REQUIRE(r.open());
+  REQUIRE(r.startReading());
 
-  SCOPE_ASSERT_EQUAL(1u, oh->Images.size());
+  REQUIRE(1u == oh->Images.size());
 
   const jsoncons::json exp(
     jsoncons::json_object_arg,
@@ -156,11 +156,11 @@ SCOPE_TEST(testTskReaderVolumeSystem) {
     }
   );
 
-  SCOPE_ASSERT_EQUAL(exp, oh->Images[0].Doc);
+  REQUIRE(exp == oh->Images[0].Doc);
 
-  SCOPE_ASSERT(oh->Dirents.empty());
-  SCOPE_ASSERT(oh->Inodes.empty());
-  SCOPE_ASSERT(ih->Batch.empty());
+  REQUIRE(oh->Dirents.empty());
+  REQUIRE(oh->Inodes.empty());
+  REQUIRE(ih->Batch.empty());
 }
 
 class FakeTskWithNoVolumeSystem: public FakeTskBase {
@@ -181,7 +181,7 @@ public:
   }
 };
 
-SCOPE_TEST(testTskReaderNoVolumeSystem) {
+TEST_CASE("testTskReaderNoVolumeSystem") {
   TskReader<FakeTskWithNoVolumeSystem> r("bogus.E01");
 
   auto ih = std::shared_ptr<MockInputHandler>(new MockInputHandler());
@@ -190,10 +190,10 @@ SCOPE_TEST(testTskReaderNoVolumeSystem) {
   auto oh = std::shared_ptr<MockOutputHandler>(new MockOutputHandler());
   r.setOutputHandler(std::static_pointer_cast<OutputHandler>(oh));
 
-  SCOPE_ASSERT(r.open());
-  SCOPE_ASSERT(r.startReading());
+  REQUIRE(r.open());
+  REQUIRE(r.startReading());
 
-  SCOPE_ASSERT_EQUAL(1u, oh->Images.size());
+  REQUIRE(1u == oh->Images.size());
 
   const jsoncons::json exp(
     jsoncons::json_object_arg,
@@ -205,11 +205,11 @@ SCOPE_TEST(testTskReaderNoVolumeSystem) {
     }
   );
 
-  SCOPE_ASSERT_EQUAL(exp, oh->Images[0].Doc);
+  REQUIRE(exp == oh->Images[0].Doc);
 
-  SCOPE_ASSERT(oh->Dirents.empty());
-  SCOPE_ASSERT(oh->Inodes.empty());
-  SCOPE_ASSERT(ih->Batch.empty());
+  REQUIRE(oh->Dirents.empty());
+  REQUIRE(oh->Inodes.empty());
+  REQUIRE(ih->Batch.empty());
 }
 
 /*
@@ -219,7 +219,7 @@ SCOPE_TEST(testTskReaderNoVolumeSystem) {
 #include "filerecord.h"
 #include "mockinputhandler.h"
 
-SCOPE_TEST(testInodeDedupe) {
+TEST_CASE("testInodeDedupe") {
   TskReader reader("not_an_image.E01");
 
   reader.setInodeRange(0, 20);
@@ -260,17 +260,17 @@ SCOPE_TEST(testInodeDedupe) {
   reader.setInputHandler(std::static_pointer_cast<InputHandler>(in));
 
   meta.addr = 8;
-  SCOPE_ASSERT(reader.addToBatch(&myFile));
-  SCOPE_ASSERT_EQUAL(1u, in->batch.size());
-  SCOPE_ASSERT_EQUAL(8u, in->batch.back().Doc["addr"]);
+  REQUIRE(reader.addToBatch(&myFile));
+  REQUIRE(1u == in->batch.size());
+  REQUIRE(8u == in->batch.back().Doc["addr"]);
 
   meta.addr = 9;
-  SCOPE_ASSERT(reader.addToBatch(&myFile));
-  SCOPE_ASSERT_EQUAL(2u, in->batch.size());
-  SCOPE_ASSERT_EQUAL(9u, in->batch.back().Doc["addr"]);
+  REQUIRE(reader.addToBatch(&myFile));
+  REQUIRE(2u == in->batch.size());
+  REQUIRE(9u == in->batch.back().Doc["addr"]);
 
   meta.addr = 8; // dupe!
-  SCOPE_ASSERT(!reader.addToBatch(&myFile));
-  SCOPE_ASSERT_EQUAL(2u, in->batch.size());
+  REQUIRE(!reader.addToBatch(&myFile));
+  REQUIRE(2u == in->batch.size());
 }
 */

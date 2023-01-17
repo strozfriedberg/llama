@@ -1,9 +1,9 @@
 ACLOCAL_AMFLAGS = -I m4
 
-AM_CPPFLAGS = -I$(srcdir)/include $(BOOST_CPPFLAGS) $(ICU_CPPFLAGS) $(LG_CPPFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/include $(ICU_CPPFLAGS) $(BOOST_CPPFLAGS) $(LG_CPPFLAGS)
 AM_CFLAGS = $(LG_CFLAGS) $(ASAN_CFLAGS)
 AM_CXXFLAGS = $(STDCXX_CXXFLAGS) $(LG_CXXFLAGS) $(ICU_CXXFLAGS) $(BOOST_CXXFLAGS) $(ASAN_CXXFLAGS)
-AM_LDFLAGS = $(BOOST_LDFLAGS) $(ICU_LDFLAGS) $(LG_LDFLAGS) $(ASAN_LDFLAGS)
+AM_LDFLAGS = $(ICU_LDFLAGS) $(BOOST_LDFLAGS) $(LG_LDFLAGS) $(ASAN_LDFLAGS)
 AM_YFLAGS = -r solved
 
 LG_LIB = src/lib/liblightgrep.la
@@ -84,13 +84,13 @@ src_lib_liblightgrep_la_HEADERS = \
 	include/lightgrep/search_hit.h
 
 noinst_PROGRAMS = \
-	c_example/cex \
+	examples/c_example/cex \
 	src/enc/enc \
 	src/val/val \
 	src/what/what
 
-c_example_cex_SOURCES = c_example/main.c
-c_example_cex_LDADD = $(LG_LIB) $(ICU_LIBS) $(STDCXX_LIB)
+examples_c_example_cex_SOURCES = examples/c_example/main.c
+examples_c_example_cex_LDADD = $(LG_LIB) $(ICU_LIBS) $(STDCXX_LIB)
 
 src_enc_enc_SOURCES = src/enc/encodings.cpp
 src_enc_enc_LDADD = $(ICU_LIBS) $(STDCXX_LIB)
@@ -101,8 +101,8 @@ src_val_val_LDADD = $(LG_LIB_INT) $(ICU_LIBS) $(STDCXX_LIB)
 src_what_what_SOURCES = src/what/what.cpp
 src_what_what_LDADD = $(LG_LIB_INT) $(ICU_LIBS) $(STDCXX_LIB)
 
-include/lightgrep/encodings.h: src/enc/enc$(EXEEXT)
-	src/enc/enc$(EXEEXT) >$@
+$(srcdir)/include/lightgrep/encodings.h: src/enc/enc$(EXEEXT)
+	$(LOG_COMPILER) src/enc/enc$(EXEEXT) >$@
 
 BUILT_SOURCES = include/lightgrep/encodings.h
 
@@ -119,9 +119,9 @@ src_cmd_lightgrep_SOURCES = \
 	src/cmd/searchcontroller.cpp \
 	src/cmd/util.cpp
 	
-src_cmd_lightgrep_LDADD = $(LG_LIB) $(LG_LIBS) $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_ASIO_LIB) $(ICU_LIBS) $(GPT_LIBS) $(STDCXX_LIB)
+src_cmd_lightgrep_LDADD = $(LG_LIB) $(LG_LIBS) $(ICU_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_ASIO_LIB) $(GPT_LIBS) $(STDCXX_LIB)
 
-src_llama_llama_SOURCES = \
+src_llama_llama_common = \
 	src/llama/batchhandler.cpp \
 	src/llama/cli.cpp \
 	src/llama/dirconversion.cpp \
@@ -133,7 +133,6 @@ src_llama_llama_SOURCES = \
 	src/llama/inodeandblocktrackerimpl.cpp \
 	src/llama/inputreader.cpp \
 	src/llama/llama.cpp \
-	src/llama/main.cpp \
 	src/llama/outputstream.cpp \
 	src/llama/outputtar.cpp \
 	src/llama/pooloutputhandler.cpp \
@@ -147,24 +146,9 @@ src_llama_llama_SOURCES = \
 	src/llama/tskautowrapper.cpp \
 	src/llama/tskconversion.cpp \
 	src/llama/tskimgassembler.cpp \
-	src/llama/tsktimestamps.cpp \
-	src/llama/test_cli.cpp \
-	src/llama/test_dirconversion.cpp \
-	src/llama/test_direntstack.cpp \
-	src/llama/test_dirreader.cpp \
-	src/llama/test_fieldhasher.cpp \
-	src/llama/test_fileproxy.cpp \
-	src/llama/test_filerecord.cpp \
-	src/llama/test_hex.cpp \
-	src/llama/test_inodeandblocktrackerimpl.cpp \
-	src/llama/test_processor.cpp \
-	src/llama/test_recordbuffer.cpp \
-	src/llama/test_recordhasher.cpp \
-	src/llama/test_tskconversion.cpp \
-	src/llama/test_tskimgassembler.cpp \
-	src/llama/test_tskreader.cpp \
-	src/llama/test_tskreaderhelper.cpp \
-	src/llama/test_tsktimestamps.cpp
+	src/llama/tsktimestamps.cpp
+
+src_llama_llama_SOURCES = $(src_llama_llama_common) src/llama/main.cpp
 
 src_llama_llama_CPPFLAGS = $(AM_CPPFLAGS) $(SCOPE_CPPFLAGS) $(TSK_CPPFLAGS) $(LIBARCHIVE_CPPFLAGS)
 src_llama_llama_LDADD = $(LG_LIB) $(LG_LIBS) $(TSK_LIBS) $(LIBARCHIVE_LIBS) $(HASHER_LIBS) $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_ASIO_LIB) $(ICU_LIBS) $(STDCXX_LIB)
@@ -189,13 +173,18 @@ endif
 
 @VALGRIND_CHECK_RULES@
 
-check_PROGRAMS = test/test src/llama/llama
+check_PROGRAMS = test/test test/llama/test
 
-TESTS = \
-	$(check_PROGRAMS) \
-	pylightgrep/test.sh
+TEST_EXTENSIONS = .sh
+SH_LOG_COMPILER =
 
 AM_TESTS_ENVIRONMENT = builddir=`pwd`;
+
+TESTS = $(check_PROGRAMS)
+
+if BUILD_PYTHON
+TESTS += pylightgrep/test.sh
+endif
 
 test_test_SOURCES = \
 	src/cmd/hitwriter.cpp \
@@ -214,7 +203,6 @@ test_test_SOURCES = \
 	test/test_auto_search_5.cpp \
 	test/test_auto_search_6.cpp \
 	test/test_auto_search_7.cpp \
-	test/test_auto_search_8.cpp \
 	test/test_auto_search_multi_1.cpp \
 	test/test_auto_search_multi_2.cpp \
 	test/test_auto_starts_with_1.cpp \
@@ -231,7 +219,6 @@ test_test_SOURCES = \
 	test/test_bytesource.cpp \
 	test/test_c_api.cpp \
 	test/test_compiler.cpp \
-	test/test.cpp \
 	test/test_c_util.cpp \
 	test/test_graph.cpp \
 	test/test_helper.cpp \
@@ -276,8 +263,33 @@ test_test_SOURCES = \
 	test/test_vm.cpp \
 	test/test_xorencoder.cpp
 
-test_test_CPPFLAGS = $(AM_CPPFLAGS) $(SCOPE_CPPFLAGS)
-test_test_LDADD = $(LG_LIB_INT) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_ASIO_LIB) $(ICU_LIBS) $(STDCXX_LIB)
+test_test_CPPFLAGS = $(AM_CPPFLAGS)
+test_test_CFLAGS = $(AM_CFLAGS) $(CATCH2_CFLAGS)
+test_test_LDADD = $(LG_LIB_INT) $(ICU_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_ASIO_LIB) $(CATCH2_LIBS) $(STDCXX_LIB)
+
+test_llama_test_SOURCES = \
+	$(src_llama_llama_common) \
+	test/llama/test_cli.cpp \
+	test/llama/test_dirconversion.cpp \
+	test/llama/test_direntstack.cpp \
+	test/llama/test_dirreader.cpp \
+	test/llama/test_fieldhasher.cpp \
+	test/llama/test_fileproxy.cpp \
+	test/llama/test_filerecord.cpp \
+	test/llama/test_hex.cpp \
+	test/llama/test_inodeandblocktrackerimpl.cpp \
+	test/llama/test_processor.cpp \
+	test/llama/test_recordbuffer.cpp \
+	test/llama/test_recordhasher.cpp \
+	test/llama/test_tskconversion.cpp \
+	test/llama/test_tskimgassembler.cpp \
+	test/llama/test_tskreader.cpp \
+	test/llama/test_tskreaderhelper.cpp \
+	test/llama/test_tsktimestamps.cpp
+
+test_llama_test_CPPFLAGS = -I$(srcdir)/src/llama $(AM_CPPFLAGS)
+test_llama_test_CFLAGS = $(AM_CFLAGS) $(CATCH2_CFLAGS)
+test_llama_test_LDADD = $(CATCH2_LIBS) $(LG_LIB) $(LG_LIBS) $(TSK_LIBS) $(LIBARCHIVE_LIBS) $(HASHER_LIBS) $(BOOST_FILESYSTEM_LIB) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_SYSTEM_LIB) $(BOOST_ASIO_LIB) $(ICU_LIBS) $(STDCXX_LIB)
 
 pkgconfigdir = $(libdir)/pkgconfig
 nodist_pkgconfig_DATA = src/lib/lightgrep.pc
@@ -314,3 +326,120 @@ endif
 
 install-exec-hook:
 	$(RM) $(DESTDIR)$(libdir)/liblightgrep.la
+
+# must be set before we can append to it
+MOSTLYCLEANFILES =
+
+#
+# Java bindings
+#
+if BUILD_JAVA
+
+lib_LTLIBRARIES += src/java/jni/libjlightgrep.la
+
+src_java_jni_libjlightgrep_la_SOURCES = src/java/jni/jlightgrep.cpp
+
+src_java_jni_libjlightgrep_la_CPPFLAGS = -I$(srcdir)/include $(JNI_CPPFLAGS) $(LG_CPPFLAGS)
+src_java_jni_libjlightgrep_la_CXXFLAGS = $(STDCXX_CXXFLAGS) $(LG_CXXFLAGS)
+src_java_jni_libjlightgrep_la_LDFLAGS = $(LG_LDFLAGS) -module -avoid-version
+src_java_jni_libjlightgrep_la_LIBADD = $(LG_LIB) $(STDCXX_LIB)
+
+JROOT:=src/java
+JSRC_DIR:=$(JROOT)/java/src
+JNI_DIR:=$(JROOT)/jni
+JTEST_DIR:=$(JROOT)/java/test
+JPKG_DIR:=com/lightboxtechnologies/lightgrep
+
+SRC_SOURCE_FILES:=\
+	$(JSRC_DIR)/$(JPKG_DIR)/ContextHandle.java \
+	$(JSRC_DIR)/$(JPKG_DIR)/ContextOptions.java \
+	$(JSRC_DIR)/$(JPKG_DIR)/DecoderHandle.java \
+	$(JSRC_DIR)/$(JPKG_DIR)/FSMHandle.java \
+  $(JSRC_DIR)/$(JPKG_DIR)/Handle.java \
+	$(JSRC_DIR)/$(JPKG_DIR)/HitCallback.java \
+	$(JSRC_DIR)/$(JPKG_DIR)/HitContext.java \
+	$(JSRC_DIR)/$(JPKG_DIR)/KeyOptions.java \
+	$(JSRC_DIR)/$(JPKG_DIR)/KeywordException.java \
+	$(JSRC_DIR)/$(JPKG_DIR)/LGUtil.java \
+	$(JSRC_DIR)/$(JPKG_DIR)/LibraryLoader.java \
+	$(JSRC_DIR)/$(JPKG_DIR)/PatternHandle.java \
+	$(JSRC_DIR)/$(JPKG_DIR)/PatternInfo.java \
+	$(JSRC_DIR)/$(JPKG_DIR)/ProgramException.java \
+	$(JSRC_DIR)/$(JPKG_DIR)/ProgramHandle.java \
+	$(JSRC_DIR)/$(JPKG_DIR)/ProgramOptions.java \
+	$(JSRC_DIR)/$(JPKG_DIR)/SearchHit.java \
+	$(JSRC_DIR)/$(JPKG_DIR)/Throws.java
+
+path_to_class = $(subst /,.,$(subst $(1)/,,$(basename $(2))))
+
+SRC_CLASS_NAMES:=$(call path_to_class,$(JSRC_DIR),$(SRC_SOURCE_FILES))
+SRC_CLASS_FILES:=$(SRC_SOURCE_FILES:.java=.class)
+
+JNI_HEADER_FILES:=\
+	$(JNI_DIR)/com_lightboxtechnologies_lightgrep_ContextHandle.h \
+	$(JNI_DIR)/com_lightboxtechnologies_lightgrep_DecoderHandle.h \
+	$(JNI_DIR)/com_lightboxtechnologies_lightgrep_FSMHandle.h \
+	$(JNI_DIR)/com_lightboxtechnologies_lightgrep_Handle.h \
+	$(JNI_DIR)/com_lightboxtechnologies_lightgrep_HitContext.h \
+	$(JNI_DIR)/com_lightboxtechnologies_lightgrep_KeyOptions.h \
+	$(JNI_DIR)/com_lightboxtechnologies_lightgrep_LGUtil.h \
+	$(JNI_DIR)/com_lightboxtechnologies_lightgrep_PatternHandle.h \
+	$(JNI_DIR)/com_lightboxtechnologies_lightgrep_PatternInfo.h \
+	$(JNI_DIR)/com_lightboxtechnologies_lightgrep_ProgramHandle.h \
+	$(JNI_DIR)/com_lightboxtechnologies_lightgrep_ProgramOptions.h
+
+$(JNI_HEADER_FILES): $(SRC_SOURCE_FILES)
+	$(JAVAC) -h $(JNI_DIR) $^
+
+.PRECIOUS: $(JNI_HEADER_FILES)
+
+src/java/jni/jlightgrep.h: $(JNI_HEADER_FILES)
+	for i in $(notdir $(JNI_HEADER_FILES)) ; do \
+		echo "#include \"$$i\"" ; \
+	done >$@
+
+BUILT_SOURCES += src/java/jni/jlightgrep.h
+
+noinst_jar_DATA = src/java/java/src/jlightgrep.jar
+noinst_jardir = $(libdir)
+
+$(JSRC_DIR)/jlightgrep.jar: $(SRC_CLASS_FILES)
+	$(JAR) cf $@ -C $(JSRC_DIR) .
+
+$(SRC_CLASS_FILES): $(SRC_SOURCE_FILES)
+	$(JAVAC) -d $(JSRC_DIR) -cp $(JSRC_DIR) -Xlint $^
+
+TEST_SOURCE_FILES:=\
+	$(JTEST_DIR)/$(JPKG_DIR)/AbstractDataDrivenTest.java \
+	$(JTEST_DIR)/$(JPKG_DIR)/AbstractSearchTest.java \
+	$(JTEST_DIR)/$(JPKG_DIR)/BaseGetHitContextTest.java \
+	$(JTEST_DIR)/$(JPKG_DIR)/BaseSearchTest.java \
+	$(JTEST_DIR)/$(JPKG_DIR)/BaseStartsWithTest.java \
+	$(JTEST_DIR)/$(JPKG_DIR)/GetHitContextArrayTest.java \
+	$(JTEST_DIR)/$(JPKG_DIR)/GetHitContextDirectByteBufferTest.java \
+	$(JTEST_DIR)/$(JPKG_DIR)/GetHitContextWrappedByteBufferTest.java \
+	$(JTEST_DIR)/$(JPKG_DIR)/LightgrepTest.java \
+	$(JTEST_DIR)/$(JPKG_DIR)/SearchArrayTest.java \
+	$(JTEST_DIR)/$(JPKG_DIR)/SearchDirectByteBufferTest.java \
+	$(JTEST_DIR)/$(JPKG_DIR)/SearchWrappedByteBufferTest.java \
+	$(JTEST_DIR)/$(JPKG_DIR)/StartsWithArrayTest.java \
+	$(JTEST_DIR)/$(JPKG_DIR)/StartsWithDirectByteBufferTest.java \
+	$(JTEST_DIR)/$(JPKG_DIR)/StartsWithWrappedByteBufferTest.java
+
+TEST_CLASS_NAMES:=$(call path_to_class,$(JTEST_DIR),$(TEST_SOURCE_FILES))
+TEST_CLASS_FILES:=$(TEST_SOURCE_FILES:.java=.class)
+
+TEST_CLASSPATH:=$(JSRC_DIR):$(JTEST_DIR):$(JUNIT_JARS)
+
+$(TEST_CLASS_FILES): $(TEST_SOURCE_FILES) $(SRC_CLASS_FILES)
+	$(JAVAC) -encoding UTF-8 -d $(JTEST_DIR) -cp $(TEST_CLASSPATH) -Xlint $(filter %.java,$^)
+
+TESTS += $(JTEST_DIR)/run_test.sh
+
+$(JTEST_DIR)/run_test.sh: $(TEST_CLASS_FILES)
+	echo -e "#!/bin/bash -ex\n\n$(JAVA) -cp $(TEST_CLASSPATH) -Djava.library.path=src/java/jni/.libs org.junit.runner.JUnitCore $(filter-out com.lightboxtechnologies.lightgrep.Base%,$(filter-out com.lightboxtechnologies.lightgrep.Abstract%,$(TEST_CLASS_NAMES)))" >$@
+	chmod a+x $@
+
+MOSTLYCLEANFILES += src/java/jni/jlightgrep.h $(JNI_HEADER_FILES) $(SRC_CLASS_FILES:.class=*.class) $(TEST_CLASS_FILES:.class=*.class) $(noinst_jar_DATA)
+
+endif

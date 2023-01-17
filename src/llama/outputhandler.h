@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-class FileRecord;
+struct FileRecord;
 
 class OutputHandler {
 public:

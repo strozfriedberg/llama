@@ -1,11 +1,11 @@
-#include <scope/test.h>
+#include <catch2/catch_test_macros.hpp>
 
 #include "hex.h"
 
 #include <vector>
 #include <utility>
 
-SCOPE_TEST(testHexEncode) {
+TEST_CASE("testHexEncode") {
   const std::vector<std::pair<std::vector<unsigned char>, std::string>> tests{
     {{0xFF}, "ff"},
     {{0x1c, 0x2d}, "1c2d"},
@@ -16,7 +16,7 @@ SCOPE_TEST(testHexEncode) {
   };
 
   for (const auto& t : tests) {
-    SCOPE_ASSERT_EQUAL(t.second, hexEncode(&t.first[0], t.first.size()));
-    SCOPE_ASSERT_EQUAL(t.second, hexEncode(&t.first[0], &t.first[0] + t.first.size()));
+    REQUIRE(t.second == hexEncode(&t.first[0], t.first.size()));
+    REQUIRE(t.second == hexEncode(&t.first[0], &t.first[0] + t.first.size()));
   }
 }

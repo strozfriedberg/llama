@@ -1,6 +1,6 @@
 #pragma once
 
-class FileRecord;
+struct FileRecord;
 
 class InputHandler {
 public:

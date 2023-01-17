@@ -8,7 +8,7 @@
 
 #include "boost_asio.h"
 
-class FileRecord;
+struct FileRecord;
 struct Options;
 class OutputHandler;
 class Processor;

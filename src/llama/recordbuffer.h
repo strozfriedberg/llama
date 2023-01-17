@@ -5,7 +5,7 @@
 #include <sstream>
 #include <string>
 
-class OutputChunk;
+struct OutputChunk;
 
 class RecordBuffer {
 public:
@@ -33,7 +33,6 @@ private:
   std::string BasePath;
 
   unsigned int FlushSize,
-               CurSize,
                Num;
 
   std::function<void(const OutputChunk&)> Out;

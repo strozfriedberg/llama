@@ -14,7 +14,6 @@ RecordBuffer::RecordBuffer(
   Buf(),
   BasePath(basePath),
   FlushSize(flushBufSize),
-  CurSize(0),
   Num(0), Out(output) {}
 
 RecordBuffer::~RecordBuffer() {

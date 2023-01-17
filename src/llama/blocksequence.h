@@ -98,15 +98,15 @@ public:
   }
 
 protected:
-  virtual bool advance() {
+  virtual bool advance() override {
     return false;
   }
 
-  virtual std::pair<const uint8_t*, const uint8_t*> cur() const {
+  virtual std::pair<const uint8_t*, const uint8_t*> cur() const override {
     return std::make_pair(nullptr, nullptr);
   }
 
-  virtual size_t offset() const {
+  virtual size_t offset() const override {
     return 0;
   }
 };
@@ -146,7 +146,6 @@ public:
     path(path),
     off(0),
     rlen(0),
-    size(0),
     bufend(&buf[0])
   {
   }
@@ -171,11 +170,11 @@ protected:
     return ok;
   }
 
-  virtual std::pair<const uint8_t*, const uint8_t*> cur() const {
+  virtual std::pair<const uint8_t*, const uint8_t*> cur() const override {
     return std::make_pair(&buf[0], bufend);
   }
 
-  virtual size_t offset() const {
+  virtual size_t offset() const override {
     return off;
   }
 
@@ -185,7 +184,6 @@ private:
 
   size_t off;
   ssize_t rlen;
-  size_t size;
   uint8_t buf[8192];
   uint8_t* bufend;
 };
@@ -235,12 +233,12 @@ protected:
     return bufend > &buf[0];
   }
 
-  virtual std::pair<const uint8_t*, const uint8_t*> cur() const {
+  virtual std::pair<const uint8_t*, const uint8_t*> cur() const override {
     return std::make_pair(&buf[0], bufend);
   }
 
   // the offset of the data at cur().first
-  virtual size_t offset() const {
+  virtual size_t offset() const override {
     return off;
   }
 

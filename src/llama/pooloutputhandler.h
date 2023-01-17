@@ -4,7 +4,7 @@
 #include "outputhandler.h"
 #include "recordbuffer.h"
 
-class OutputChunk;
+struct OutputChunk;
 class OutputWriter;
 
 class PoolOutputHandler: public OutputHandler {

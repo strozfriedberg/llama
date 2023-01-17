@@ -1,15 +1,15 @@
-#include <scope/test.h>
+#include <catch2/catch_test_macros.hpp>
 
 #include "direntstack.h"
 #include "recordhasher.h"
 
-SCOPE_TEST(testDirentStackStartsEmpty) {
+TEST_CASE("testDirentStackStartsEmpty") {
   RecordHasher rh;
   DirentStack dirents(rh);
-  SCOPE_ASSERT(dirents.empty());
+  REQUIRE(dirents.empty());
 }
 
-SCOPE_TEST(testDirentStackPushPop) {
+TEST_CASE("testDirentStackPushPop") {
   RecordHasher rh;
   DirentStack dirents(rh);
 
@@ -23,8 +23,8 @@ SCOPE_TEST(testDirentStackPushPop) {
   
   dirents.push("filename", std::move(in));
   
-  SCOPE_ASSERT(!dirents.empty());
-  SCOPE_ASSERT_EQUAL("filename", dirents.top()["path"]);
+  REQUIRE(!dirents.empty());
+  REQUIRE("filename" == dirents.top()["path"]);
   
   const jsoncons::json exp_out(
     jsoncons::json_object_arg,
@@ -38,14 +38,14 @@ SCOPE_TEST(testDirentStackPushPop) {
     }
   );
 
-  SCOPE_ASSERT_EQUAL(exp_out, dirents.pop());
+  REQUIRE(exp_out == dirents.pop());
 }
 
-SCOPE_TEST(testDirentStackPushPushPopPop) {
+TEST_CASE("testDirentStackPushPushPopPop") {
   RecordHasher rh;
   DirentStack dirents(rh);
 
-  SCOPE_ASSERT(dirents.empty());
+  REQUIRE(dirents.empty());
 
   jsoncons::json a(
     jsoncons::json_object_arg,
@@ -57,8 +57,8 @@ SCOPE_TEST(testDirentStackPushPushPopPop) {
   
   dirents.push("a", std::move(a));
   
-  SCOPE_ASSERT(!dirents.empty());
-  SCOPE_ASSERT_EQUAL("a", dirents.top()["path"]);
+  REQUIRE(!dirents.empty());
+  REQUIRE("a" == dirents.top()["path"]);
 
   jsoncons::json b(
     jsoncons::json_object_arg,
@@ -70,8 +70,8 @@ SCOPE_TEST(testDirentStackPushPushPopPop) {
  
   dirents.push("b", std::move(b));
 
-  SCOPE_ASSERT(!dirents.empty());
-  SCOPE_ASSERT_EQUAL("a/b", dirents.top()["path"]);
+  REQUIRE(!dirents.empty());
+  REQUIRE("a/b" == dirents.top()["path"]);
 
   const jsoncons::json exp_out_b(
     jsoncons::json_object_arg,
@@ -85,10 +85,10 @@ SCOPE_TEST(testDirentStackPushPushPopPop) {
     }
   );
 
-  SCOPE_ASSERT_EQUAL(exp_out_b, dirents.pop());
+  REQUIRE(exp_out_b == dirents.pop());
 
-  SCOPE_ASSERT(!dirents.empty());
-  SCOPE_ASSERT_EQUAL("a", dirents.top()["path"]);
+  REQUIRE(!dirents.empty());
+  REQUIRE("a" == dirents.top()["path"]);
 
   const jsoncons::json exp_out_a(
     jsoncons::json_object_arg,
@@ -108,6 +108,6 @@ SCOPE_TEST(testDirentStackPushPushPopPop) {
     }
   );
 
-  SCOPE_ASSERT_EQUAL(exp_out_a, dirents.pop());
-  SCOPE_ASSERT(dirents.empty());
+  REQUIRE(exp_out_a == dirents.pop());
+  REQUIRE(dirents.empty());
 }

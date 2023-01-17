@@ -39,11 +39,10 @@ public:
     return InUse.top();
   }
 
-  FieldHasher& pop() {
+  void pop() {
     InUse.top().reset();
     Spares.push(std::move(InUse.top()));
     InUse.pop();
-    return InUse.top();
   }
 
   template <typename...Args>

@@ -1,9 +1,9 @@
-#include <scope/test.h>
+#include <catch2/catch_test_macros.hpp>
 
 #include "hex.h"
 #include "recordhasher.h"
 
-SCOPE_TEST(testHashRun) {
+TEST_CASE("testHashRun") {
   RecordHasher hasher;
 
   const jsoncons::json r(
@@ -23,10 +23,10 @@ SCOPE_TEST(testHashRun) {
     0x1f, 0x4f, 0x73, 0xfb, 0xea, 0xd0, 0x33, 0xf9
   }};
 
-  SCOPE_ASSERT_EQUAL(exp, hasher.hashRun(r));
+  REQUIRE(exp == hasher.hashRun(r));
 }
 
-SCOPE_TEST(testHashStream) {
+TEST_CASE("testHashStream") {
   RecordHasher hasher;
 
   const jsoncons::json r(
@@ -48,10 +48,10 @@ SCOPE_TEST(testHashStream) {
     0xc6, 0x83, 0x64, 0xd7, 0x80, 0x56, 0x52, 0x24
   }};
 
-  SCOPE_ASSERT_EQUAL(exp, hasher.hashStream(r));
+  REQUIRE(exp == hasher.hashStream(r));
 }
 
-SCOPE_TEST(testHashAttr) {
+TEST_CASE("testHashAttr") {
   RecordHasher hasher;
 
   const jsoncons::json sr(
@@ -126,10 +126,10 @@ SCOPE_TEST(testHashAttr) {
     0x7b, 0xe2, 0xd7, 0xbf, 0x83, 0x5a, 0xee, 0xf2
   }};
 
-  SCOPE_ASSERT_EQUAL(exp, hasher.hashAttr(r));
+  REQUIRE(exp == hasher.hashAttr(r));
 }
 
-SCOPE_TEST(testHashInode) {
+TEST_CASE("testHashInode") {
   RecordHasher hasher;
 
   const std::string in = R"(
@@ -188,10 +188,10 @@ SCOPE_TEST(testHashInode) {
     0x8c, 0x14, 0x6b, 0xde, 0xc5, 0xd0, 0x19, 0x2e
   }};
 
-  SCOPE_ASSERT_EQUAL(exp, hasher.hashInode(r));
+  REQUIRE(exp == hasher.hashInode(r));
 }
 
-SCOPE_TEST(testHashDirent) {
+TEST_CASE("testHashDirent") {
   RecordHasher hasher;
 
   const std::string in = R"(
@@ -219,5 +219,5 @@ SCOPE_TEST(testHashDirent) {
     0xe5, 0x50, 0xe9, 0xdc, 0x49, 0x8d, 0x73, 0xc6
   }};
 
-  SCOPE_ASSERT_EQUAL(exp, hasher.hashDirent(r));
+  REQUIRE(exp == hasher.hashDirent(r));
 }
