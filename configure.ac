@@ -115,6 +115,11 @@ case "$host" in
   # Boost ASIO needs ws2_32 and mswsock on Windows
   BOOST_ASIO_LIB="-lws2_32 -lmswsock"
   AC_SUBST([BOOST_ASIO_LIB])
+
+  # Boost has issues unless WIN32_LEAN_AND_MEAN is specified
+  # This tells windows to not default #include extra libraries, including
+  # the (older) winsock.h, which cannot be included before winsock2.h
+  AX_APPEND_COMPILE_FLAGS([-DWIN32_LEAN_AND_MEAN], [LLAMA_CPPFLAGS])
   ;;
 esac
 
