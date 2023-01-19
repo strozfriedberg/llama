@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "lightgrep/api.h"
+#include <lightgrep/api.h>
 
 struct SFHASH_Hasher;
 struct FileRecord;
