@@ -8,6 +8,7 @@
 
 #include <hasher/api.h>
 
+#include <thread>
 #include <vector>
 
 #include "boost_asio.h"
