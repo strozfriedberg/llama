@@ -60,7 +60,7 @@ bool DirReader::startReading() {
 
     if (entry.is_directory()) {
       // recurse, depth first
-      hadError |= !push_it(dirStack, entry.path());
+      hadError |= !push_it(dirStack, entry.path().string());
     }
   } while (!dirStack.empty());
 
