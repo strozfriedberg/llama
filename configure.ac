@@ -210,28 +210,13 @@ if test "x$ax_cv_boost_program_options" != "xyes"; then
   AC_MSG_ERROR([Failed to find Boost program_options library.])
 fi
 
-AX_BOOST_SYSTEM
-if test "x$ax_cv_boost_system" != "xyes"; then
-  AC_MSG_ERROR([Failed to find Boost system library.])
-fi
-
 case "$host" in
 *-*-mingw*)
   # Boost ASIO needs ws2_32 and mswsock on Windows
   BOOST_ASIO_LIB="-lws2_32 -lmswsock"
   AC_SUBST([BOOST_ASIO_LIB])
-
-  # FIXME: wrong boost_system lib gets detected!
-  BOOST_SYSTEM_LIB=`echo "$BOOST_SYSTEM_LIB" | sed 's/.dll/-mt/'`
-  # FIXME: wrong boost_filesystem lib gets detected!
-  # BOOST_FILESYSTEM_LIB=`echo "$BOOST_FILESYSTEM_LIB" | sed 's/.dll/-mt/'`
   ;;
 esac
-
-if test "x$enable_shared" != "xyes"; then
-  AX_APPEND_FLAG([-DBOOST_THREAD_USE_LIB], [BOOST_CPPFLAGS])
-fi
-
 
 # 
 # libtsk
