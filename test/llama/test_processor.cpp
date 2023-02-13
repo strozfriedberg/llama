@@ -77,7 +77,6 @@ TEST_CASE("testBoostThreadPool") {
   boost::asio::thread_pool pool(2);
   boost::asio::post(pool, [&]() {
     ++count;
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     boost::asio::post(pool, [&]() {
       ++count;
     });
