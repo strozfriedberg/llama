@@ -32,18 +32,32 @@ TEST_CASE("testCLICommandPrecedence") {
 }
 
 TEST_CASE("testCLIDefaultCommand") {
+  const char* args[] = {"llama", "output", "nosnits_workstation.E01"};
+  Cli cli;
+  auto opts = cli.parse(3, args);
+  REQUIRE("search" == opts->Command);
+  REQUIRE("output" == opts->Output);
+  REQUIRE("nosnits_workstation.E01" == opts->Input);
+}
+
+TEST_CASE("testNoArgs") {
   const char* args[] = {"llama"};
   Cli cli;
-  auto opts = cli.parse(1, args);
-  REQUIRE("search" == opts->Command);
+  CHECK_THROWS_AS(cli.parse(1, args), std::invalid_argument);
+}
+
+TEST_CASE("testNoInput") {
+  const char* args[] = {"llama", "output"};
+  Cli cli;
+  CHECK_THROWS_AS(cli.parse(2, args), std::invalid_argument);
 }
 
 TEST_CASE("testCLIKeywordsFiles") {
   const char* args[] = {"llama", "-f", "mypatterns.txt", "--file",
-                        "morepatterns.txt"};
+                        "morepatterns.txt", "output", "nosnits_workstation.E01"};
   std::vector<std::string> expected{"mypatterns.txt", "morepatterns.txt"};
   Cli cli;
-  auto opts = cli.parse(5, args);
+  auto opts = cli.parse(7, args);
   REQUIRE(expected == opts->KeyFiles);
 }
 
@@ -56,12 +70,13 @@ TEST_CASE("testCLIReal") {
 }
 
 TEST_CASE("testCLInumThreads") {
-  const char* args[] = {"llama", "-j", "17"};
+  const char* args1[] = {"llama", "-j", "17", "output", "nosnits_workstation.E01"};
   Cli cli;
-  auto opts = cli.parse(3, args);
+  auto opts = cli.parse(5, args1);
   REQUIRE(17u == opts->NumThreads);
 
-  opts = cli.parse(1, args); // test default
+  const char* args2[] = {"llama", "output", "nosnits_workstation.E01"};
+  opts = cli.parse(3, args2); // test default
   REQUIRE(std::thread::hardware_concurrency() == opts->NumThreads);
 }
 
