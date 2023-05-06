@@ -6,7 +6,7 @@
 #include "codec.h"
 #include "outputwriter.h"
 
-class archive;
+struct archive;
 
 class OutputTar: public OutputWriter {
 public:

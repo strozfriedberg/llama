@@ -66,7 +66,7 @@ protected:
 class FakeTskWithVolumeSystem: public FakeTskBase {
 public:
   bool walk(
-    TSK_IMG_INFO* info,
+    TSK_IMG_INFO* /*info*/,
     std::function<TSK_FILTER_ENUM(const TSK_VS_INFO*)> vs_cb,
     std::function<TSK_FILTER_ENUM(const TSK_VS_PART_INFO*)> vol_cb,
     std::function<TSK_FILTER_ENUM(TSK_FS_INFO*)> fs_cb,
@@ -166,7 +166,7 @@ TEST_CASE("testTskReaderVolumeSystem") {
 class FakeTskWithNoVolumeSystem: public FakeTskBase {
 public:
   bool walk(
-    TSK_IMG_INFO* info,
+    TSK_IMG_INFO* /*info*/,
     std::function<TSK_FILTER_ENUM(const TSK_VS_INFO*)>,
     std::function<TSK_FILTER_ENUM(const TSK_VS_PART_INFO*)>,
     std::function<TSK_FILTER_ENUM(TSK_FS_INFO*)> fs_cb,

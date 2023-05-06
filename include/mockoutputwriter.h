@@ -21,7 +21,7 @@ public:
     Inodes.push_back(c);
   }
 
-  virtual void outputSearchHit(const std::string& hit) override {}
+  virtual void outputSearchHit(const std::string& /*hit*/) override {}
 
   virtual void close() override {}
 
