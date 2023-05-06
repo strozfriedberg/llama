@@ -136,7 +136,7 @@ private:
         Output->outputDirent(Dirents.pop());
       }
 
-      std::cerr << par_addr << " -> " << fs_file->meta->addr << '\n';
+      // std::cerr << par_addr << " -> " << fs_file->meta->addr << '\n';
       Dirents.push(fs_file->name->name, Tsk.convertName(*fs_file->name));
     }
 
