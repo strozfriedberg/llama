@@ -31,6 +31,7 @@ src_llama_llama_common = \
 	src/llama/tskautowrapper.cpp \
 	src/llama/tskconversion.cpp \
 	src/llama/tskimgassembler.cpp \
+	src/llama/tskreader.cpp \
 	src/llama/tsktimestamps.cpp
 
 src_llama_llama_SOURCES = $(src_llama_llama_common) src/llama/main.cpp
