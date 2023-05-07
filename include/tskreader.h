@@ -60,7 +60,6 @@ public:
 
     // tell TskAuto to start giving files to processFile
     // std::cerr << "Image is " << getImageSize() << " bytes in size" << std::endl;
-
     const bool ret = Tsk.walk(
       Img.get(),
       [this](const TSK_VS_INFO* vs_info) { return filterVs(vs_info); },
@@ -74,7 +73,6 @@ public:
       while (!Dirents.empty()) {
         Output->outputDirent(Dirents.pop());
       }
-
       Output->outputImage(Asm.dump());
 
       // teardown
@@ -117,7 +115,6 @@ private:
       // nothing to process
       return false;
     }
-
     const TSK_FS_META& meta = *fs_file->meta;
 
     const uint64_t inum = meta.addr;
@@ -126,35 +123,26 @@ private:
       return false;
     }
 
-    //
     // handle the name
-    //
     if (fs_file->name) {
       const TSK_INUM_T par_addr =  fs_file->name->par_addr;
 
       while (!Dirents.empty() && par_addr != Dirents.top()["meta_addr"]) {
         Output->outputDirent(Dirents.pop());
       }
-
       // std::cerr << par_addr << " -> " << fs_file->meta->addr << '\n';
       Dirents.push(fs_file->name->name, Tsk.convertName(*fs_file->name));
     }
 
-    //
     // handle the meta
-    //
     jsoncons::json jmeta = Tsk.convertMeta(meta, *Tsg);
 
-    //
     // handle the attrs
-    //
-
     Tsk.populateAttrs(fs_file);
 
     TskReaderHelper::handleAttrs(
       meta, CurFsOffset, CurFsBlockSize, inum, Tsk, *Tracker, jmeta["attrs"]
     );
-
     Input->push({std::move(jmeta), makeBlockSequence(fs_file)});
 
     return true;
@@ -170,7 +158,6 @@ private:
         Img.get(), their_fs->offset, their_fs->ftype
       );
     }
-
     TSK_FS_INFO* our_fs = i->second.get();
 
     // open our own copy of the file, since TskAuto closes the ones it opens
