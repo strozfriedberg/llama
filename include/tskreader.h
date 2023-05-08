@@ -46,10 +46,7 @@ private:
   // callbacks
   TSK_FILTER_ENUM filterVs(const TSK_VS_INFO* vs_info);
 
-  TSK_FILTER_ENUM filterVol(const TSK_VS_PART_INFO* vs_part) {
-    Asm.addVolume(Tsk->convertVol(*vs_part));
-    return TSK_FILTER_CONT;
-  }
+  TSK_FILTER_ENUM filterVol(const TSK_VS_PART_INFO* vs_part);
 
   TSK_FILTER_ENUM filterFs(TSK_FS_INFO* fs_info) {
     Asm.addFileSystem(Tsk->convertFS(*fs_info));
