@@ -64,3 +64,8 @@ TSK_FILTER_ENUM TskReader::filterFs(TSK_FS_INFO* fs_info) {
   return TSK_FILTER_CONT;
 }
 
+TSK_RETVAL_ENUM TskReader::processFile(TSK_FS_FILE* fs_file, const char* /* path */) {
+  // std::cerr << "processFile " << path << "/" << fs_file->name->name << std::endl;
+  addToBatch(fs_file);
+  return TSK_OK;
+}
