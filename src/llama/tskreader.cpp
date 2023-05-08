@@ -43,3 +43,8 @@ bool TskReader::startReading() {
   }
   return ret;
 }
+
+TSK_FILTER_ENUM TskReader::filterVs(const TSK_VS_INFO* vs_info) {
+  Asm.addVolumeSystem(Tsk->convertVS(*vs_info));
+  return TSK_FILTER_CONT;
+}
