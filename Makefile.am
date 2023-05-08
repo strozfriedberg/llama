@@ -27,11 +27,12 @@ src_llama_llama_common = \
 	src/llama/schema.cpp \
 	src/llama/timestamps.cpp \
 	src/llama/treehasher.cpp \
-	src/llama/tsk.cpp \
+	src/llama/tskfacade.cpp \
 	src/llama/tskautowrapper.cpp \
 	src/llama/tskconversion.cpp \
 	src/llama/tskimgassembler.cpp \
 	src/llama/tskreader.cpp \
+	src/llama/tskreaderhelper.cpp \
 	src/llama/tsktimestamps.cpp
 
 src_llama_llama_SOURCES = $(src_llama_llama_common) src/llama/main.cpp

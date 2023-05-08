@@ -16,7 +16,7 @@
 #include "inputreader.h"
 #include "outputhandler.h"
 #include "recordhasher.h"
-#include "tsk.h"
+#include "tskfacade.h"
 #include "tskimgassembler.h"
 #include "tskreaderhelper.h"
 #include "tsktimestamps.h"
@@ -24,27 +24,14 @@
 
 class BlockSequence;
 
-template <class Provider>
 class TskReader: public InputReader {
 public:
-  TskReader(const std::string& imgPath):
-    ImgPath(imgPath),
-    Img(nullptr, nullptr),
-    Input(),
-    Output(),
-    Tsk(),
-    Asm(),
-    Tsg(nullptr),
-    Tracker(new InodeAndBlockTrackerImpl()),
-    RecHasher(),
-    Dirents(RecHasher)
-  {
-  }
+  TskReader(const std::string& imgPath);
 
   virtual ~TskReader() {}
 
   bool open() {
-    return bool(Img = Tsk.openImg(ImgPath.c_str()));
+    return bool(Img = Tsk->openImg(ImgPath.c_str()));
   }
 
   virtual void setInputHandler(std::shared_ptr<InputHandler> in) override {
@@ -56,11 +43,11 @@ public:
   }
 
   virtual bool startReading() override {
-    Asm.addImage(Tsk.convertImg(*Img));
+    Asm.addImage(Tsk->convertImg(*Img));
 
     // tell TskAuto to start giving files to processFile
     // std::cerr << "Image is " << getImageSize() << " bytes in size" << std::endl;
-    const bool ret = Tsk.walk(
+    const bool ret = Tsk->walk(
       Img.get(),
       [this](const TSK_VS_INFO* vs_info) { return filterVs(vs_info); },
       [this](const TSK_VS_PART_INFO* vs_part) { return filterVol(vs_part); },
@@ -84,18 +71,18 @@ public:
 private:
   // callbacks
   TSK_FILTER_ENUM filterVs(const TSK_VS_INFO* vs_info) {
-    Asm.addVolumeSystem(Tsk.convertVS(*vs_info));
+    Asm.addVolumeSystem(Tsk->convertVS(*vs_info));
     return TSK_FILTER_CONT;
   }
 
   TSK_FILTER_ENUM filterVol(const TSK_VS_PART_INFO* vs_part) {
-    Asm.addVolume(Tsk.convertVol(*vs_part));
+    Asm.addVolume(Tsk->convertVol(*vs_part));
     return TSK_FILTER_CONT;
   }
 
   TSK_FILTER_ENUM filterFs(TSK_FS_INFO* fs_info) {
-    Asm.addFileSystem(Tsk.convertFS(*fs_info));
-    Tsg = Tsk.makeTimestampGetter(fs_info->ftype);
+    Asm.addFileSystem(Tsk->convertFS(*fs_info));
+    Tsg = Tsk->makeTimestampGetter(fs_info->ftype);
     Tracker->setInodeRange(fs_info->first_inum, fs_info->last_inum + 1);
     Tracker->setBlockRange(fs_info->first_block * fs_info->block_size, (fs_info->last_block + 1) * fs_info->block_size);
     CurFsOffset = fs_info->offset;
@@ -131,17 +118,17 @@ private:
         Output->outputDirent(Dirents.pop());
       }
       // std::cerr << par_addr << " -> " << fs_file->meta->addr << '\n';
-      Dirents.push(fs_file->name->name, Tsk.convertName(*fs_file->name));
+      Dirents.push(fs_file->name->name, Tsk->convertName(*fs_file->name));
     }
 
     // handle the meta
-    jsoncons::json jmeta = Tsk.convertMeta(meta, *Tsg);
+    jsoncons::json jmeta = Tsk->convertMeta(meta, *Tsg);
 
     // handle the attrs
-    Tsk.populateAttrs(fs_file);
+    Tsk->populateAttrs(fs_file);
 
     TskReaderHelper::handleAttrs(
-      meta, CurFsOffset, CurFsBlockSize, inum, Tsk, *Tracker, jmeta["attrs"]
+      meta, CurFsOffset, CurFsBlockSize, inum, *Tsk, *Tracker, jmeta["attrs"]
     );
     Input->push({std::move(jmeta), makeBlockSequence(fs_file)});
 
@@ -154,7 +141,7 @@ private:
     // open our own copy of the fs, since TskAuto closes the ones it opens
     auto [i, absent] = Fs.try_emplace(their_fs->offset, nullptr, nullptr);
     if (absent) {
-      i->second = Tsk.openFS(
+      i->second = Tsk->openFS(
         Img.get(), their_fs->offset, their_fs->ftype
       );
     }
@@ -163,7 +150,7 @@ private:
     // open our own copy of the file, since TskAuto closes the ones it opens
     return std::static_pointer_cast<BlockSequence>(
       std::make_shared<TskBlockSequence>(
-        Tsk.openFile(our_fs, fs_file->meta->addr)
+        Tsk->openFile(our_fs, fs_file->meta->addr)
       )
     );
   }
@@ -175,7 +162,7 @@ private:
   std::shared_ptr<InputHandler> Input;
   std::shared_ptr<OutputHandler> Output;
 
-  Provider Tsk;
+  std::unique_ptr<TskFacade> Tsk;
   TskImgAssembler Asm;
   std::unique_ptr<TimestampGetter> Tsg;
   std::unique_ptr<InodeAndBlockTracker> Tracker;
