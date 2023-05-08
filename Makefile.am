@@ -13,6 +13,7 @@ src_llama_llama_common = \
 	src/llama/direntstack.cpp \
 	src/llama/dirreader.cpp \
 	src/llama/fieldhasher.cpp \
+	src/llama/filerecord.cpp \
 	src/llama/filescheduler.cpp \
 	src/llama/hex.cpp \
 	src/llama/inodeandblocktrackerimpl.cpp \
