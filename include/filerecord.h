@@ -22,21 +22,13 @@ struct FileRecord {
 
   FileRecord(FileRecord&& r) = default;
 
+  FileRecord(jsoncons::json&& doc);
+
+  FileRecord(jsoncons::json&& doc, std::shared_ptr<BlockSequence>&& bseq);
+
   FileRecord& operator=(const FileRecord& r) = default;
 
   FileRecord& operator=(FileRecord&& r) = default;
 
-  FileRecord(jsoncons::json&& doc):
-    Doc(std::move(doc)),
-    Blocks()
-  {}
-
-  FileRecord(jsoncons::json&& doc, std::shared_ptr<BlockSequence>&& bseq):
-    Doc(std::move(doc)),
-    Blocks(std::move(bseq))
-  {}
-
-  std::string str() const {
-    return Doc.as<std::string>();
-  }
+  std::string str() const;
 };
