@@ -30,9 +30,7 @@ public:
 
   virtual ~TskReader() {}
 
-  bool open() {
-    return bool(Img = Tsk->openImg(ImgPath.c_str()));
-  }
+  bool open();
 
   virtual void setInputHandler(std::shared_ptr<InputHandler> in) override {
     Input = in;

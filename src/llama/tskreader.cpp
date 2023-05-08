@@ -13,3 +13,7 @@ TskReader::TskReader(const std::string& imgPath):
   Dirents(RecHasher)
 {
 }
+
+bool TskReader::open() {
+  return bool(Img = Tsk->openImg(ImgPath.c_str()));
+}
