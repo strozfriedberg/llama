@@ -2,6 +2,8 @@
 
 #include "inodeandblocktracker.h"
 #include "inodeandblocktrackerimpl.h"
+#include "inputhandler.h"
+#include "outputhandler.h"
 
 #include "tskfacade.h"
 #include "tsktimestamps.h"
