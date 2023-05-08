@@ -16,7 +16,6 @@
 #include "inputreader.h"
 #include "outputhandler.h"
 #include "recordhasher.h"
-#include "tskfacade.h"
 #include "tskimgassembler.h"
 #include "tskreaderhelper.h"
 #include "tsktimestamps.h"

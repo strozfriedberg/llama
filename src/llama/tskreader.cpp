@@ -1,5 +1,7 @@
 #include "tskreader.h"
 
+#include "tskfacade.h"
+
 TskReader::TskReader(const std::string& imgPath):
   ImgPath(imgPath),
   Img(nullptr, nullptr),
