@@ -48,15 +48,7 @@ private:
 
   TSK_FILTER_ENUM filterVol(const TSK_VS_PART_INFO* vs_part);
 
-  TSK_FILTER_ENUM filterFs(TSK_FS_INFO* fs_info) {
-    Asm.addFileSystem(Tsk->convertFS(*fs_info));
-    Tsg = Tsk->makeTimestampGetter(fs_info->ftype);
-    Tracker->setInodeRange(fs_info->first_inum, fs_info->last_inum + 1);
-    Tracker->setBlockRange(fs_info->first_block * fs_info->block_size, (fs_info->last_block + 1) * fs_info->block_size);
-    CurFsOffset = fs_info->offset;
-    CurFsBlockSize = fs_info->block_size;
-    return TSK_FILTER_CONT;
-  }
+  TSK_FILTER_ENUM filterFs(TSK_FS_INFO* fs_info);
 
   TSK_RETVAL_ENUM processFile(TSK_FS_FILE* fs_file, const char* /* path */) {
     // std::cerr << "processFile " << path << "/" << fs_file->name->name << std::endl;

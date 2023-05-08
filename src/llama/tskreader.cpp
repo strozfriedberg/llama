@@ -53,3 +53,14 @@ TSK_FILTER_ENUM TskReader::filterVol(const TSK_VS_PART_INFO* vs_part) {
   Asm.addVolume(Tsk->convertVol(*vs_part));
   return TSK_FILTER_CONT;
 }
+
+TSK_FILTER_ENUM TskReader::filterFs(TSK_FS_INFO* fs_info) {
+  Asm.addFileSystem(Tsk->convertFS(*fs_info));
+  Tsg = Tsk->makeTimestampGetter(fs_info->ftype);
+  Tracker->setInodeRange(fs_info->first_inum, fs_info->last_inum + 1);
+  Tracker->setBlockRange(fs_info->first_block * fs_info->block_size, (fs_info->last_block + 1) * fs_info->block_size);
+  CurFsOffset = fs_info->offset;
+  CurFsBlockSize = fs_info->block_size;
+  return TSK_FILTER_CONT;
+}
+
