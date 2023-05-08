@@ -1,6 +1,7 @@
 #include "tskreader.h"
 
 #include "tskfacade.h"
+#include "tsktimestamps.h"
 
 TskReader::TskReader(const std::string& imgPath):
   ImgPath(imgPath),
@@ -15,6 +16,8 @@ TskReader::TskReader(const std::string& imgPath):
   Dirents(RecHasher)
 {
 }
+
+TskReader::~TskReader() {}
 
 bool TskReader::open() {
   return bool(Img = Tsk->openImg(ImgPath.c_str()));

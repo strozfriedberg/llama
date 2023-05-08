@@ -18,16 +18,16 @@
 #include "recordhasher.h"
 #include "tskimgassembler.h"
 #include "tskreaderhelper.h"
-#include "tsktimestamps.h"
 #include "util.h"
 
 class BlockSequence;
+class TimestampGetter;
 
 class TskReader: public InputReader {
 public:
   TskReader(const std::string& imgPath);
 
-  virtual ~TskReader() {}
+  virtual ~TskReader();
 
   bool open();
 
