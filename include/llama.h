@@ -2,8 +2,6 @@
 
 #include "boost_asio.h"
 
-#include <lightgrep/api.h>
-
 struct Options;
 struct ProgramHandle;
 
