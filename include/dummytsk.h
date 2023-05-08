@@ -3,11 +3,10 @@
 #include <functional>
 #include <memory>
 
-#include <tsk/libtsk.h>
-
 #include "jsoncons_wrapper.h"
-#include "tsktimestamps.h"
 #include "tskfacade.h"
+
+class TimestampGetter;
 
 class DummyTsk: public TskFacade {
 public:
