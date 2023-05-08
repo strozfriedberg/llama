@@ -1,5 +1,8 @@
 #include "tskreader.h"
 
+#include "inodeandblocktracker.h"
+#include "inodeandblocktrackerimpl.h"
+
 #include "tskfacade.h"
 #include "tsktimestamps.h"
 

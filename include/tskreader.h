@@ -10,8 +10,6 @@
 #include "direntstack.h"
 #include "filerecord.h"
 #include "hex.h"
-#include "inodeandblocktracker.h"
-#include "inodeandblocktrackerimpl.h"
 #include "inputhandler.h"
 #include "inputreader.h"
 #include "outputhandler.h"
@@ -21,6 +19,7 @@
 #include "util.h"
 
 class BlockSequence;
+class InodeAndBlockTracker;
 class TimestampGetter;
 
 class TskReader: public InputReader {
