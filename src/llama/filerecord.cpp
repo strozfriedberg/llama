@@ -1,5 +1,7 @@
 #include "filerecord.h"
 
+#include "blocksequence.h"
+
 FileRecord::FileRecord(jsoncons::json&& doc):
   Doc(std::move(doc)),
   Blocks()

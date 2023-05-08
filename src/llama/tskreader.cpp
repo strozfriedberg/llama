@@ -1,5 +1,6 @@
 #include "tskreader.h"
 
+#include "blocksequence.h"
 #include "inodeandblocktracker.h"
 #include "inodeandblocktrackerimpl.h"
 #include "inputhandler.h"

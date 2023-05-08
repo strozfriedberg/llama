@@ -5,7 +5,6 @@
 
 #include <hasher/api.h>
 
-#include "blocksequence.h"
 #include "jsoncons_wrapper.h"
 
 class BlockSequence;

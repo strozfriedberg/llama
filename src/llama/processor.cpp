@@ -2,6 +2,7 @@
 
 #include <hasher/api.h>
 
+#include "blocksequence.h"
 #include "filerecord.h"
 #include "hex.h"
 #include "outputhandler.h"
