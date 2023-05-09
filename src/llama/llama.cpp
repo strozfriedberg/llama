@@ -25,6 +25,8 @@
 
 #include <hasher/api.h>
 
+#include <lightgrep/api.h>
+
 namespace fs = std::filesystem;
 
 Llama::Llama()
