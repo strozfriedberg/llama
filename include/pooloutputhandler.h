@@ -9,19 +9,9 @@ class OutputWriter;
 
 class PoolOutputHandler: public OutputHandler {
 public:
-  PoolOutputHandler(boost::asio::thread_pool& pool, std::shared_ptr<OutputWriter> out):
-    MainStrand(pool.get_executor()),
-    RecStrand(pool.get_executor()),
-    Out(out),
-    ImageRecBuf("recs/image", 4 * 1024, [this](const OutputChunk& c) { Out->outputImage(c); }),
-    InodesRecBuf("recs/inodes", 16 * 1024 * 1024, [this](const OutputChunk& c) { Out->outputInode(c); }),
-    DirentsRecBuf("recs/dirents", 16 * 1024 * 1024, [this](const OutputChunk& c) { Out->outputDirent(c); }),
-    Closed(false)
-  {}
+  PoolOutputHandler(boost::asio::thread_pool& pool, std::shared_ptr<OutputWriter> out);
 
-  virtual ~PoolOutputHandler() {
-    close();
-  }
+  virtual ~PoolOutputHandler();
 
   virtual void outputImage(const FileRecord& rec) override;
 
