@@ -8,6 +8,7 @@ bin_PROGRAMS = src/llama/llama
 
 src_llama_llama_common = \
 	src/llama/batchhandler.cpp \
+	src/llama/blocksequence_impl.cpp \
 	src/llama/cli.cpp \
 	src/llama/dirconversion.cpp \
 	src/llama/direntstack.cpp \
