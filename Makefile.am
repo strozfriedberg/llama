@@ -55,6 +55,7 @@ TESTS = $(check_PROGRAMS)
 
 test_llama_test_SOURCES = \
 	$(src_llama_llama_common) \
+	test/llama/test_blocksequence.cpp \
 	test/llama/test_cli.cpp \
 	test/llama/test_dirconversion.cpp \
 	test/llama/test_direntstack.cpp \

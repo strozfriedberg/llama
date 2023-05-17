@@ -27,12 +27,12 @@ protected:
   virtual size_t offset() const override;
 
 private:
-  std::string path;
+  uint8_t buf[8192];
   std::ifstream in;
+  std::string path;
 
   size_t off;
   ssize_t rlen;
-  uint8_t buf[8192];
   uint8_t* bufend;
 };
 
@@ -56,10 +56,10 @@ protected:
   }
 
 private:
+  uint8_t buf[8192];
   std::unique_ptr<TSK_FS_FILE, void(*)(TSK_FS_FILE*)> file;
   size_t off;
   ssize_t rlen;
   size_t size;
-  uint8_t buf[8192];
   uint8_t* bufend;
 };
