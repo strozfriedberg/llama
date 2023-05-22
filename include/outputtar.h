@@ -25,6 +25,8 @@ public:
   virtual void outputSearchHit(const std::string&) override {
   }
 
+  virtual void outputFile(uint64_t size, const std::string& path, const BlockSequence& file) override;
+
   virtual void close() override {
   }
 
