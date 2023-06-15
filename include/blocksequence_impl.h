@@ -9,7 +9,7 @@
 #include <string>
 #include <utility>
 
-#include <tsk/libtsk.h>
+#include "tsk.h"
 
 class FileBlockSequence: public BlockSequence {
 public:

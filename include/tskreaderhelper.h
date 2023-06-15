@@ -2,7 +2,7 @@
 
 #include <functional>
 
-#include <tsk/libtsk.h>
+#include "tsk.h"
 
 #include "tskfacade.h"
 #include "jsoncons_wrapper.h"

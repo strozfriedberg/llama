@@ -3,7 +3,7 @@
 #include <functional>
 #include <memory>
 
-#include <tsk/libtsk.h>
+#include "tsk.h"
 
 #include "jsoncons_wrapper.h"
 

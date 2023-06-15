@@ -5,7 +5,7 @@
 #include <stack>
 #include <vector>
 
-#include <tsk/libtsk.h>
+#include "tsk.h"
 
 #include "direntstack.h"
 #include "filerecord.h"
