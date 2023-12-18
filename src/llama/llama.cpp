@@ -35,7 +35,7 @@ int Llama::run(int argc, const char* const argv[]) {
   try {
     Opts = CliParser->parse(argc, argv);
   }
-  catch (std::invalid_argument& arg) {
+  catch (const std::invalid_argument& arg) {
     std::cerr << "Error: " << arg.what() << '\n';
     return -1;
   }
