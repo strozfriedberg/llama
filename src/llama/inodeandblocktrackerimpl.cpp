@@ -4,21 +4,21 @@
 #include <iostream>
 
 void InodeAndBlockTrackerImpl::dump() const {
-  std::cerr << "a {\n";
-  for (const auto& i : AllocatedBlock) {
-    std::cerr << " [" << i.lower() << ',' << i.upper() << "),\n";
-  }
-  std::cerr << "}\n";
+  // std::cerr << "a {\n";
+  // for (const auto& i : AllocatedBlock) {
+    // std::cerr << " [" << i.lower() << ',' << i.upper() << "),\n";
+  // }
+  // std::cerr << "}\n";
 
-  std::cerr << "c {\n";
-  for (const auto& p : ClaimedBlock) {
-    std::cerr << " [" << p.first.lower() << ',' << p.first.upper() << "): {";
-    for (const auto& claimant : p.second) {
-      std::cerr << claimant << ',';
-    }
-    std::cerr << "},\n";
-  }
-  std::cerr << '}' << std::endl;
+  // std::cerr << "c {\n";
+  // for (const auto& p : ClaimedBlock) {
+    // std::cerr << " [" << p.first.lower() << ',' << p.first.upper() << "): {";
+    // for (const auto& claimant : p.second) {
+      // std::cerr << claimant << ',';
+    // }
+    // std::cerr << "},\n";
+  // }
+  // std::cerr << '}' << std::endl;
 }
 
 InodeAndBlockTrackerImpl::~InodeAndBlockTrackerImpl() {
@@ -36,7 +36,7 @@ void InodeAndBlockTrackerImpl::setInodeRange(uint64_t begin, uint64_t end) {
   //  InodeEncountered.resize(end - begin);
   InodeSeen.clear();
 //  InodeSeen.resize(end);
-  std::cerr << "InodeSeen.size() == " << end << std::endl;
+  // std::cerr << "InodeSeen.size() == " << end << std::endl;
 }
 
 bool InodeAndBlockTrackerImpl::markInodeSeen(uint64_t inum) {
@@ -61,7 +61,7 @@ void InodeAndBlockTrackerImpl::setBlockRange(uint64_t begin, uint64_t end) {
 //  AllocatedBlock.resize(end+1);
 }
 
-void InodeAndBlockTrackerImpl::markBlocksAllocated(uint64_t inum, uint64_t begin, uint64_t end) {
+void InodeAndBlockTrackerImpl::markBlocksAllocated(uint64_t /*inum*/, uint64_t begin, uint64_t end) {
   const boost::icl::interval<uint64_t>::type i(begin, end);
   AllocatedBlock.insert(i);
   ClaimedBlock.erase(i);

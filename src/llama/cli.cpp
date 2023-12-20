@@ -64,13 +64,20 @@ void Cli::printHelp(std::ostream& out) const {
 }
 
 std::string Cli::figureOutCommand(
-    const boost::program_options::variables_map& optsMap) const {
+  const boost::program_options::variables_map& optsMap) const {
   // convert some options to commands
   if (optsMap.count("help")) {
     return "help";
   }
   if (optsMap.count("version")) {
     return "version";
+  }
+  // default is "search"; check required args
+  if (optsMap.count("output") == 0) {
+    throw std::invalid_argument("No output file was specified");
+  }
+  if (optsMap.count("input") == 0) {
+    throw std::invalid_argument("No input file/directory was specified");
   }
   return "search";
 }

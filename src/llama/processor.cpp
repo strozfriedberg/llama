@@ -22,7 +22,7 @@ std::shared_ptr<Processor> Processor::clone() const {
 }
 
 void Processor::process(FileRecord& rec, OutputHandler& out) {
-  std::cerr << "hashing..." << std::endl;
+  // std::cerr << "hashing..." << std::endl;
   // hash 'em if ya got 'em
   auto i = rec.Blocks->begin();
   const auto end = rec.Blocks->end();

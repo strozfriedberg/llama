@@ -32,21 +32,23 @@ Llama::Llama()
       LgProg(nullptr, lg_destroy_program) {}
 
 int Llama::run(int argc, const char* const argv[]) {
-  Opts = CliParser->parse(argc, argv);
-
-  if (Opts) {
-    if ("help" == Opts->Command) {
-      CliParser->printHelp(std::cout);
-    }
-    else if ("version" == Opts->Command) {
-      CliParser->printVersion(std::cout);
-    }
-    else if ("search" == Opts->Command) {
-      search();
-    }
-    return 0;
+  try {
+    Opts = CliParser->parse(argc, argv);
   }
-  return 1;
+  catch (const std::invalid_argument& arg) {
+    std::cerr << "Error: " << arg.what() << '\n';
+    return -1;
+  }
+  if ("help" == Opts->Command) {
+    CliParser->printHelp(std::cout);
+  }
+  else if ("version" == Opts->Command) {
+    CliParser->printVersion(std::cout);
+  }
+  else if ("search" == Opts->Command) {
+    search();
+  }
+  return 0;
 }
 
 void Llama::search() {
