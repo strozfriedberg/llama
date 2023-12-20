@@ -6,7 +6,7 @@
 #include "jsoncons_wrapper.h"
 #include "tskfacade.h"
 
-class TimestampGetter;
+#include "tsktimestamps.h"
 
 class DummyTsk: public TskFacade {
 public:
@@ -70,6 +70,6 @@ public:
   }
 
   std::unique_ptr<TimestampGetter> makeTimestampGetter(TSK_FS_TYPE_ENUM /* fstype */) const override {
-    return nullptr;
+    return std::unique_ptr<TimestampGetter>();
   }
 };
