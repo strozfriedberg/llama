@@ -24,6 +24,7 @@ src_llama_common = \
 	src/outputtar.cpp \
 	src/pooloutputhandler.cpp \
 	src/processor.cpp \
+	src/readseek_impl.cpp \
 	src/recordbuffer.cpp \
 	src/recordhasher.cpp \
 	src/schema.cpp \
@@ -66,6 +67,7 @@ test_test_SOURCES = \
 	test/test_hex.cpp \
 	test/test_inodeandblocktrackerimpl.cpp \
 	test/test_processor.cpp \
+	test/test_readseek.cpp \
 	test/test_recordbuffer.cpp \
 	test/test_recordhasher.cpp \
 	test/test_tskconversion.cpp \
