@@ -22,6 +22,7 @@
 /config.status
 /config/
 /configure
+/configure~
 /configure.scan
 /libtool
 /m4/libtool.m4
@@ -29,8 +30,8 @@
 /m4/ltsugar.m4
 /m4/ltversion.m4
 /m4/lt~obsolete.m4
-/src/llama/llama.log
-/src/llama/llama
+/src/llama.log
+/src/llama
 /stamp-h1
 /test-suite.log
 /test-suite-memcheck.log
