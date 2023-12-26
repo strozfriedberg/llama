@@ -12,6 +12,8 @@ TEST_CASE("readSeekBuf") {
   REQUIRE(size_t(rs.read(srcbuf.size(), buf)) == srcbuf.size());
   REQUIRE(buf == srcbuf);
   REQUIRE(rs.tellg() == rs.size());
+  REQUIRE(rs.read(1, buf) == 0); // read past end should return 0
+  REQUIRE(buf == srcbuf); // unsuccessful read should not modify the input buffer
 
   REQUIRE(rs.seek(1) == 1);
   REQUIRE(rs.tellg() == 1);
