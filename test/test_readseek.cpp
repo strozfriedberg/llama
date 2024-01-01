@@ -2,11 +2,9 @@
 
 #include "readseek_impl.h"
 
-TEST_CASE("readSeekBuf") {
-  std::vector<uint8_t> srcbuf{ 35, 32, 113, 65 };
+void basicReadSeekTest(const std::vector<uint8_t>& srcbuf, ReadSeek& rs) {
   std::vector<uint8_t> buf;
 
-  ReadSeekBuf rs(srcbuf);
   REQUIRE(rs.tellg() == 0);
   REQUIRE(rs.size() == srcbuf.size());
   REQUIRE(size_t(rs.read(srcbuf.size(), buf)) == srcbuf.size());
@@ -22,4 +20,11 @@ TEST_CASE("readSeekBuf") {
   REQUIRE(rs.tellg() == 3);
 
   REQUIRE(rs.seek(rs.size() + 1) == rs.size());
+}
+
+TEST_CASE("readSeekBuf") {
+  std::vector<uint8_t> srcbuf{ 35, 32, 113, 65 };
+
+  ReadSeekBuf rs(srcbuf);
+  basicReadSeekTest(srcbuf, rs);
 }
