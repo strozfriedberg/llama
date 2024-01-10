@@ -19,3 +19,23 @@ private:
 
   size_t Pos;
 };
+
+//*******************************************************************
+
+class ReadSeekFile: public ReadSeek {
+public:
+  ReadSeekFile(std::shared_ptr<FILE> fileptr);
+  virtual ~ReadSeekFile() {}
+
+  virtual ssize_t read(size_t len, std::vector<uint8_t>& buf) override;
+
+  virtual size_t tellg() const override;
+  virtual size_t seek(size_t pos) override;
+
+  virtual size_t size(void) const override;
+
+private:
+  std::shared_ptr<FILE> FilePtr;
+
+  size_t Pos, Size;
+};
