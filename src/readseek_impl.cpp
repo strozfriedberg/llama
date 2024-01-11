@@ -52,3 +52,19 @@ size_t ReadSeekFile::seek(size_t pos) {
 size_t ReadSeekFile::size(void) const {
   return Size;
 }
+
+//*******************************************************************
+
+ReadSeekTSK::ReadSeekTSK(TSK_FS_ATTR*) {}
+
+ssize_t ReadSeekTSK::read(size_t, std::vector<uint8_t>&) {
+  return 0;
+}
+
+size_t ReadSeekTSK::seek(size_t) {
+  return 0;
+}
+
+size_t ReadSeekTSK::size(void) const {
+  return 0;
+}
