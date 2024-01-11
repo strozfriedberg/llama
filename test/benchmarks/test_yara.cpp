@@ -2,18 +2,21 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "yara.h"
+#include <lightgrep/api.h>
+
+#include <filesystem>
+#include <cstdio>
+#include <iostream>
+
+namespace fs = std::filesystem;
 
 namespace {
 
   std::string holmes2(
 R"("My dear fellow," said Sherlock Holmes as we sat on either side of the fire in his lodgings at Baker Street, "life is infinitely stranger than anything which the mind of man could invent. We would not dare to conceive the things which are really mere commonplaces of existence. If we could fly out of that window hand in hand, hover over this great city, gently remove the roofs, and peep in at the queer things which are going on, the strange coincidences, the plannings, the cross-purposes, the wonderful chains of events, working through generations, and leading to the most outre results, it would make all fiction with its conventionalities and foreseen conclusions most stale and unprofitable."
-
 "And yet I am not convinced of it," I answered. "The cases which come to light in the papers are, as a rule, bald enough, and vulgar enough. We have in our police reports realism pushed to its extreme limits, and yet the result is, it must be confessed, neither fascinating nor artistic."
-
 "A certain selection and discretion must be used in producing a realistic effect," remarked Holmes. "This is wanting in the police report, where more stress is laid, perhaps, upon the platitudes of the magistrate than upon the details, which to an observer contain the vital essence of the whole matter. Depend upon it, there is nothing so unnatural as the commonplace."
-
-I smiled and shook my head. "I can quite understand your thinking so." I said. "Of course, in your position of unofficial adviser and helper to everybody who is absolutely puzzled, throughout three continents, you are brought in contact with all that is strange and bizarre. But here"--I picked up the morning paper from the ground--"let us put it to a practical test. Here is the first heading upon which I come. 'A husband's cruelty to his wife.' There is half a column of print, but I know without reading it that it is all perfectly familiar to me. There is, of course, the other woman, the drink, the push, the blow, the bruise, the sympathetic sister or landlady. The crudest of writers could invent nothing more crude."
-
+"I smiled and shook my head. "I can quite understand your thinking so." I said. "Of course, in your position of unofficial adviser and helper to everybody who is absolutely puzzled, throughout three continents, you are brought in contact with all that is strange and bizarre. But here"--I picked up the morning paper from the ground--"let us put it to a practical test. Here is the first heading upon which I come. 'A husband's cruelty to his wife.' There is half a column of print, but I know without reading it that it is all perfectly familiar to me. There is, of course, the other woman, the drink, the push, the blow, the bruise, the sympathetic sister or landlady. The crudest of writers could invent nothing more crude."
 "Indeed, your example is an unfortunate one for your argument," said Holmes, taking the paper and glancing his eye down it. "This is the Dundas separation case, and, as it happens, I was engaged in clearing up some small points in connection with it. The husband was a teetotaler, there was no other woman, and the conduct complained of was that he had drifted into the habit of winding up every meal by taking out his false teeth and hurling them at his wife, which, you will allow, is not an action likely to occur to the imagination of the average story-teller. Take a pinch of snuff, Doctor, and acknowledge that I have scored over you in your example.\"
 )");
 
@@ -78,15 +81,65 @@ std::string SAMPLE_RULE =
     }
   }
 
+  unsigned int g_yaraCallbackCount = 0;
+  unsigned int g_lgCallbackCount = 0;
+
   int yara_callback_function(
     YR_SCAN_CONTEXT* context,
     int message,
     void* message_data,
     void* user_data)
   {
+    ++g_yaraCallbackCount;
     return CALLBACK_CONTINUE;
   }
+
+  void lg_callback_function(
+    void* userData,
+    const LG_SearchHit* const hit)
+  {
+    ++g_lgCallbackCount;
+  }
+
+  unsigned int addYaraRulesFromPath(std::shared_ptr<YR_COMPILER> comp, const std::string& path) {
+    unsigned int fileCount = 0;
+
+    for (const auto& dir_entry: fs::recursive_directory_iterator(path)) {
+      // auto yarpath = dir_entry.path();
+      std::string ext = dir_entry.path().extension().string();
+      std::string path = dir_entry.path().string();
+      if (!dir_entry.is_regular_file() || ext != "yar") {
+        continue;
+      }
+      FILE* f = std::fopen(dir_entry.path().string().c_str(), "rb");
+      if (!f) {
+        std::cerr << "Couldn't open " << dir_entry << '\n';
+        continue;
+      }
+      yr_compiler_add_file(comp.get(), f, "", path.c_str());
+      ++fileCount;
+    }
+    return fileCount;
+  }
+
+  std::string yaraToLG(int flags, uint8_t* bytes, unsigned int length) {
+    std::string ret;
+    if (flags & STRING_FLAGS_HEXADECIMAL) {
+      for (unsigned int i = 0; i < length; ++i) {
+        ret += "\\x";
+        ret += hex_char(bytes[i] >> 4);
+        ret += hex_char(bytes[i] & 0x0f);
+      }
+    }
+    return ret;
+  }
 } // local namespace
+
+TEST_CASE("yaraHexToLG") {
+  uint8_t input[] = {0x73, 0x70, 0x72, 0x6E, 0x67, 0x00};
+
+  REQUIRE(R"(\x73\x70\x72\x6e\x67\x00)" == yaraToLG(STRING_FLAGS_HEXADECIMAL, input, 6));
+}
 
 TEST_CASE("testYara") {
   std::unique_ptr<YaraLib> lib(new YaraLib());
@@ -110,18 +163,35 @@ TEST_CASE("testYara") {
   yr_rule_strings_foreach(rule, str) {
     CAPTURE(str->length);
     CAPTURE(STRING_IS_HEX(str));
-    std::string p;
-    for (int i = 0; i < str->length; ++i) {
-      uint8_t b = str->string[i];
-      p += "\\x";
-      p += hex_char(b >> 4);
-      p += hex_char(b & 0x0f);
-    }
+    std::string p = yaraToLG(str->flags, str->string, str->length);
     patterns.push_back(p);
   }
 
   int flags = 0;
+  yr_rules_scan_mem(rules.get(), (uint8_t*)holmes2.c_str(), holmes2.size(), flags, yara_callback_function, nullptr, 0);
+  REQUIRE(g_yaraCallbackCount == 2);
+
   BENCHMARK("yaraHolmes") {
-    REQUIRE(ERROR_SUCCESS == yr_rules_scan_mem(rules.get(), (uint8_t*)holmes2.c_str(), holmes2.size(), flags, yara_callback_function, nullptr, 0));
+    yr_rules_scan_mem(rules.get(), (uint8_t*)holmes2.c_str(), holmes2.size(), flags, yara_callback_function, nullptr, 0);
+  };
+
+  LG_HPATTERN pat = lg_create_pattern();
+  LG_HFSM fsm = lg_create_fsm(2, 30);
+  LG_Error* errPtr = nullptr;
+  LG_KeyOptions keyOpts{0, 0, 0};
+  lg_parse_pattern(pat, patterns[0].c_str(), &keyOpts, &errPtr);
+  lg_add_pattern(fsm, pat, "US-ASCII", 0, &errPtr);
+  lg_parse_pattern(pat, patterns[1].c_str(), &keyOpts, &errPtr);
+  lg_add_pattern(fsm, pat, "US-ASCII", 0, &errPtr);
+
+  LG_ProgramOptions progOpts{10};
+  LG_HPROGRAM prog = lg_create_program(fsm, &progOpts);
+  LG_ContextOptions ctxOpts{0, 0};
+  LG_HCONTEXT ctx = lg_create_context(prog, &ctxOpts);
+
+  lg_search(ctx, holmes2.data(), holmes2.data() + holmes2.size(), 0, nullptr, lg_callback_function);
+  REQUIRE(g_lgCallbackCount == 0);
+  BENCHMARK("lightgrepHolmes") {
+    lg_search(ctx, holmes2.data(), holmes2.data() + holmes2.size(), 0, nullptr, lg_callback_function);
   };
 }
