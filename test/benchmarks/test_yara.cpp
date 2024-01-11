@@ -1,3 +1,4 @@
+#include <catch2/benchmark/catch_benchmark_all.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include "yara.h"
@@ -89,7 +90,7 @@ TEST_CASE("testYara") {
     CAPTURE(str->length);
     CAPTURE(STRING_IS_HEX(str));
     std::string p;
-    for (unsigned int i = 0; i < str->length; ++i) {
+    for (int i = 0; i < str->length; ++i) {
       uint8_t b = str->string[i];
       p += "\\x";
       p += hex_char(b >> 4);
