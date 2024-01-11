@@ -45,14 +45,16 @@ src_llama_LDADD = $(LLAMA_LIBS) $(LG_LIBS) $(TSK_LIBS) $(LIBARCHIVE_LIBS) $(YARA
 
 @VALGRIND_CHECK_RULES@
 
-check_PROGRAMS = test/test
+# unit tests and benchmarks are part of 'check' target
+check_PROGRAMS = test/test test/benchmarks/benchmarks
 
 TEST_EXTENSIONS = .sh
 SH_LOG_COMPILER =
 
 AM_TESTS_ENVIRONMENT = builddir=`pwd`;
 
-TESTS = $(check_PROGRAMS)
+# ...but don't run benchmarks automatically with 'check'
+TESTS = test/test
 
 test_test_SOURCES = \
 	$(src_llama_common) \
@@ -74,8 +76,13 @@ test_test_SOURCES = \
 	test/test_tskimgassembler.cpp \
 	test/test_tskreader.cpp \
 	test/test_tskreaderhelper.cpp \
-	test/test_tsktimestamps.cpp \
-	test/test_yara.cpp
+	test/test_tsktimestamps.cpp
 
 test_test_CPPFLAGS = -I$(srcdir)/src $(AM_CPPFLAGS) $(CATCH2_CPPFLAGS)
 test_test_LDADD = $(CATCH2_LIBS) $(LLAMA_LIBS) $(LG_LIBS) $(TSK_LIBS) $(LIBARCHIVE_LIBS) $(YARA_LIBS) $(HASHER_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_ASIO_LIB) $(STDCXX_LIB)
+
+test_benchmarks_benchmarks_SOURCES = \
+	test/benchmarks/test_yara.cpp
+
+test_benchmarks_benchmarks_CPPFLAGS = -I$(srcdir)/src $(AM_CPPFLAGS) $(CATCH2_CPPFLAGS)
+test_benchmarks_benchmarks_LDADD = $(CATCH2_LIBS) $(LLAMA_LIBS) $(LG_LIBS) $(TSK_LIBS) $(LIBARCHIVE_LIBS) $(YARA_LIBS) $(HASHER_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_ASIO_LIB) $(STDCXX_LIB)
