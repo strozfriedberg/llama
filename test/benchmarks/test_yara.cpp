@@ -104,41 +104,53 @@ std::string SAMPLE_RULE =
   unsigned int addYaraRulesFromPath(std::shared_ptr<YR_COMPILER> comp, const std::string& path) {
     unsigned int fileCount = 0;
 
+    // WARN("addYaraRulesFromPath(" << path << ")");
+    unsigned int i = 0;
     for (const auto& dir_entry: fs::recursive_directory_iterator(path)) {
+      ++i;
       // auto yarpath = dir_entry.path();
       std::string ext = dir_entry.path().extension().string();
-      std::string path = dir_entry.path().string();
-      if (!dir_entry.is_regular_file() || ext != "yar") {
+      std::string yarpath = dir_entry.path().string();
+      // WARN("path = " << yarpath);
+      if (ext.compare(".yar") != 0) {
         continue;
       }
-      FILE* f = std::fopen(dir_entry.path().string().c_str(), "rb");
+      // WARN("Opening " << yarpath);
+      FILE* f = std::fopen(yarpath.c_str(), "rb");
       if (!f) {
-        std::cerr << "Couldn't open " << dir_entry << '\n';
+        WARN("Couldn't open " << dir_entry << '\n');
         continue;
       }
-      yr_compiler_add_file(comp.get(), f, "", path.c_str());
+      INFO("Adding " << yarpath << " to yara compiler");
+      yr_compiler_add_file(comp.get(), f, "", yarpath.c_str());
       ++fileCount;
     }
+    // WARN("i = " << i);
     return fileCount;
   }
 
-  std::string yaraToLG(int flags, uint8_t* bytes, unsigned int length) {
-    std::string ret;
+  struct YaraPattern {
+    std::string Expression;
+  };
+
+  YaraPattern yaraToLG(int flags, uint8_t* bytes, unsigned int length) {
+    YaraPattern yp;
     if (flags & STRING_FLAGS_HEXADECIMAL) {
       for (unsigned int i = 0; i < length; ++i) {
-        ret += "\\x";
-        ret += hex_char(bytes[i] >> 4);
-        ret += hex_char(bytes[i] & 0x0f);
+        yp.Expression += "\\z";
+        yp.Expression += hex_char(bytes[i] >> 4);
+        yp.Expression += hex_char(bytes[i] & 0x0f);
       }
     }
-    return ret;
+    return yp;
   }
 } // local namespace
 
 TEST_CASE("yaraHexToLG") {
   uint8_t input[] = {0x73, 0x70, 0x72, 0x6E, 0x67, 0x00};
 
-  REQUIRE(R"(\x73\x70\x72\x6e\x67\x00)" == yaraToLG(STRING_FLAGS_HEXADECIMAL, input, 6));
+  auto yp = yaraToLG(STRING_FLAGS_HEXADECIMAL, input, 6);
+  REQUIRE(R"(\z73\z70\z72\z6e\z67\z00)" == yp.Expression);
 }
 
 TEST_CASE("testYara") {
@@ -148,27 +160,36 @@ TEST_CASE("testYara") {
   yr_compiler_create(&compPtr);
   std::shared_ptr<YR_COMPILER> comp(compPtr, yr_compiler_destroy);
 
-  REQUIRE(0 == yr_compiler_add_string(comp.get(), SAMPLE_RULE.c_str(), ""));
+  REQUIRE(1 == addYaraRulesFromPath(comp, "/Users/jonstewart/code/llama"));
+  // REQUIRE(0 == yr_compiler_add_string(comp.get(), SAMPLE_RULE.c_str(), ""));
 
   YR_RULES* rulesPtr = nullptr;
   REQUIRE(0 == yr_compiler_get_rules(comp.get(), &rulesPtr));
   std::shared_ptr<YR_RULES> rules(rulesPtr, yr_rules_destroy);
 
-  REQUIRE(rules->num_rules == 1);
-  YR_RULE* rule = &((*rules).rules_table[0]);
-  REQUIRE("APT_CobaltStrike_Beacon_Indicator" == std::string(rule->identifier));
+  CHECK(rules->num_rules == 1);
+  // YR_RULE* rule = &((*rules).rules_table[0]);
+  // REQUIRE("APT_CobaltStrike_Beacon_Indicator" == std::string(rule->identifier));
 
-  std::vector<std::string> patterns;
-  YR_STRING* str = nullptr;
-  yr_rule_strings_foreach(rule, str) {
-    CAPTURE(str->length);
-    CAPTURE(STRING_IS_HEX(str));
-    std::string p = yaraToLG(str->flags, str->string, str->length);
-    patterns.push_back(p);
+  std::vector<YaraPattern> patterns;
+  YR_RULE* rule = nullptr;
+
+  WARN("yr_rules_foreach");
+  yr_rules_foreach(rules, rule) {
+    YR_STRING* str = nullptr;
+    yr_rule_strings_foreach(rule, str) {
+      CAPTURE(str->length);
+      CAPTURE(STRING_IS_HEX(str));
+      patterns.push_back(yaraToLG(str->flags, str->string, str->length));
+    }
   }
+  WARN("done with yr_rules_foreach");
+  CHECK(patterns.size() == 256);
 
   int flags = 0;
+  WARN("yr_rules_scan_mem");
   yr_rules_scan_mem(rules.get(), (uint8_t*)holmes2.c_str(), holmes2.size(), flags, yara_callback_function, nullptr, 0);
+  WARN("done with yr_rules_scan_mem");
   REQUIRE(g_yaraCallbackCount == 2);
 
   BENCHMARK("yaraHolmes") {
@@ -179,16 +200,24 @@ TEST_CASE("testYara") {
   LG_HFSM fsm = lg_create_fsm(2, 30);
   LG_Error* errPtr = nullptr;
   LG_KeyOptions keyOpts{0, 0, 0};
-  lg_parse_pattern(pat, patterns[0].c_str(), &keyOpts, &errPtr);
-  lg_add_pattern(fsm, pat, "US-ASCII", 0, &errPtr);
-  lg_parse_pattern(pat, patterns[1].c_str(), &keyOpts, &errPtr);
-  lg_add_pattern(fsm, pat, "US-ASCII", 0, &errPtr);
-
+  unsigned int i = 0;
+  for (const auto& p: patterns) {
+    if (0 == lg_parse_pattern(pat, p.Expression.c_str(), &keyOpts, &errPtr)) {
+      WARN("could not parse '" << p.Expression.c_str() << "': " << errPtr->Message);
+      continue;
+    }
+    if (lg_add_pattern(fsm, pat, "ISO-8859-1", i++, &errPtr) < 0) {
+      WARN("could not add pattern '" << p.Expression.c_str() << "' to FSM: " << errPtr->Message);
+    }
+  }
+  WARN("Making program, " << lg_fsm_pattern_count(fsm) << " patterns in fsm");
   LG_ProgramOptions progOpts{10};
   LG_HPROGRAM prog = lg_create_program(fsm, &progOpts);
+  WARN("Making context, " << lg_prog_pattern_count(prog) << " patterns in program");
   LG_ContextOptions ctxOpts{0, 0};
   LG_HCONTEXT ctx = lg_create_context(prog, &ctxOpts);
 
+  WARN("Lightgrep search");
   lg_search(ctx, holmes2.data(), holmes2.data() + holmes2.size(), 0, nullptr, lg_callback_function);
   REQUIRE(g_lgCallbackCount == 0);
   BENCHMARK("lightgrepHolmes") {
