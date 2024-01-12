@@ -23,8 +23,19 @@ R"("My dear fellow," said Sherlock Holmes as we sat on either side of the fire i
 class YaraLib {
 // don't make more than one of these at a time... it would be bad
 public:
-  YaraLib() { yr_initialize(); }
-  ~YaraLib() { yr_finalize(); }
+  YaraLib() {
+    yr_initialize();
+    YR_COMPILER* c = nullptr;
+    yr_compiler_create(&c);
+    Comp.reset(c, yr_compiler_destroy);
+  }
+
+  ~YaraLib() {
+    Comp.reset();
+    yr_finalize();
+  }
+
+  std::shared_ptr<YR_COMPILER> Comp;
 };
 
 std::string SAMPLE_RULE = 
@@ -154,17 +165,13 @@ TEST_CASE("yaraHexToLG") {
 }
 
 TEST_CASE("testYara") {
-  std::unique_ptr<YaraLib> lib(new YaraLib());
+  YaraLib yara;
 
-  YR_COMPILER* compPtr = nullptr;
-  yr_compiler_create(&compPtr);
-  std::shared_ptr<YR_COMPILER> comp(compPtr, yr_compiler_destroy);
-
-  REQUIRE(1 == addYaraRulesFromPath(comp, "/Users/jonstewart/code/llama"));
+  REQUIRE(1 == addYaraRulesFromPath(yara.Comp, "/Users/jonstewart/code/llama"));
   // REQUIRE(0 == yr_compiler_add_string(comp.get(), SAMPLE_RULE.c_str(), ""));
 
   YR_RULES* rulesPtr = nullptr;
-  REQUIRE(0 == yr_compiler_get_rules(comp.get(), &rulesPtr));
+  REQUIRE(0 == yr_compiler_get_rules(yara.Comp.get(), &rulesPtr));
   std::shared_ptr<YR_RULES> rules(rulesPtr, yr_rules_destroy);
 
   CHECK(rules->num_rules == 1);
@@ -174,7 +181,7 @@ TEST_CASE("testYara") {
   std::vector<YaraPattern> patterns;
   YR_RULE* rule = nullptr;
 
-  WARN("yr_rules_foreach");
+  // WARN("yr_rules_foreach");
   yr_rules_foreach(rules, rule) {
     YR_STRING* str = nullptr;
     yr_rule_strings_foreach(rule, str) {
@@ -183,13 +190,13 @@ TEST_CASE("testYara") {
       patterns.push_back(yaraToLG(str->flags, str->string, str->length));
     }
   }
-  WARN("done with yr_rules_foreach");
+  // WARN("done with yr_rules_foreach");
   CHECK(patterns.size() == 256);
 
   int flags = 0;
-  WARN("yr_rules_scan_mem");
+  // WARN("yr_rules_scan_mem");
   yr_rules_scan_mem(rules.get(), (uint8_t*)holmes2.c_str(), holmes2.size(), flags, yara_callback_function, nullptr, 0);
-  WARN("done with yr_rules_scan_mem");
+  // WARN("done with yr_rules_scan_mem");
   REQUIRE(g_yaraCallbackCount == 2);
 
   BENCHMARK("yaraHolmes") {
@@ -210,14 +217,14 @@ TEST_CASE("testYara") {
       WARN("could not add pattern '" << p.Expression.c_str() << "' to FSM: " << errPtr->Message);
     }
   }
-  WARN("Making program, " << lg_fsm_pattern_count(fsm) << " patterns in fsm");
+  // WARN("Making program, " << lg_fsm_pattern_count(fsm) << " patterns in fsm");
   LG_ProgramOptions progOpts{10};
   LG_HPROGRAM prog = lg_create_program(fsm, &progOpts);
-  WARN("Making context, " << lg_prog_pattern_count(prog) << " patterns in program");
+  // WARN("Making context, " << lg_prog_pattern_count(prog) << " patterns in program");
   LG_ContextOptions ctxOpts{0, 0};
   LG_HCONTEXT ctx = lg_create_context(prog, &ctxOpts);
 
-  WARN("Lightgrep search");
+  // WARN("Lightgrep search");
   lg_search(ctx, holmes2.data(), holmes2.data() + holmes2.size(), 0, nullptr, lg_callback_function);
   REQUIRE(g_lgCallbackCount == 0);
   BENCHMARK("lightgrepHolmes") {
