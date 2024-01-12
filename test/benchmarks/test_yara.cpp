@@ -35,7 +35,15 @@ public:
     yr_finalize();
   }
 
+  bool compile(void) {
+    YR_RULES* rulesPtr = nullptr;
+    int ret = yr_compiler_get_rules(Comp.get(), &rulesPtr);
+    Rules.reset(rulesPtr, yr_rules_destroy);
+    return ret == 0;
+  }
+
   std::shared_ptr<YR_COMPILER> Comp;
+  std::shared_ptr<YR_RULES> Rules;
 
   unsigned int addYaraRulesFromPath(const std::string& path) {
     unsigned int fileCount = 0;
@@ -170,11 +178,9 @@ TEST_CASE("testYara") {
   REQUIRE(1 == yara.addYaraRulesFromPath("/Users/jonstewart/code/llama"));
   // REQUIRE(0 == yr_compiler_add_string(comp.get(), SAMPLE_RULE.c_str(), ""));
 
-  YR_RULES* rulesPtr = nullptr;
-  REQUIRE(0 == yr_compiler_get_rules(yara.Comp.get(), &rulesPtr));
-  std::shared_ptr<YR_RULES> rules(rulesPtr, yr_rules_destroy);
+  REQUIRE(yara.compile());
 
-  CHECK(rules->num_rules == 1);
+  CHECK(yara.Rules->num_rules == 1);
   // YR_RULE* rule = &((*rules).rules_table[0]);
   // REQUIRE("APT_CobaltStrike_Beacon_Indicator" == std::string(rule->identifier));
 
@@ -182,7 +188,7 @@ TEST_CASE("testYara") {
   YR_RULE* rule = nullptr;
 
   // WARN("yr_rules_foreach");
-  yr_rules_foreach(rules, rule) {
+  yr_rules_foreach(yara.Rules.get(), rule) {
     YR_STRING* str = nullptr;
     yr_rule_strings_foreach(rule, str) {
       CAPTURE(str->length);
@@ -195,12 +201,12 @@ TEST_CASE("testYara") {
 
   int flags = 0;
   // WARN("yr_rules_scan_mem");
-  yr_rules_scan_mem(rules.get(), (uint8_t*)holmes2.c_str(), holmes2.size(), flags, yara_callback_function, nullptr, 0);
+  yr_rules_scan_mem(yara.Rules.get(), (uint8_t*)holmes2.c_str(), holmes2.size(), flags, yara_callback_function, nullptr, 0);
   // WARN("done with yr_rules_scan_mem");
   REQUIRE(g_yaraCallbackCount == 2);
 
   BENCHMARK("yaraHolmes") {
-    yr_rules_scan_mem(rules.get(), (uint8_t*)holmes2.c_str(), holmes2.size(), flags, yara_callback_function, nullptr, 0);
+    yr_rules_scan_mem(yara.Rules.get(), (uint8_t*)holmes2.c_str(), holmes2.size(), flags, yara_callback_function, nullptr, 0);
   };
 
   LG_HPATTERN pat = lg_create_pattern();
