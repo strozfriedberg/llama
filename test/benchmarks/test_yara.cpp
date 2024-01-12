@@ -36,6 +36,34 @@ public:
   }
 
   std::shared_ptr<YR_COMPILER> Comp;
+
+  unsigned int addYaraRulesFromPath(const std::string& path) {
+    unsigned int fileCount = 0;
+
+    // WARN("addYaraRulesFromPath(" << path << ")");
+    unsigned int i = 0;
+    for (const auto& dir_entry: fs::recursive_directory_iterator(path)) {
+      ++i;
+      // auto yarpath = dir_entry.path();
+      std::string ext = dir_entry.path().extension().string();
+      std::string yarpath = dir_entry.path().string();
+      // WARN("path = " << yarpath);
+      if (ext.compare(".yar") != 0) {
+        continue;
+      }
+      // WARN("Opening " << yarpath);
+      FILE* f = std::fopen(yarpath.c_str(), "rb");
+      if (!f) {
+        WARN("Couldn't open " << dir_entry << '\n');
+        continue;
+      }
+      INFO("Adding " << yarpath << " to yara compiler");
+      yr_compiler_add_file(Comp.get(), f, "", yarpath.c_str());
+      ++fileCount;
+    }
+    // WARN("i = " << i);
+    return fileCount;
+  }
 };
 
 std::string SAMPLE_RULE = 
@@ -112,34 +140,6 @@ std::string SAMPLE_RULE =
     ++g_lgCallbackCount;
   }
 
-  unsigned int addYaraRulesFromPath(std::shared_ptr<YR_COMPILER> comp, const std::string& path) {
-    unsigned int fileCount = 0;
-
-    // WARN("addYaraRulesFromPath(" << path << ")");
-    unsigned int i = 0;
-    for (const auto& dir_entry: fs::recursive_directory_iterator(path)) {
-      ++i;
-      // auto yarpath = dir_entry.path();
-      std::string ext = dir_entry.path().extension().string();
-      std::string yarpath = dir_entry.path().string();
-      // WARN("path = " << yarpath);
-      if (ext.compare(".yar") != 0) {
-        continue;
-      }
-      // WARN("Opening " << yarpath);
-      FILE* f = std::fopen(yarpath.c_str(), "rb");
-      if (!f) {
-        WARN("Couldn't open " << dir_entry << '\n');
-        continue;
-      }
-      INFO("Adding " << yarpath << " to yara compiler");
-      yr_compiler_add_file(comp.get(), f, "", yarpath.c_str());
-      ++fileCount;
-    }
-    // WARN("i = " << i);
-    return fileCount;
-  }
-
   struct YaraPattern {
     std::string Expression;
   };
@@ -167,7 +167,7 @@ TEST_CASE("yaraHexToLG") {
 TEST_CASE("testYara") {
   YaraLib yara;
 
-  REQUIRE(1 == addYaraRulesFromPath(yara.Comp, "/Users/jonstewart/code/llama"));
+  REQUIRE(1 == yara.addYaraRulesFromPath("/Users/jonstewart/code/llama"));
   // REQUIRE(0 == yr_compiler_add_string(comp.get(), SAMPLE_RULE.c_str(), ""));
 
   YR_RULES* rulesPtr = nullptr;
