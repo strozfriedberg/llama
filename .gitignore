@@ -34,9 +34,9 @@
 /stamp-h1
 /test-suite.log
 /test-suite-memcheck.log
-/test/test
+/test/llama/test
 /test/test.exe
-/test/test.log
+/test/llama/test.log
 /test/test.trs
 /tmp/
 _libs/
