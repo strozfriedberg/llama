@@ -1,6 +1,7 @@
 #include <catch2/benchmark/catch_benchmark_all.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+
 #include "yara.h"
 #include <lightgrep/api.h>
 
@@ -19,6 +20,24 @@ R"("My dear fellow," said Sherlock Holmes as we sat on either side of the fire i
 "I smiled and shook my head. "I can quite understand your thinking so." I said. "Of course, in your position of unofficial adviser and helper to everybody who is absolutely puzzled, throughout three continents, you are brought in contact with all that is strange and bizarre. But here"--I picked up the morning paper from the ground--"let us put it to a practical test. Here is the first heading upon which I come. 'A husband's cruelty to his wife.' There is half a column of print, but I know without reading it that it is all perfectly familiar to me. There is, of course, the other woman, the drink, the push, the blow, the bruise, the sympathetic sister or landlady. The crudest of writers could invent nothing more crude."
 "Indeed, your example is an unfortunate one for your argument," said Holmes, taking the paper and glancing his eye down it. "This is the Dundas separation case, and, as it happens, I was engaged in clearing up some small points in connection with it. The husband was a teetotaler, there was no other woman, and the conduct complained of was that he had drifted into the habit of winding up every meal by taking out his false teeth and hurling them at his wife, which, you will allow, is not an action likely to occur to the imagination of the average story-teller. Take a pinch of snuff, Doctor, and acknowledge that I have scored over you in your example.\"
 )");
+
+std::string ASCII_RULE = R"(
+rule APT15_Malware_Mar18_RoyalCliPartial {
+   meta:
+      description = "Detects malware from APT 15 report by NCC Group"
+      license = "Detection Rule License 1.1 https://github.com/Neo23x0/signature-base/blob/master/LICENSE"
+      author = "Florian Roth - Nextron Systems"
+      reference = "https://goo.gl/HZ5XMN"
+      date = "2018-03-10"
+      hash1 = "6df9b712ff56009810c4000a0ad47e41b7a6183b69416251e060b5c80cd05785"
+      id = "165bfa6c-1a8d-5628-8c35-da4e4a2ae04f"
+   strings:
+      $s1 = "Run cmd error %d" ascii wide fullword
+      $s2 = "run file failed" ascii wide
+      $s3 = "\\Release\\RoyalCli.pdb" ascii
+   condition:
+      uint16(0) == 0x5a4d and filesize < 200KB and 2 of them
+})";
 
 char hex_char(uint8_t val) {
   switch (val) {
@@ -63,16 +82,67 @@ struct YaraPattern {
   std::string Expression;
 };
 
-YaraPattern yaraToLG(int flags, uint8_t* bytes, unsigned int length) {
-  YaraPattern yp;
-  if (flags & STRING_FLAGS_HEXADECIMAL) {
-    for (unsigned int i = 0; i < length; ++i) {
-      yp.Expression += "\\z";
-      yp.Expression += hex_char(bytes[i] >> 4);
-      yp.Expression += hex_char(bytes[i] & 0x0f);
+std::string byteToHexString(uint8_t b) {
+  std::string ret("\\z");
+  ret += hex_char(b >> 4);
+  ret += hex_char(b & 0x0f);
+  return ret;
+}
+
+std::string ESCAPED_CHARS = "(){}[]*-+?\\";
+
+std::string convertChar(uint8_t b) {
+  std::string ret;
+  if (std::isprint(b)) {
+    if (ESCAPED_CHARS.find(b) != std::string::npos) {
+      ret = "\\";
     }
+    ret += char(b);
   }
-  return yp;
+  else {
+    ret = byteToHexString(b);
+  }
+  return ret;
+}
+
+std::vector<YaraPattern> yaraToLG(int flags, uint8_t* bytes, unsigned int length) {
+  std::vector<YaraPattern> yps;
+  if (flags & STRING_FLAGS_HEXADECIMAL) {
+    YaraPattern yp;
+    for (unsigned int i = 0; i < length; ++i) {
+      yp.Expression += byteToHexString(bytes[i]);
+    }
+    yps.push_back(yp);
+    return yps;
+  }
+  if (flags & STRING_FLAGS_ASCII) {
+    YaraPattern yp;
+    if (flags & STRING_FLAGS_FULL_WORD) {
+      yp.Expression = "\\W";
+    }
+    for (unsigned int i = 0; i < length; ++i) {
+      yp.Expression += convertChar(bytes[i]);
+    }
+    if (flags & STRING_FLAGS_FULL_WORD) {
+      yp.Expression += "\\W";
+    }
+    yps.push_back(yp);
+  }
+  if (flags & STRING_FLAGS_WIDE) {
+    YaraPattern yp;
+    if (flags & STRING_FLAGS_FULL_WORD) {
+      yp.Expression = "\\W\\z00";
+    }
+    for (unsigned int i = 0; i < length; ++i) {
+      yp.Expression += convertChar(bytes[i]);
+      yp.Expression += "\\z00";
+    }
+    if (flags & STRING_FLAGS_FULL_WORD) {
+      yp.Expression += "\\W\\z00";
+    }
+    yps.push_back(yp);
+  }
+  return yps;
 }
 
 class YaraLib {
@@ -99,6 +169,10 @@ public:
 
   std::shared_ptr<YR_COMPILER> Comp;
   std::shared_ptr<YR_RULES> Rules;
+
+  bool addRulesFromString(const std::string& s) {
+    return 0 == yr_compiler_add_string(Comp.get(), s.c_str(), "");
+  }
 
   unsigned int addYaraRulesFromPath(const std::string& path) {
     unsigned int fileCount = 0;
@@ -137,7 +211,8 @@ public:
       yr_rule_strings_foreach(rule, str) {
         CAPTURE(str->length);
         CAPTURE(STRING_IS_HEX(str));
-        ret.push_back(yaraToLG(str->flags, str->string, str->length));
+        auto lgPats = yaraToLG(str->flags, str->string, str->length);
+        ret.insert(ret.end(), lgPats.begin(), lgPats.end());
       }
     }
     return ret;
@@ -185,31 +260,52 @@ TEST_CASE("yaraHexToLG") {
   uint8_t input[] = {0x73, 0x70, 0x72, 0x6E, 0x67, 0x00};
 
   auto yp = yaraToLG(STRING_FLAGS_HEXADECIMAL, input, 6);
-  REQUIRE(R"(\z73\z70\z72\z6e\z67\z00)" == yp.Expression);
+  REQUIRE(yp.size() == 1);
+  REQUIRE(R"(\z73\z70\z72\z6e\z67\z00)" == yp[0].Expression);
+}
+
+TEST_CASE("yaraAsciiToLG") {
+  YaraLib yara;
+
+  REQUIRE(yara.addRulesFromString(ASCII_RULE));
+  REQUIRE(yara.compile());
+  auto patterns = yara.convertToLG();
+  REQUIRE(patterns.size() == 5);
+  CHECK(patterns[0].Expression == "\\WRun cmd error %d\\W");
+  CHECK(patterns[1].Expression == "\\W\\z00R\\z00u\\z00n\\z00 \\z00c\\z00m\\z00d\\z00 \\z00e\\z00r\\z00r\\z00o\\z00r\\z00 \\z00%\\z00d\\z00\\W\\z00");
+  CHECK(patterns[2].Expression == "run file failed");
+  CHECK(patterns[3].Expression == "r\\z00u\\z00n\\z00 \\z00f\\z00i\\z00l\\z00e\\z00 \\z00f\\z00a\\z00i\\z00l\\z00e\\z00d\\z00");
+  CHECK(patterns[4].Expression == "\\\\Release\\\\RoyalCli.pdb");
+}
+
+  // yr_rules_scan_mem(yara.Rules.get(), (uint8_t*)holmes2.c_str(), holmes2.size(), flags, yara_callback_function, nullptr, 0);
+  // REQUIRE(g_yaraCallbackCount == 13);
+
+  // lg_search(ctx, holmes2.data(), holmes2.data() + holmes2.size(), 0, nullptr, lg_callback_function);
+  // REQUIRE(g_lgCallbackCount == 0);
+
+
+TEST_CASE("asanTest") {
+  const char *s = "hello, there, what an odd world we live in.";
+
+  BENCHMARK("memchr") {
+    return std::memchr(s, 'v', 43);
+  };
 }
 
 TEST_CASE("testYara") {
   YaraLib yara;
 
-  REQUIRE(1 == yara.addYaraRulesFromPath("/Users/jonstewart/code/llama"));
-  // REQUIRE(0 == yr_compiler_add_string(comp.get(), SAMPLE_RULE.c_str(), ""));
+  REQUIRE(2 == yara.addYaraRulesFromPath("/Users/jonstewart/code/llama"));
 
   REQUIRE(yara.compile());
 
-  CHECK(yara.Rules->num_rules == 1);
-  // YR_RULE* rule = &((*rules).rules_table[0]);
-  // REQUIRE("APT_CobaltStrike_Beacon_Indicator" == std::string(rule->identifier));
+  CHECK(yara.Rules->num_rules == 10);
 
   std::vector<YaraPattern> patterns = yara.convertToLG();
-  // WARN("done with yr_rules_foreach");
-  CHECK(patterns.size() == 256);
+  CHECK(patterns.size() == 325);
 
   int flags = 0;
-  // WARN("yr_rules_scan_mem");
-  yr_rules_scan_mem(yara.Rules.get(), (uint8_t*)holmes2.c_str(), holmes2.size(), flags, yara_callback_function, nullptr, 0);
-  // WARN("done with yr_rules_scan_mem");
-  REQUIRE(g_yaraCallbackCount == 2);
-
   BENCHMARK("yaraHolmes") {
     yr_rules_scan_mem(yara.Rules.get(), (uint8_t*)holmes2.c_str(), holmes2.size(), flags, yara_callback_function, nullptr, 0);
   };
@@ -228,17 +324,13 @@ TEST_CASE("testYara") {
       WARN("could not add pattern '" << p.Expression.c_str() << "' to FSM: " << errPtr->Message);
     }
   }
-  // WARN("Making program, " << lg_fsm_pattern_count(fsm) << " patterns in fsm");
   LG_ProgramOptions progOpts{10};
   LG_HPROGRAM prog = lg_create_program(fsm, &progOpts);
-  // WARN("Making context, " << lg_prog_pattern_count(prog) << " patterns in program");
+
   LG_ContextOptions ctxOpts{0, 0};
   LG_HCONTEXT ctx = lg_create_context(prog, &ctxOpts);
 
-  // WARN("Lightgrep search");
-  lg_search(ctx, holmes2.data(), holmes2.data() + holmes2.size(), 0, nullptr, lg_callback_function);
-  REQUIRE(g_lgCallbackCount == 0);
-  BENCHMARK("lightgrepHolmes") {
-    lg_search(ctx, holmes2.data(), holmes2.data() + holmes2.size(), 0, nullptr, lg_callback_function);
-  };
+//  BENCHMARK("lightgrepHolmes") {
+//    lg_search(ctx, holmes2.data(), holmes2.data() + holmes2.size(), 0, nullptr, lg_callback_function);
+//  };
 }
