@@ -296,7 +296,7 @@ TEST_CASE("asanTest") {
 TEST_CASE("testYara") {
   YaraLib yara;
 
-  REQUIRE(2 == yara.addYaraRulesFromPath("/Users/jonstewart/code/llama"));
+  REQUIRE(2 == yara.addYaraRulesFromPath("./test/data/yara"));
 
   REQUIRE(yara.compile());
 
