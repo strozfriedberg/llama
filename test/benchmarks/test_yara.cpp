@@ -178,9 +178,9 @@ public:
     unsigned int fileCount = 0;
 
     // WARN("addYaraRulesFromPath(" << path << ")");
-    unsigned int i = 0;
+    //unsigned int i = 0;
     for (const auto& dir_entry: fs::recursive_directory_iterator(path)) {
-      ++i;
+      //++i;
       // auto yarpath = dir_entry.path();
       std::string ext = dir_entry.path().extension().string();
       std::string yarpath = dir_entry.path().string();
@@ -238,18 +238,18 @@ unsigned int g_yaraCallbackCount = 0;
 unsigned int g_lgCallbackCount = 0;
 
 int yara_callback_function(
-  YR_SCAN_CONTEXT* context,
-  int message,
-  void* message_data,
-  void* user_data)
+  YR_SCAN_CONTEXT* /*context*/,
+  int /*message*/,
+  void* /*message_data*/,
+  void* /*user_data*/)
 {
   ++g_yaraCallbackCount;
   return CALLBACK_CONTINUE;
 }
 
 void lg_callback_function(
-  void* userData,
-  const LG_SearchHit* const hit)
+  void* /*userData*/,
+  const LG_SearchHit* const /*hit*/)
 {
   ++g_lgCallbackCount;
 }
@@ -285,13 +285,13 @@ TEST_CASE("yaraAsciiToLG") {
   // REQUIRE(g_lgCallbackCount == 0);
 
 
-TEST_CASE("asanTest") {
-  const char *s = "hello, there, what an odd world we live in.";
-
-  BENCHMARK("memchr") {
-    return std::memchr(s, 'v', 43);
-  };
-}
+//TEST_CASE("asanTest") {
+//  const char *s = "hello, there, what an odd world we live in.";
+//
+//  BENCHMARK("memchr") {
+//    return std::memchr(s, 'v', 43);
+//  };
+//}
 
 TEST_CASE("testYara") {
   YaraLib yara;
@@ -300,10 +300,10 @@ TEST_CASE("testYara") {
 
   REQUIRE(yara.compile());
 
-  CHECK(yara.Rules->num_rules == 10);
+  CHECK(yara.Rules->num_rules == 11);
 
   std::vector<YaraPattern> patterns = yara.convertToLG();
-  CHECK(patterns.size() == 325);
+  CHECK(patterns.size() == 344);
 
   int flags = 0;
   BENCHMARK("yaraHolmes") {
@@ -316,21 +316,32 @@ TEST_CASE("testYara") {
   LG_KeyOptions keyOpts{0, 0, 0};
   unsigned int i = 0;
   for (const auto& p: patterns) {
+    INFO("lg_parse_pattern(\"" << p.Expression << "\")");
+    if (p.Expression.empty()) {
+      continue;
+    }
     if (0 == lg_parse_pattern(pat, p.Expression.c_str(), &keyOpts, &errPtr)) {
-      WARN("could not parse '" << p.Expression.c_str() << "': " << errPtr->Message);
+      if (p.Expression.empty()) {
+        WARN("could not parse null expression");
+      }
+      if (errPtr) {
+        WARN("could not parse '" << p.Expression << "': " << (errPtr->Message ? errPtr->Message: "unspecified"));
+      }
       continue;
     }
     if (lg_add_pattern(fsm, pat, "ISO-8859-1", i++, &errPtr) < 0) {
-      WARN("could not add pattern '" << p.Expression.c_str() << "' to FSM: " << errPtr->Message);
+      WARN("could not add pattern '" << p.Expression << "' to FSM: " << errPtr->Message);
     }
   }
   LG_ProgramOptions progOpts{10};
   LG_HPROGRAM prog = lg_create_program(fsm, &progOpts);
+  REQUIRE(prog);
 
   LG_ContextOptions ctxOpts{0, 0};
   LG_HCONTEXT ctx = lg_create_context(prog, &ctxOpts);
+  REQUIRE(ctx);
 
-//  BENCHMARK("lightgrepHolmes") {
-//    lg_search(ctx, holmes2.data(), holmes2.data() + holmes2.size(), 0, nullptr, lg_callback_function);
-//  };
+  BENCHMARK("lightgrepHolmes") {
+    lg_search(ctx, holmes2.data(), holmes2.data() + holmes2.size(), 0, nullptr, lg_callback_function);
+  };
 }
