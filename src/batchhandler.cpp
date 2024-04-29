@@ -3,6 +3,8 @@
 #include "filerecord.h"
 #include "filescheduler.h"
 
+#include <duckdb.hpp>
+
 BatchHandler::BatchHandler(std::shared_ptr<FileScheduler> sink):
   Sink(sink),
   CurBatch()
