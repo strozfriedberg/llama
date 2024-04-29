@@ -46,7 +46,10 @@ src_llama_LDADD = $(LLAMA_LIBS) $(LG_LIBS) $(TSK_LIBS) $(LIBARCHIVE_LIBS) $(YARA
 @VALGRIND_CHECK_RULES@
 
 # unit tests and benchmarks are part of 'check' target
-check_PROGRAMS = test/test test/benchmarks/benchmarks
+check_PROGRAMS = test/test
+if HAS_YARA
+check_PROGRAMS += test/benchmarks/benchmarks
+endif
 
 TEST_EXTENSIONS = .sh
 SH_LOG_COMPILER =
