@@ -179,6 +179,18 @@ AC_SUBST([YARA_CPPFLAGS])
 AC_CHECK_HEADERS([jsoncons/json.hpp], [], [AC_MSG_ERROR([Couldn't find jsoncons/json.hpp])])
 
 #
+# duckdb
+#
+AC_CHECK_HEADER([duckdb.hpp], [], [AC_MSG_ERROR([Couldn't find duckdb.hpp])])
+
+TMP_LIBS="$LIBS"
+AC_CHECK_LIB([duckdb], [duckdb_library_version], [], [AC_MSG_ERROR([Couldn't find duckdb_static library])])
+DUCKDB_LIBS="$LIBS"
+LIBS="$TMP_LIBS"
+
+AC_SUBST([DUCKDB_LIBS])
+
+#
 # libasan
 #
 AC_ARG_WITH([asan],
@@ -305,6 +317,8 @@ AC_MSG_NOTICE([LIBARCHIVE_LIBS:     $LIBARCHIVE_LIBS])
 
 AC_MSG_NOTICE([YARA_CPPFLAGS: $YARA_CPPFLAGS])
 AC_MSG_NOTICE([YARA_LIBS:     $YARA_LIBS])
+
+AC_MSG_NOTICE([DUCKDB_LIBS:   $DUCKDB_LIBS])
 
 AC_MSG_NOTICE([LLAMA_CPPFLAGS: $LLAMA_CPPFLAGS])
 AC_MSG_NOTICE([LLAMA_CXXFLAGS: $LLAMA_CXXFLAGS])
