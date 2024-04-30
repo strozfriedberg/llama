@@ -66,6 +66,7 @@ test_test_SOURCES = \
 	test/test_dirconversion.cpp \
 	test/test_direntstack.cpp \
 	test/test_dirreader.cpp \
+	test/test_duckdb.cpp \
 	test/test_fieldhasher.cpp \
 	test/test_fileproxy.cpp \
 	test/test_filerecord.cpp \
