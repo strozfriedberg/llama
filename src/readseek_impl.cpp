@@ -5,7 +5,7 @@
 
 #include "throw.h"
 
-ssize_t ReadSeekBuf::read(size_t len, std::vector<uint8_t>& buf) {
+int64_t ReadSeekBuf::read(size_t len, std::vector<uint8_t>& buf) {
   if (Pos >= Buf.size()) {
     return 0;
   }
@@ -28,7 +28,7 @@ ReadSeekFile::ReadSeekFile(std::shared_ptr<FILE> fileptr):
   std::fseek(FilePtr.get(), 0, SEEK_SET);
 }
 
-ssize_t ReadSeekFile::read(size_t len, std::vector<uint8_t>& buf) {
+int64_t ReadSeekFile::read(size_t len, std::vector<uint8_t>& buf) {
   if (std::feof(FilePtr.get()) || len == 0) {
     return 0;
   }
@@ -57,7 +57,7 @@ size_t ReadSeekFile::size(void) const {
 
 ReadSeekTSK::ReadSeekTSK(TSK_FS_ATTR*) {}
 
-ssize_t ReadSeekTSK::read(size_t, std::vector<uint8_t>&) {
+int64_t ReadSeekTSK::read(size_t, std::vector<uint8_t>&) {
   return 0;
 }
 
