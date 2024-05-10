@@ -1,6 +1,9 @@
 #include "timestamps.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <boost/date_time/posix_time/posix_time.hpp>
+#pragma GCC diagnostic pop
 
 // TODO: we know the precision, so we should print fractional seconds that way
 // TODO: add direct tests of this

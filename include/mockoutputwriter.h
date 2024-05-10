@@ -23,6 +23,8 @@ public:
 
   virtual void outputSearchHit(const std::string& /*hit*/) override {}
 
+  virtual void outputFile(uint64_t, const std::string&, const BlockSequence&) override {}
+
   virtual void close() override {}
 
   std::vector<OutputChunk> OutFiles; // TODO: remove

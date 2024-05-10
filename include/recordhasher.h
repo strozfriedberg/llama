@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fieldhasher.h"
+#include "fieldhash.h"
 #include "jsoncons_wrapper.h"
 #include "treehasher.h"
 

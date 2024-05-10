@@ -2,7 +2,7 @@
 
 #include <functional>
 
-#include <tsk/libtsk.h>
+#include "tsk.h"
 
 class TskAutoWrapper: public TskAuto {
 public:

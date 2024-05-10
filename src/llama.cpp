@@ -21,9 +21,11 @@
 
 #include <boost/filesystem.hpp>
 
-#include <tsk/libtsk.h>
+#include "tsk.h"
 
 #include <hasher/api.h>
+
+#include <lightgrep/api.h>
 
 namespace fs = std::filesystem;
 

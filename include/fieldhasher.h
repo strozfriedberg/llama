@@ -11,9 +11,7 @@
 
 #include <hasher/api.h>
 
-struct FieldHash {
-  uint8_t hash[32];
-};
+#include "fieldhash.h"
 
 bool operator==(const FieldHash& l, const FieldHash& r);
 

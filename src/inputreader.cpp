@@ -1,12 +1,11 @@
 #include "inputreader.h"
 
 #include "dirreader.h"
-#include "tsk.h"
 #include "tskreader.h"
 
 std::shared_ptr<InputReader>
 InputReader::createTSK(const std::string& imgName) {
-  auto ret = std::make_shared<TskReader<Tsk>>(imgName);
+  auto ret = std::make_shared<TskReader>(imgName);
   if (!ret->open()) {
     throw std::runtime_error("Couldn't open image " + imgName);
   }

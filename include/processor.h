@@ -2,11 +2,14 @@
 
 #include <memory>
 
-#include <lightgrep/api.h>
-
 struct SFHASH_Hasher;
+
+struct ProgramHandle;
+struct ContextHandle;
+
 struct FileRecord;
 class OutputHandler;
+
 
 class Processor {
 public:

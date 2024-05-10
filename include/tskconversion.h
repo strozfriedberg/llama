@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-#include <tsk/libtsk.h>
+#include "tsk.h"
 
 #include "jsoncons_wrapper.h"
 #include "tsktimestamps.h"

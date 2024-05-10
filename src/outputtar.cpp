@@ -1,6 +1,7 @@
 #include "outputtar.h"
 
 #include "outputchunk.h"
+#include "throw.h"
 #include "util.h"
 
 #include <ctime>
@@ -80,4 +81,8 @@ void OutputTar::outputDirent(const OutputChunk& c) {
 
 void OutputTar::outputInode(const OutputChunk& c) {
   doOutput(c);
+}
+
+void OutputTar::outputFile(uint64_t, const std::string&, const BlockSequence&) {
+  THROW("OutputTar::outputFile() is unimplemented");
 }

@@ -1,5 +1,6 @@
 #include "dirreader.h"
 
+#include "blocksequence_impl.h"
 #include "filerecord.h"
 #include "hex.h"
 #include "inputhandler.h"

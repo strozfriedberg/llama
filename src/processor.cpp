@@ -2,12 +2,29 @@
 
 #include <hasher/api.h>
 
+#include <lightgrep/api.h>
+
+#include "blocksequence.h"
 #include "filerecord.h"
 #include "hex.h"
 #include "outputhandler.h"
 
 namespace {
-const LG_ContextOptions ctxOpts{0, 0};
+  const LG_ContextOptions ctxOpts{0, 0};
+
+  bool hashFile(SFHASH_Hasher* hasher, BlockSequence& content, SFHASH_HashValues& hashes) {
+    auto i = content.begin();
+    const auto end = content.end();
+    if (i != end) {
+      sfhash_reset_hasher(hasher);
+      for ( ; i != end; ++i) {
+        sfhash_update_hasher(hasher, i->first, i->second);
+      }
+      sfhash_get_hashes(hasher, &hashes);
+      return true;
+    }
+    return false;
+  }
 }
 
 Processor::Processor(const std::shared_ptr<ProgramHandle>& prog):
@@ -24,15 +41,8 @@ std::shared_ptr<Processor> Processor::clone() const {
 void Processor::process(FileRecord& rec, OutputHandler& out) {
   // std::cerr << "hashing..." << std::endl;
   // hash 'em if ya got 'em
-  auto i = rec.Blocks->begin();
-  const auto end = rec.Blocks->end();
-  if (i != end) {
-    sfhash_reset_hasher(Hasher.get());
-    for ( ; i != end; ++i) {
-      sfhash_update_hasher(Hasher.get(), i->first, i->second);
-    }
-    sfhash_get_hashes(Hasher.get(), &rec.Hashes);
 
+  if (hashFile(Hasher.get(), *rec.Blocks, rec.Hashes)) {
     rec.Doc["md5"] = hexEncode(rec.Hashes.Md5, rec.Hashes.Md5 + sizeof(rec.Hashes.Md5));
     rec.Doc["sha1"] = hexEncode(rec.Hashes.Sha1, rec.Hashes.Sha1 + sizeof(rec.Hashes.Sha1));
     rec.Doc["sha256"] = hexEncode(rec.Hashes.Sha2_256, rec.Hashes.Sha2_256 + sizeof(rec.Hashes.Sha2_256));
@@ -40,6 +50,5 @@ void Processor::process(FileRecord& rec, OutputHandler& out) {
     rec.Doc["fuzzy"] = hexEncode(rec.Hashes.Fuzzy, rec.Hashes.Fuzzy + sizeof(rec.Hashes.Fuzzy));
     rec.Doc["entropy"] = rec.Hashes.Entropy;
   }
-
   out.outputInode(rec);
 }
