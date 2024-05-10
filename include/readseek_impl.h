@@ -2,6 +2,8 @@
 
 #include "readseek.h"
 
+#include <memory>
+
 class ReadSeekBuf: public ReadSeek {
 public:
   ReadSeekBuf(const std::vector<uint8_t>& buf): Buf(buf), Pos(0) {}
