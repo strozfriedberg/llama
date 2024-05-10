@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <memory>
 
 #include "throw.h"
 
