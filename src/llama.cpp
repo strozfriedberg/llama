@@ -11,6 +11,7 @@
 #include "outputtar.h"
 #include "pooloutputhandler.h"
 #include "processor.h"
+#include "tsk.h"
 
 #include <filesystem>
 #include <fstream>
@@ -18,10 +19,6 @@
 #include <iostream>
 #include <streambuf>
 #include <unordered_map>
-
-#include <boost/filesystem.hpp>
-
-#include "tsk.h"
 
 #include <hasher/api.h>
 
