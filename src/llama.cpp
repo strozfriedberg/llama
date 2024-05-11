@@ -11,6 +11,7 @@
 #include "outputtar.h"
 #include "pooloutputhandler.h"
 #include "processor.h"
+#include "timer.h"
 #include "tsk.h"
 
 #include <filesystem>
@@ -45,13 +46,16 @@ int Llama::run(int argc, const char* const argv[]) {
     CliParser->printVersion(std::cout);
   }
   else if ("search" == Opts->Command) {
+    Timer overall;
     search();
+    std::cerr << "Overall time: " << overall.elapsed() << "\n";
   }
   return 0;
 }
 
 void Llama::search() {
   if (init()) {
+    Timer searchTime;
     // std::cout << "Number of patterns: " << lg_pattern_count(LgProg.get())
     //           << std::endl;
     auto out = std::shared_ptr<OutputWriter>(Opts->Output == "-" ?
@@ -71,6 +75,7 @@ void Llama::search() {
       std::cerr << "startReading returned an error" << std::endl;
     }
     Pool.join();
+    std::cerr << "Search time: " << searchTime.elapsed() << "\n";
     // std::cout << "All done" << std::endl;
   }
   else {
@@ -133,6 +138,7 @@ bool Llama::openInput(const std::string& input) {
 }
 
 bool Llama::init() {
+  Timer initTime;
   auto readPats = make_future(Pool, [this]() {
     return this->Opts->KeyFiles.size() ?
            readpatterns(this->Opts->KeyFiles): true;
@@ -142,5 +148,8 @@ bool Llama::init() {
     return openInput(this->Opts->Input);
   });
 
-  return readPats.get() && open.get();
+  bool ret = readPats.get() && open.get();
+  std::cerr << "Init time: " << initTime.elapsed() << "\n";
+  return ret;
 }
+
