@@ -58,11 +58,7 @@ void Llama::search() {
     Timer searchTime;
     // std::cout << "Number of patterns: " << lg_pattern_count(LgProg.get())
     //           << std::endl;
-    auto out = std::shared_ptr<OutputWriter>(Opts->Output == "-" ?
-      static_cast<OutputWriter*>(new OutputStream(std::cout)) :
-      static_cast<OutputWriter*>(new OutputTar(Opts->Output, Opts->OutputCodec))
-    );
-    auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, out));
+    auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, Output));
 
     auto protoProc = std::make_shared<Processor>(LgProg);
     auto scheduler = std::make_shared<FileScheduler>(Pool, protoProc, outh, Opts);
@@ -137,6 +133,11 @@ bool Llama::openInput(const std::string& input) {
   return bool(Input);
 }
 
+bool Llama::openOutput(const std::string& outputFile, Codec codec) {
+  Output.reset(new OutputTar(outputFile, codec));
+  return bool(Output);
+}
+
 bool Llama::init() {
   Timer initTime;
   auto readPats = make_future(Pool, [this]() {
@@ -148,7 +149,11 @@ bool Llama::init() {
     return openInput(this->Opts->Input);
   });
 
-  bool ret = readPats.get() && open.get();
+  auto output = make_future(Pool, [this]() {
+    return openOutput(this->Opts->Output, this->Opts->OutputCodec);
+  });
+
+  bool ret = readPats.get() && open.get() && output.get();
   std::cerr << "Init time: " << initTime.elapsed() << "\n";
   return ret;
 }

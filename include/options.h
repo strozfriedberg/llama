@@ -14,3 +14,4 @@ struct Options {
   unsigned int NumThreads;
   Codec OutputCodec;
 };
+
