@@ -14,7 +14,7 @@ Cli::Cli() : All(), Opts(new Options) {
 
   po::options_description ioOpts("Input/Output Options");
   ioOpts.add_options()
-    ("output", po::value<std::string>(&Opts->Output), "Tar file to create for output, extension will be added; or - for stdout")
+    ("output", po::value<std::string>(&Opts->Output), "Tar file to create for output, extension will be added")
     ("codec", po::value<std::string>(&CodecSelect)->default_value("lz4"), "Output tar compression method (none|gzip|lz4|lzma|bzip2|lzo|xz)")
     ("input", po::value<std::string>(&Opts->Input), "Evidence file or directory to process")
   ;
