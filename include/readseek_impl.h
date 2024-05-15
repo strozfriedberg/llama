@@ -53,13 +53,10 @@ public:
 
   virtual int64_t read(size_t len, std::vector<uint8_t>& buf) override;
 
-  virtual size_t tellg() const override { return Pos; }
+  virtual size_t tellg() const override { return 0; }
   virtual size_t seek(size_t pos) override;
 
   virtual size_t size(void) const override;
 
 private:
-  TSK_FS_ATTR* TskAttr;
-
-  size_t Pos;
 };
