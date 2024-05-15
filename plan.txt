@@ -13,6 +13,7 @@ Input
  - Merkle tree metadata records
  - multiple inputs (disk images, directories)
  - option to follow symbolic links? use of stat() vs lstat() for getting inode
+ - define models of Dirent, Inode, Attr, Stream
 
 Signatures
   - llara
@@ -69,6 +70,7 @@ Optimization
  - Allocators or other pools for file records, batches, and search hits
 
 Open Problems
+ - Parsing PE & ELF
  - Memory
    - not that hard
  - Event logs
@@ -84,10 +86,12 @@ Data Model
 
 Flow
  - Directory Walk
-   - write inode record
-   - if meta.nlink == 1, proceed; else, accumulate all dirents
-   - 
-
+ - Filter Dirents
+ - If Dirent passes, pass alone inode
+ - If inode's been processed, skip (don't check if nlink == 1)
+ - Filter inodes
+ - If default processing, pass along default data stream
+ - If not default, filter attrs and pass along their streams
 
 The default attribute is the one where type matches the filesystem's default, with the lowest id
 
