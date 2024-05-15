@@ -7,7 +7,6 @@
 #include "inputhandler.h"
 #include "inputreader.h"
 #include "outputhandler.h"
-#include "outputstream.h"
 #include "outputtar.h"
 #include "pooloutputhandler.h"
 #include "processor.h"

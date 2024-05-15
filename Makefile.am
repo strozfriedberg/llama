@@ -20,7 +20,6 @@ src_llama_common = \
 	src/inodeandblocktrackerimpl.cpp \
 	src/inputreader.cpp \
 	src/llama.cpp \
-	src/outputstream.cpp \
 	src/outputtar.cpp \
 	src/pooloutputhandler.cpp \
 	src/processor.cpp \
