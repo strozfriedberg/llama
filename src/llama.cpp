@@ -26,6 +26,15 @@
 
 namespace fs = std::filesystem;
 
+namespace {
+
+void log_timer(const std::string& msg, const Timer& timer) {
+  double elapsed = timer.elapsed();
+  std::cerr << msg << elapsed << "\n";
+}
+
+}
+
 Llama::Llama()
     : CliParser(std::make_shared<Cli>()), Pool(),
       LgProg(nullptr, lg_destroy_program) {}
@@ -47,7 +56,7 @@ int Llama::run(int argc, const char* const argv[]) {
   else if ("search" == Opts->Command) {
     Timer overall;
     search();
-    std::cerr << "Overall time: " << overall.elapsed() << "\n";
+    log_timer("Overall time: ", overall);
   }
   return 0;
 }
@@ -70,7 +79,7 @@ void Llama::search() {
       std::cerr << "startReading returned an error" << std::endl;
     }
     Pool.join();
-    std::cerr << "Search time: " << searchTime.elapsed() << "\n";
+    log_timer("Search time: ", searchTime);
     // std::cout << "All done" << std::endl;
   }
   else {
@@ -153,7 +162,7 @@ bool Llama::init() {
   });
 
   bool ret = readPats.get() && open.get() && output.get();
-  std::cerr << "Init time: " << initTime.elapsed() << "\n";
+  log_timer("Init time: ", initTime);
   return ret;
 }
 
