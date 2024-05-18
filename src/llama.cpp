@@ -26,15 +26,6 @@
 
 namespace fs = std::filesystem;
 
-namespace {
-
-void log_timer(const std::string& msg, const Timer& timer) {
-  double elapsed = timer.elapsed();
-  std::cerr << msg << elapsed << "\n";
-}
-
-}
-
 Llama::Llama()
     : CliParser(std::make_shared<Cli>()), Pool(),
       LgProg(nullptr, lg_destroy_program) {}
@@ -54,16 +45,15 @@ int Llama::run(int argc, const char* const argv[]) {
     CliParser->printVersion(std::cout);
   }
   else if ("search" == Opts->Command) {
-    Timer overall;
+    Timer overall(&std::cerr, "Overall time: ");
     search();
-    log_timer("Overall time: ", overall);
   }
   return 0;
 }
 
 void Llama::search() {
   if (init()) {
-    Timer searchTime;
+    Timer searchTime(&std::cerr, "Search time: ");
     // std::cout << "Number of patterns: " << lg_pattern_count(LgProg.get())
     //           << std::endl;
     auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, Output));
@@ -79,7 +69,6 @@ void Llama::search() {
       std::cerr << "startReading returned an error" << std::endl;
     }
     Pool.join();
-    log_timer("Search time: ", searchTime);
     // std::cout << "All done" << std::endl;
   }
   else {
@@ -147,7 +136,7 @@ bool Llama::openOutput(const std::string& outputFile, Codec codec) {
 }
 
 bool Llama::init() {
-  Timer initTime;
+  Timer initTime(&std::cerr, "Init time: ");
   auto readPats = make_future(Pool, [this]() {
     return this->Opts->KeyFiles.size() ?
            readpatterns(this->Opts->KeyFiles): true;
@@ -162,7 +151,6 @@ bool Llama::init() {
   });
 
   bool ret = readPats.get() && open.get() && output.get();
-  log_timer("Init time: ", initTime);
   return ret;
 }
 
