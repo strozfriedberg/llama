@@ -4,7 +4,7 @@ Input
    - inode dedupe
    - resident files (batched)
    - compressed files
-   - nonresident files (segmented w/ completion handlers)
+   - nonresident files (segmented w/ completion handlers; what did I mean by "segmented w/ completion handlers?"; oh maybe splitting up very large files?)
    - other attributes
    - slack
    - unallocated
@@ -12,8 +12,19 @@ Input
    - boost::filesystem
  - Merkle tree metadata records
  - multiple inputs (disk images, directories)
+ - option to follow symbolic links? use of stat() vs lstat() for getting inode
+ - define models of Dirent, Inode, Attr, Stream
 
- Signatures
+Signatures
+  - llara
+    - define format, that simplifies yara
+    - ensure grammar is LL
+    - compose metadata filtering with content filtering
+      - a normal yara rule only concerns itself with content -- THIS IS A GOOD THING
+      - but practically, some situations demand metadata filtering, so allow creation of metadata rules and then mix them with content rules, e.g., cobalt_strike(only_system_files(x)) conceptually (not the syntax we should use) would filter all files by metadata to allow only "system files" and then those would be scanned with a cobalt strike rule
+    - uses lightgrep patterns for strings, no distinction between fixed and regexp
+    - has an encodings field for which encodings to use (default is ASCII? latin1?)
+    - ship a yara -> llara conversion tool
   - STIX2
     - RapidJson, basic parse
     - artifact
@@ -59,6 +70,7 @@ Optimization
  - Allocators or other pools for file records, batches, and search hits
 
 Open Problems
+ - Parsing PE & ELF
  - Memory
    - not that hard
  - Event logs
@@ -74,10 +86,12 @@ Data Model
 
 Flow
  - Directory Walk
-   - write inode record
-   - if meta.nlink == 1, proceed; else, accumulate all dirents
-   - 
-
+ - Filter Dirents
+ - If Dirent passes, pass alone inode
+ - If inode's been processed, skip (don't check if nlink == 1)
+ - Filter inodes
+ - If default processing, pass along default data stream
+ - If not default, filter attrs and pass along their streams
 
 The default attribute is the one where type matches the filesystem's default, with the lowest id
 
