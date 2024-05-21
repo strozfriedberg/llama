@@ -69,6 +69,7 @@ void Llama::search() {
       std::cerr << "startReading returned an error" << std::endl;
     }
     Pool.join();
+    std::cerr << "Hashing Time: " << scheduler->getProcessorTime() << "s\n";
     // std::cout << "All done" << std::endl;
   }
   else {
