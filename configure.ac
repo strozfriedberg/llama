@@ -63,6 +63,12 @@ AS_IF([test "x$enable_symbols" != "xno"], [SYMBOLS='-g'], [SYMBOLS=''])
 
 AX_APPEND_COMPILE_FLAGS([$SYMBOLS $OFLAGS], [LLAMA_CXXFLAGS])
 
+AC_MSG_NOTICE([LLAMA_CXXFLAGS: $LLAMA_CXXFLAGS])
+AC_MSG_NOTICE([CPPFLAGS: $CPPFLAGS])
+AC_MSG_NOTICE([CXXFLAGS: $CXXFLAGS])
+AC_MSG_NOTICE([CFLAGS: $CFLAGS])
+AC_MSG_NOTICE([LDFLAGS: $LDFLAGS])
+
 PKG_CHECK_MODULES([GPT], [libprofiler], [], [ : ])
 
 # FIXME: mingw defaults to -g -O2, along with a bunch of other flags which
@@ -181,7 +187,7 @@ AC_CHECK_HEADERS([jsoncons/json.hpp], [], [AC_MSG_ERROR([Couldn't find jsoncons/
 #
 # duckdb
 #
-AC_CHECK_HEADER([duckdb.hpp], [], [AC_MSG_ERROR([Couldn't find duckdb.hpp])])
+AC_CHECK_HEADERS([duckdb.h], [], [AC_MSG_ERROR([Couldn't find duckdb.h])])
 
 TMP_LIBS="$LIBS"
 AC_CHECK_LIB([duckdb], [duckdb_library_version], [], [AC_MSG_ERROR([Couldn't find duckdb_static library])])
