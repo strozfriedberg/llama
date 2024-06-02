@@ -1,5 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include "throw.h"
+
 #include <duckdb.h>
 
 struct Dirent {
@@ -22,6 +24,18 @@ struct DirentBatch {
     std::copy(dent.path.begin(), dent.path.end(), Buf.begin() + Offsets.back().first);
     std::copy(dent.name.begin(), dent.name.end(), Buf.begin() + Offsets.back().second);
     Buf[offset + totalSize] = '\0';
+  }
+
+  void copyToDB(duckdb_appender& appender) {
+    duckdb_state state;
+    for (auto& offsets: Offsets) {
+      state = duckdb_append_varchar_length(appender, Buf.data() + offsets.first, offsets.second - offsets.first);
+      THROW_IF(state == DuckDBError, "Failed to append path");
+      state = duckdb_append_varchar(appender, Buf.data() + offsets.second);
+      THROW_IF(state == DuckDBError, "Failed to append name");
+      state = duckdb_appender_end_row(appender);
+      THROW_IF(state == DuckDBError, "Failed call to end_row");
+    }
   }
 };
 
@@ -52,14 +66,7 @@ TEST_CASE("TestMakeDuckDB") {
   duckdb_appender appender;
   state = duckdb_appender_create(dbconn, nullptr, "dirent", &appender);
   REQUIRE(state != DuckDBError);
-  for (auto& offsets: batch.Offsets) {
-    state = duckdb_append_varchar_length(appender, batch.Buf.data() + offsets.first, offsets.second - offsets.first);
-    REQUIRE(state != DuckDBError);
-    state = duckdb_append_varchar(appender, batch.Buf.data() + offsets.second);
-    REQUIRE(state != DuckDBError);
-    state = duckdb_appender_end_row(appender);
-    REQUIRE(state != DuckDBError);
-  }
+  batch.copyToDB(appender);
   duckdb_appender_destroy(&appender);
 
   duckdb_result result;
