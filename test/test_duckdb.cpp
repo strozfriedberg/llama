@@ -15,6 +15,11 @@ struct DirentBatch {
   std::vector<char> Buf;
   std::vector<std::pair<size_t, size_t>> Offsets;
 
+  static bool createTable(duckdb_connection& dbconn, const std::string& table) {
+    std::string query = "CREATE TABLE " + table + " (path VARCHAR, name VARCHAR);";
+    return DuckDBSuccess == duckdb_query(dbconn, query.c_str(), nullptr);
+  }
+
   void add(const Dirent& dent) {
     size_t pathSize = dent.path.size();
     size_t totalSize = pathSize + dent.name.size();
@@ -46,8 +51,7 @@ TEST_CASE("TestMakeDuckDB") {
   REQUIRE(duckdb_open(nullptr, &db) == DuckDBSuccess);
   REQUIRE(duckdb_connect(db, &dbconn) == DuckDBSuccess);
 
-  auto state = duckdb_query(dbconn, "CREATE TABLE dirent (path VARCHAR, name VARCHAR);", nullptr);
-  REQUIRE(state != DuckDBError);
+  REQUIRE(DirentBatch::createTable(dbconn, "dirent"));
 
   std::vector<Dirent> dirents = {
     {"/tmp/", "foo"},
@@ -64,7 +68,7 @@ TEST_CASE("TestMakeDuckDB") {
   REQUIRE(batch.Buf.size() == 28);
 
   duckdb_appender appender;
-  state = duckdb_appender_create(dbconn, nullptr, "dirent", &appender);
+  auto state = duckdb_appender_create(dbconn, nullptr, "dirent", &appender);
   REQUIRE(state != DuckDBError);
   batch.copyToDB(appender);
   duckdb_appender_destroy(&appender);
