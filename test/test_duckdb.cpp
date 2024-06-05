@@ -44,14 +44,56 @@ struct DirentBatch {
   }
 };
 
+class LlamaDB;
+
+class LlamaDBConnection {
+public:
+  friend class LlamaDB;
+
+  ~LlamaDBConnection() {
+    duckdb_disconnect(&DBConn);
+  }
+
+  duckdb_connection& get() { return DBConn; }
+
+private:
+  LlamaDBConnection(LlamaDB& db);
+  LlamaDBConnection(const LlamaDBConnection&) = delete;
+
+  duckdb_connection DBConn;
+};
+
+class LlamaDB {
+public:
+  LlamaDB(const char* path = nullptr) {
+    auto state = duckdb_open(path, &Db);
+    THROW_IF(state == DuckDBError, "Failed to open database");
+  }
+
+  duckdb_database& get() { return Db; }
+
+  LlamaDBConnection* connect() {
+    return new LlamaDBConnection(*this);
+  }
+
+  ~LlamaDB() {
+    duckdb_close(&Db);
+  }
+
+private:
+  duckdb_database Db;
+};
+
+LlamaDBConnection::LlamaDBConnection(LlamaDB& db) {
+  auto state = duckdb_connect(db.get(), &DBConn);
+  THROW_IF(state == DuckDBError, "Failed to connect to database");
+}
+
 TEST_CASE("TestMakeDuckDB") { 
-  duckdb_database db(nullptr);
-  duckdb_connection dbconn(nullptr);
+  LlamaDB db;
+  std::unique_ptr<LlamaDBConnection> conn(db.connect());
 
-  REQUIRE(duckdb_open(nullptr, &db) == DuckDBSuccess);
-  REQUIRE(duckdb_connect(db, &dbconn) == DuckDBSuccess);
-
-  REQUIRE(DirentBatch::createTable(dbconn, "dirent"));
+  REQUIRE(DirentBatch::createTable(conn->get(), "dirent"));
 
   std::vector<Dirent> dirents = {
     {"/tmp/", "foo"},
@@ -68,17 +110,14 @@ TEST_CASE("TestMakeDuckDB") {
   REQUIRE(batch.Buf.size() == 28);
 
   duckdb_appender appender;
-  auto state = duckdb_appender_create(dbconn, nullptr, "dirent", &appender);
+  auto state = duckdb_appender_create(conn->get(), nullptr, "dirent", &appender);
   REQUIRE(state != DuckDBError);
   batch.copyToDB(appender);
   duckdb_appender_destroy(&appender);
 
   duckdb_result result;
-  state = duckdb_query(dbconn, "SELECT * FROM dirent WHERE dirent.path = '/tmp/';", &result);
+  state = duckdb_query(conn->get(), "SELECT * FROM dirent WHERE dirent.path = '/tmp/';", &result);
   REQUIRE(state != DuckDBError);
   REQUIRE(duckdb_row_count(&result) == 2);
-
-  duckdb_disconnect(&dbconn);
-  duckdb_close(&db);
 }
 
