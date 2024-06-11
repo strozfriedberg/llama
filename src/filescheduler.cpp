@@ -23,6 +23,14 @@ void FileScheduler::scheduleFileBatch(std::shared_ptr<std::vector<FileRecord>> b
   );
 }
 
+double FileScheduler::getProcessorTime() {
+  double ret = 0;
+  for (auto& p : Processors) {
+    ret += p->getProcessorTime();
+  }
+  return ret;
+}
+
 void FileScheduler::performScheduling(std::shared_ptr<std::vector<FileRecord>> batch) {
   // check scratch location capacity and other stuff here
   // this is useful work that can be done on a separate thread from TSK

@@ -22,6 +22,8 @@ public:
 
   void scheduleFileBatch(std::shared_ptr<std::vector<FileRecord>> batch);
 
+  double getProcessorTime();
+
 private:
   void performScheduling(std::shared_ptr<std::vector<FileRecord>> batch);
 

@@ -21,8 +21,13 @@ public:
 
   Processor(const Processor&) = delete;
 
+  double getProcessorTime() const { return ProcTimeTotal; }
+
 private:
   std::shared_ptr<ProgramHandle> LgProg; // shared
   std::shared_ptr<ContextHandle> Ctx; // not shared, could be unique_ptr
   std::shared_ptr<SFHASH_Hasher> Hasher; // not shared, could be unique_ptr
+
+  double ProcTimeTotal;
 };
+
