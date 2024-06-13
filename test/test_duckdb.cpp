@@ -44,25 +44,6 @@ struct DirentBatch {
   }
 };
 
-class LlamaDB;
-
-class LlamaDBConnection {
-public:
-  friend class LlamaDB;
-
-  ~LlamaDBConnection() {
-    duckdb_disconnect(&DBConn);
-  }
-
-  duckdb_connection& get() { return DBConn; }
-
-private:
-  LlamaDBConnection(LlamaDB& db);
-  LlamaDBConnection(const LlamaDBConnection&) = delete;
-
-  duckdb_connection DBConn;
-};
-
 class LlamaDB {
 public:
   LlamaDB(const char* path = nullptr) {
@@ -72,10 +53,6 @@ public:
 
   duckdb_database& get() { return Db; }
 
-  LlamaDBConnection* connect() {
-    return new LlamaDBConnection(*this);
-  }
-
   ~LlamaDB() {
     duckdb_close(&Db);
   }
@@ -84,16 +61,31 @@ private:
   duckdb_database Db;
 };
 
-LlamaDBConnection::LlamaDBConnection(LlamaDB& db) {
-  auto state = duckdb_connect(db.get(), &DBConn);
-  THROW_IF(state == DuckDBError, "Failed to connect to database");
-}
+class LlamaDBConnection {
+public:
+  LlamaDBConnection(LlamaDB& db) {
+    auto state = duckdb_connect(db.get(), &DBConn);
+    THROW_IF(state == DuckDBError, "Failed to connect to database");
+  }
+  
+  ~LlamaDBConnection() {
+    duckdb_disconnect(&DBConn);
+  }
+
+  duckdb_connection& get() { return DBConn; }
+
+private:
+  LlamaDBConnection(const LlamaDBConnection&) = delete;
+
+  duckdb_connection DBConn;
+};
+
 
 TEST_CASE("TestMakeDuckDB") { 
   LlamaDB db;
-  std::unique_ptr<LlamaDBConnection> conn(db.connect());
+  LlamaDBConnection conn(db);
 
-  REQUIRE(DirentBatch::createTable(conn->get(), "dirent"));
+  REQUIRE(DirentBatch::createTable(conn.get(), "dirent"));
 
   std::vector<Dirent> dirents = {
     {"/tmp/", "foo"},
@@ -110,13 +102,13 @@ TEST_CASE("TestMakeDuckDB") {
   REQUIRE(batch.Buf.size() == 28);
 
   duckdb_appender appender;
-  auto state = duckdb_appender_create(conn->get(), nullptr, "dirent", &appender);
+  auto state = duckdb_appender_create(conn.get(), nullptr, "dirent", &appender);
   REQUIRE(state != DuckDBError);
   batch.copyToDB(appender);
   duckdb_appender_destroy(&appender);
 
   duckdb_result result;
-  state = duckdb_query(conn->get(), "SELECT * FROM dirent WHERE dirent.path = '/tmp/';", &result);
+  state = duckdb_query(conn.get(), "SELECT * FROM dirent WHERE dirent.path = '/tmp/';", &result);
   REQUIRE(state != DuckDBError);
   REQUIRE(duckdb_row_count(&result) == 2);
 }
