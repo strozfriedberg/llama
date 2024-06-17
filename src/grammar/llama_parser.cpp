@@ -15,6 +15,10 @@ RCB = "}"
 #include "llama_parser.h"
 #include <iostream>
 
+namespace LlamaRegex {
+  std::regex alphanum("\\w");
+}
+
 void print(std::string s) {
   std::cout << s << std::endl;
 }
@@ -33,7 +37,6 @@ LlamaLexer::LlamaLexer(char* input) {
 
 std::string LlamaLexer::getNextLexeme() {
   std::string lexeme = "";
-  print("here");
   if (lastToken->getType() == TokenType::EQUAL && *curr == '"') {
     lexeme.push_back(*(curr++)); // capture opening quote
     while (*curr != '"') {
@@ -41,16 +44,23 @@ std::string LlamaLexer::getNextLexeme() {
       curr++;
     }
     lexeme.push_back(*(curr++)); // capture closing quote
-  } 
+  }
+  else if (std::regex_match(curr, curr + 1, LlamaRegex::alphanum)) {
+    while (std::regex_match(curr, curr + 1, LlamaRegex::alphanum)) {
+      lexeme += *curr;
+      curr++;
+    }
+  }
   else {
     while (*curr != ' ' && *curr != '\0') {
       lexeme += *curr;
       curr++;
     }
   }
-  if (*curr != '\0') {
+  if (*curr == ' ') {
+    // skip space
     curr++;
-  } // skip space
+  }
   print(lexeme);
   return lexeme;
 }
