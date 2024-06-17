@@ -37,7 +37,11 @@ LlamaLexer::LlamaLexer(char* input) {
 
 std::string LlamaLexer::getNextLexeme() {
   std::string lexeme = "";
-  if (lastToken->getType() == TokenType::EQUAL && *curr == '"') {
+  if (*curr == ' ' || *curr == '\n') {
+    // skip whitespace
+    curr++;
+  }
+  if (*curr == '"') {
     lexeme.push_back(*(curr++)); // capture opening quote
     while (*curr != '"') {
       lexeme += *curr;
@@ -56,10 +60,6 @@ std::string LlamaLexer::getNextLexeme() {
       lexeme += *curr;
       curr++;
     }
-  }
-  if (*curr == ' ') {
-    // skip space
-    curr++;
   }
   print(lexeme);
   return lexeme;
