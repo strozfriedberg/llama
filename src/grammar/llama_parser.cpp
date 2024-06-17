@@ -25,12 +25,10 @@ void print(std::string s) {
 
 LlamaLexer::LlamaLexer(char* input) {
   curr = input;
-  lastToken = new Token();
 
   while (*curr != '\0') {
     std::string lexeme = getNextLexeme();
     Token* token = new Token(lexeme);
-    lastToken = token;
     tokens.push_back(token);
   }
 }

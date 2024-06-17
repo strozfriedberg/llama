@@ -58,6 +58,5 @@ private:
   std::string getNextLexeme();
 
   char* curr;
-  Token* lastToken;
   std::vector<Token*> tokens;
 };
