@@ -92,11 +92,35 @@ Token::Token(std::string lexeme) {
 }
 
 
-bool Token::is_rule(std::string c) { return c == "rule"; }
-bool Token::is_lcb(std::string c) { return c == "{"; }
-bool Token::is_meta(std::string c) { return c == "meta"; }
-bool Token::is_colon(std::string c) { return c == ":"; }
-bool Token::is_alpha_num_underscore(std::string c) { std::regex e("\\w+"); return std::regex_match(c.begin(), c.end(), e); }
-bool Token::is_equal(std::string c) { return c == "="; }
-bool Token::is_double_quoted_string(std::string c) { return (c[0] == '"' && c[c.size() - 1] == '"'); }
-bool Token::is_rcb(std::string c) { return c == "}";}
+bool Token::is_rule(std::string c) {
+  return c == "rule";
+}
+
+bool Token::is_lcb(std::string c) {
+  return c == "{";
+}
+
+bool Token::is_meta(std::string c) {
+  return c == "meta";
+}
+
+bool Token::is_colon(std::string c) {
+  return c == ":";
+}
+
+bool Token::is_alpha_num_underscore(std::string c) {
+  std::regex e("\\w+");
+  return std::regex_match(c.begin(), c.end(), e);
+}
+
+bool Token::is_equal(std::string c) {
+  return c == "=";
+}
+
+bool Token::is_double_quoted_string(std::string c) {
+  return (c[0] == '"' && c[c.size() - 1] == '"');
+}
+
+bool Token::is_rcb(std::string c) {
+  return c == "}";
+}
