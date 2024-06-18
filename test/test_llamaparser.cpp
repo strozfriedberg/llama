@@ -13,8 +13,11 @@ double_quoted_string = "\""string"\""
 string = "\w+"
 EQUAL = "="
 RULE = "rule"
-LCB = "{"
 META = "meta"
+FILEMETADATA = "filemetadata"
+SIGNATURE = "signature"
+GREP = "grep"
+LCB = "{"
 COLON = ":"
 RCB = "}"
 ************************************************************/
@@ -24,6 +27,9 @@ enum class TokenType {
   RULE,
   LCB,
   META,
+  FILEMETADATA,
+  SIGNATURE,
+  GREP,
   COLON,
   RCB,
   ALPHA_NUM_UNDERSCORE,
@@ -42,6 +48,9 @@ private:
   bool is_rule(std::string c);
   bool is_lcb(std::string c);
   bool is_meta(std::string c);
+  bool is_filemetadata(std::string c);
+  bool is_signature(std::string c);
+  bool is_grep(std::string c);
   bool is_colon(std::string c);
   bool is_alpha_num_underscore(std::string c);
   bool is_equal(std::string c);
@@ -127,7 +136,7 @@ std::string LlamaLexer::getNextLexeme() {
 }
 
 Token::Token() {
-  lexeme = "";
+  this->lexeme = "";
   type = TokenType::NONE;
 }
 
@@ -139,6 +148,12 @@ Token::Token(std::string lexeme) {
     type = TokenType::LCB;
   } else if (is_meta(lexeme)) {
     type = TokenType::META;
+  } else if (is_filemetadata(lexeme)) {
+    type = TokenType::FILEMETADATA;
+  } else if (is_signature(lexeme)) {
+    type = TokenType::SIGNATURE;
+  } else if (is_grep(lexeme)) {
+    type = TokenType::GREP;
   } else if (is_colon(lexeme)) {
     type = TokenType::COLON;
   } else if (is_alpha_num_underscore(lexeme)) {
@@ -148,7 +163,7 @@ Token::Token(std::string lexeme) {
   } else if (is_double_quoted_string(lexeme)) {
     type = TokenType::DOUBLE_QUOTED_STRING;
     // strip quotes
-    lexeme = lexeme.substr(1, lexeme.size() - 2);
+    this->lexeme = lexeme.substr(1, lexeme.size() - 2);
   } else if (is_rcb(lexeme)) {
     type = TokenType::RCB;
   }
@@ -165,6 +180,18 @@ bool Token::is_lcb(std::string c) {
 
 bool Token::is_meta(std::string c) {
   return c == "meta";
+}
+
+bool Token::is_filemetadata(std::string c) {
+  return c == "filemetadata";
+}
+
+bool Token::is_signature(std::string c) {
+  return c == "signature";
+}
+
+bool Token::is_grep(std::string c) {
+  return c == "grep";
 }
 
 bool Token::is_colon(std::string c) {
@@ -244,4 +271,24 @@ TEST_CASE("RuleWithMultipleAssignments") {
   REQUIRE(lexer.getTokens()[8]->getType() == TokenType::EQUAL);
   REQUIRE(lexer.getTokens()[9]->getType() == TokenType::DOUBLE_QUOTED_STRING);
   REQUIRE(lexer.getTokens()[10]->getType() == TokenType::RCB);
+}
+
+TEST_CASE("RuleWithMetaFilemetadataGrepSignatureSections") {
+  char* input = "rule { meta: some_id = \"some_value\" filemetadata: grep: signature: }";
+  LlamaLexer lexer(input);
+  REQUIRE(lexer.getTokens().size() == 14);
+  REQUIRE(lexer.getTokens()[0]->getType() == TokenType::RULE);
+  REQUIRE(lexer.getTokens()[1]->getType() == TokenType::LCB);
+  REQUIRE(lexer.getTokens()[2]->getType() == TokenType::META);
+  REQUIRE(lexer.getTokens()[3]->getType() == TokenType::COLON);
+  REQUIRE(lexer.getTokens()[4]->getType() == TokenType::ALPHA_NUM_UNDERSCORE);
+  REQUIRE(lexer.getTokens()[5]->getType() == TokenType::EQUAL);
+  REQUIRE(lexer.getTokens()[6]->getType() == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.getTokens()[7]->getType() == TokenType::FILEMETADATA);
+  REQUIRE(lexer.getTokens()[8]->getType() == TokenType::COLON);
+  REQUIRE(lexer.getTokens()[9]->getType() == TokenType::GREP);
+  REQUIRE(lexer.getTokens()[10]->getType() == TokenType::COLON);
+  REQUIRE(lexer.getTokens()[11]->getType() == TokenType::SIGNATURE);
+  REQUIRE(lexer.getTokens()[12]->getType() == TokenType::COLON);
+  REQUIRE(lexer.getTokens()[13]->getType() == TokenType::RCB);
 }
