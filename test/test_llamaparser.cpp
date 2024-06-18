@@ -100,7 +100,7 @@ std::string LlamaLexer::getNextLexeme() {
   }
 
   // handle double quoted strings
-  // this is a different branch because we must to handle
+  // this is a different branch because we must handle
   // white space within double quoted strings
   if (*curr == '"') {
     // capture opening quote
