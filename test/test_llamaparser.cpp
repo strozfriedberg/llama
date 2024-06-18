@@ -78,6 +78,7 @@ public:
 private:
   std::string getNextLexeme();
   char advance() { return *curr++; }
+  char peek() { return *(curr + 1); }
   void scanToken();
   void addToken(TokenType type, std::string lexeme) { tokens.push_back(new Token(lexeme, type)); }
   void addToken(TokenType type) { addToken(type, std::string()); }
