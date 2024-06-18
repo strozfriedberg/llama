@@ -79,10 +79,16 @@ private:
   std::string getNextLexeme();
   char advance() { return *curr++; }
   char peek() { return *(curr + 1); }
+
   void scanToken();
+
   void addToken(TokenType type, std::string lexeme) { tokens.push_back(new Token(lexeme, type)); }
   void addToken(TokenType type) { addToken(type, std::string()); }
+
   bool isAtEnd() { return *curr == '\0'; }
+
+
+  void string();
 
   char* curr;
   std::vector<Token*> tokens;
@@ -120,6 +126,17 @@ void LlamaLexer::scanToken() {
     default:
       throw UnexpectedInputError("Unexpected input character: " + std::string{c});
   }
+}
+
+void LlamaLexer::string() {
+  std::string lexeme = std::string();
+  advance(); // consume opening quote
+  while (*curr != '"' && !isAtEnd()) {
+    lexeme.push_back(*curr);
+    advance();
+  }
+  advance(); // consume closing quote
+  addToken(TokenType::DOUBLE_QUOTED_STRING, lexeme);
 }
 
 std::string LlamaLexer::getNextLexeme() {
