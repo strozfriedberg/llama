@@ -68,6 +68,7 @@ public:
 
 private:
   std::string getNextLexeme();
+  char advance() { return *curr++; }
 
   char* curr;
   std::vector<Token*> tokens;
@@ -95,7 +96,7 @@ std::string LlamaLexer::getNextLexeme() {
 
   // ignore whitespace
   while (std::isspace(*curr)) {
-    curr++;
+    advance();
   }
 
   // handle double quoted strings
@@ -103,32 +104,32 @@ std::string LlamaLexer::getNextLexeme() {
   // white space within double quoted strings
   if (*curr == '"') {
     // capture opening quote
-    lexeme.push_back(*(curr++));
+    lexeme.push_back(advance());
 
     while (*curr != '"') {
       lexeme += *curr;
-      curr++;
+      advance();
     }
 
     // capture closing quote
-    lexeme.push_back(*(curr++));
+    lexeme.push_back(advance());
   }
   // process punctuation one character at a time
   else if (std::ispunct(*curr)) {
     lexeme += *curr;
-    curr++;
+    advance();
   }
   // handle identifiers which must start with an alphanumeric character
   else if (std::isalnum(*curr)) {
     while (std::isalnum(*curr) || *curr == '_' || *curr == '-') {
       lexeme += *curr;
-      curr++;
+      advance();
     }
   }
   else {
     while (!std::isspace(*curr) && *curr != '\0') {
       lexeme += *curr;
-      curr++;
+      advance();
     }
   }
   print(lexeme);
