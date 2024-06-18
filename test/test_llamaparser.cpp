@@ -78,9 +78,6 @@ private:
   char* curr;
   std::vector<Token*> tokens;
 };
-namespace LlamaRegex {
-  std::regex alphanum("\\w");
-}
 
 void print(std::string s) {
   std::cout << s << std::endl;
