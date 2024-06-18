@@ -42,6 +42,7 @@ class Token {
 public:
   Token();
   Token(std::string lexeme);
+  Token(std::string lexeme, TokenType type) : lexeme(lexeme), type(type) {}
   TokenType getType() { return type; }
 
 private:
@@ -69,6 +70,8 @@ public:
 private:
   std::string getNextLexeme();
   char advance() { return *curr++; }
+  void scanToken();
+  void addToken(TokenType type, char c) { tokens.push_back(new Token(std::string(1, c), type)); }
 
   char* curr;
   std::vector<Token*> tokens;
@@ -88,6 +91,21 @@ LlamaLexer::LlamaLexer(char* input) {
     std::string lexeme = getNextLexeme();
     Token* token = new Token(lexeme);
     tokens.push_back(token);
+  }
+}
+
+void LlamaLexer::scanToken() {
+  char c = advance();
+  switch(c) {
+    case '{': addToken(TokenType::LCB, c); break;
+    case '}': addToken(TokenType::RCB, c); break;
+    case ':': addToken(TokenType::COLON, c); break;
+    case '=': addToken(TokenType::EQUAL, c); break;
+
+    case ' ':
+    case '\n':
+    case '\r':
+    case '\t': break;
   }
 }
 
