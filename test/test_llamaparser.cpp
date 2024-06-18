@@ -81,6 +81,7 @@ private:
   void scanToken();
   void addToken(TokenType type, std::string lexeme) { tokens.push_back(new Token(lexeme, type)); }
   void addToken(TokenType type) { addToken(type, std::string()); }
+  bool isAtEnd() { return *curr == '\0'; }
 
   char* curr;
   std::vector<Token*> tokens;
@@ -156,7 +157,7 @@ std::string LlamaLexer::getNextLexeme() {
     }
   }
   else {
-    while (!std::isspace(*curr) && *curr != '\0') {
+    while (!std::isspace(*curr) && !isAtEnd()) {
       lexeme += *curr;
       advance();
     }
