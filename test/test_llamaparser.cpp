@@ -73,6 +73,7 @@ class LlamaLexer {
 public:
   LlamaLexer(char* input);
   std::vector<Token*> getTokens() { return tokens; }
+  void scanTokens();
 
 private:
   std::string getNextLexeme();
@@ -91,7 +92,9 @@ void print(std::string s) {
 
 LlamaLexer::LlamaLexer(char* input) {
   curr = input;
+}
 
+void LlamaLexer::scanTokens() {
   while (*curr != '\0') {
     std::string lexeme = getNextLexeme();
     Token* token = new Token(lexeme);
@@ -247,6 +250,7 @@ bool Token::is_rcb(std::string c) {
 TEST_CASE("RuleWithMetaSectionAndOneAssignment") {
   char* input = "rule { meta: some_id = \"some_value\" }";
   LlamaLexer lexer(input);
+  lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 8);
   REQUIRE(lexer.getTokens()[0]->getType() == TokenType::RULE);
   REQUIRE(lexer.getTokens()[1]->getType() == TokenType::LCB);
@@ -261,6 +265,7 @@ TEST_CASE("RuleWithMetaSectionAndOneAssignment") {
 TEST_CASE("RuleWithMultipleSpaces") {
   char* input = "rule    {   meta:    some_id  = \"some_value\"   }";
   LlamaLexer lexer(input);
+  lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 8);
   REQUIRE(lexer.getTokens()[0]->getType() == TokenType::RULE);
   REQUIRE(lexer.getTokens()[1]->getType() == TokenType::LCB);
@@ -275,6 +280,7 @@ TEST_CASE("RuleWithMultipleSpaces") {
 TEST_CASE("RuleWithNewLinesAndTabs") {
   char* input = "rule {\n\tmeta:\n}";
   LlamaLexer lexer(input);
+  lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 5);
   REQUIRE(lexer.getTokens()[0]->getType() == TokenType::RULE);
   REQUIRE(lexer.getTokens()[1]->getType() == TokenType::LCB);
@@ -286,6 +292,7 @@ TEST_CASE("RuleWithNewLinesAndTabs") {
 TEST_CASE("RuleWithMultipleAssignments") {
   char* input = "rule { meta: some_id = \"some_value\"\n\t\tsome_other_id = \"some_other_value\" }";
   LlamaLexer lexer(input);
+  lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 11);
   REQUIRE(lexer.getTokens()[0]->getType() == TokenType::RULE);
   REQUIRE(lexer.getTokens()[1]->getType() == TokenType::LCB);
@@ -303,6 +310,7 @@ TEST_CASE("RuleWithMultipleAssignments") {
 TEST_CASE("RuleWithMetaFilemetadataGrepSignatureSections") {
   char* input = "rule { meta: some_id = \"some_value\" filemetadata: grep: signature: }";
   LlamaLexer lexer(input);
+  lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 14);
   REQUIRE(lexer.getTokens()[0]->getType() == TokenType::RULE);
   REQUIRE(lexer.getTokens()[1]->getType() == TokenType::LCB);
