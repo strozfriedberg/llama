@@ -83,20 +83,35 @@ LlamaLexer::LlamaLexer(char* input) {
 
 std::string LlamaLexer::getNextLexeme() {
   std::string lexeme = "";
+
+  // ignore whitespace
   while (std::isspace(*curr)) {
-    // skip whitespace
     curr++;
   }
+
+  // handle double quoted strings
+  // this is a different branch because we must to handle
+  // white space within double quoted strings
   if (*curr == '"') {
-    lexeme.push_back(*(curr++)); // capture opening quote
+    // capture opening quote
+    lexeme.push_back(*(curr++));
+
     while (*curr != '"') {
       lexeme += *curr;
       curr++;
     }
-    lexeme.push_back(*(curr++)); // capture closing quote
+
+    // capture closing quote
+    lexeme.push_back(*(curr++));
   }
-  else if (std::regex_match(curr, curr + 1, LlamaRegex::alphanum)) {
-    while (std::regex_match(curr, curr + 1, LlamaRegex::alphanum)) {
+  // process punctuation one character at a time
+  else if (std::ispunct(*curr)) {
+    lexeme += *curr;
+    curr++;
+  }
+  // handle identifiers which must start with an alphanumeric character
+  else if (std::isalnum(*curr)) {
+    while (std::isalnum(*curr) || *curr == '_' || *curr == '-') {
       lexeme += *curr;
       curr++;
     }
@@ -212,4 +227,21 @@ TEST_CASE("RuleWithNewLinesAndTabs") {
   REQUIRE(lexer.getTokens()[2]->getType() == TokenType::META);
   REQUIRE(lexer.getTokens()[3]->getType() == TokenType::COLON);
   REQUIRE(lexer.getTokens()[4]->getType() == TokenType::RCB);
+}
+
+TEST_CASE("RuleWithMultipleAssignments") {
+  char* input = "rule { meta: some_id = \"some_value\"\n\t\tsome_other_id = \"some_other_value\" }";
+  LlamaLexer lexer(input);
+  REQUIRE(lexer.getTokens().size() == 11);
+  REQUIRE(lexer.getTokens()[0]->getType() == TokenType::RULE);
+  REQUIRE(lexer.getTokens()[1]->getType() == TokenType::LCB);
+  REQUIRE(lexer.getTokens()[2]->getType() == TokenType::META);
+  REQUIRE(lexer.getTokens()[3]->getType() == TokenType::COLON);
+  REQUIRE(lexer.getTokens()[4]->getType() == TokenType::ALPHA_NUM_UNDERSCORE);
+  REQUIRE(lexer.getTokens()[5]->getType() == TokenType::EQUAL);
+  REQUIRE(lexer.getTokens()[6]->getType() == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.getTokens()[7]->getType() == TokenType::ALPHA_NUM_UNDERSCORE);
+  REQUIRE(lexer.getTokens()[8]->getType() == TokenType::EQUAL);
+  REQUIRE(lexer.getTokens()[9]->getType() == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.getTokens()[10]->getType() == TokenType::RCB);
 }
