@@ -63,6 +63,12 @@ private:
   TokenType type;
 };
 
+class UnexpectedInputError : public std::runtime_error {
+  std::string message;
+public:
+  UnexpectedInputError(std::string message) : std::runtime_error(message) {}
+};
+
 class LlamaLexer {
 public:
   LlamaLexer(char* input);
@@ -105,6 +111,9 @@ void LlamaLexer::scanToken() {
     case '\n':
     case '\r':
     case '\t': break;
+
+    default:
+      throw UnexpectedInputError("Unexpected input character: " + std::string{c});
   }
 }
 
