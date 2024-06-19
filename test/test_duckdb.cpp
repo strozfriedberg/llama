@@ -80,6 +80,26 @@ private:
   duckdb_connection DBConn;
 };
 
+class LlamaDBAppender {
+public:
+  LlamaDBAppender(duckdb_connection& conn, const char* table) {
+    auto state = duckdb_appender_create(conn, nullptr, table, &Appender);
+    THROW_IF(state == DuckDBError, "Failed to create appender");
+  }
+
+  ~LlamaDBAppender() {
+    duckdb_appender_destroy(&Appender);
+  }
+
+  duckdb_appender& get() { return Appender; }
+
+  bool flush() {
+    return DuckDBSuccess == duckdb_appender_flush(Appender);
+  }
+
+private:
+  duckdb_appender Appender;
+};
 
 TEST_CASE("TestMakeDuckDB") { 
   LlamaDB db;
@@ -101,14 +121,13 @@ TEST_CASE("TestMakeDuckDB") {
   REQUIRE(batch.size() == 3);
   REQUIRE(batch.Buf.size() == 28);
 
-  duckdb_appender appender;
-  auto state = duckdb_appender_create(conn.get(), nullptr, "dirent", &appender);
-  REQUIRE(state != DuckDBError);
-  batch.copyToDB(appender);
-  duckdb_appender_destroy(&appender);
+  LlamaDBAppender appender(conn.get(), "dirent"); // need an appender object, too, which also doesn't jibe with smart pointers, and destroy must be called even if create returns an error
+  // REQUIRE(state != DuckDBError);
+  batch.copyToDB(appender.get());
+  REQUIRE(appender.flush());
 
   duckdb_result result;
-  state = duckdb_query(conn.get(), "SELECT * FROM dirent WHERE dirent.path = '/tmp/';", &result);
+  auto state = duckdb_query(conn.get(), "SELECT * FROM dirent WHERE dirent.path = '/tmp/';", &result);
   REQUIRE(state != DuckDBError);
   REQUIRE(duckdb_row_count(&result) == 2);
 }
