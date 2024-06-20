@@ -55,20 +55,20 @@ public:
 class LlamaLexer {
 public:
   LlamaLexer(char* input);
-  const std::vector<Token>& getTokens() const { return tokens; }
+
   void scanTokens();
-
-  char advance() { return *curr++; }
-  char peek() const { return *(curr + 1); }
-
   void scanToken();
+
+  void parseString();
 
   void addToken(TokenType type, const std::string& lexeme = "") { tokens.push_back(Token(type, lexeme)); }
 
+  char advance() { return *curr++; }
+
+  char peek() const { return *(curr + 1); }
   bool isAtEnd() const { return *curr == '\0'; }
 
-
-  void parseString();
+  const std::vector<Token>& getTokens() const { return tokens; }
 
 private:
   char* curr;
