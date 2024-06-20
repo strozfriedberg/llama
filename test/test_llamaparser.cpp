@@ -39,10 +39,22 @@ enum class TokenType {
   ENDOFFILE
 };
 
+
+namespace Llama {
+  const std::unordered_map<std::string, TokenType> keywords = {
+    {"rule", TokenType::RULE},
+    {"meta", TokenType::META},
+    {"filemetadata", TokenType::FILEMETADATA},
+    {"signature", TokenType::SIGNATURE},
+    {"grep", TokenType::GREP}
+  };
+}
+
 class Token {
 public:
   Token(TokenType type, const std::string& lexeme = "") : Lexeme(lexeme), Type(type) {}
 
+  // replace with start, end
   std::string Lexeme;
   TokenType Type;
 };
@@ -59,6 +71,7 @@ public:
   void scanTokens();
   void scanToken();
 
+  void parseIdentifier();
   void parseString();
 
   void addToken(TokenType type, const std::string& lexeme = "") { Tokens.push_back(Token(type, lexeme)); }
@@ -105,6 +118,22 @@ void LlamaLexer::scanToken() {
 
     default:
       throw UnexpectedInputError("Unexpected input character: " + std::string{c});
+  }
+}
+
+void LlamaLexer::parseIdentifier() {
+  std::string lexeme;
+  while (isalnum(*Cur) || *Cur == '_') {
+    lexeme.push_back(advance());
+  }
+
+  auto found = Llama::keywords.find(lexeme);
+
+  if (found != Llama::keywords.end()) {
+    addToken(found->second);
+  }
+  else {
+    addToken(TokenType::ALPHA_NUM_UNDERSCORE, lexeme);
   }
 }
 
@@ -162,6 +191,20 @@ TEST_CASE("unterminatedString") {
   std::string input = "some string";
   LlamaLexer lexer(input);
   REQUIRE_THROWS_AS(lexer.parseString(), UnexpectedInputError);
+}
+
+TEST_CASE("parseIdentifier") {
+  std::string input = "rule";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::RULE);
+}
+
+TEST_CASE("parseAlphaNumUnderscore") {
+  std::string input = "not_a_keyword";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::ALPHA_NUM_UNDERSCORE);
 }
 
 TEST_CASE("scanTokens") {
