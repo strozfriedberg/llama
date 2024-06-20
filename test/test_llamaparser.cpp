@@ -54,7 +54,7 @@ public:
 
 class LlamaLexer {
 public:
-  LlamaLexer(char* input);
+  LlamaLexer(const std::string& input) : input(input), cur(input.data()) {};
 
   void scanTokens();
   void scanToken();
@@ -63,15 +63,16 @@ public:
 
   void addToken(TokenType type, const std::string& lexeme = "") { tokens.push_back(Token(type, lexeme)); }
 
-  char advance() { return *curr++; }
+  char advance() { return *cur++; }
 
-  char peek() const { return *(curr + 1); }
-  bool isAtEnd() const { return *curr == '\0'; }
+  char peek() const { return *(cur + 1); }
+  bool isAtEnd() const { return *cur == '\0'; }
 
   const std::vector<Token>& getTokens() const { return tokens; }
 
 private:
-  char* curr;
+  const std::string& input;
+  const char* cur;
   std::vector<Token> tokens;
 };
 
@@ -79,12 +80,8 @@ void print(std::string s) {
   std::cout << s << std::endl;
 }
 
-LlamaLexer::LlamaLexer(char* input) {
-  curr = input;
-}
-
 void LlamaLexer::scanTokens() {
-  while (*curr != '\0') {
+  while (*cur != '\0') {
     scanToken();
   }
 
@@ -113,7 +110,7 @@ void LlamaLexer::scanToken() {
 
 void LlamaLexer::parseString() {
   std::string lexeme = std::string();
-  while(*curr != '"' && !isAtEnd()) {
+  while(*cur != '"' && !isAtEnd()) {
     lexeme.push_back(advance());
   }
   if (isAtEnd()) {
@@ -124,7 +121,7 @@ void LlamaLexer::parseString() {
 }
 
 TEST_CASE("ScanToken") {
-  char* input = "{}:= \n\r\t";
+  std::string input = "{}:= \n\r\t";
   LlamaLexer lexer(input);
   lexer.scanToken();
   REQUIRE(lexer.getTokens().at(0).type == TokenType::LCB);
@@ -144,7 +141,7 @@ TEST_CASE("ScanToken") {
 }
 
 TEST_CASE("ScanTokenString") {
-  char* input = "\"some string\"{";
+  std::string input = "\"some string\"{";
   LlamaLexer lexer(input);
   lexer.scanToken();
   REQUIRE(lexer.getTokens().at(0).type == TokenType::DOUBLE_QUOTED_STRING);
@@ -154,7 +151,7 @@ TEST_CASE("ScanTokenString") {
 }
 
 TEST_CASE("parseString") {
-  char* input = "some string\"";
+  std::string input = "some string\"";
   LlamaLexer lexer(input);
   lexer.parseString();
   REQUIRE(lexer.getTokens().at(0).type == TokenType::DOUBLE_QUOTED_STRING);
@@ -162,13 +159,13 @@ TEST_CASE("parseString") {
 }
 
 TEST_CASE("unterminatedString") {
-  char* input = "some string";
+  std::string input = "some string";
   LlamaLexer lexer(input);
   REQUIRE_THROWS_AS(lexer.parseString(), UnexpectedInputError);
 }
 
 TEST_CASE("scanTokens") {
-  char* input = "{ }";
+  std::string input = "{ }";
   LlamaLexer lexer(input);
   lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 3);
