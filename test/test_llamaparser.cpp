@@ -133,9 +133,13 @@ void LlamaLexer::scanToken() {
 
 void LlamaLexer::string() {
   std::string lexeme = std::string();
-  for (char c = advance() ; c != '"' && !isAtEnd(); c = advance()) {
-    lexeme.push_back(c);
+  while(*curr != '"' && !isAtEnd()) {
+    lexeme.push_back(advance());
   }
+  if (isAtEnd()) {
+    throw UnexpectedInputError("Unterminated string");
+  }
+  advance(); // consume closing quote
   addToken(TokenType::DOUBLE_QUOTED_STRING, lexeme);
 }
 
@@ -300,6 +304,12 @@ TEST_CASE("processString") {
   lexer.string();
   REQUIRE(lexer.tokens.at(0)->getType() == TokenType::DOUBLE_QUOTED_STRING);
   REQUIRE(lexer.tokens.at(0)->lexeme == "some string");
+}
+
+TEST_CASE("unterminatedString") {
+  char* input = "some string";
+  LlamaLexer lexer(input);
+  REQUIRE_THROWS_AS(lexer.string(), UnexpectedInputError);
 }
 
 TEST_CASE("scanTokens") {
