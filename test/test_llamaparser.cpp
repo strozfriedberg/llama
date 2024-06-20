@@ -280,6 +280,8 @@ TEST_CASE("ScanToken") {
   lexer.scanToken();
   lexer.scanToken();
   REQUIRE(lexer.tokens.size() == 4);
+  REQUIRE(lexer.isAtEnd());
+  REQUIRE_THROWS_AS(lexer.scanToken(), UnexpectedInputError);
 }
 
 
