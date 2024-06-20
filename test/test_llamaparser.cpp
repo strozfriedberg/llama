@@ -70,7 +70,7 @@ public:
   void addToken(TokenType type, std::string lexeme) { tokens.push_back(Token(lexeme, type)); }
   void addToken(TokenType type) { addToken(type, std::string()); }
 
-  bool isAtEnd() { return *curr == '\0'; }
+  bool isAtEnd() const { return *curr == '\0'; }
 
 
   void string();
