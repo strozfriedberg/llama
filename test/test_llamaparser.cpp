@@ -14,6 +14,7 @@ string = "\w+"
 EQUAL = "="
 RULE = "rule"
 META = "meta"
+HASH = "hash"
 FILEMETADATA = "filemetadata"
 SIGNATURE = "signature"
 GREP = "grep"
@@ -30,6 +31,7 @@ enum class TokenType {
   FILEMETADATA,
   SIGNATURE,
   GREP,
+  HASH,
   COLON,
   RCB,
   ALPHA_NUM_UNDERSCORE,
@@ -46,7 +48,8 @@ namespace Llama {
     {"meta", TokenType::META},
     {"filemetadata", TokenType::FILEMETADATA},
     {"signature", TokenType::SIGNATURE},
-    {"grep", TokenType::GREP}
+    {"grep", TokenType::GREP},
+    {"hash", TokenType::HASH}
   };
 }
 
@@ -193,11 +196,46 @@ TEST_CASE("unterminatedString") {
   REQUIRE_THROWS_AS(lexer.parseString(), UnexpectedInputError);
 }
 
-TEST_CASE("parseIdentifier") {
+TEST_CASE("parseRuleId") {
   std::string input = "rule";
   LlamaLexer lexer(input);
   lexer.parseIdentifier();
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::RULE);
+}
+
+TEST_CASE("parseMetaId") {
+  std::string input = "meta";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::META);
+}
+
+TEST_CASE("parseFileMetadataId") {
+  std::string input = "filemetadata";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::FILEMETADATA);
+}
+
+TEST_CASE("parseSignatureId") {
+  std::string input = "signature";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::SIGNATURE);
+}
+
+TEST_CASE("parseGrepId") {
+  std::string input = "grep";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::GREP);
+}
+
+TEST_CASE("parseHash") {
+  std::string input = "hash";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::HASH);
 }
 
 TEST_CASE("parseAlphaNumUnderscore") {
