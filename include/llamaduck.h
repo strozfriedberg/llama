@@ -1,5 +1,7 @@
 #pragma once
 
+#include "throw.h"
+
 #include <duckdb.h>
 
 class LlamaDB {
