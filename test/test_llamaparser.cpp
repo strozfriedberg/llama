@@ -264,6 +264,24 @@ bool Token::is_rcb(std::string c) {
 }
 
 
+TEST_CASE("ScanToken") {
+  char* input = "{}:= \n\r\t";
+  LlamaLexer lexer(input);
+  lexer.scanToken();
+  REQUIRE(lexer.tokens.at(0)->getType() == TokenType::LCB);
+  lexer.scanToken();
+  REQUIRE(lexer.tokens.at(1)->getType() == TokenType::RCB);
+  lexer.scanToken();
+  REQUIRE(lexer.tokens.at(2)->getType() == TokenType::COLON);
+  lexer.scanToken();
+  REQUIRE(lexer.tokens.at(3)->getType() == TokenType::EQUAL);
+  lexer.scanToken();
+  lexer.scanToken();
+  lexer.scanToken();
+  lexer.scanToken();
+  REQUIRE(lexer.tokens.size() == 4);
+}
+
 
 TEST_CASE("RuleWithMetaSectionAndOneAssignment") {
   char* input = "rule { meta: some_id = \"some_value\" }";
