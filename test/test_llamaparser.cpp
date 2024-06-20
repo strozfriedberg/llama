@@ -41,8 +41,6 @@ enum class TokenType {
 
 class Token {
 public:
-  Token();
-  Token(std::string lexeme);
   Token(TokenType type) : lexeme(std::string()), type(type) {}
   Token(std::string lexeme, TokenType type) : lexeme(lexeme), type(type) {}
 
@@ -125,11 +123,6 @@ void LlamaLexer::parseString() {
   }
   advance(); // consume closing quote
   addToken(TokenType::DOUBLE_QUOTED_STRING, lexeme);
-}
-
-Token::Token() {
-  this->lexeme = "";
-  type = TokenType::NONE;
 }
 
 TEST_CASE("ScanToken") {
