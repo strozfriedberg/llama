@@ -45,19 +45,6 @@ public:
   Token(std::string lexeme);
   Token(TokenType type) : lexeme(std::string()), type(type) {}
   Token(std::string lexeme, TokenType type) : lexeme(lexeme), type(type) {}
-  TokenType getType() { return type; }
-
-  bool is_rule(std::string c);
-  bool is_lcb(std::string c);
-  bool is_meta(std::string c);
-  bool is_filemetadata(std::string c);
-  bool is_signature(std::string c);
-  bool is_grep(std::string c);
-  bool is_colon(std::string c);
-  bool is_alpha_num_underscore(std::string c);
-  bool is_equal(std::string c);
-  bool is_double_quoted_string(std::string c);
-  bool is_rcb(std::string c);
 
   std::string lexeme;
   TokenType type;
@@ -75,7 +62,6 @@ public:
   std::vector<Token*> getTokens() { return tokens; }
   void scanTokens();
 
-  std::string getNextLexeme();
   char advance() { return *curr++; }
   char peek() { return *(curr + 1); }
 
@@ -141,142 +127,22 @@ void LlamaLexer::string() {
   addToken(TokenType::DOUBLE_QUOTED_STRING, lexeme);
 }
 
-std::string LlamaLexer::getNextLexeme() {
-  std::string lexeme = "";
-
-  // ignore whitespace
-  while (std::isspace(*curr)) {
-    advance();
-  }
-
-  // handle double quoted strings
-  // this is a different branch because we must handle
-  // white space within double quoted strings
-  if (*curr == '"') {
-    // capture opening quote
-    lexeme.push_back(advance());
-
-    while (*curr != '"') {
-      lexeme += *curr;
-      advance();
-    }
-
-    // capture closing quote
-    lexeme.push_back(advance());
-  }
-  // process punctuation one character at a time
-  else if (std::ispunct(*curr)) {
-    lexeme += *curr;
-    advance();
-  }
-  // handle identifiers which must start with an alphanumeric character
-  else if (std::isalnum(*curr)) {
-    while (std::isalnum(*curr) || *curr == '_' || *curr == '-') {
-      lexeme += *curr;
-      advance();
-    }
-  }
-  else {
-    while (!std::isspace(*curr) && !isAtEnd()) {
-      lexeme += *curr;
-      advance();
-    }
-  }
-  return lexeme;
-}
-
 Token::Token() {
   this->lexeme = "";
   type = TokenType::NONE;
 }
 
-Token::Token(std::string lexeme) {
-  this->lexeme = lexeme;
-  if (is_rule(lexeme)) {
-    type = TokenType::RULE;
-  } else if (is_lcb(lexeme)) {
-    type = TokenType::LCB;
-  } else if (is_meta(lexeme)) {
-    type = TokenType::META;
-  } else if (is_filemetadata(lexeme)) {
-    type = TokenType::FILEMETADATA;
-  } else if (is_signature(lexeme)) {
-    type = TokenType::SIGNATURE;
-  } else if (is_grep(lexeme)) {
-    type = TokenType::GREP;
-  } else if (is_colon(lexeme)) {
-    type = TokenType::COLON;
-  } else if (is_alpha_num_underscore(lexeme)) {
-    type = TokenType::ALPHA_NUM_UNDERSCORE;
-  } else if (is_equal(lexeme)) {
-    type = TokenType::EQUAL;
-  } else if (is_double_quoted_string(lexeme)) {
-    type = TokenType::DOUBLE_QUOTED_STRING;
-    // strip quotes
-    this->lexeme = lexeme.substr(1, lexeme.size() - 2);
-  } else if (is_rcb(lexeme)) {
-    type = TokenType::RCB;
-  }
-}
-
-
-bool Token::is_rule(std::string c) {
-  return c == "rule";
-}
-
-bool Token::is_lcb(std::string c) {
-  return c == "{";
-}
-
-bool Token::is_meta(std::string c) {
-  return c == "meta";
-}
-
-bool Token::is_filemetadata(std::string c) {
-  return c == "filemetadata";
-}
-
-bool Token::is_signature(std::string c) {
-  return c == "signature";
-}
-
-bool Token::is_grep(std::string c) {
-  return c == "grep";
-}
-
-bool Token::is_colon(std::string c) {
-  return c == ":";
-}
-
-bool Token::is_alpha_num_underscore(std::string c) {
-  std::regex e("\\w+");
-  return std::regex_match(c.begin(), c.end(), e);
-}
-
-bool Token::is_equal(std::string c) {
-  return c == "=";
-}
-
-bool Token::is_double_quoted_string(std::string c) {
-  return (c[0] == '"' && c[c.size() - 1] == '"');
-}
-
-bool Token::is_rcb(std::string c) {
-  return c == "}";
-}
-
-
 TEST_CASE("ScanToken") {
   char* input = "{}:= \n\r\t";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.tokens.at(0)->getType() == TokenType::LCB);
+  REQUIRE(lexer.tokens.at(0)->type == TokenType::LCB);
   lexer.scanToken();
-  REQUIRE(lexer.tokens.at(1)->getType() == TokenType::RCB);
+  REQUIRE(lexer.tokens.at(1)->type == TokenType::RCB);
   lexer.scanToken();
-  REQUIRE(lexer.tokens.at(2)->getType() == TokenType::COLON);
+  REQUIRE(lexer.tokens.at(2)->type == TokenType::COLON);
   lexer.scanToken();
-  REQUIRE(lexer.tokens.at(3)->getType() == TokenType::EQUAL);
+  REQUIRE(lexer.tokens.at(3)->type == TokenType::EQUAL);
   lexer.scanToken();
   lexer.scanToken();
   lexer.scanToken();
@@ -290,17 +156,17 @@ TEST_CASE("ScanTokenString") {
   char* input = "\"some string\"{";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.tokens.at(0)->getType() == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.tokens.at(0)->type == TokenType::DOUBLE_QUOTED_STRING);
   REQUIRE(lexer.tokens.at(0)->lexeme == "some string");
   lexer.scanToken();
-  REQUIRE(lexer.tokens.at(1)->getType() == TokenType::LCB);
+  REQUIRE(lexer.tokens.at(1)->type == TokenType::LCB);
 }
 
 TEST_CASE("processString") {
   char* input = "some string\"";
   LlamaLexer lexer(input);
   lexer.string();
-  REQUIRE(lexer.tokens.at(0)->getType() == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.tokens.at(0)->type == TokenType::DOUBLE_QUOTED_STRING);
   REQUIRE(lexer.tokens.at(0)->lexeme == "some string");
 }
 
@@ -315,7 +181,7 @@ TEST_CASE("scanTokens") {
   LlamaLexer lexer(input);
   lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 3);
-  REQUIRE(lexer.getTokens()[0]->getType() == TokenType::LCB);
-  REQUIRE(lexer.getTokens()[1]->getType() == TokenType::RCB);
-  REQUIRE(lexer.getTokens()[2]->getType() == TokenType::ENDOFFILE);
+  REQUIRE(lexer.getTokens()[0]->type == TokenType::LCB);
+  REQUIRE(lexer.getTokens()[1]->type == TokenType::RCB);
+  REQUIRE(lexer.getTokens()[2]->type == TokenType::ENDOFFILE);
 }
