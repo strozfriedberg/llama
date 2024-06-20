@@ -42,7 +42,7 @@ enum class TokenType {
 class Token {
 public:
   Token(TokenType type) : lexeme(std::string()), type(type) {}
-  Token(std::string lexeme, TokenType type) : lexeme(lexeme), type(type) {}
+  Token(TokenType type, std::string lexeme) : lexeme(lexeme), type(type) {}
 
   std::string lexeme;
   TokenType type;
@@ -65,7 +65,7 @@ public:
 
   void scanToken();
 
-  void addToken(TokenType type, const std::string& lexeme) { tokens.push_back(Token(lexeme, type)); }
+  void addToken(TokenType type, const std::string& lexeme) { tokens.push_back(Token(type, lexeme)); }
   void addToken(TokenType type) { addToken(type, std::string()); }
 
   bool isAtEnd() const { return *curr == '\0'; }
