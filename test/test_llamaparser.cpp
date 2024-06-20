@@ -73,7 +73,7 @@ public:
   bool isAtEnd() const { return *curr == '\0'; }
 
 
-  void string();
+  void parseString();
 
   char* curr;
   std::vector<Token> tokens;
@@ -103,7 +103,7 @@ void LlamaLexer::scanToken() {
     case ':': addToken(TokenType::COLON); break;
     case '=': addToken(TokenType::EQUAL); break;
 
-    case '"': string(); break;
+    case '"': parseString(); break;
 
     case ' ':
     case '\n':
@@ -115,7 +115,7 @@ void LlamaLexer::scanToken() {
   }
 }
 
-void LlamaLexer::string() {
+void LlamaLexer::parseString() {
   std::string lexeme = std::string();
   while(*curr != '"' && !isAtEnd()) {
     lexeme.push_back(advance());
@@ -162,10 +162,10 @@ TEST_CASE("ScanTokenString") {
   REQUIRE(lexer.tokens.at(1).type == TokenType::LCB);
 }
 
-TEST_CASE("processString") {
+TEST_CASE("parseString") {
   char* input = "some string\"";
   LlamaLexer lexer(input);
-  lexer.string();
+  lexer.parseString();
   REQUIRE(lexer.tokens.at(0).type == TokenType::DOUBLE_QUOTED_STRING);
   REQUIRE(lexer.tokens.at(0).lexeme == "some string");
 }
@@ -173,7 +173,7 @@ TEST_CASE("processString") {
 TEST_CASE("unterminatedString") {
   char* input = "some string";
   LlamaLexer lexer(input);
-  REQUIRE_THROWS_AS(lexer.string(), UnexpectedInputError);
+  REQUIRE_THROWS_AS(lexer.parseString(), UnexpectedInputError);
 }
 
 TEST_CASE("scanTokens") {
