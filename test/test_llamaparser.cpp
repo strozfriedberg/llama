@@ -116,6 +116,8 @@ void LlamaLexer::scanToken() {
     case ':': addToken(TokenType::COLON); break;
     case '=': addToken(TokenType::EQUAL); break;
 
+    case '"': string(); break;
+
     case ' ':
     case '\n':
     case '\r':
@@ -128,12 +130,9 @@ void LlamaLexer::scanToken() {
 
 void LlamaLexer::string() {
   std::string lexeme = std::string();
-  advance(); // consume opening quote
-  while (*curr != '"' && !isAtEnd()) {
-    lexeme.push_back(*curr);
-    advance();
+  for (char c = advance() ; c != '"' && !isAtEnd(); c = advance()) {
+    lexeme.push_back(c);
   }
-  advance(); // consume closing quote
   addToken(TokenType::DOUBLE_QUOTED_STRING, lexeme);
 }
 
@@ -281,6 +280,24 @@ TEST_CASE("ScanToken") {
   REQUIRE(lexer.tokens.size() == 4);
   REQUIRE(lexer.isAtEnd());
   REQUIRE_THROWS_AS(lexer.scanToken(), UnexpectedInputError);
+}
+
+TEST_CASE("ScanTokenString") {
+  char* input = "\"some string\"{";
+  LlamaLexer lexer(input);
+  lexer.scanToken();
+  REQUIRE(lexer.tokens.at(0)->getType() == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.tokens.at(0)->lexeme == "some string");
+  lexer.scanToken();
+  REQUIRE(lexer.tokens.at(1)->getType() == TokenType::LCB);
+}
+
+TEST_CASE("processString") {
+  char* input = "some string\"";
+  LlamaLexer lexer(input);
+  lexer.string();
+  REQUIRE(lexer.tokens.at(0)->getType() == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.tokens.at(0)->lexeme == "some string");
 }
 
 
