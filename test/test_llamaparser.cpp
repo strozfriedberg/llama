@@ -63,7 +63,7 @@ public:
   void scanTokens();
 
   char advance() { return *curr++; }
-  char peek() { return *(curr + 1); }
+  char peek() const { return *(curr + 1); }
 
   void scanToken();
 
