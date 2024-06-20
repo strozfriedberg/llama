@@ -75,7 +75,6 @@ public:
   std::vector<Token*> getTokens() { return tokens; }
   void scanTokens();
 
-private:
   std::string getNextLexeme();
   char advance() { return *curr++; }
   char peek() { return *(curr + 1); }
