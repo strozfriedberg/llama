@@ -48,9 +48,8 @@ public:
 };
 
 class UnexpectedInputError : public std::runtime_error {
-  std::string message;
 public:
-  UnexpectedInputError(std::string message) : std::runtime_error(message) {}
+  UnexpectedInputError(const std::string& message) : std::runtime_error(message) {}
 };
 
 class LlamaLexer {
