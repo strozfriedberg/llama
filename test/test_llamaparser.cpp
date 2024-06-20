@@ -46,7 +46,6 @@ public:
   Token(std::string lexeme, TokenType type) : lexeme(lexeme), type(type) {}
   TokenType getType() { return type; }
 
-private:
   bool is_rule(std::string c);
   bool is_lcb(std::string c);
   bool is_meta(std::string c);
