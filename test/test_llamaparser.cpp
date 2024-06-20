@@ -177,7 +177,6 @@ std::string LlamaLexer::getNextLexeme() {
       advance();
     }
   }
-  print(lexeme);
   return lexeme;
 }
 
