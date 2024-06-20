@@ -67,7 +67,7 @@ public:
 
   void scanToken();
 
-  void addToken(TokenType type, std::string lexeme) { tokens.push_back(Token(lexeme, type)); }
+  void addToken(TokenType type, const std::string& lexeme) { tokens.push_back(Token(lexeme, type)); }
   void addToken(TokenType type) { addToken(type, std::string()); }
 
   bool isAtEnd() const { return *curr == '\0'; }
