@@ -35,7 +35,8 @@ enum class TokenType {
   ALPHA_NUM_UNDERSCORE,
   DOUBLE_QUOTED_STRING,
   STRING,
-  EQUAL
+  EQUAL,
+  ENDOFFILE
 };
 
 class Token {
@@ -106,6 +107,8 @@ void LlamaLexer::scanTokens() {
     Token* token = new Token(lexeme);
     tokens.push_back(token);
   }
+
+  tokens.push_back(new Token(TokenType::ENDOFFILE));
 }
 
 void LlamaLexer::scanToken() {
@@ -299,12 +302,21 @@ TEST_CASE("processString") {
   REQUIRE(lexer.tokens.at(0)->lexeme == "some string");
 }
 
+TEST_CASE("scanTokens") {
+  char* input = "{ }";
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  REQUIRE(lexer.getTokens().size() == 3);
+  REQUIRE(lexer.getTokens()[0]->getType() == TokenType::LCB);
+  REQUIRE(lexer.getTokens()[1]->getType() == TokenType::RCB);
+  REQUIRE(lexer.getTokens()[2]->getType() == TokenType::ENDOFFILE);
+}
 
 TEST_CASE("RuleWithMetaSectionAndOneAssignment") {
   char* input = "rule { meta: some_id = \"some_value\" }";
   LlamaLexer lexer(input);
   lexer.scanTokens();
-  REQUIRE(lexer.getTokens().size() == 8);
+  REQUIRE(lexer.getTokens().size() == 9);
   REQUIRE(lexer.getTokens()[0]->getType() == TokenType::RULE);
   REQUIRE(lexer.getTokens()[1]->getType() == TokenType::LCB);
   REQUIRE(lexer.getTokens()[2]->getType() == TokenType::META);
@@ -313,13 +325,14 @@ TEST_CASE("RuleWithMetaSectionAndOneAssignment") {
   REQUIRE(lexer.getTokens()[5]->getType() == TokenType::EQUAL);
   REQUIRE(lexer.getTokens()[6]->getType() == TokenType::DOUBLE_QUOTED_STRING);
   REQUIRE(lexer.getTokens()[7]->getType() == TokenType::RCB);
+  REQUIRE(lexer.getTokens()[8]->getType() == TokenType::ENDOFFILE);
 }
 
 TEST_CASE("RuleWithMultipleSpaces") {
   char* input = "rule    {   meta:    some_id  = \"some_value\"   }";
   LlamaLexer lexer(input);
   lexer.scanTokens();
-  REQUIRE(lexer.getTokens().size() == 8);
+  REQUIRE(lexer.getTokens().size() == 9);
   REQUIRE(lexer.getTokens()[0]->getType() == TokenType::RULE);
   REQUIRE(lexer.getTokens()[1]->getType() == TokenType::LCB);
   REQUIRE(lexer.getTokens()[2]->getType() == TokenType::META);
@@ -328,25 +341,27 @@ TEST_CASE("RuleWithMultipleSpaces") {
   REQUIRE(lexer.getTokens()[5]->getType() == TokenType::EQUAL);
   REQUIRE(lexer.getTokens()[6]->getType() == TokenType::DOUBLE_QUOTED_STRING);
   REQUIRE(lexer.getTokens()[7]->getType() == TokenType::RCB);
+  REQUIRE(lexer.getTokens()[8]->getType() == TokenType::ENDOFFILE);
 }
 
 TEST_CASE("RuleWithNewLinesAndTabs") {
   char* input = "rule {\n\tmeta:\n}";
   LlamaLexer lexer(input);
   lexer.scanTokens();
-  REQUIRE(lexer.getTokens().size() == 5);
+  REQUIRE(lexer.getTokens().size() == 6);
   REQUIRE(lexer.getTokens()[0]->getType() == TokenType::RULE);
   REQUIRE(lexer.getTokens()[1]->getType() == TokenType::LCB);
   REQUIRE(lexer.getTokens()[2]->getType() == TokenType::META);
   REQUIRE(lexer.getTokens()[3]->getType() == TokenType::COLON);
   REQUIRE(lexer.getTokens()[4]->getType() == TokenType::RCB);
+  REQUIRE(lexer.getTokens()[5]->getType() == TokenType::ENDOFFILE);
 }
 
 TEST_CASE("RuleWithMultipleAssignments") {
   char* input = "rule { meta: some_id = \"some_value\"\n\t\tsome_other_id = \"some_other_value\" }";
   LlamaLexer lexer(input);
   lexer.scanTokens();
-  REQUIRE(lexer.getTokens().size() == 11);
+  REQUIRE(lexer.getTokens().size() == 12);
   REQUIRE(lexer.getTokens()[0]->getType() == TokenType::RULE);
   REQUIRE(lexer.getTokens()[1]->getType() == TokenType::LCB);
   REQUIRE(lexer.getTokens()[2]->getType() == TokenType::META);
@@ -358,13 +373,14 @@ TEST_CASE("RuleWithMultipleAssignments") {
   REQUIRE(lexer.getTokens()[8]->getType() == TokenType::EQUAL);
   REQUIRE(lexer.getTokens()[9]->getType() == TokenType::DOUBLE_QUOTED_STRING);
   REQUIRE(lexer.getTokens()[10]->getType() == TokenType::RCB);
+  REQUIRE(lexer.getTokens()[11]->getType() == TokenType::ENDOFFILE);
 }
 
 TEST_CASE("RuleWithMetaFilemetadataGrepSignatureSections") {
   char* input = "rule { meta: some_id = \"some_value\" filemetadata: grep: signature: }";
   LlamaLexer lexer(input);
   lexer.scanTokens();
-  REQUIRE(lexer.getTokens().size() == 14);
+  REQUIRE(lexer.getTokens().size() == 15);
   REQUIRE(lexer.getTokens()[0]->getType() == TokenType::RULE);
   REQUIRE(lexer.getTokens()[1]->getType() == TokenType::LCB);
   REQUIRE(lexer.getTokens()[2]->getType() == TokenType::META);
@@ -379,4 +395,5 @@ TEST_CASE("RuleWithMetaFilemetadataGrepSignatureSections") {
   REQUIRE(lexer.getTokens()[11]->getType() == TokenType::SIGNATURE);
   REQUIRE(lexer.getTokens()[12]->getType() == TokenType::COLON);
   REQUIRE(lexer.getTokens()[13]->getType() == TokenType::RCB);
+  REQUIRE(lexer.getTokens()[14]->getType() == TokenType::ENDOFFILE);
 }
