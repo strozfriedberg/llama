@@ -41,10 +41,10 @@ enum class TokenType {
 
 class Token {
 public:
-  Token(TokenType type, const std::string& lexeme = "") : lexeme(lexeme), type(type) {}
+  Token(TokenType type, const std::string& lexeme = "") : Lexeme(lexeme), Type(type) {}
 
-  std::string lexeme;
-  TokenType type;
+  std::string Lexeme;
+  TokenType Type;
 };
 
 class UnexpectedInputError : public std::runtime_error {
@@ -54,26 +54,26 @@ public:
 
 class LlamaLexer {
 public:
-  LlamaLexer(const std::string& input) : input(input), cur(input.data()) {};
+  LlamaLexer(const std::string& input) : Input(input), Cur(Input.data()) {};
 
   void scanTokens();
   void scanToken();
 
   void parseString();
 
-  void addToken(TokenType type, const std::string& lexeme = "") { tokens.push_back(Token(type, lexeme)); }
+  void addToken(TokenType type, const std::string& lexeme = "") { Tokens.push_back(Token(type, lexeme)); }
 
-  char advance() { return *cur++; }
+  char advance() { return *Cur++; }
 
-  char peek() const { return *(cur + 1); }
-  bool isAtEnd() const { return *cur == '\0'; }
+  char peek() const { return *(Cur + 1); }
+  bool isAtEnd() const { return *Cur == '\0'; }
 
-  const std::vector<Token>& getTokens() const { return tokens; }
+  const std::vector<Token>& getTokens() const { return Tokens; }
 
 private:
-  const std::string& input;
-  const char* cur;
-  std::vector<Token> tokens;
+  const std::string& Input;
+  const char* Cur;
+  std::vector<Token> Tokens;
 };
 
 void print(std::string s) {
@@ -81,11 +81,11 @@ void print(std::string s) {
 }
 
 void LlamaLexer::scanTokens() {
-  while (*cur != '\0') {
+  while (*Cur != '\0') {
     scanToken();
   }
 
-  tokens.push_back(Token(TokenType::ENDOFFILE));
+  Tokens.push_back(Token(TokenType::ENDOFFILE));
 }
 
 void LlamaLexer::scanToken() {
@@ -110,7 +110,7 @@ void LlamaLexer::scanToken() {
 
 void LlamaLexer::parseString() {
   std::string lexeme = std::string();
-  while(*cur != '"' && !isAtEnd()) {
+  while(*Cur != '"' && !isAtEnd()) {
     lexeme.push_back(advance());
   }
   if (isAtEnd()) {
@@ -124,13 +124,13 @@ TEST_CASE("ScanToken") {
   std::string input = "{}:= \n\r\t";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(0).type == TokenType::LCB);
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::LCB);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(1).type == TokenType::RCB);
+  REQUIRE(lexer.getTokens().at(1).Type == TokenType::RCB);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(2).type == TokenType::COLON);
+  REQUIRE(lexer.getTokens().at(2).Type == TokenType::COLON);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(3).type == TokenType::EQUAL);
+  REQUIRE(lexer.getTokens().at(3).Type == TokenType::EQUAL);
   lexer.scanToken();
   lexer.scanToken();
   lexer.scanToken();
@@ -144,18 +144,18 @@ TEST_CASE("ScanTokenString") {
   std::string input = "\"some string\"{";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(0).type == TokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(lexer.getTokens().at(0).lexeme == "some string");
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.getTokens().at(0).Lexeme == "some string");
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(1).type == TokenType::LCB);
+  REQUIRE(lexer.getTokens().at(1).Type == TokenType::LCB);
 }
 
 TEST_CASE("parseString") {
   std::string input = "some string\"";
   LlamaLexer lexer(input);
   lexer.parseString();
-  REQUIRE(lexer.getTokens().at(0).type == TokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(lexer.getTokens().at(0).lexeme == "some string");
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.getTokens().at(0).Lexeme == "some string");
 }
 
 TEST_CASE("unterminatedString") {
@@ -169,7 +169,7 @@ TEST_CASE("scanTokens") {
   LlamaLexer lexer(input);
   lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 3);
-  REQUIRE(lexer.getTokens()[0].type == TokenType::LCB);
-  REQUIRE(lexer.getTokens()[1].type == TokenType::RCB);
-  REQUIRE(lexer.getTokens()[2].type == TokenType::ENDOFFILE);
+  REQUIRE(lexer.getTokens()[0].Type == TokenType::LCB);
+  REQUIRE(lexer.getTokens()[1].Type == TokenType::RCB);
+  REQUIRE(lexer.getTokens()[2].Type == TokenType::ENDOFFILE);
 }
