@@ -19,6 +19,7 @@ src_llama_common = \
 	src/hex.cpp \
 	src/inodeandblocktrackerimpl.cpp \
 	src/inputreader.cpp \
+	src/lexer.cpp \
 	src/llama.cpp \
 	src/outputtar.cpp \
 	src/pooloutputhandler.cpp \
