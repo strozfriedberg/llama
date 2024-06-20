@@ -59,7 +59,7 @@ public:
 class LlamaLexer {
 public:
   LlamaLexer(char* input);
-  std::vector<Token*> getTokens() { return tokens; }
+  std::vector<Token> getTokens() { return tokens; }
   void scanTokens();
 
   char advance() { return *curr++; }
@@ -67,7 +67,7 @@ public:
 
   void scanToken();
 
-  void addToken(TokenType type, std::string lexeme) { tokens.push_back(new Token(lexeme, type)); }
+  void addToken(TokenType type, std::string lexeme) { tokens.push_back(Token(lexeme, type)); }
   void addToken(TokenType type) { addToken(type, std::string()); }
 
   bool isAtEnd() { return *curr == '\0'; }
@@ -76,7 +76,7 @@ public:
   void string();
 
   char* curr;
-  std::vector<Token*> tokens;
+  std::vector<Token> tokens;
 };
 
 void print(std::string s) {
@@ -92,7 +92,7 @@ void LlamaLexer::scanTokens() {
     scanToken();
   }
 
-  tokens.push_back(new Token(TokenType::ENDOFFILE));
+  tokens.push_back(Token(TokenType::ENDOFFILE));
 }
 
 void LlamaLexer::scanToken() {
@@ -136,13 +136,13 @@ TEST_CASE("ScanToken") {
   char* input = "{}:= \n\r\t";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.tokens.at(0)->type == TokenType::LCB);
+  REQUIRE(lexer.tokens.at(0).type == TokenType::LCB);
   lexer.scanToken();
-  REQUIRE(lexer.tokens.at(1)->type == TokenType::RCB);
+  REQUIRE(lexer.tokens.at(1).type == TokenType::RCB);
   lexer.scanToken();
-  REQUIRE(lexer.tokens.at(2)->type == TokenType::COLON);
+  REQUIRE(lexer.tokens.at(2).type == TokenType::COLON);
   lexer.scanToken();
-  REQUIRE(lexer.tokens.at(3)->type == TokenType::EQUAL);
+  REQUIRE(lexer.tokens.at(3).type == TokenType::EQUAL);
   lexer.scanToken();
   lexer.scanToken();
   lexer.scanToken();
@@ -156,18 +156,18 @@ TEST_CASE("ScanTokenString") {
   char* input = "\"some string\"{";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.tokens.at(0)->type == TokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(lexer.tokens.at(0)->lexeme == "some string");
+  REQUIRE(lexer.tokens.at(0).type == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.tokens.at(0).lexeme == "some string");
   lexer.scanToken();
-  REQUIRE(lexer.tokens.at(1)->type == TokenType::LCB);
+  REQUIRE(lexer.tokens.at(1).type == TokenType::LCB);
 }
 
 TEST_CASE("processString") {
   char* input = "some string\"";
   LlamaLexer lexer(input);
   lexer.string();
-  REQUIRE(lexer.tokens.at(0)->type == TokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(lexer.tokens.at(0)->lexeme == "some string");
+  REQUIRE(lexer.tokens.at(0).type == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.tokens.at(0).lexeme == "some string");
 }
 
 TEST_CASE("unterminatedString") {
@@ -181,7 +181,7 @@ TEST_CASE("scanTokens") {
   LlamaLexer lexer(input);
   lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 3);
-  REQUIRE(lexer.getTokens()[0]->type == TokenType::LCB);
-  REQUIRE(lexer.getTokens()[1]->type == TokenType::RCB);
-  REQUIRE(lexer.getTokens()[2]->type == TokenType::ENDOFFILE);
+  REQUIRE(lexer.getTokens()[0].type == TokenType::LCB);
+  REQUIRE(lexer.getTokens()[1].type == TokenType::RCB);
+  REQUIRE(lexer.getTokens()[2].type == TokenType::ENDOFFILE);
 }
