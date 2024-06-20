@@ -55,7 +55,7 @@ public:
 class LlamaLexer {
 public:
   LlamaLexer(char* input);
-  std::vector<Token> getTokens() { return tokens; }
+  const std::vector<Token>& getTokens() const { return tokens; }
   void scanTokens();
 
   char advance() { return *curr++; }
@@ -71,6 +71,7 @@ public:
 
   void parseString();
 
+private:
   char* curr;
   std::vector<Token> tokens;
 };
@@ -127,18 +128,18 @@ TEST_CASE("ScanToken") {
   char* input = "{}:= \n\r\t";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.tokens.at(0).type == TokenType::LCB);
+  REQUIRE(lexer.getTokens().at(0).type == TokenType::LCB);
   lexer.scanToken();
-  REQUIRE(lexer.tokens.at(1).type == TokenType::RCB);
+  REQUIRE(lexer.getTokens().at(1).type == TokenType::RCB);
   lexer.scanToken();
-  REQUIRE(lexer.tokens.at(2).type == TokenType::COLON);
+  REQUIRE(lexer.getTokens().at(2).type == TokenType::COLON);
   lexer.scanToken();
-  REQUIRE(lexer.tokens.at(3).type == TokenType::EQUAL);
-  lexer.scanToken();
-  lexer.scanToken();
+  REQUIRE(lexer.getTokens().at(3).type == TokenType::EQUAL);
   lexer.scanToken();
   lexer.scanToken();
-  REQUIRE(lexer.tokens.size() == 4);
+  lexer.scanToken();
+  lexer.scanToken();
+  REQUIRE(lexer.getTokens().size() == 4);
   REQUIRE(lexer.isAtEnd());
   REQUIRE_THROWS_AS(lexer.scanToken(), UnexpectedInputError);
 }
@@ -147,18 +148,18 @@ TEST_CASE("ScanTokenString") {
   char* input = "\"some string\"{";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.tokens.at(0).type == TokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(lexer.tokens.at(0).lexeme == "some string");
+  REQUIRE(lexer.getTokens().at(0).type == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.getTokens().at(0).lexeme == "some string");
   lexer.scanToken();
-  REQUIRE(lexer.tokens.at(1).type == TokenType::LCB);
+  REQUIRE(lexer.getTokens().at(1).type == TokenType::LCB);
 }
 
 TEST_CASE("parseString") {
   char* input = "some string\"";
   LlamaLexer lexer(input);
   lexer.parseString();
-  REQUIRE(lexer.tokens.at(0).type == TokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(lexer.tokens.at(0).lexeme == "some string");
+  REQUIRE(lexer.getTokens().at(0).type == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.getTokens().at(0).lexeme == "some string");
 }
 
 TEST_CASE("unterminatedString") {
