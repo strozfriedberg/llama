@@ -41,8 +41,7 @@ enum class TokenType {
 
 class Token {
 public:
-  Token(TokenType type) : lexeme(std::string()), type(type) {}
-  Token(TokenType type, std::string lexeme) : lexeme(lexeme), type(type) {}
+  Token(TokenType type, const std::string& lexeme = "") : lexeme(lexeme), type(type) {}
 
   std::string lexeme;
   TokenType type;
