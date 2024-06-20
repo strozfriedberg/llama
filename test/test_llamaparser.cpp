@@ -81,7 +81,7 @@ void print(std::string s) {
 }
 
 void LlamaLexer::scanTokens() {
-  while (*Cur != '\0') {
+  while (!isAtEnd()) {
     scanToken();
   }
 
