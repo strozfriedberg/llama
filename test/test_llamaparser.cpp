@@ -54,7 +54,7 @@ public:
 
 class LlamaLexer {
 public:
-  LlamaLexer(const std::string& input) : Input(input), Cur(Input.data()) {};
+  LlamaLexer(const std::string& input) : Input(input), Cur(Input.begin()) {};
 
   void scanTokens();
   void scanToken();
@@ -66,13 +66,13 @@ public:
   char advance() { return *Cur++; }
 
   char peek() const { return *(Cur + 1); }
-  bool isAtEnd() const { return *Cur == '\0'; }
+  bool isAtEnd() const { return Cur == Input.end(); }
 
   const std::vector<Token>& getTokens() const { return Tokens; }
 
 private:
   const std::string& Input;
-  const char* Cur;
+  std::string::const_iterator Cur;
   std::vector<Token> Tokens;
 };
 
@@ -172,4 +172,11 @@ TEST_CASE("scanTokens") {
   REQUIRE(lexer.getTokens()[0].Type == TokenType::LCB);
   REQUIRE(lexer.getTokens()[1].Type == TokenType::RCB);
   REQUIRE(lexer.getTokens()[2].Type == TokenType::ENDOFFILE);
+}
+
+TEST_CASE("inputIterator") {
+  std::string input = "{";
+  LlamaLexer lexer(input);
+  REQUIRE(lexer.advance() == '{');
+  REQUIRE(lexer.isAtEnd());
 }
