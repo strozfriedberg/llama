@@ -49,8 +49,8 @@ class Token {
 public:
   Token(TokenType type, int32_t start, int32_t end) : Type(type), Start(start), End(end) {}
 
-  int32_t Start, End;
   TokenType Type;
+  int32_t Start, End;
 };
 
 class UnexpectedInputError : public std::runtime_error {
