@@ -56,7 +56,9 @@ void Llama::search() {
   if (init()) {
     // std::cout << "Number of patterns: " << lg_pattern_count(LgProg.get())
     //           << std::endl;
-    auto out = std::shared_ptr<OutputWriter>(new OutputTar(Opts->Output, Opts->OutputCodec));
+    std::filesystem::path outdir(Opts->Output);
+    std::filesystem::create_directories(outdir);
+    auto out = std::shared_ptr<OutputWriter>(new OutputTar(outdir / "llama", Opts->OutputCodec));
     auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, out));
 
     auto protoProc = std::make_shared<Processor>(LgProg);
