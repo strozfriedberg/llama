@@ -47,10 +47,9 @@ namespace Llama {
 
 class Token {
 public:
-  Token(TokenType type, const std::string& lexeme = "") : Lexeme(lexeme), Type(type) {}
+  Token(TokenType type, int32_t start, int32_t end) : Type(type), Start(start), End(end) {}
 
-  // replace with start, end
-  std::string Lexeme;
+  int32_t Start, End;
   TokenType Type;
 };
 
@@ -61,7 +60,7 @@ public:
 
 class LlamaLexer {
 public:
-  LlamaLexer(const std::string& input) : Input(input), Cur(Input.begin()) {};
+  LlamaLexer(const std::string& input) : Input(input), CurIdx(0) {};
 
   void scanTokens();
   void scanToken();
@@ -69,17 +68,17 @@ public:
   void parseIdentifier();
   void parseString();
 
-  void addToken(TokenType type, const std::string& lexeme = "") { Tokens.push_back(Token(type, lexeme)); }
+  void addToken(TokenType type, int32_t start, int32_t end) { Tokens.push_back(Token(type, start, end)); }
 
-  char advance() { return *Cur++; }
+  char advance() { return Input.at(CurIdx++); }
 
-  char peek() const { return *(Cur + 1); }
-  bool isAtEnd() const { return Cur == Input.end(); }
+  bool isAtEnd() const { return CurIdx >= Input.size(); }
 
+  char getCurChar() const;
   const std::vector<Token>& getTokens() const { return Tokens; }
 
 private:
   const std::string& Input;
-  std::string::const_iterator Cur;
+  int32_t CurIdx;
   std::vector<Token> Tokens;
 };

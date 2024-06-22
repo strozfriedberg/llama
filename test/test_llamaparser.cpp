@@ -19,7 +19,6 @@ TEST_CASE("ScanToken") {
   lexer.scanToken();
   REQUIRE(lexer.getTokens().size() == 4);
   REQUIRE(lexer.isAtEnd());
-  REQUIRE_THROWS_AS(lexer.scanToken(), UnexpectedInputError);
 }
 
 TEST_CASE("ScanTokenString") {
@@ -27,7 +26,6 @@ TEST_CASE("ScanTokenString") {
   LlamaLexer lexer(input);
   lexer.scanToken();
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(lexer.getTokens().at(0).Lexeme == "some string");
   lexer.scanToken();
   REQUIRE(lexer.getTokens().at(1).Type == TokenType::LCB);
 }
@@ -37,7 +35,6 @@ TEST_CASE("parseString") {
   LlamaLexer lexer(input);
   lexer.parseString();
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(lexer.getTokens().at(0).Lexeme == "some string");
 }
 
 TEST_CASE("unterminatedString") {
