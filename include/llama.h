@@ -23,7 +23,7 @@ public:
 private:
   bool readpatterns(const std::vector<std::string>& keyFiles);
   bool openInput(const std::string& input);
-  bool openOutput(const std::string& outputFile, Codec codec);
+  bool dbInit();
 
   std::shared_ptr<Cli> CliParser;
 
