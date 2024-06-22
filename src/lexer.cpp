@@ -29,7 +29,12 @@ void LlamaLexer::scanToken() {
     case '\t': break;
 
     default:
-      throw UnexpectedInputError("Unexpected input character: " + std::string{c});
+      if (isalnum(c)) {
+        parseIdentifier();
+      }
+      else {
+        throw UnexpectedInputError("Unexpected input character: " + std::string{c});
+      }
   }
 }
 

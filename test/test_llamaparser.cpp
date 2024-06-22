@@ -102,6 +102,24 @@ TEST_CASE("scanTokens") {
   REQUIRE(lexer.getTokens()[2].Type == TokenType::ENDOFFILE);
 }
 
+TEST_CASE("scanTokensParseIdentifierKeyword") {
+  std::string input = "rule";
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  REQUIRE(lexer.getTokens().size() == 2);
+  REQUIRE(lexer.getTokens()[0].Type == TokenType::RULE);
+  REQUIRE(lexer.getTokens()[1].Type == TokenType::ENDOFFILE);
+}
+
+TEST_CASE("parseTokensParseIdentifierNonKeyword") {
+  std::string input = "foobar";
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  REQUIRE(lexer.getTokens().size() == 2);
+  REQUIRE(lexer.getTokens()[0].Type == TokenType::ALPHA_NUM_UNDERSCORE);
+  REQUIRE(lexer.getTokens()[1].Type == TokenType::ENDOFFILE);
+}
+
 TEST_CASE("inputIterator") {
   std::string input = "{";
   LlamaLexer lexer(input);
