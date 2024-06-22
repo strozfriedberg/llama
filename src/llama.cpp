@@ -77,10 +77,7 @@ void Llama::search() {
     Pool.join();
     std::cerr << "Hashing Time: " << scheduler->getProcessorTime() << "s\n";
 
-    std::string query = "EXPORT DATABASE '";
-    query += outdir.string();
-    query += "' (FORMAT PARQUET);";
-    duckdb_query(DbConn.get(), query.c_str(), nullptr);
+    writeDB(outdir.string());
     // std::cout << "All done" << std::endl;
   }
   else {
@@ -162,5 +159,12 @@ bool Llama::init() {
     return dbInit();
   });
   return readPats.get() && open.get() && db.get();
+}
+
+void Llama::writeDB(const std::string& outdir) {
+  std::string query = "EXPORT DATABASE '";
+  query += outdir;
+  query += "' (FORMAT PARQUET);";
+  duckdb_query(DbConn.get(), query.c_str(), nullptr);
 }
 
