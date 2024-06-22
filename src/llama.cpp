@@ -7,7 +7,6 @@
 #include "inputhandler.h"
 #include "inputreader.h"
 #include "outputhandler.h"
-#include "outputstream.h"
 #include "outputtar.h"
 #include "pooloutputhandler.h"
 #include "processor.h"
@@ -57,10 +56,7 @@ void Llama::search() {
   if (init()) {
     // std::cout << "Number of patterns: " << lg_pattern_count(LgProg.get())
     //           << std::endl;
-    auto out = std::shared_ptr<OutputWriter>(Opts->Output == "-" ?
-      static_cast<OutputWriter*>(new OutputStream(std::cout)) :
-      static_cast<OutputWriter*>(new OutputTar(Opts->Output, Opts->OutputCodec))
-    );
+    auto out = std::shared_ptr<OutputWriter>(new OutputTar(Opts->Output, Opts->OutputCodec));
     auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, out));
 
     auto protoProc = std::make_shared<Processor>(LgProg);
