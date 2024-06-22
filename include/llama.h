@@ -1,6 +1,7 @@
 #pragma once
 
 #include "boost_asio.h"
+#include "llamaduck.h"
 
 struct Options;
 struct ProgramHandle;
@@ -29,4 +30,7 @@ private:
   std::shared_ptr<Options> Opts;
   std::shared_ptr<ProgramHandle> LgProg;
   std::shared_ptr<InputReader> Input;
+
+  LlamaDB Db;
+  LlamaDBConnection DbConn;
 };
