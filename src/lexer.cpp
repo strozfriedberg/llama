@@ -29,7 +29,10 @@ void LlamaLexer::scanToken() {
     case '\t': break;
 
     default:
-      if (isalnum(c)) {
+      if (isdigit(c)) {
+        parseNumber();
+      }
+      else if (isalnum(c)) {
         parseIdentifier();
       }
       else {

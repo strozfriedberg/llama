@@ -138,19 +138,22 @@ TEST_CASE("inputIterator") {
 }
 
 TEST_CASE("scanTokensFullRule") {
-  std::string input = "rule MyRule {\n\tmeta:\n\t\tdescription: \"this is my rule\"\n}";
+  std::string input = "rule MyRule {\n\tmeta:\n\t\tdescription = \"this is my rule\"\nsomething = 5\n}";
   LlamaLexer lexer(input);
   lexer.scanTokens();
   std::vector<Token> tokens = lexer.getTokens();
-  REQUIRE(tokens.size() == 10);
+  REQUIRE(tokens.size() == 13);
   REQUIRE(tokens[0].Type == TokenType::RULE);
   REQUIRE(tokens[1].Type == TokenType::ALPHA_NUM_UNDERSCORE);
   REQUIRE(tokens[2].Type == TokenType::LCB);
   REQUIRE(tokens[3].Type == TokenType::META);
   REQUIRE(tokens[4].Type == TokenType::COLON);
   REQUIRE(tokens[5].Type == TokenType::ALPHA_NUM_UNDERSCORE);
-  REQUIRE(tokens[6].Type == TokenType::COLON);
+  REQUIRE(tokens[6].Type == TokenType::EQUAL);
   REQUIRE(tokens[7].Type == TokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(tokens[8].Type == TokenType::RCB);
-  REQUIRE(tokens[9].Type == TokenType::ENDOFFILE);
+  REQUIRE(tokens[8].Type == TokenType::ALPHA_NUM_UNDERSCORE);
+  REQUIRE(tokens[9].Type == TokenType::EQUAL);
+  REQUIRE(tokens[10].Type == TokenType::NUMBER);
+  REQUIRE(tokens[11].Type == TokenType::RCB);
+  REQUIRE(tokens[12].Type == TokenType::ENDOFFILE);
 }
