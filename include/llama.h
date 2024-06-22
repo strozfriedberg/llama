@@ -24,6 +24,8 @@ private:
   bool openInput(const std::string& input);
   bool dbInit();
 
+  void writeDB(const std::string& outdir);
+
   std::shared_ptr<Cli> CliParser;
 
   boost::asio::thread_pool Pool;
