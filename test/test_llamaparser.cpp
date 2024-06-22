@@ -127,3 +127,21 @@ TEST_CASE("inputIterator") {
   REQUIRE(lexer.advance() == '{');
   REQUIRE(lexer.isAtEnd());
 }
+
+TEST_CASE("scanTokensFullRule") {
+  std::string input = "rule MyRule {\n\tmeta:\n\t\tdescription: \"this is my rule\"\n}";
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  std::vector<Token> tokens = lexer.getTokens();
+  REQUIRE(tokens.size() == 10);
+  REQUIRE(tokens[0].Type == TokenType::RULE);
+  REQUIRE(tokens[1].Type == TokenType::ALPHA_NUM_UNDERSCORE);
+  REQUIRE(tokens[2].Type == TokenType::LCB);
+  REQUIRE(tokens[3].Type == TokenType::META);
+  REQUIRE(tokens[4].Type == TokenType::COLON);
+  REQUIRE(tokens[5].Type == TokenType::ALPHA_NUM_UNDERSCORE);
+  REQUIRE(tokens[6].Type == TokenType::COLON);
+  REQUIRE(tokens[7].Type == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(tokens[8].Type == TokenType::RCB);
+  REQUIRE(tokens[9].Type == TokenType::ENDOFFILE);
+}
