@@ -13,7 +13,7 @@ void LlamaLexer::scanTokens() {
 }
 
 void LlamaLexer::scanToken() {
-  int32_t start = CurIdx;
+  size_t start = CurIdx;
   char c = advance();
   switch(c) {
     case '{': addToken(TokenType::LCB, start, CurIdx); break;
@@ -39,7 +39,7 @@ void LlamaLexer::scanToken() {
 }
 
 void LlamaLexer::parseIdentifier() {
-  int32_t start = CurIdx;
+  size_t start = CurIdx;
   if (CurIdx > 0) {
     start--;
   }
@@ -47,7 +47,7 @@ void LlamaLexer::parseIdentifier() {
     advance();
   }
 
-  int32_t end = CurIdx;
+  size_t end = CurIdx;
   std::string lexeme = Input.substr(start, end - start);
   auto found = Llama::keywords.find(lexeme);
 
@@ -60,14 +60,14 @@ void LlamaLexer::parseIdentifier() {
 }
 
 void LlamaLexer::parseString() {
-  int32_t start = CurIdx;
+  size_t start = CurIdx;
   while(getCurChar() != '"' && !isAtEnd()) {
     advance();
   }
   if (isAtEnd()) {
     throw UnexpectedInputError("Unterminated string");
   }
-  int32_t end = CurIdx;
+  size_t end = CurIdx;
   advance(); // consume closing quote
   addToken(TokenType::DOUBLE_QUOTED_STRING, start, end);
 }

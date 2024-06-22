@@ -79,6 +79,6 @@ public:
 
 private:
   const std::string& Input;
-  int32_t CurIdx;
+  size_t CurIdx;
   std::vector<Token> Tokens;
 };
