@@ -70,7 +70,11 @@ public:
 
   void addToken(TokenType type, int32_t start, int32_t end) { Tokens.push_back(Token(type, start, end)); }
 
-  char advance() { return Input.at(CurIdx++); }
+  char advance() {
+    char curChar = getCurChar();
+    ++CurIdx;
+    return curChar;
+  }
 
   bool isAtEnd() const { return CurIdx >= Input.size(); }
 
