@@ -30,7 +30,8 @@ namespace fs = std::filesystem;
 
 Llama::Llama()
     : CliParser(std::make_shared<Cli>()), Pool(),
-      LgProg(nullptr, lg_destroy_program) {}
+      LgProg(nullptr, lg_destroy_program),
+      Db(), DbConn(Db) {}
 
 int Llama::run(int argc, const char* const argv[]) {
   try {
@@ -63,9 +64,7 @@ void Llama::search() {
     auto out = std::shared_ptr<OutputWriter>(new OutputTar(outdir / "llama", Opts->OutputCodec));
     auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, out));
 
-    LlamaDB db;
-    LlamaDBConnection conn(db);
-    DirentBatch::createTable(conn.get(), "dirent");
+    DirentBatch::createTable(DbConn.get(), "dirent");
 
     auto protoProc = std::make_shared<Processor>(LgProg);
     auto scheduler = std::make_shared<FileScheduler>(Pool, protoProc, outh, Opts);
@@ -83,7 +82,7 @@ void Llama::search() {
     std::string query = "EXPORT DATABASE '";
     query += outdir.string();
     query += "' (FORMAT PARQUET);";
-    duckdb_query(conn.get(), query.c_str(), nullptr);
+    duckdb_query(DbConn.get(), query.c_str(), nullptr);
     // std::cout << "All done" << std::endl;
   }
   else {
