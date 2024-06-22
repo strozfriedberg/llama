@@ -2,10 +2,12 @@
 
 #include "batchhandler.h"
 #include "cli.h"
+#include "direntbatch.h"
 #include "easyfut.h"
 #include "filescheduler.h"
 #include "inputhandler.h"
 #include "inputreader.h"
+#include "llamaduck.h"
 #include "outputhandler.h"
 #include "outputtar.h"
 #include "pooloutputhandler.h"
@@ -61,6 +63,10 @@ void Llama::search() {
     auto out = std::shared_ptr<OutputWriter>(new OutputTar(outdir / "llama", Opts->OutputCodec));
     auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, out));
 
+    LlamaDB db;
+    LlamaDBConnection conn(db);
+    DirentBatch::createTable(conn.get(), "dirent");
+
     auto protoProc = std::make_shared<Processor>(LgProg);
     auto scheduler = std::make_shared<FileScheduler>(Pool, protoProc, outh, Opts);
     auto inh = std::shared_ptr<InputHandler>(new BatchHandler(scheduler));
@@ -73,6 +79,11 @@ void Llama::search() {
     }
     Pool.join();
     std::cerr << "Hashing Time: " << scheduler->getProcessorTime() << "s\n";
+
+    std::string query = "EXPORT DATABASE '";
+    query += outdir.string();
+    query += "' (FORMAT PARQUET);";
+    duckdb_query(conn.get(), query.c_str(), nullptr);
     // std::cout << "All done" << std::endl;
   }
   else {
