@@ -64,7 +64,7 @@ void Llama::search() {
     auto out = std::shared_ptr<OutputWriter>(new OutputTar(outdir / "llama", Opts->OutputCodec));
     auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, out));
 
-    DirentBatch::createTable(DbConn.get(), "dirent");
+    dbInit();
 
     auto protoProc = std::make_shared<Processor>(LgProg);
     auto scheduler = std::make_shared<FileScheduler>(Pool, protoProc, outh, Opts);
@@ -141,6 +141,11 @@ bool Llama::openInput(const std::string& input) {
     InputReader::createDir(input) :
     InputReader::createTSK(input);
   return bool(Input);
+}
+
+bool Llama::dbInit() {
+  DirentBatch::createTable(DbConn.get(), "dirent");
+  return true;
 }
 
 bool Llama::init() {
