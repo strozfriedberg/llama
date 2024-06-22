@@ -93,6 +93,15 @@ TEST_CASE("parseAlphaNumUnderscore") {
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::ALPHA_NUM_UNDERSCORE);
 }
 
+TEST_CASE("parseNumber") {
+  std::string input = "123456789";
+  LlamaLexer lexer(input);
+  lexer.parseNumber();
+  std::vector<Token> tokens = lexer.getTokens();
+  REQUIRE(tokens.size() == 1);
+  REQUIRE(tokens[0].Type == TokenType::NUMBER);
+}
+
 TEST_CASE("scanTokens") {
   std::string input = "{ }";
   LlamaLexer lexer(input);

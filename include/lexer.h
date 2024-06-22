@@ -10,6 +10,7 @@ expr = alpha_num_underscore EQUAL double_quoted_string
 alpha_num_underscore = "[a-zA-Z0-9-_]+"
 double_quoted_string = "\""string"\""
 string = "\w+"
+NUMBER = [0-9]+
 EQUAL = "="
 RULE = "rule"
 META = "meta"
@@ -28,7 +29,7 @@ enum class TokenType {
   RULE, META, FILEMETADATA, SIGNATURE, GREP, HASH,
 
   LCB, RCB, COLON, EQUAL,
-  ALPHA_NUM_UNDERSCORE, DOUBLE_QUOTED_STRING,
+  ALPHA_NUM_UNDERSCORE, DOUBLE_QUOTED_STRING, NUMBER,
 
   ENDOFFILE
 };
@@ -67,6 +68,7 @@ public:
 
   void parseIdentifier();
   void parseString();
+  void parseNumber();
 
   void addToken(TokenType type, int32_t start, int32_t end) { Tokens.push_back(Token(type, start, end)); }
 

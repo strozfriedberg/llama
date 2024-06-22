@@ -72,6 +72,20 @@ void LlamaLexer::parseString() {
   addToken(TokenType::DOUBLE_QUOTED_STRING, start, end);
 }
 
+void LlamaLexer::parseNumber() {
+  size_t start = CurIdx;
+  if (CurIdx > 0) {
+    start--;
+  }
+  while (isdigit(getCurChar())) {
+    advance();
+  }
+
+  size_t end = CurIdx;
+  std::string lexeme = Input.substr(start, end - start);
+  addToken(TokenType::NUMBER, start, end);
+}
+
 char LlamaLexer::getCurChar() const {
   if (CurIdx >= Input.size()) {
     return '\0';
