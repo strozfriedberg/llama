@@ -6,9 +6,9 @@ TEST_CASE("ScanToken") {
   std::string input = "{}:= \n\r\t";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::LCB);
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::OPEN_BRACE);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(1).Type == TokenType::RCB);
+  REQUIRE(lexer.getTokens().at(1).Type == TokenType::CLOSE_BRACE);
   lexer.scanToken();
   REQUIRE(lexer.getTokens().at(2).Type == TokenType::COLON);
   lexer.scanToken();
@@ -28,7 +28,7 @@ TEST_CASE("ScanTokenString") {
   lexer.scanToken();
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::DOUBLE_QUOTED_STRING);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(1).Type == TokenType::LCB);
+  REQUIRE(lexer.getTokens().at(1).Type == TokenType::OPEN_BRACE);
 }
 
 TEST_CASE("parseString") {
@@ -107,8 +107,8 @@ TEST_CASE("scanTokens") {
   LlamaLexer lexer(input);
   lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 3);
-  REQUIRE(lexer.getTokens()[0].Type == TokenType::LCB);
-  REQUIRE(lexer.getTokens()[1].Type == TokenType::RCB);
+  REQUIRE(lexer.getTokens()[0].Type == TokenType::OPEN_BRACE);
+  REQUIRE(lexer.getTokens()[1].Type == TokenType::CLOSE_BRACE);
   REQUIRE(lexer.getTokens()[2].Type == TokenType::ENDOFFILE);
 }
 
@@ -145,7 +145,7 @@ TEST_CASE("scanTokensFullRule") {
   REQUIRE(tokens.size() == 13);
   REQUIRE(tokens[0].Type == TokenType::RULE);
   REQUIRE(tokens[1].Type == TokenType::IDENTIFIER);
-  REQUIRE(tokens[2].Type == TokenType::LCB);
+  REQUIRE(tokens[2].Type == TokenType::OPEN_BRACE);
   REQUIRE(tokens[3].Type == TokenType::META);
   REQUIRE(tokens[4].Type == TokenType::COLON);
   REQUIRE(tokens[5].Type == TokenType::IDENTIFIER);
@@ -154,6 +154,6 @@ TEST_CASE("scanTokensFullRule") {
   REQUIRE(tokens[8].Type == TokenType::IDENTIFIER);
   REQUIRE(tokens[9].Type == TokenType::EQUAL);
   REQUIRE(tokens[10].Type == TokenType::NUMBER);
-  REQUIRE(tokens[11].Type == TokenType::RCB);
+  REQUIRE(tokens[11].Type == TokenType::CLOSE_BRACE);
   REQUIRE(tokens[12].Type == TokenType::ENDOFFILE);
 }

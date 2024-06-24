@@ -16,8 +16,8 @@ void LlamaLexer::scanToken() {
   size_t start = CurIdx;
   char c = advance();
   switch(c) {
-    case '{': addToken(TokenType::LCB, start, CurIdx); break;
-    case '}': addToken(TokenType::RCB, start, CurIdx); break;
+    case '{': addToken(TokenType::OPEN_BRACE, start, CurIdx); break;
+    case '}': addToken(TokenType::CLOSE_BRACE, start, CurIdx); break;
     case ':': addToken(TokenType::COLON, start, CurIdx); break;
     case '=': addToken(TokenType::EQUAL, start, CurIdx); break;
 

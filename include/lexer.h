@@ -5,7 +5,7 @@
 #include <cctype>
 
 /**************************************************************
-rule_decl = RULE LCB META COLON expr+ RCB
+rule_decl = RULE OPEN_BRACE META COLON expr+ CLOSE_BRACE
 expr = IDENTIFIER EQUAL double_quoted_string
 IDENTIFIER = "[a-zA-Z0-9-_]+"
 double_quoted_string = "\""string"\""
@@ -18,9 +18,9 @@ HASH = "hash"
 FILEMETADATA = "filemetadata"
 SIGNATURE = "signature"
 GREP = "grep"
-LCB = "{"
+OPEN_BRACE = "{"
 COLON = ":"
-RCB = "}"
+CLOSE_BRACE = "}"
 ************************************************************/
 
 enum class TokenType {
@@ -28,7 +28,7 @@ enum class TokenType {
 
   RULE, META, FILEMETADATA, SIGNATURE, GREP, HASH,
 
-  LCB, RCB, COLON, EQUAL,
+  OPEN_BRACE, CLOSE_BRACE, COLON, EQUAL,
   IDENTIFIER, DOUBLE_QUOTED_STRING, NUMBER,
 
   ENDOFFILE
