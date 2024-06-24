@@ -85,10 +85,14 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
   if (!fs_file || !fs_file->meta) {
     // TODO: Can we have a nonull fs_file->name in this case?
     // nothing to process
+    // I mean, yes? of course? obviously? TSK can possibly recover deleted dirents that point to nonexistent inodes -- jls
+    // so, this is wrong and needs to be a unit test
     return false;
   }
   const TSK_FS_META& meta = *fs_file->meta;
 
+  // this is also a bug, that we can skip files based on dupe inum before writing dirent info
+  // skipping dupe inodes must come _after_ full consideration/writing of dirents. more tests. -- jls
   const uint64_t inum = meta.addr;
   if (Tracker->markInodeSeen(inum)) {
     // been here, done that
@@ -115,6 +119,7 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
   TskReaderHelper::handleAttrs(
     meta, CurFsOffset, CurFsBlockSize, inum, *Tsk, *Tracker, jmeta["attrs"]
   );
+  // why on earth are we making this separate block sequence thing? it's goofy -- jls
   Input->push({std::move(jmeta), makeBlockSequence(fs_file)});
 
   return true;
