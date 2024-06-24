@@ -48,10 +48,10 @@ namespace Llama {
 
 class Token {
 public:
-  Token(TokenType type, size_t start, size_t end) : Type(type), Start(start), End(end) {}
+  Token(TokenType type, uint32_t start, uint32_t end) : Type(type), Start(start), End(end) {}
 
   TokenType Type;
-  size_t Start, End;
+  uint32_t Start, End;
 };
 
 class UnexpectedInputError : public std::runtime_error {
@@ -70,7 +70,7 @@ public:
   void parseString();
   void parseNumber();
 
-  void addToken(TokenType type, size_t start, size_t end) { Tokens.push_back(Token(type, start, end)); }
+  void addToken(TokenType type, uint32_t start, uint32_t end) { Tokens.push_back(Token(type, start, end)); }
 
   char advance() {
     char curChar = getCurChar();
