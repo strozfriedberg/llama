@@ -58,7 +58,7 @@ void LlamaLexer::parseIdentifier() {
     addToken(found->second, start, end);
   }
   else {
-    addToken(TokenType::ALPHA_NUM_UNDERSCORE, start, end);
+    addToken(TokenType::IDENTIFIER, start, end);
   }
 }
 

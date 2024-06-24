@@ -6,8 +6,8 @@
 
 /**************************************************************
 rule_decl = RULE LCB META COLON expr+ RCB
-expr = alpha_num_underscore EQUAL double_quoted_string
-alpha_num_underscore = "[a-zA-Z0-9-_]+"
+expr = IDENTIFIER EQUAL double_quoted_string
+IDENTIFIER = "[a-zA-Z0-9-_]+"
 double_quoted_string = "\""string"\""
 string = "\w+"
 NUMBER = [0-9]+
@@ -29,7 +29,7 @@ enum class TokenType {
   RULE, META, FILEMETADATA, SIGNATURE, GREP, HASH,
 
   LCB, RCB, COLON, EQUAL,
-  ALPHA_NUM_UNDERSCORE, DOUBLE_QUOTED_STRING, NUMBER,
+  IDENTIFIER, DOUBLE_QUOTED_STRING, NUMBER,
 
   ENDOFFILE
 };

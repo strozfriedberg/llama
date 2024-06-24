@@ -90,7 +90,7 @@ TEST_CASE("parseAlphaNumUnderscore") {
   std::string input = "not_a_keyword";
   LlamaLexer lexer(input);
   lexer.parseIdentifier();
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::ALPHA_NUM_UNDERSCORE);
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::IDENTIFIER);
 }
 
 TEST_CASE("parseNumber") {
@@ -126,7 +126,7 @@ TEST_CASE("parseTokensParseIdentifierNonKeyword") {
   LlamaLexer lexer(input);
   lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 2);
-  REQUIRE(lexer.getTokens()[0].Type == TokenType::ALPHA_NUM_UNDERSCORE);
+  REQUIRE(lexer.getTokens()[0].Type == TokenType::IDENTIFIER);
   REQUIRE(lexer.getTokens()[1].Type == TokenType::ENDOFFILE);
 }
 
@@ -144,14 +144,14 @@ TEST_CASE("scanTokensFullRule") {
   std::vector<Token> tokens = lexer.getTokens();
   REQUIRE(tokens.size() == 13);
   REQUIRE(tokens[0].Type == TokenType::RULE);
-  REQUIRE(tokens[1].Type == TokenType::ALPHA_NUM_UNDERSCORE);
+  REQUIRE(tokens[1].Type == TokenType::IDENTIFIER);
   REQUIRE(tokens[2].Type == TokenType::LCB);
   REQUIRE(tokens[3].Type == TokenType::META);
   REQUIRE(tokens[4].Type == TokenType::COLON);
-  REQUIRE(tokens[5].Type == TokenType::ALPHA_NUM_UNDERSCORE);
+  REQUIRE(tokens[5].Type == TokenType::IDENTIFIER);
   REQUIRE(tokens[6].Type == TokenType::EQUAL);
   REQUIRE(tokens[7].Type == TokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(tokens[8].Type == TokenType::ALPHA_NUM_UNDERSCORE);
+  REQUIRE(tokens[8].Type == TokenType::IDENTIFIER);
   REQUIRE(tokens[9].Type == TokenType::EQUAL);
   REQUIRE(tokens[10].Type == TokenType::NUMBER);
   REQUIRE(tokens[11].Type == TokenType::RCB);
