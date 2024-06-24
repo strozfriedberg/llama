@@ -23,7 +23,7 @@ TEST_CASE("TestMakeDuckDB") {
   for (auto dirent : dirents) {
     batch.add(dirent);
   }
-  REQUIRE(batch.size() == 3);
+  REQUIRE(batch.size() == dirents.size());
   REQUIRE(batch.Buf.size() == 28);
 
   LlamaDBAppender appender(conn.get(), "dirent"); // need an appender object, too, which also doesn't jibe with smart pointers, and destroy must be called even if create returns an error
