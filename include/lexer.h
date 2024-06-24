@@ -4,24 +4,6 @@
 #include <iostream>
 #include <cctype>
 
-/**************************************************************
-rule_decl = RULE OPEN_BRACE META COLON expr+ CLOSE_BRACE
-expr = IDENTIFIER EQUAL double_quoted_string
-IDENTIFIER = "[a-zA-Z0-9-_]+"
-double_quoted_string = "\""string"\""
-string = "\w+"
-NUMBER = [0-9]+
-EQUAL = "="
-RULE = "rule"
-META = "meta"
-HASH = "hash"
-FILEMETADATA = "filemetadata"
-SIGNATURE = "signature"
-GREP = "grep"
-OPEN_BRACE = "{"
-COLON = ":"
-CLOSE_BRACE = "}"
-************************************************************/
 
 enum class TokenType {
   NONE,
