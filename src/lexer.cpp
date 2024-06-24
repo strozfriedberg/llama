@@ -15,17 +15,17 @@ void LlamaLexer::scanToken() {
   uint32_t start = CurIdx;
   char c = advance();
   switch(c) {
-    case '{': addToken(TokenType::OPEN_BRACE, start, CurIdx); break;
-    case '}': addToken(TokenType::CLOSE_BRACE, start, CurIdx); break;
-    case ':': addToken(TokenType::COLON, start, CurIdx); break;
-    case '=': addToken(TokenType::EQUAL, start, CurIdx); break;
+    case '\t':
+    case '\n':
+    case '\r':
+    case ' ': break;
 
     case '"': parseString(); break;
 
-    case ' ':
-    case '\n':
-    case '\r':
-    case '\t': break;
+    case ':': addToken(TokenType::COLON, start, CurIdx); break;
+    case '=': addToken(TokenType::EQUAL, start, CurIdx); break;
+    case '{': addToken(TokenType::OPEN_BRACE, start, CurIdx); break;
+    case '}': addToken(TokenType::CLOSE_BRACE, start, CurIdx); break;
 
     default:
       if (isdigit(c)) {
