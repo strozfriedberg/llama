@@ -8,10 +8,24 @@
 enum class TokenType {
   NONE,
 
-  RULE, META, FILEMETADATA, SIGNATURE, GREP, HASH,
+  // reserved keywords
+  RULE,
+  META,
+  FILEMETADATA,
+  SIGNATURE,
+  GREP,
+  HASH,
 
-  OPEN_BRACE, CLOSE_BRACE, COLON, EQUAL,
-  IDENTIFIER, DOUBLE_QUOTED_STRING, NUMBER,
+  // punctuation
+  OPEN_BRACE,
+  CLOSE_BRACE,
+  COLON,
+  EQUAL,
+
+  // user-defined tokens
+  IDENTIFIER,
+  DOUBLE_QUOTED_STRING,
+  NUMBER,
 
   ENDOFFILE
 };
