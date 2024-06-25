@@ -11,7 +11,7 @@ enum class TokenType {
   // reserved keywords
   RULE,
   META,
-  FILEMETADATA,
+  FILE_METADATA,
   SIGNATURE,
   GREP,
   HASH,
@@ -27,7 +27,7 @@ enum class TokenType {
   DOUBLE_QUOTED_STRING,
   NUMBER,
 
-  ENDOFFILE
+  END_OF_FILE
 };
 
 
@@ -35,7 +35,7 @@ namespace Llama {
   const std::unordered_map<std::string, TokenType> keywords = {
     {"rule", TokenType::RULE},
     {"meta", TokenType::META},
-    {"filemetadata", TokenType::FILEMETADATA},
+    {"filemetadata", TokenType::FILE_METADATA},
     {"signature", TokenType::SIGNATURE},
     {"grep", TokenType::GREP},
     {"hash", TokenType::HASH}

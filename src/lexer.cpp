@@ -8,7 +8,7 @@ void LlamaLexer::scanTokens() {
   while (!isAtEnd()) {
     scanToken();
   }
-  addToken(TokenType::ENDOFFILE, CurIdx, CurIdx+1);
+  addToken(TokenType::END_OF_FILE, CurIdx, CurIdx+1);
 }
 
 void LlamaLexer::scanToken() {

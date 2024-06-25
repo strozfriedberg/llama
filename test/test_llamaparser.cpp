@@ -62,7 +62,7 @@ TEST_CASE("parseFileMetadataId") {
   std::string input = "filemetadata";
   LlamaLexer lexer(input);
   lexer.parseIdentifier();
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::FILEMETADATA);
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::FILE_METADATA);
 }
 
 TEST_CASE("parseSignatureId") {
@@ -109,7 +109,7 @@ TEST_CASE("scanTokens") {
   REQUIRE(lexer.getTokens().size() == 3);
   REQUIRE(lexer.getTokens()[0].Type == TokenType::OPEN_BRACE);
   REQUIRE(lexer.getTokens()[1].Type == TokenType::CLOSE_BRACE);
-  REQUIRE(lexer.getTokens()[2].Type == TokenType::ENDOFFILE);
+  REQUIRE(lexer.getTokens()[2].Type == TokenType::END_OF_FILE);
 }
 
 TEST_CASE("scanTokensParseIdentifierKeyword") {
@@ -118,7 +118,7 @@ TEST_CASE("scanTokensParseIdentifierKeyword") {
   lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 2);
   REQUIRE(lexer.getTokens()[0].Type == TokenType::RULE);
-  REQUIRE(lexer.getTokens()[1].Type == TokenType::ENDOFFILE);
+  REQUIRE(lexer.getTokens()[1].Type == TokenType::END_OF_FILE);
 }
 
 TEST_CASE("parseTokensParseIdentifierNonKeyword") {
@@ -127,7 +127,7 @@ TEST_CASE("parseTokensParseIdentifierNonKeyword") {
   lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 2);
   REQUIRE(lexer.getTokens()[0].Type == TokenType::IDENTIFIER);
-  REQUIRE(lexer.getTokens()[1].Type == TokenType::ENDOFFILE);
+  REQUIRE(lexer.getTokens()[1].Type == TokenType::END_OF_FILE);
 }
 
 TEST_CASE("inputIterator") {
@@ -155,5 +155,5 @@ TEST_CASE("scanTokensFullRule") {
   REQUIRE(tokens[9].Type == TokenType::EQUAL);
   REQUIRE(tokens[10].Type == TokenType::NUMBER);
   REQUIRE(tokens[11].Type == TokenType::CLOSE_BRACE);
-  REQUIRE(tokens[12].Type == TokenType::ENDOFFILE);
+  REQUIRE(tokens[12].Type == TokenType::END_OF_FILE);
 }
