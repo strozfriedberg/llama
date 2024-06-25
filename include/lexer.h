@@ -27,7 +27,7 @@ enum class TokenType {
   DOUBLE_QUOTED_STRING,
   NUMBER,
 
-  _EOF
+  ENDOFFILE
 };
 
 
