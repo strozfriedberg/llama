@@ -7,6 +7,7 @@
 .deps/
 .dirstamp
 .libs/
+.vscode/
 .DS_Store
 /INSTALL
 /Makefile
@@ -35,8 +36,10 @@
 /stamp-h1
 /test-suite.log
 /test-suite-memcheck.log
-/test/llama/test
+/test/test
 /test/test.exe
+/test/test.log
+/test/llama/test
 /test/llama/test.log
 /test/test.trs
 /tmp/
