@@ -39,5 +39,8 @@
 /test/test.exe
 /test/llama/test.log
 /test/test.trs
+/test/benchmarks/benchmarks
+/test/test
+/test/test.log
 /tmp/
 _libs/
