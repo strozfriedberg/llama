@@ -441,20 +441,26 @@ TEST_CASE("testTskMetaConvert") {
   REQUIRE("" == js["link"]);
 }
 
+namespace {
+  void initTskFsName(TSK_FS_NAME& name) {
+    std::memset(&name, 0, sizeof(name));
+
+    name.name = const_cast<char*>("woowoowoo\0bad bad bad");
+    name.name_size = 9;
+    name.shrt_name = const_cast<char*>("WOOWOO~1");
+    name.shrt_name_size = 8;
+    name.meta_addr = 7;
+    name.meta_seq = 6;
+    name.par_addr = 231;
+    name.par_seq = 72;
+    name.type = TSK_FS_NAME_TYPE_SOCK;
+    name.flags = TSK_FS_NAME_FLAG_ALLOC;
+  }
+}
+
 TEST_CASE("testTskNameConvert") {
   TSK_FS_NAME name;
-  std::memset(&name, 0, sizeof(name));
-
-  name.name = const_cast<char*>("woowoowoo\0bad bad bad");
-  name.name_size = 9;
-  name.shrt_name = const_cast<char*>("WOOWOO~1");
-  name.shrt_name_size = 8;
-  name.meta_addr = 7;
-  name.meta_seq = 6;
-  name.par_addr = 231;
-  name.par_seq = 72;
-  name.type = TSK_FS_NAME_TYPE_SOCK;
-  name.flags = TSK_FS_NAME_FLAG_ALLOC;
+  initTskFsName(name);
 
   const jsoncons::json js = TskUtils::convertName(name);
 
