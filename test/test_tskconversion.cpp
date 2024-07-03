@@ -481,8 +481,9 @@ TEST_CASE("testConvertTskFsNameToDirent") {
   initTskFsName(name);
 
   Dirent d;
-  TskUtils::convertNameToDirent(name, d);
+  TskUtils::convertNameToDirent("/usr/tmp/", name, d);
 
+  REQUIRE("/usr/tmp/" == d.Path);
   REQUIRE("woowoowoo" == d.Name);
   REQUIRE("WOOWOO~1" == d.Shrt_name);
   REQUIRE("Domain Socket" == d.Type);

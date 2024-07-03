@@ -368,7 +368,9 @@ jsoncons::json TskUtils::convertFS(const TSK_FS_INFO& fs) {
   );
 }
 
-void TskUtils::convertNameToDirent(const TSK_FS_NAME& name, Dirent& dirent) {
+void TskUtils::convertNameToDirent(const std::string& path, const TSK_FS_NAME& name, Dirent& dirent) {
+  dirent.Path = path;
+
   dirent.Name = extractString(name.name, name.name_size);
   dirent.Shrt_name = extractString(name.shrt_name, name.shrt_name_size);
 
