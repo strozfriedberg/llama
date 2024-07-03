@@ -64,7 +64,7 @@ namespace TskUtils {
   jsoncons::json convertAttr(const TSK_FS_ATTR& attr);
   jsoncons::json convertRun(const TSK_FS_ATTR_RUN& run);
 
-  void convertNameToDirent(const TSK_FS_NAME& name, Dirent& dirent);
+  void convertNameToDirent(const std::string& path, const TSK_FS_NAME& name, Dirent& dirent);
 
   std::unique_ptr<TimestampGetter> makeTimestampGetter(TSK_FS_TYPE_ENUM fstype);
 }
