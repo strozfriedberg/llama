@@ -1,3 +1,8 @@
+#include <catch2/catch_test_macros.hpp>
+
+#include "tskreader.h"
+
+
 /***********************
  * 
  * 
@@ -26,12 +31,10 @@
  *
 */
 
-// #include <catch2/catch_test_macros.hpp>
 
 // #include <cstring>
 // #include <stdexcept>
 
-// #include "tskreader.h"
 
 // #include "dummytsk.h"
 // #include "mockinputhandler.h"

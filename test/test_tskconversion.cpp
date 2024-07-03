@@ -2,6 +2,8 @@
 
 #include "tskconversion.h"
 
+#include "direntbatch.h"
+
 TEST_CASE("textExtractString") {
   using namespace TskUtils;
   REQUIRE("" == extractString("", 0));
@@ -472,4 +474,23 @@ TEST_CASE("testTskNameConvert") {
   REQUIRE(72 == js["par_seq"]);
   REQUIRE("Domain Socket" == js["type"]);
   REQUIRE("Allocated" == js["flags"]);
+}
+
+TEST_CASE("testConvertTskFsNameToDirent") {
+  TSK_FS_NAME name;
+  initTskFsName(name);
+
+  Dirent d;
+  TskUtils::convertNameToDirent(name, d);
+
+  REQUIRE("woowoowoo" == d.Name);
+  REQUIRE("WOOWOO~1" == d.Shrt_name);
+  REQUIRE("Domain Socket" == d.Type);
+  REQUIRE("Allocated" == d.Flags);
+
+  REQUIRE(7 == d.Meta_addr);
+  REQUIRE(231 == d.Par_addr);
+
+  REQUIRE(6 == d.Meta_seq);
+  REQUIRE(72 == d.Par_seq);
 }
