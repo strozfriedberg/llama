@@ -32,7 +32,7 @@ TEST_CASE("TestMakeDuckDB") {
   REQUIRE(appender.flush());
 
   duckdb_result result;
-  auto state = duckdb_query(conn.get(), "SELECT * FROM dirent WHERE dirent.path = '/tmp/';", &result);
+  auto state = duckdb_query(conn.get(), "SELECT * FROM dirent WHERE dirent.path = '/tmp/' and ((dirent.name = 'bar' and dirent.meta_addr = 4) or (dirent.shrt_name = 'f~1' and dirent.par_addr = 2));", &result);
   REQUIRE(state != DuckDBError);
   REQUIRE(duckdb_row_count(&result) == 2);
   REQUIRE(duckdb_column_count(&result) == 9);
