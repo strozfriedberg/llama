@@ -10,8 +10,17 @@
 #include "throw.h"
 
 struct Dirent {
-  std::string path;
-  std::string name;
+  std::string Path;
+  std::string Name;
+  std::string Shrt_name;
+
+  std::string Type;
+  std::string Flags;
+
+  uint64_t Meta_addr;
+  uint64_t Par_addr;
+  uint64_t Meta_seq;
+  uint64_t Par_seq;
 };
 
 struct DirentBatch {
@@ -26,13 +35,13 @@ struct DirentBatch {
   }
 
   void add(const Dirent& dent) {
-    size_t pathSize = dent.path.size();
-    size_t totalSize = pathSize + dent.name.size();
+    size_t pathSize = dent.Path.size();
+    size_t totalSize = pathSize + dent.Name.size();
     size_t offset = Buf.size();
     Buf.resize(offset + totalSize + 1);
     Offsets.push_back({offset, offset + pathSize});
-    std::copy(dent.path.begin(), dent.path.end(), Buf.begin() + Offsets.back().first);
-    std::copy(dent.name.begin(), dent.name.end(), Buf.begin() + Offsets.back().second);
+    std::copy(dent.Path.begin(), dent.Path.end(), Buf.begin() + Offsets.back().first);
+    std::copy(dent.Name.begin(), dent.Name.end(), Buf.begin() + Offsets.back().second);
     Buf[offset + totalSize] = '\0';
   }
 
@@ -48,4 +57,3 @@ struct DirentBatch {
     }
   }
 };
-
