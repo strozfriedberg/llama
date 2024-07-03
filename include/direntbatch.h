@@ -21,6 +21,19 @@ struct Dirent {
   uint64_t Par_addr;
   uint64_t Meta_seq;
   uint64_t Par_seq;
+
+  Dirent(const std::string& p = "",
+         const std::string& n = "",
+         const std::string& shrt = "",
+         const std::string& type = "",
+         const std::string& flags = "",
+         uint64_t meta = 0,
+         uint64_t parent = 0,
+         uint64_t meta_seq = 0,
+         uint64_t par_seq = 0
+  ):
+    Path(p), Name(n), Shrt_name(shrt), Type(type), Flags(flags),
+    Meta_addr(meta), Par_addr(parent), Meta_seq(meta_seq), Par_seq(par_seq) {}
 };
 
 struct DirentBatch {
