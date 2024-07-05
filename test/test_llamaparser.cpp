@@ -177,6 +177,68 @@ TEST_CASE("parseLengthId") {
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::LENGTH);
 }
 
+TEST_CASE("parseNotEqual") {
+  std::string input = "!=";
+  LlamaLexer lexer(input);
+  lexer.scanToken();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::NOT_EQUAL);
+  REQUIRE(lexer.isAtEnd());
+}
+
+TEST_CASE("parseBangAloneThrowsException") {
+  std::string input = "!";
+  LlamaLexer lexer(input);
+  REQUIRE_THROWS_AS(lexer.scanToken(), UnexpectedInputError);
+}
+
+TEST_CASE("parseLessThan") {
+  std::string input = "<";
+  LlamaLexer lexer(input);
+  lexer.scanToken();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::LESS_THAN);
+  REQUIRE(lexer.isAtEnd());
+}
+
+TEST_CASE("parseLessThanEqual") {
+  std::string input = "<=";
+  LlamaLexer lexer(input);
+  lexer.scanToken();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::LESS_THAN_EQUAL);
+  REQUIRE(lexer.isAtEnd());
+}
+
+TEST_CASE("parseEqual") {
+  std::string input = "=";
+  LlamaLexer lexer(input);
+  lexer.scanToken();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::EQUAL);
+  REQUIRE(lexer.isAtEnd());
+}
+
+TEST_CASE("parseEqualEqual") {
+  std::string input = "==";
+  LlamaLexer lexer(input);
+  lexer.scanToken();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::EQUAL_EQUAL);
+  REQUIRE(lexer.isAtEnd());
+}
+
+TEST_CASE("parseGreaterThan") {
+  std::string input = ">";
+  LlamaLexer lexer(input);
+  lexer.scanToken();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::GREATER_THAN);
+  REQUIRE(lexer.isAtEnd());
+}
+
+TEST_CASE("parseGreaterThanEqual") {
+  std::string input = ">=";
+  LlamaLexer lexer(input);
+  lexer.scanToken();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::GREATER_THAN_EQUAL);
+  REQUIRE(lexer.isAtEnd());
+}
+
 TEST_CASE("parseAlphaNumUnderscore") {
   std::string input = "not_a_keyword";
   LlamaLexer lexer(input);

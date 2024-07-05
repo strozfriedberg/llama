@@ -20,10 +20,22 @@ void LlamaLexer::scanToken() {
     case '\r':
     case ' ': break;
 
+    case '!' : {
+      if (match('=')) {
+        addToken(TokenType::NOT_EQUAL, start, CurIdx);
+      }
+      else {
+        throw UnexpectedInputError("Unexpected input character: !");
+      }
+      break;
+    }
+
     case '"': parseString(); break;
 
     case ':': addToken(TokenType::COLON, start, CurIdx); break;
-    case '=': addToken(TokenType::EQUAL, start, CurIdx); break;
+    case '<': addToken(match('=') ? TokenType::LESS_THAN_EQUAL : TokenType::LESS_THAN, start, CurIdx); break;
+    case '=': addToken(match('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL, start, CurIdx); break;
+    case '>': addToken(match('=') ? TokenType::GREATER_THAN_EQUAL : TokenType::GREATER_THAN, start, CurIdx); break;
     case '{': addToken(TokenType::OPEN_BRACE, start, CurIdx); break;
     case '}': addToken(TokenType::CLOSE_BRACE, start, CurIdx); break;
 
