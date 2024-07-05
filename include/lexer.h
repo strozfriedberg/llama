@@ -17,6 +17,7 @@ enum class TokenType {
   SIGNATURE,
   GREP,
   HASH,
+  CONDITION,
 
   // punctuation
   OPEN_BRACE,
@@ -40,7 +41,8 @@ namespace Llama {
     {"file_metadata", TokenType::FILE_METADATA},
     {"signature", TokenType::SIGNATURE},
     {"grep", TokenType::GREP},
-    {"hash", TokenType::HASH}
+    {"hash", TokenType::HASH},
+    {"condition", TokenType::CONDITION}
   };
 }
 

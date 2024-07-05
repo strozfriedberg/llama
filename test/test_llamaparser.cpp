@@ -86,6 +86,13 @@ TEST_CASE("parseHashId") {
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::HASH);
 }
 
+TEST_CASE("parseConditionId") {
+  std::string input = "condition";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::CONDITION);
+}
+
 TEST_CASE("parseAlphaNumUnderscore") {
   std::string input = "not_a_keyword";
   LlamaLexer lexer(input);
