@@ -37,6 +37,7 @@ enum class TokenType {
   CLOSE_BRACE,
   OPEN_PAREN,
   CLOSE_PAREN,
+  COMMA,
   COLON,
   EQUAL,
   EQUAL_EQUAL,

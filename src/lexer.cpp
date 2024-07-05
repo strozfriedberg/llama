@@ -34,6 +34,7 @@ void LlamaLexer::scanToken() {
 
     case '(': addToken(TokenType::OPEN_PAREN, start, CurIdx); break;
     case ')': addToken(TokenType::CLOSE_PAREN, start, CurIdx); break;
+    case ',': addToken(TokenType::COMMA, start, CurIdx); break;
     case ':': addToken(TokenType::COLON, start, CurIdx); break;
     case '<': addToken(match('=') ? TokenType::LESS_THAN_EQUAL : TokenType::LESS_THAN, start, CurIdx); break;
     case '=': addToken(match('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL, start, CurIdx); break;

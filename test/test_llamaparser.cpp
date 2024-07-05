@@ -38,6 +38,14 @@ TEST_CASE("ScanCloseParen") {
   REQUIRE(lexer.getLexeme(0) == ")");
 }
 
+TEST_CASE("ScanComma") {
+  std::string input = ",";
+  LlamaLexer lexer(input);
+  lexer.scanToken();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::COMMA);
+  REQUIRE(lexer.getLexeme(0) == ",");
+}
+
 TEST_CASE("ScanTokenString") {
   std::string input = "\"some string\"{";
   LlamaLexer lexer(input);
