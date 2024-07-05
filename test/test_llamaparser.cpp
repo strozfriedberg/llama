@@ -22,6 +22,22 @@ TEST_CASE("ScanToken") {
   REQUIRE_THROWS_AS(lexer.scanToken(), UnexpectedInputError);
 }
 
+TEST_CASE("ScanOpenParen") {
+  std::string input = "(";
+  LlamaLexer lexer(input);
+  lexer.scanToken();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::OPEN_PAREN);
+  REQUIRE(lexer.getLexeme(0) == "(");
+}
+
+TEST_CASE("ScanCloseParen") {
+  std::string input = ")";
+  LlamaLexer lexer(input);
+  lexer.scanToken();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::CLOSE_PAREN);
+  REQUIRE(lexer.getLexeme(0) == ")");
+}
+
 TEST_CASE("ScanTokenString") {
   std::string input = "\"some string\"{";
   LlamaLexer lexer(input);

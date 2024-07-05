@@ -35,6 +35,8 @@ enum class TokenType {
   // punctuation
   OPEN_BRACE,
   CLOSE_BRACE,
+  OPEN_PAREN,
+  CLOSE_PAREN,
   COLON,
   EQUAL,
   EQUAL_EQUAL,
@@ -112,6 +114,7 @@ public:
   bool match(char expected);
   bool isAtEnd() const { return CurIdx >= Input.size(); }
 
+  std::string getLexeme(int idx) const { return Input.substr(Tokens.at(idx).Start, Tokens.at(idx).End - Tokens.at(idx).Start); }
   char getCurChar() const;
   const std::vector<Token>& getTokens() const { return Tokens; }
 
