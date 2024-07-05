@@ -228,6 +228,14 @@ TEST_CASE("inputIterator") {
   REQUIRE(lexer.isAtEnd());
 }
 
+TEST_CASE("match") {
+  std::string input = "{";
+  LlamaLexer lexer(input);
+  REQUIRE(lexer.match('{'));
+  REQUIRE_FALSE(lexer.match('{'));
+  REQUIRE(lexer.isAtEnd());
+}
+
 TEST_CASE("scanTokensFullRule") {
   std::string input = "rule MyRule {\n\tmeta:\n\t\tdescription = \"this is my rule\"\nsomething = 5\n}";
   LlamaLexer lexer(input);

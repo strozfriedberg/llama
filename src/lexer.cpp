@@ -88,6 +88,14 @@ void LlamaLexer::parseNumber() {
   addToken(TokenType::NUMBER, start, end);
 }
 
+bool LlamaLexer::match(char expected) {
+  if (isAtEnd()) { return false; }
+  if (Input.at(CurIdx) != expected) { return false; }
+
+  advance();
+  return true;
+}
+
 char LlamaLexer::getCurChar() const {
   if (CurIdx >= Input.size()) {
     return '\0';

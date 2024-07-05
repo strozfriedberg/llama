@@ -103,6 +103,7 @@ public:
     return curChar;
   }
 
+  bool match(char expected);
   bool isAtEnd() const { return CurIdx >= Input.size(); }
 
   char getCurChar() const;
