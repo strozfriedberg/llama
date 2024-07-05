@@ -37,7 +37,7 @@ namespace Llama {
   const std::unordered_map<std::string, TokenType> keywords = {
     {"rule", TokenType::RULE},
     {"meta", TokenType::META},
-    {"filemetadata", TokenType::FILE_METADATA},
+    {"file_metadata", TokenType::FILE_METADATA},
     {"signature", TokenType::SIGNATURE},
     {"grep", TokenType::GREP},
     {"hash", TokenType::HASH}

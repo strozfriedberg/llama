@@ -59,7 +59,7 @@ TEST_CASE("parseMetaId") {
 }
 
 TEST_CASE("parseFileMetadataId") {
-  std::string input = "filemetadata";
+  std::string input = "file_metadata";
   LlamaLexer lexer(input);
   lexer.parseIdentifier();
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::FILE_METADATA);
