@@ -135,6 +135,48 @@ TEST_CASE("parseStringsId") {
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::STRINGS);
 }
 
+TEST_CASE("parseAllId") {
+  std::string input = "all";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::ALL);
+}
+
+TEST_CASE("parseAnyId") {
+  std::string input = "any";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::ANY);
+}
+
+TEST_CASE("parseOffsetId") {
+  std::string input = "offset";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::OFFSET);
+}
+
+TEST_CASE("parseCountId") {
+  std::string input = "count";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::COUNT);
+}
+
+TEST_CASE("parseCountHasHitsId") {
+  std::string input = "count_has_hits";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::COUNT_HAS_HITS);
+}
+
+TEST_CASE("parseLengthId") {
+  std::string input = "length";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::LENGTH);
+}
+
 TEST_CASE("parseAlphaNumUnderscore") {
   std::string input = "not_a_keyword";
   LlamaLexer lexer(input);

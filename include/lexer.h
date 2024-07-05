@@ -24,6 +24,13 @@ enum class TokenType {
   FILESIZE,
   FILENAME,
   FILEPATH,
+  ALL,
+  ANY,
+  OFFSET,
+  COUNT,
+  COUNT_HAS_HITS,
+  LENGTH,
+
 
   // punctuation
   OPEN_BRACE,
@@ -54,7 +61,13 @@ namespace Llama {
     {"modified_time", TokenType::MODIFIED_TIME},
     {"filesize", TokenType::FILESIZE},
     {"filename", TokenType::FILENAME},
-    {"filepath", TokenType::FILEPATH}
+    {"filepath", TokenType::FILEPATH},
+    {"all", TokenType::ALL},
+    {"any", TokenType::ANY},
+    {"offset", TokenType::OFFSET},
+    {"count", TokenType::COUNT},
+    {"count_has_hits", TokenType::COUNT_HAS_HITS},
+    {"length", TokenType::LENGTH}
   };
 }
 
