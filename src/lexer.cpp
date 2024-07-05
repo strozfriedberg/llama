@@ -98,7 +98,6 @@ void LlamaLexer::parseNumber() {
   }
 
   uint32_t end = CurIdx;
-  std::string lexeme = Input.substr(start, end - start);
   addToken(TokenType::NUMBER, start, end);
 }
 
