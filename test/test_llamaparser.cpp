@@ -79,7 +79,7 @@ TEST_CASE("parseGrepId") {
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::GREP);
 }
 
-TEST_CASE("parseHash") {
+TEST_CASE("parseHashId") {
   std::string input = "hash";
   LlamaLexer lexer(input);
   lexer.parseIdentifier();
