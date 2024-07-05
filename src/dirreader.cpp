@@ -27,9 +27,12 @@ void DirReader::setOutputHandler(std::shared_ptr<OutputHandler> out) {
   Output = out;
 }
 
-bool push_it(std::stack<fs::directory_iterator> dirStack, const std::string& path) {
+bool push_it(std::stack<fs::directory_iterator>* dirStack, const std::string& path) {
   std::error_code err;
-  dirStack.emplace(path, err);
+  if (!dirStack) {
+    return false;
+  }
+  dirStack->emplace(path, err);
   if (err) {
     // TODO: Logger?
     std::cerr << "Error: " << path << ": " << err.message() << std::endl;
@@ -43,7 +46,7 @@ bool DirReader::startReading() {
   std::error_code err;
 
   // push the initial directory onto the stack
-  if (!push_it(dirStack, Root)) {
+  if (!push_it(&dirStack, Root)) {
     return false;
   }
 
@@ -61,7 +64,7 @@ bool DirReader::startReading() {
 
     if (entry.is_directory()) {
       // recurse, depth first
-      hadError |= !push_it(dirStack, entry.path().string());
+      hadError |= !push_it(&dirStack, entry.path().string());
     }
   } while (!dirStack.empty());
 
