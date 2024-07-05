@@ -64,8 +64,7 @@ void LlamaLexer::parseIdentifier() {
   }
 
   uint32_t end = CurIdx;
-  std::string lexeme = Input.substr(start, end - start);
-  auto found = Llama::keywords.find(lexeme);
+  auto found = Llama::keywords.find(Input.substr(start, end - start));
 
   if (found != Llama::keywords.end()) {
     addToken(found->second, start, end);
