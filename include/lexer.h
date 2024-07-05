@@ -16,8 +16,14 @@ enum class TokenType {
   FILE_METADATA,
   SIGNATURE,
   GREP,
+  STRINGS,
   HASH,
   CONDITION,
+  CREATED_TIME,
+  MODIFIED_TIME,
+  FILESIZE,
+  FILENAME,
+  FILEPATH,
 
   // punctuation
   OPEN_BRACE,
@@ -41,8 +47,14 @@ namespace Llama {
     {"file_metadata", TokenType::FILE_METADATA},
     {"signature", TokenType::SIGNATURE},
     {"grep", TokenType::GREP},
+    {"strings", TokenType::STRINGS},
     {"hash", TokenType::HASH},
-    {"condition", TokenType::CONDITION}
+    {"condition", TokenType::CONDITION},
+    {"created_time", TokenType::CREATED_TIME},
+    {"modified_time", TokenType::MODIFIED_TIME},
+    {"filesize", TokenType::FILESIZE},
+    {"filename", TokenType::FILENAME},
+    {"filepath", TokenType::FILEPATH}
   };
 }
 

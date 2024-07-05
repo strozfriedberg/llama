@@ -93,6 +93,48 @@ TEST_CASE("parseConditionId") {
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::CONDITION);
 }
 
+TEST_CASE("parseCreatedTimeId") {
+  std::string input = "created_time";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::CREATED_TIME);
+}
+
+TEST_CASE("parseModifiedTimeId") {
+  std::string input = "modified_time";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::MODIFIED_TIME);
+}
+
+TEST_CASE("parseFilesizeId") {
+  std::string input = "filesize";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::FILESIZE);
+}
+
+TEST_CASE("parseFilenameId") {
+  std::string input = "filename";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::FILENAME);
+}
+
+TEST_CASE("parseFilepathId") {
+  std::string input = "filepath";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::FILEPATH);
+}
+
+TEST_CASE("parseStringsId") {
+  std::string input = "strings";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::STRINGS);
+}
+
 TEST_CASE("parseAlphaNumUnderscore") {
   std::string input = "not_a_keyword";
   LlamaLexer lexer(input);
