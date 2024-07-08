@@ -118,17 +118,17 @@ TEST_CASE("parseConditionId") {
 }
 
 TEST_CASE("parseCreatedTimeId") {
-  std::string input = "created_time";
+  std::string input = "created";
   LlamaLexer lexer(input);
   lexer.parseIdentifier();
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::CREATED_TIME);
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::CREATED);
 }
 
 TEST_CASE("parseModifiedTimeId") {
-  std::string input = "modified_time";
+  std::string input = "modified";
   LlamaLexer lexer(input);
   lexer.parseIdentifier();
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::MODIFIED_TIME);
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::MODIFIED);
 }
 
 TEST_CASE("parseFilesizeId") {
