@@ -1,0 +1,82 @@
+startRule           = rule_decl+ EOF;
+
+rule_decl           = RULE IDENTIFIER OPEN_BRACE rule CLOSE_BRACE;
+
+rule                = meta_section? rule_content;
+
+rule_content        = grep_section | meta_section? hash_section? signature_section?;
+
+expr                = expr operator expr | func_call | literal;
+
+meta_section        = META COLON string_def+;
+
+grep_section        = GREP COLON string_section? condition_section;
+
+signature_section   = SIGNATURE COLON DOUBLE_QUOTED_STRING+;
+
+hash_section        = HASH COLON hash_stmt+;
+
+hash_stmt           = hash EQUAL DOUBLE_QUOTED_STRING;
+
+strings_section     = STRINGS COLON string_def+;
+
+condition_section   = CONDITION COLON expr;
+
+string_def          = IDENTIFIER EQUAL DOUBLE_QUOTED_STRING;
+
+func_call           = condition_func OPEN_PAREN arg_list CLOSE_PAREN;
+
+arg_list            = IDENTIFIER ( COMMA IDENTIFIER )*;
+
+section_name        = META | FILE_METADATA | SIGNATURE | GREP | HASH;
+
+literal             = IDENTIFIER | DOUBLE_QUOTED_STRING | NUMBER;
+
+condition_func      = ANY | ALL | OFFSET | COUNT_HAS_HITS | COUNT | LENGTH;
+
+operator            = EQUAL_EQUAL
+                    | NOT_EQUAL
+                    | LESS_THAN 
+                    | LESS_THAN_EQUAL
+                    | GREATER_THAN
+                    | GREATER_THAN_EQUAL
+                    | AND
+                    | OR;
+
+hash                = MD5 | SHA1 | SHA256 | BLAKE3;
+
+OPEN_BRACE          = "{";
+CLOSE_BRACE         = "}";
+OPEN_PAREN          = "(";
+CLOSE_PAREN         = ")";
+COLON               = ":";
+COMMA               = ",";
+EOF                 = "\0";
+MD5                 = "md5";
+SHA1                = "sha1";
+SHA256              = "sha256";
+BLAKE3              = "blake3";
+ANY                 = "any";
+ALL                 = "all";
+OFFSET              = "offset";
+COUNT_HAS_HITS      = "count_has_hits";
+COUNT               = "count";
+LENGTH              = "length";
+EQUAL_EQUAL         = "==";
+NOT_EQUAL           = "!=";
+LESS_THAN           = "<";
+LESS_THAN_EQUAL     = "<=";
+GREATER_THAN        = ">";
+GREATER_THAN_EQUAL  = ">=";
+AND                 = "and";
+OR                  = "or";
+META                = "meta";
+FILE_METADATA       = "file_metadata";
+SIGNATURE           = "signature";
+GREP                = "grep";
+HASH                = "hash";
+STRINGS             = "strings";
+CONDITION           = "condition";
+RULE                = "rule";
+IDENTIFIER          = [a-zA-Z_][a-zA-Z0-9_]*;
+DOUBLE_QUOTED_STRING = "\""[^\"]*"\"";
