@@ -1,12 +1,19 @@
-startRule           = rule_decl+ EOF;
+start_rule           = rule_decl+ EOF;
 
 rule_decl           = RULE IDENTIFIER OPEN_BRACE rule CLOSE_BRACE;
 
 rule                = meta_section? rule_content;
 
-rule_content        = grep_section | meta_section? hash_section? signature_section?;
+rule_content        = grep_section
+                    | non_grep_section+;
 
-expr                = expr operator expr | func_call | literal;
+non_grep_section   = meta_section
+                   | hash_section
+                   | signature_section;
+
+expr                = expr operator expr 
+                    | func_call
+                    | literal;
 
 meta_section        = META COLON string_def+;
 
@@ -28,11 +35,25 @@ func_call           = condition_func OPEN_PAREN arg_list CLOSE_PAREN;
 
 arg_list            = IDENTIFIER ( COMMA IDENTIFIER )*;
 
-section_name        = META | FILE_METADATA | SIGNATURE | GREP | HASH;
+section_name        = META 
+                    | FILE_METADATA 
+                    | SIGNATURE 
+                    | GREP 
+                    | HASH
+                    ;
 
-literal             = IDENTIFIER | DOUBLE_QUOTED_STRING | NUMBER;
+literal             = IDENTIFIER 
+                    | DOUBLE_QUOTED_STRING 
+                    | NUMBER
+                    ;
 
-condition_func      = ANY | ALL | OFFSET | COUNT_HAS_HITS | COUNT | LENGTH;
+condition_func      = ANY 
+                    | ALL 
+                    | OFFSET 
+                    | COUNT_HAS_HITS 
+                    | COUNT 
+                    | LENGTH
+                    ;
 
 operator            = EQUAL_EQUAL
                     | NOT_EQUAL
@@ -41,9 +62,14 @@ operator            = EQUAL_EQUAL
                     | GREATER_THAN
                     | GREATER_THAN_EQUAL
                     | AND
-                    | OR;
+                    | OR
+                    ;
 
-hash                = MD5 | SHA1 | SHA256 | BLAKE3;
+hash                = MD5
+                    | SHA1
+                    | SHA256
+                    | BLAKE3
+                    ;
 
 OPEN_BRACE          = "{";
 CLOSE_BRACE         = "}";
