@@ -22,9 +22,9 @@ grep_section        = GREP COLON string_section? condition_section;
 
 signature_section   = SIGNATURE COLON DOUBLE_QUOTED_STRING+;
 
-hash_section        = HASH COLON hash_stmt+;
+hash_section        = HASH COLON hash_expr+;
 
-hash_stmt           = hash EQUAL DOUBLE_QUOTED_STRING;
+hash_expr           = hash EQUAL DOUBLE_QUOTED_STRING;
 
 strings_section     = STRINGS COLON string_def+;
 
