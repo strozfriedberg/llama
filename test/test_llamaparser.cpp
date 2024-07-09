@@ -92,6 +92,14 @@ TEST_CASE("parseIdentifierEncodingsList") {
   REQUIRE(lexeme == "ASCII,UTF-8");
 }
 
+TEST_CASE("parseNocase") {
+  std::string input = "nocase";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::NOCASE);
+
+}
+
 TEST_CASE("unterminatedString") {
   std::string input = "some string";
   LlamaLexer lexer(input);
