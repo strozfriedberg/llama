@@ -29,7 +29,11 @@ strings_section     = STRINGS COLON string_def+;
 
 condition_section   = CONDITION COLON expr;
 
-string_def          = IDENTIFIER EQUAL DOUBLE_QUOTED_STRING;
+string_def          = IDENTIFIER EQUAL DOUBLE_QUOTED_STRING string_mod+;
+
+string_mod          = encodings | FIXED | NOCASE;
+
+encodings           = ENCODINGS EQUAL ENCODINGS_LIST;
 
 func_call           = condition_func OPEN_PAREN arg_list CLOSE_PAREN;
 
