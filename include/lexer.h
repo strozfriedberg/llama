@@ -36,7 +36,7 @@ enum class TokenType {
   SHA256,
   ENCODINGS,
   NOCASE,
-  FIXED
+  FIXED,
 
 
   // punctuation
