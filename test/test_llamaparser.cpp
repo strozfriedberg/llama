@@ -65,6 +65,33 @@ TEST_CASE("parseString") {
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::DOUBLE_QUOTED_STRING);
 }
 
+TEST_CASE("parseEncodingsList") {
+  std::string input = "=UTF-8,UTF-16";
+  LlamaLexer lexer(input);
+  lexer.parseEncodingsList();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::EQUAL);
+  REQUIRE(lexer.getTokens().at(1).Type == TokenType::ENCODINGS_LIST);
+  std::string lexeme(lexer.getLexeme(1));
+  REQUIRE(lexeme == "UTF-8,UTF-16");
+}
+
+TEST_CASE("parseEncodingsWithoutList") {
+  std::string input = "encodings";
+  LlamaLexer lexer(input);
+  REQUIRE_THROWS_AS(lexer.parseIdentifier(), UnexpectedInputError);
+}
+
+TEST_CASE("parseIdentifierEncodingsList") {
+  std::string input = "encodings=ASCII,UTF-8";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::ENCODINGS);
+  REQUIRE(lexer.getTokens().at(1).Type == TokenType::EQUAL);
+  REQUIRE(lexer.getTokens().at(2).Type == TokenType::ENCODINGS_LIST);
+  std::string lexeme(lexer.getLexeme(2));
+  REQUIRE(lexeme == "ASCII,UTF-8");
+}
+
 TEST_CASE("unterminatedString") {
   std::string input = "some string";
   LlamaLexer lexer(input);

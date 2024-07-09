@@ -34,6 +34,7 @@ enum class TokenType {
   MD5,
   SHA1,
   SHA256,
+  ENCODINGS,
 
 
   // punctuation
@@ -55,6 +56,7 @@ enum class TokenType {
   IDENTIFIER,
   DOUBLE_QUOTED_STRING,
   NUMBER,
+  ENCODINGS_LIST,
 
   END_OF_FILE
 };
@@ -83,7 +85,8 @@ namespace Llama {
     {"length", TokenType::LENGTH},
     {"md5", TokenType::MD5},
     {"sha1", TokenType::SHA1},
-    {"sha256", TokenType::SHA256}
+    {"sha256", TokenType::SHA256},
+    {"encodings", TokenType::ENCODINGS}
   };
 }
 
@@ -110,6 +113,7 @@ public:
   void parseIdentifier();
   void parseString();
   void parseNumber();
+  void parseEncodingsList();
 
   void addToken(TokenType type, uint32_t start, uint32_t end) { Tokens.push_back(Token(type, start, end)); }
 

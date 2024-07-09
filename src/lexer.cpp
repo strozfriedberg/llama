@@ -69,6 +69,7 @@ void LlamaLexer::parseIdentifier() {
 
   if (found != Llama::keywords.end()) {
     addToken(found->second, start, end);
+    if (found->second == TokenType::ENCODINGS) { parseEncodingsList(); }
   }
   else {
     addToken(TokenType::IDENTIFIER, start, end);
@@ -99,6 +100,21 @@ void LlamaLexer::parseNumber() {
 
   uint32_t end = CurIdx;
   addToken(TokenType::NUMBER, start, end);
+}
+
+void LlamaLexer::parseEncodingsList() {
+  if (match('=')) {
+    addToken(TokenType::EQUAL, CurIdx-1, CurIdx);
+    uint32_t start = CurIdx;
+    while (!std::isspace(getCurChar()) && !isAtEnd()) {
+      advance();
+    }
+    uint32_t end = CurIdx;
+    addToken(TokenType::ENCODINGS_LIST, start, end);
+  }
+  else {
+    throw UnexpectedInputError("Expected '=' after 'encodings'");
+  }
 }
 
 bool LlamaLexer::match(char expected) {
