@@ -35,13 +35,6 @@ func_call           = condition_func OPEN_PAREN arg_list CLOSE_PAREN;
 
 arg_list            = IDENTIFIER ( COMMA IDENTIFIER )*;
 
-section_name        = META 
-                    | FILE_METADATA 
-                    | SIGNATURE 
-                    | GREP 
-                    | HASH
-                    ;
-
 literal             = IDENTIFIER 
                     | DOUBLE_QUOTED_STRING 
                     | NUMBER
