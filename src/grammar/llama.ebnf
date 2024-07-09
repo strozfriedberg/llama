@@ -4,6 +4,7 @@ rule_decl           = RULE IDENTIFIER OPEN_BRACE rule CLOSE_BRACE;
 
 rule                = meta_section? rule_content;
 
+(* Rules can either have a grep section or one of the non-grep sections, but not both. *)
 rule_content        = grep_section
                     | non_grep_section+;
 
