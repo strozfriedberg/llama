@@ -36,6 +36,7 @@ enum class TokenType {
   SHA256,
   ENCODINGS,
   NOCASE,
+  FIXED
 
 
   // punctuation
@@ -88,7 +89,8 @@ namespace Llama {
     {"sha1", TokenType::SHA1},
     {"sha256", TokenType::SHA256},
     {"encodings", TokenType::ENCODINGS},
-    {"nocase", TokenType::NOCASE}
+    {"nocase", TokenType::NOCASE},
+    {"fixed", TokenType::FIXED}
   };
 }
 

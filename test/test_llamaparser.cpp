@@ -97,7 +97,13 @@ TEST_CASE("parseNocase") {
   LlamaLexer lexer(input);
   lexer.parseIdentifier();
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::NOCASE);
+}
 
+TEST_CASE("parseFixed") {
+  std::string input = "fixed";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::FIXED);
 }
 
 TEST_CASE("unterminatedString") {
