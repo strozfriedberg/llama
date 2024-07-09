@@ -34,6 +34,7 @@ enum class TokenType {
   MD5,
   SHA1,
   SHA256,
+  BLAKE3,
   ENCODINGS,
   NOCASE,
   FIXED,
@@ -88,6 +89,7 @@ namespace Llama {
     {"md5", TokenType::MD5},
     {"sha1", TokenType::SHA1},
     {"sha256", TokenType::SHA256},
+    {"blake3", TokenType::BLAKE3},
     {"encodings", TokenType::ENCODINGS},
     {"nocase", TokenType::NOCASE},
     {"fixed", TokenType::FIXED}

@@ -266,6 +266,13 @@ TEST_CASE("parseSha256Id") {
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::SHA256);
 }
 
+TEST_CASE("parseBlake3Id") {
+  std::string input = "blake3";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::BLAKE3);
+}
+
 TEST_CASE("parseNotEqual") {
   std::string input = "!=";
   LlamaLexer lexer(input);
