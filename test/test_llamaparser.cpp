@@ -27,6 +27,8 @@ TEST_CASE("ScanOpenParen") {
   LlamaLexer lexer(input);
   lexer.scanToken();
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::OPEN_PAREN);
+  std::string lexeme(lexer.getLexeme(0));
+  REQUIRE(lexeme == "(");
 }
 
 TEST_CASE("ScanCloseParen") {
@@ -34,6 +36,8 @@ TEST_CASE("ScanCloseParen") {
   LlamaLexer lexer(input);
   lexer.scanToken();
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::CLOSE_PAREN);
+  std::string lexeme(lexer.getLexeme(0));
+  REQUIRE(lexeme == ")");
 }
 
 TEST_CASE("ScanComma") {
@@ -41,6 +45,8 @@ TEST_CASE("ScanComma") {
   LlamaLexer lexer(input);
   lexer.scanToken();
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::COMMA);
+  std::string lexeme(lexer.getLexeme(0));
+  REQUIRE(lexeme == ",");
 }
 
 TEST_CASE("ScanTokenString") {
