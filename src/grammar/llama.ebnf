@@ -1,4 +1,4 @@
-start_rule           = rule_decl+ EOF;
+start_rule          = rule_decl+ EOF;
 
 rule_decl           = RULE IDENTIFIER OPEN_BRACE rule CLOSE_BRACE;
 
