@@ -31,6 +31,9 @@ enum class TokenType {
   COUNT,
   COUNT_HAS_HITS,
   LENGTH,
+  MD5,
+  SHA1,
+  SHA256,
 
 
   // punctuation
@@ -77,7 +80,10 @@ namespace Llama {
     {"offset", TokenType::OFFSET},
     {"count", TokenType::COUNT},
     {"count_has_hits", TokenType::COUNT_HAS_HITS},
-    {"length", TokenType::LENGTH}
+    {"length", TokenType::LENGTH},
+    {"md5", TokenType::MD5},
+    {"sha1", TokenType::SHA1},
+    {"sha256", TokenType::SHA256}
   };
 }
 

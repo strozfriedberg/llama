@@ -204,6 +204,27 @@ TEST_CASE("parseLengthId") {
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::LENGTH);
 }
 
+TEST_CASE("parseMd5Id") {
+  std::string input = "md5";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::MD5);
+}
+
+TEST_CASE("parseSha1Id") {
+  std::string input = "sha1";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::SHA1);
+}
+
+TEST_CASE("parseSha256Id") {
+  std::string input = "sha256";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier();
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::SHA256);
+}
+
 TEST_CASE("parseNotEqual") {
   std::string input = "!=";
   LlamaLexer lexer(input);
