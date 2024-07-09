@@ -3,6 +3,7 @@
 #include <iostream>
 #include <regex>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -115,7 +116,7 @@ public:
   bool match(char expected);
   bool isAtEnd() const { return CurIdx >= Input.size(); }
 
-  std::string getLexeme(int idx) const { return Input.substr(Tokens.at(idx).Start, Tokens.at(idx).End - Tokens.at(idx).Start); }
+  std::string_view getLexeme(int idx) const;
   char getCurChar() const;
   const std::vector<Token>& getTokens() const { return Tokens; }
 
