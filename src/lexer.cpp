@@ -102,8 +102,9 @@ void LlamaLexer::parseNumber() {
 }
 
 bool LlamaLexer::match(char expected) {
-  if (isAtEnd()) { return false; }
-  if (Input.at(CurIdx) != expected) { return false; }
+  if (isAtEnd() || Input.at(CurIdx) != expected) {
+    return false;
+  }
 
   advance();
   return true;
