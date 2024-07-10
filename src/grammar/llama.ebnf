@@ -8,7 +8,7 @@ rule                = meta_section? rule_content;
 rule_content        = grep_section
                     | non_grep_section+;
 
-non_grep_section   = meta_section
+non_grep_section   = file_metadata_section
                    | hash_section
                    | signature_section;
 
@@ -17,6 +17,8 @@ expr                = expr operator expr
                     | literal;
 
 meta_section        = META COLON string_def+;
+
+file_metadata_section = FILE_METADATA COLON file_metadata_def+;
 
 grep_section        = GREP COLON string_section? condition_section;
 
@@ -30,6 +32,9 @@ strings_section     = STRINGS COLON string_def+;
 
 condition_section   = CONDITION COLON expr;
 
+file_metadata_def   = file_metadata EQUAL DOUBLE_QUOTED_STRING
+                    | FILESIZE EQUAL NUMBER;
+
 string_def          = IDENTIFIER EQUAL DOUBLE_QUOTED_STRING string_mod+;
 
 string_mod          = encodings | FIXED | NOCASE;
@@ -39,6 +44,10 @@ encodings           = ENCODINGS EQUAL ENCODINGS_LIST;
 func_call           = condition_func OPEN_PAREN arg_list CLOSE_PAREN;
 
 arg_list            = IDENTIFIER ( COMMA IDENTIFIER )*;
+
+file_metadata       = CREATED
+                    | MODIFIED
+                    ;
 
 literal             = IDENTIFIER 
                     | DOUBLE_QUOTED_STRING 
@@ -102,5 +111,9 @@ HASH                = "hash";
 STRINGS             = "strings";
 CONDITION           = "condition";
 RULE                = "rule";
+CREATED             = "created";
+MODIFIED            = "modified";
+FILESIZE            = "filesize";
+ENCODINGS           = "encodings";
 IDENTIFIER          = [a-zA-Z_][a-zA-Z0-9_]*;
 DOUBLE_QUOTED_STRING = "\""[^\"]*"\"";
