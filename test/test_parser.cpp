@@ -86,3 +86,9 @@ TEST_CASE("TestLlamaParserMatchMultipleFalse") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_FALSE(parser.match(TokenType::OPEN_BRACE, TokenType::META));
 }
+
+TEST_CASE("parseHashThrowsIfNotHash") {
+  std::string input = "notAHash";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseHash(), ParserError);
+}
