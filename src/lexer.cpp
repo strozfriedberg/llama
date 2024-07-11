@@ -20,10 +20,25 @@ void LlamaLexer::scanToken() {
     case '\r':
     case ' ': break;
 
+    case '!' : {
+      if (match('=')) {
+        addToken(TokenType::NOT_EQUAL, start, CurIdx);
+      }
+      else {
+        throw UnexpectedInputError("Unexpected input character: !");
+      }
+      break;
+    }
+
     case '"': parseString(); break;
 
+    case '(': addToken(TokenType::OPEN_PAREN, start, CurIdx); break;
+    case ')': addToken(TokenType::CLOSE_PAREN, start, CurIdx); break;
+    case ',': addToken(TokenType::COMMA, start, CurIdx); break;
     case ':': addToken(TokenType::COLON, start, CurIdx); break;
-    case '=': addToken(TokenType::EQUAL, start, CurIdx); break;
+    case '<': addToken(match('=') ? TokenType::LESS_THAN_EQUAL : TokenType::LESS_THAN, start, CurIdx); break;
+    case '=': addToken(match('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL, start, CurIdx); break;
+    case '>': addToken(match('=') ? TokenType::GREATER_THAN_EQUAL : TokenType::GREATER_THAN, start, CurIdx); break;
     case '{': addToken(TokenType::OPEN_BRACE, start, CurIdx); break;
     case '}': addToken(TokenType::CLOSE_BRACE, start, CurIdx); break;
 
@@ -50,11 +65,11 @@ void LlamaLexer::parseIdentifier() {
   }
 
   uint32_t end = CurIdx;
-  std::string lexeme = Input.substr(start, end - start);
-  auto found = Llama::keywords.find(lexeme);
+  auto found = Llama::keywords.find(Input.substr(start, end - start));
 
   if (found != Llama::keywords.end()) {
     addToken(found->second, start, end);
+    if (found->second == TokenType::ENCODINGS) { parseEncodingsList(); }
   }
   else {
     addToken(TokenType::IDENTIFIER, start, end);
@@ -84,8 +99,35 @@ void LlamaLexer::parseNumber() {
   }
 
   uint32_t end = CurIdx;
-  std::string lexeme = Input.substr(start, end - start);
   addToken(TokenType::NUMBER, start, end);
+}
+
+void LlamaLexer::parseEncodingsList() {
+  if (match('=')) {
+    addToken(TokenType::EQUAL, CurIdx-1, CurIdx);
+    uint32_t start = CurIdx;
+    while (!std::isspace(getCurChar()) && !isAtEnd()) {
+      advance();
+    }
+    uint32_t end = CurIdx;
+    addToken(TokenType::ENCODINGS_LIST, start, end);
+  }
+  else {
+    throw UnexpectedInputError("Expected '=' after 'encodings'");
+  }
+}
+
+bool LlamaLexer::match(char expected) {
+  if (isAtEnd() || Input.at(CurIdx) != expected) {
+    return false;
+  }
+
+  advance();
+  return true;
+}
+
+std::string_view LlamaLexer::getLexeme(int idx) const {
+  return std::string_view(Input).substr(Tokens.at(idx).Start, Tokens.at(idx).End - Tokens.at(idx).Start);
 }
 
 char LlamaLexer::getCurChar() const {
