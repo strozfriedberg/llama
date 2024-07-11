@@ -92,3 +92,15 @@ TEST_CASE("parseHashThrowsIfNotHash") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseHash(), ParserError);
 }
+
+TEST_CASE("parseHashDoesNotThrowIfHash") {
+  std::string input = "md5";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseHash());
+}
+
+TEST_CASE("parseHashExprThrowsIfNotEqual") {
+  std::string input = "md5 notEqual";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseHashExpr(), ParserError);
+}
