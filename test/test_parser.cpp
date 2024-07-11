@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include "lexer.h"
 #include "parser.h"
 
 std::vector<Token> getTokensFromString(const std::string& input) {

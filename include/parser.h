@@ -1,4 +1,4 @@
-#include "lexer.h"
+#include "token.h"
 
 class LlamaParser {
 public:
