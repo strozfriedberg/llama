@@ -20,7 +20,9 @@ public:
   bool check(TokenType type) const { return peek().Type == type; }
   bool isAtEnd() const { return peek().Type == TokenType::END_OF_FILE; }
 
+  bool matchHashTokenType();
 
+  void parseHashSection();
   void parseHashExpr();
   void parseHash();
 
@@ -36,6 +38,22 @@ bool LlamaParser::match(TokenType type) {
   return false;
 }
 
+bool LlamaParser::matchHashTokenType() {
+  return match(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3);
+}
+
+void LlamaParser::parseHashSection() {
+  if (!match(TokenType::HASH)) {
+    throw ParserError("Expected hash keyword");
+  }
+  if (!match(TokenType::COLON)) {
+    throw ParserError("Expected colon");
+  }
+  while (matchHashTokenType()) {
+    parseHashExpr();
+  }
+}
+
 void LlamaParser::parseHashExpr() {
   parseHash();
   if (!match(TokenType::EQUAL)) {
@@ -47,7 +65,7 @@ void LlamaParser::parseHashExpr() {
 }
 
 void LlamaParser::parseHash() {
-  if (!match(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3)) {
+  if (!matchHashTokenType()) {
     throw ParserError("Expected hash type");
   }
 }

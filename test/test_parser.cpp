@@ -116,3 +116,21 @@ TEST_CASE("parseHashExprDoesNotThrowIfEqualAndDoubleQuotedString") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseHashExpr());
 }
+
+TEST_CASE("parseHashSectionThrowsIfNotHash") {
+  std::string input = "notAHash";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseHashSection(), ParserError);
+}
+
+TEST_CASE("parseHashSectionThrowsIfNotColon") {
+  std::string input = "md5 notColon";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseHashSection(), ParserError);
+}
+
+TEST_CASE("parseHashSectionDoesNotThrowIfHashAndColon") {
+  std::string input = "md5:";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseHashSection());
+}
