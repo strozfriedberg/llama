@@ -6,7 +6,7 @@ class LlamaParser {
 public:
   LlamaParser(std::vector<Token> tokens) : Tokens(tokens) {}
 
-  Token previous() { return Tokens.at(CurIdx - 1); }
+  Token previous() const { return Tokens.at(CurIdx - 1); }
   Token peek() const { return Tokens.at(CurIdx); }
 
   std::vector<Token> Tokens;
