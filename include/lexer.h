@@ -28,11 +28,7 @@ public:
 
   void addToken(TokenType type, uint32_t start, uint32_t end) { Tokens.push_back(Token(type, start, end)); }
 
-  char advance() {
-    char curChar = getCurChar();
-    ++CurIdx;
-    return curChar;
-  }
+  char advance();
 
   bool match(char expected);
   bool isAtEnd() const { return CurIdx >= Input.size(); }
