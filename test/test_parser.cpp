@@ -54,11 +54,17 @@ TEST_CASE("TestLlamaParserPeek") {
   REQUIRE(parser.peek().Type == TokenType::OPEN_BRACE);
 }
 
-TEST_CASE("TestLlamaParserIsAtEnd") {
+TEST_CASE("TestLlamaParserIsAtEndTrue") {
   std::string input = "rule";
   LlamaParser parser(getTokensFromString(input));
-  parser.CurIdx = 1;
+  parser.advance();
   REQUIRE(parser.isAtEnd());
+}
+
+TEST_CASE("TestLlamaParserIsAtEndFalse") {
+  std::string input = "rule";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_FALSE(parser.isAtEnd());
 }
 
 TEST_CASE("TestLlamaParserAdvance") {
@@ -69,30 +75,40 @@ TEST_CASE("TestLlamaParserAdvance") {
   REQUIRE(parser.peek().Type == TokenType::OPEN_BRACE);
 }
 
-TEST_CASE("TestLlamaParserCheck") {
+TEST_CASE("TestLlamaParserCheckTrue") {
   std::string input = "rule { meta: description = \"test\" }";
   LlamaParser parser(getTokensFromString(input));
-  parser.CurIdx = 1;
-  REQUIRE(parser.check(TokenType::OPEN_BRACE));
+  REQUIRE(parser.check(TokenType::RULE));
 }
 
-TEST_CASE("TestLlamaParserMatch") {
+TEST_CASE("TestLlamaParserCheckFalse") {
   std::string input = "rule { meta: description = \"test\" }";
   LlamaParser parser(getTokensFromString(input));
-  parser.CurIdx = 1;
-  REQUIRE(parser.match(TokenType::OPEN_BRACE));
+  REQUIRE_FALSE(parser.check(TokenType::OPEN_BRACE));
 }
 
-TEST_CASE("TestLlamaParserMatchMultiple") {
+TEST_CASE("TestLlamaParserMatchTrue") {
   std::string input = "rule { meta: description = \"test\" }";
   LlamaParser parser(getTokensFromString(input));
-  parser.CurIdx = 1;
-  REQUIRE(parser.match(TokenType::OPEN_BRACE, TokenType::META));
+  REQUIRE(parser.match(TokenType::RULE));
+  REQUIRE(parser.CurIdx == 1);
+}
+
+TEST_CASE("TestLlamaParserMatchFalse") {
+  std::string input = "rule { meta: description = \"test\" }";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_FALSE(parser.match(TokenType::OPEN_BRACE));
+  REQUIRE(parser.CurIdx == 0);
+}
+
+TEST_CASE("TestLlamaParserMatchMultipleTrue") {
+  std::string input = "rule { meta: description = \"test\" }";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE(parser.match(TokenType::RULE, TokenType::META));
 }
 
 TEST_CASE("TestLlamaParserMatchMultipleFalse") {
   std::string input = "rule { meta: description = \"test\" }";
   LlamaParser parser(getTokensFromString(input));
-  parser.CurIdx = 1;
-  REQUIRE_FALSE(parser.match(TokenType::META, TokenType::RULE));
+  REQUIRE_FALSE(parser.match(TokenType::OPEN_BRACE, TokenType::META));
 }
