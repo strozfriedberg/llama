@@ -20,8 +20,9 @@ public:
   bool check(TokenType type) const { return peek().Type == type; }
   bool isAtEnd() const { return peek().Type == TokenType::END_OF_FILE; }
 
-  void parseHash();
+
   void parseHashExpr();
+  void parseHash();
 
   std::vector<Token> Tokens;
   uint32_t CurIdx = 0;
@@ -35,12 +36,6 @@ bool LlamaParser::match(TokenType type) {
   return false;
 }
 
-void LlamaParser::parseHash() {
-  if (!match(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3)) {
-    throw ParserError("Expected hash type");
-  }
-}
-
 void LlamaParser::parseHashExpr() {
   parseHash();
   if (!match(TokenType::EQUAL)) {
@@ -48,5 +43,11 @@ void LlamaParser::parseHashExpr() {
   }
   if (!match(TokenType::DOUBLE_QUOTED_STRING)) {
     throw ParserError("Expected double quoted string");
+  }
+}
+
+void LlamaParser::parseHash() {
+  if (!match(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3)) {
+    throw ParserError("Expected hash type");
   }
 }
