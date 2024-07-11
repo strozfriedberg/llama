@@ -72,6 +72,7 @@ test_test_SOURCES = \
 	test/test_hex.cpp \
 	test/test_inodeandblocktrackerimpl.cpp \
 	test/test_lexer.cpp \
+	test/test_parser.cpp \
 	test/test_processor.cpp \
 	test/test_readseek.cpp \
 	test/test_recordbuffer.cpp \
