@@ -3,6 +3,7 @@
 #include "schema.h"
 
 #include <system_error>
+#include <fstream>
 
 namespace fs = std::filesystem;
 
@@ -148,7 +149,69 @@ jsoncons::json DirConverter::convertName(const fs::directory_entry& de) const {
       { "par_seq",   jsoncons::null_type() },
 //      { "date_added", name.date_added },
       { "type",      DirUtils::fileTypeString(DirUtils::fileType(de)) },
-      { "flags",     NAME_FLAG_ALLOC }
+      { "flags",     NAME_FLAG_ALLOC },
+
+      // TODO
+      { "sig_desc",  "" },
+      { "sig_tags", "[\"tag1\", \"tag2\"]" }
     }
   );
+}
+
+DirConverter::DirConverter() {
+  readMagics();
+  for (auto it = this->magics.begin(); it != this->magics.end(); ++it) {
+    printf("value desc %s, pattern %s\n", it->description.c_str(), it->pattern.c_str());
+    for (auto check : it->checks) {
+      printf("\tcmp_type %s, offset %llu, value %s\n", check.compare_type.c_str(), check.offset, check.value.c_str());
+    }
+  }
+}
+
+void DirConverter::readMagics() {
+  std::ifstream is("./magics.json");
+  auto json(jsoncons::json::parse(is));
+  auto startsWith = [](const std::string& s, const std::string& prefix) -> bool {
+    return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
+    };
+  auto parseOffset = [&startsWith](std::string s) -> unsigned long long {
+    std::stringstream ss;
+    if (startsWith(s, "0x") || startsWith(s, "0X")) {
+      ss << std::hex << s.substr(2);
+    }
+    else {
+      ss << std::dec << s;
+    }
+    unsigned long long v;
+    ss >> v;
+    return v;
+    };
+  for (const auto& magic_json : json.array_range()) {
+    magic m;
+    if (magic_json.contains("checks")) {
+      for (const auto& check : magic_json["checks"].array_range()) {
+        m.checks.push_back(magic::check{
+          check["compare_type"].as_string(),
+          parseOffset(check["offset"].as_string()),
+          check["value"].as_string() });
+      }
+    }
+    if (magic_json.contains("pattern")) {
+      m.pattern = magic_json["pattern"].as_string();
+    }
+    if (magic_json.contains("description")) {
+      m.description = magic_json["description"].as_string();
+    }
+    if (magic_json.contains("tags")) {
+      for (const auto& tag : magic_json["tags"].array_range()) {
+        m.tags.push_back(tag.as_string());
+      }
+    }
+    if (magic_json.contains("extensions")) {
+      for (const auto& ext : magic_json["extensions"].object_range()) {
+        m.extensions[ext.key()] = ext.value().as_string();
+      }
+    }
+    this->magics.push_back(m);
+  }
 }
