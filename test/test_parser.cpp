@@ -13,6 +13,12 @@ public:
   uint32_t CurIdx = 0;
 };
 
+std::vector<Token> getTokensFromString(const std::string& input) {
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  return lexer.getTokens();
+}
+
 TEST_CASE("LlamaParser") {
   std::vector<Token> tokens;
   LlamaParser parser(tokens);
@@ -20,18 +26,14 @@ TEST_CASE("LlamaParser") {
 
 TEST_CASE("TestLlamaParserPrevious") {
   std::string input = "rule { meta: description = \"test\" }";
-  LlamaLexer lexer(input);
-  lexer.scanTokens();
-  LlamaParser parser(lexer.getTokens());
+  LlamaParser parser(getTokensFromString(input));
   parser.CurIdx = 1;
   REQUIRE(parser.previous().Type == TokenType::RULE);
 }
 
 TEST_CASE("TestLlamaParserPeek") {
   std::string input = "rule { meta: description = \"test\" }";
-  LlamaLexer lexer(input);
-  lexer.scanTokens();
-  LlamaParser parser(lexer.getTokens());
+  LlamaParser parser(getTokensFromString(input));
   parser.CurIdx = 1;
   REQUIRE(parser.peek().Type == TokenType::OPEN_BRACE);
 }
