@@ -8,6 +8,7 @@ public:
 
   Token previous() const { return Tokens.at(CurIdx - 1); }
   Token peek() const { return Tokens.at(CurIdx); }
+  Token advance() { if (!isAtEnd()) ++CurIdx; return previous();}
 
   bool isAtEnd() const { return peek().Type == TokenType::END_OF_FILE; }
 
@@ -45,4 +46,12 @@ TEST_CASE("TestLlamaParserIsAtEnd") {
   LlamaParser parser(getTokensFromString(input));
   parser.CurIdx = 1;
   REQUIRE(parser.isAtEnd());
+}
+
+TEST_CASE("TestLlamaParserAdvance") {
+  std::string input = "rule { meta: description = \"test\" }";
+  LlamaParser parser(getTokensFromString(input));
+  parser.advance();
+  REQUIRE(parser.previous().Type == TokenType::RULE);
+  REQUIRE(parser.peek().Type == TokenType::OPEN_BRACE);
 }
