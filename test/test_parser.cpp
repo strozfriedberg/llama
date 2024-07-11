@@ -10,11 +10,13 @@ public:
   Token peek() const { return Tokens.at(CurIdx); }
   Token advance() { if (!isAtEnd()) ++CurIdx; return previous();}
 
+  bool check(TokenType type) const { return peek().Type == type; }
   bool isAtEnd() const { return peek().Type == TokenType::END_OF_FILE; }
 
   std::vector<Token> Tokens;
   uint32_t CurIdx = 0;
 };
+
 
 std::vector<Token> getTokensFromString(const std::string& input) {
   LlamaLexer lexer(input);
@@ -54,4 +56,11 @@ TEST_CASE("TestLlamaParserAdvance") {
   parser.advance();
   REQUIRE(parser.previous().Type == TokenType::RULE);
   REQUIRE(parser.peek().Type == TokenType::OPEN_BRACE);
+}
+
+TEST_CASE("TestLlamaParserCheck") {
+  std::string input = "rule { meta: description = \"test\" }";
+  LlamaParser parser(getTokensFromString(input));
+  parser.CurIdx = 1;
+  REQUIRE(parser.check(TokenType::OPEN_BRACE));
 }
