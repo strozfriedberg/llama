@@ -10,6 +10,10 @@ public:
   Token peek() const { return Tokens.at(CurIdx); }
   Token advance() { if (!isAtEnd()) ++CurIdx; return previous();}
 
+  template <class... TokenTypes>
+  bool match(TokenTypes... types) { return (match(types) || ...);};
+  bool match(TokenType type);
+
   bool check(TokenType type) const { return peek().Type == type; }
   bool isAtEnd() const { return peek().Type == TokenType::END_OF_FILE; }
 
@@ -17,6 +21,13 @@ public:
   uint32_t CurIdx = 0;
 };
 
+bool LlamaParser::match(TokenType type) {
+  if (check(type)) {
+    advance();
+    return true;
+  }
+  return false;
+}
 
 std::vector<Token> getTokensFromString(const std::string& input) {
   LlamaLexer lexer(input);
@@ -63,4 +74,25 @@ TEST_CASE("TestLlamaParserCheck") {
   LlamaParser parser(getTokensFromString(input));
   parser.CurIdx = 1;
   REQUIRE(parser.check(TokenType::OPEN_BRACE));
+}
+
+TEST_CASE("TestLlamaParserMatch") {
+  std::string input = "rule { meta: description = \"test\" }";
+  LlamaParser parser(getTokensFromString(input));
+  parser.CurIdx = 1;
+  REQUIRE(parser.match(TokenType::OPEN_BRACE));
+}
+
+TEST_CASE("TestLlamaParserMatchMultiple") {
+  std::string input = "rule { meta: description = \"test\" }";
+  LlamaParser parser(getTokensFromString(input));
+  parser.CurIdx = 1;
+  REQUIRE(parser.match(TokenType::OPEN_BRACE, TokenType::META));
+}
+
+TEST_CASE("TestLlamaParserMatchMultipleFalse") {
+  std::string input = "rule { meta: description = \"test\" }";
+  LlamaParser parser(getTokensFromString(input));
+  parser.CurIdx = 1;
+  REQUIRE_FALSE(parser.match(TokenType::META, TokenType::RULE));
 }
