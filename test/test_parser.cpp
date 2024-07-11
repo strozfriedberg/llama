@@ -9,6 +9,8 @@ public:
   Token previous() const { return Tokens.at(CurIdx - 1); }
   Token peek() const { return Tokens.at(CurIdx); }
 
+  bool isAtEnd() const { return peek().Type == TokenType::END_OF_FILE; }
+
   std::vector<Token> Tokens;
   uint32_t CurIdx = 0;
 };
@@ -36,4 +38,11 @@ TEST_CASE("TestLlamaParserPeek") {
   LlamaParser parser(getTokensFromString(input));
   parser.CurIdx = 1;
   REQUIRE(parser.peek().Type == TokenType::OPEN_BRACE);
+}
+
+TEST_CASE("TestLlamaParserIsAtEnd") {
+  std::string input = "rule";
+  LlamaParser parser(getTokensFromString(input));
+  parser.CurIdx = 1;
+  REQUIRE(parser.isAtEnd());
 }
