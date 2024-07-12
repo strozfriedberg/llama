@@ -118,9 +118,9 @@ void LlamaLexer::parseEncodingsList() {
 }
 
 char LlamaLexer::advance() {
-    char curChar = getCurChar();
-    ++CurIdx;
-    return curChar;
+  char curChar = getCurChar();
+  ++CurIdx;
+  return curChar;
 }
 
 bool LlamaLexer::match(char expected) {
