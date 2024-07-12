@@ -14,7 +14,7 @@ public:
   Token advance() { if (!isAtEnd()) ++CurIdx; return previous();}
 
   template <class... TokenTypes>
-  bool match(TokenTypes... types) { return (match(types) || ...);};
+  bool matchAny(TokenTypes... types) { return (match(types) || ...);};
   bool match(TokenType type);
 
   bool check(TokenType type) const { return peek().Type == type; }
@@ -39,7 +39,7 @@ bool LlamaParser::match(TokenType type) {
 }
 
 bool LlamaParser::matchHashTokenType() {
-  return match(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3);
+  return matchAny(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3);
 }
 
 void LlamaParser::parseHashSection() {

@@ -78,13 +78,13 @@ TEST_CASE("TestLlamaParserMatchFalse") {
 TEST_CASE("TestLlamaParserMatchMultipleTrue") {
   std::string input = "rule { meta: description = \"test\" }";
   LlamaParser parser(getTokensFromString(input));
-  REQUIRE(parser.match(TokenType::RULE, TokenType::META));
+  REQUIRE(parser.matchAny(TokenType::RULE, TokenType::META));
 }
 
 TEST_CASE("TestLlamaParserMatchMultipleFalse") {
   std::string input = "rule { meta: description = \"test\" }";
   LlamaParser parser(getTokensFromString(input));
-  REQUIRE_FALSE(parser.match(TokenType::OPEN_BRACE, TokenType::META));
+  REQUIRE_FALSE(parser.matchAny(TokenType::OPEN_BRACE, TokenType::META));
 }
 
 TEST_CASE("parseHashThrowsIfNotHash") {
