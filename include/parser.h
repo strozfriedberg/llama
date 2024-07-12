@@ -14,8 +14,7 @@ public:
   Token advance() { if (!isAtEnd()) ++CurIdx; return previous();}
 
   template <class... TokenTypes>
-  bool matchAny(TokenTypes... types) { return (match(types) || ...);};
-  bool match(TokenType type);
+  bool matchAny(TokenTypes... types);
 
   template <class... TokenTypes>
   bool checkAny(TokenTypes... types) { return (check(types) || ...);};
@@ -34,8 +33,9 @@ public:
   uint32_t CurIdx = 0;
 };
 
-bool LlamaParser::match(TokenType type) {
-  if (check(type)) {
+template <class... TokenTypes>
+bool LlamaParser::matchAny(TokenTypes... types) {
+  if (checkAny(types...)) {
     advance();
     return true;
   }
@@ -51,10 +51,10 @@ bool LlamaParser::checkHashTokenType() {
 }
 
 void LlamaParser::parseHashSection() {
-  if (!match(TokenType::HASH)) {
+  if (!matchAny(TokenType::HASH)) {
     throw ParserError("Expected hash keyword");
   }
-  if (!match(TokenType::COLON)) {
+  if (!matchAny(TokenType::COLON)) {
     throw ParserError("Expected colon");
   }
   while (checkHashTokenType()) {
@@ -64,10 +64,10 @@ void LlamaParser::parseHashSection() {
 
 void LlamaParser::parseHashExpr() {
   parseHash();
-  if (!match(TokenType::EQUAL)) {
+  if (!matchAny(TokenType::EQUAL)) {
     throw ParserError("Expected equal sign");
   }
-  if (!match(TokenType::DOUBLE_QUOTED_STRING)) {
+  if (!matchAny(TokenType::DOUBLE_QUOTED_STRING)) {
     throw ParserError("Expected double quoted string");
   }
 }
