@@ -21,9 +21,6 @@ public:
 
   bool isAtEnd() const { return peek().Type == TokenType::END_OF_FILE; }
 
-  bool matchHashTokenType();
-  bool checkHashTokenType();
-
   void parseHashSection();
   void parseHashExpr();
   void parseHash();
@@ -41,14 +38,6 @@ bool LlamaParser::matchAny(TokenTypes... types) {
   return false;
 }
 
-bool LlamaParser::matchHashTokenType() {
-  return matchAny(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3);
-}
-
-bool LlamaParser::checkHashTokenType() {
-  return checkAny(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3);
-}
-
 void LlamaParser::parseHashSection() {
   if (!matchAny(TokenType::HASH)) {
     throw ParserError("Expected hash keyword");
@@ -56,7 +45,7 @@ void LlamaParser::parseHashSection() {
   if (!matchAny(TokenType::COLON)) {
     throw ParserError("Expected colon");
   }
-  while (checkHashTokenType()) {
+  while (std::apply([&](auto... types) { return checkAny(types...); }, Llama::hashTokenTypes)) {
     parseHashExpr();
   }
 }
@@ -72,7 +61,7 @@ void LlamaParser::parseHashExpr() {
 }
 
 void LlamaParser::parseHash() {
-  if (!matchHashTokenType()) {
+  if (!std::apply([&](auto... types) { return matchAny(types...); }, Llama::hashTokenTypes)) {
     throw ParserError("Expected hash type");
   }
 }

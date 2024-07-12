@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <tuple>
 
 enum class TokenType {
   NONE,
@@ -86,6 +87,13 @@ namespace Llama {
     {"encodings", TokenType::ENCODINGS},
     {"nocase", TokenType::NOCASE},
     {"fixed", TokenType::FIXED}
+  };
+
+  const std::tuple<TokenType, TokenType, TokenType, TokenType> hashTokenTypes = {
+    TokenType::MD5,
+    TokenType::SHA1,
+    TokenType::SHA256,
+    TokenType::BLAKE3
   };
 }
 
