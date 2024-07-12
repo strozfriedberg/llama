@@ -17,8 +17,7 @@ public:
   bool matchAny(TokenTypes... types);
 
   template <class... TokenTypes>
-  bool checkAny(TokenTypes... types) { return (check(types) || ...);};
-  bool check(TokenType type) const { return peek().Type == type; }
+  bool checkAny(TokenTypes... types) { return ((peek().Type == types) || ...);};
 
   bool isAtEnd() const { return peek().Type == TokenType::END_OF_FILE; }
 
