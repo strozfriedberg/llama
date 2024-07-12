@@ -124,13 +124,13 @@ TEST_CASE("parseHashSectionThrowsIfNotHash") {
 }
 
 TEST_CASE("parseHashSectionThrowsIfNotColon") {
-  std::string input = "md5 notColon";
+  std::string input = "hash notColon";
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseHashSection(), ParserError);
 }
 
 TEST_CASE("parseHashSectionDoesNotThrowIfHashAndColon") {
-  std::string input = "md5:";
+  std::string input = "hash: md5 = \"test\"";
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseHashSection());
 }

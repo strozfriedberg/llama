@@ -17,10 +17,14 @@ public:
   bool matchAny(TokenTypes... types) { return (match(types) || ...);};
   bool match(TokenType type);
 
+  template <class... TokenTypes>
+  bool checkAny(TokenTypes... types) { return (check(types) || ...);};
   bool check(TokenType type) const { return peek().Type == type; }
+
   bool isAtEnd() const { return peek().Type == TokenType::END_OF_FILE; }
 
   bool matchHashTokenType();
+  bool checkHashTokenType();
 
   void parseHashSection();
   void parseHashExpr();
@@ -42,6 +46,10 @@ bool LlamaParser::matchHashTokenType() {
   return matchAny(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3);
 }
 
+bool LlamaParser::checkHashTokenType() {
+  return checkAny(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3);
+}
+
 void LlamaParser::parseHashSection() {
   if (!match(TokenType::HASH)) {
     throw ParserError("Expected hash keyword");
@@ -49,7 +57,7 @@ void LlamaParser::parseHashSection() {
   if (!match(TokenType::COLON)) {
     throw ParserError("Expected colon");
   }
-  while (matchHashTokenType()) {
+  while (checkHashTokenType()) {
     parseHashExpr();
   }
 }
