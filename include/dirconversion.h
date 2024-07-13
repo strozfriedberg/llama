@@ -20,7 +20,7 @@ struct magic {
   struct check {
     std::string compare_type;
     unsigned long long offset;
-    std::string value;
+    std::vector<char> value;
   };
   std::vector<check> checks;
   std::string description;

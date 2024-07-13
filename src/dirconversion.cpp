@@ -163,7 +163,7 @@ DirConverter::DirConverter() {
   for (auto it = this->magics.begin(); it != this->magics.end(); ++it) {
     printf("value desc %s, pattern %s\n", it->description.c_str(), it->pattern.c_str());
     for (auto check : it->checks) {
-      printf("\tcmp_type %s, offset %llu, value %s\n", check.compare_type.c_str(), check.offset, check.value.c_str());
+      printf("\tcmp_type %s, offset %llu, value %lu\n", check.compare_type.c_str(), check.offset, check.value.size());
     }
   }
 }
@@ -171,9 +171,13 @@ DirConverter::DirConverter() {
 void DirConverter::readMagics() {
   std::ifstream is("./magics.json");
   auto json(jsoncons::json::parse(is));
+
+  // set of helper functions
+
   auto startsWith = [](const std::string& s, const std::string& prefix) -> bool {
     return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
     };
+
   auto parseOffset = [&startsWith](std::string s) -> unsigned long long {
     std::stringstream ss;
     if (startsWith(s, "0x") || startsWith(s, "0X")) {
@@ -186,6 +190,28 @@ void DirConverter::readMagics() {
     ss >> v;
     return v;
     };
+
+  auto char2int = [](char input) -> int {
+    if (input >= '0' && input <= '9')
+      return input - '0';
+    if (input >= 'A' && input <= 'F')
+      return input - 'A' + 10;
+    if (input >= 'a' && input <= 'f')
+      return input - 'a' + 10;
+    return 0;
+    };
+
+  // accept 0xABCD (or 1234), return [0xAB, 0xCD] (or [12, 34])
+  auto str2bin = [char2int, startsWith](const std::string& src) -> std::vector<char> {
+    bool hex = startsWith(src, "0x") || startsWith(src, "0X");
+    std::vector<char> dst(src.length() / 2 - hex);
+    auto di = dst.begin();
+    for (size_t i = hex * 2; i < src.length(); i += 2) {
+      *di++ = (char2int(src[i]) * (hex ? 16 : 10) + char2int(src[i + 1]));
+    }
+    return dst;
+    };
+
   for (const auto& magic_json : json.array_range()) {
     magic m;
     if (magic_json.contains("checks")) {
@@ -193,7 +219,7 @@ void DirConverter::readMagics() {
         m.checks.push_back(magic::check{
           check["compare_type"].as_string(),
           parseOffset(check["offset"].as_string()),
-          check["value"].as_string() });
+          str2bin(check["value"].as_string()) });
       }
     }
     if (magic_json.contains("pattern")) {
