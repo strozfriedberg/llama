@@ -117,6 +117,12 @@ void LlamaLexer::parseEncodingsList() {
   }
 }
 
+char LlamaLexer::advance() {
+  char curChar = getCurChar();
+  ++CurIdx;
+  return curChar;
+}
+
 bool LlamaLexer::match(char expected) {
   if (isAtEnd() || Input.at(CurIdx) != expected) {
     return false;
