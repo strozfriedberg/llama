@@ -16,7 +16,7 @@ public:
 
 class LlamaLexer {
 public:
-  LlamaLexer(const std::string& input) : Input(input), CurIdx(0), CurPos() {};
+  LlamaLexer(const std::string& input) : Input(input), CurIdx(0) {};
 
   void scanTokens();
   void scanToken();
@@ -26,7 +26,7 @@ public:
   void parseNumber();
   void parseEncodingsList();
 
-  void addToken(TokenType type, uint32_t start, uint32_t end) { Tokens.push_back(Token(type, start, end, CurPos)); }
+  void addToken(TokenType type, uint32_t start, uint32_t end, uint32_t lineNum, uint32_t colNum);
 
   char advance();
 
@@ -35,12 +35,11 @@ public:
 
   std::string_view getLexeme(int idx) const;
   char getCurChar() const;
-  StreamPosition getCurPos() const { return CurPos; }
   const std::vector<Token>& getTokens() const { return Tokens; }
 
+  uint32_t LineNum = 1, ColNum = 1;
 private:
   const std::string& Input;
   size_t CurIdx;
-  StreamPosition CurPos;
   std::vector<Token> Tokens;
 };
