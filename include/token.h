@@ -99,8 +99,9 @@ public:
 
 class Token {
 public:
-  Token(TokenType type, uint32_t start, uint32_t end) : Type(type), Start(start), End(end) {}
+  Token(TokenType type, uint32_t start, uint32_t end, StreamPosition pos) : Type(type), Start(start), End(end), Pos(pos) {}
 
   TokenType Type;
   uint32_t Start, End;
+  StreamPosition Pos;
 };

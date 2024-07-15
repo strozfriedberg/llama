@@ -26,7 +26,7 @@ public:
   void parseNumber();
   void parseEncodingsList();
 
-  void addToken(TokenType type, uint32_t start, uint32_t end) { Tokens.push_back(Token(type, start, end)); }
+  void addToken(TokenType type, uint32_t start, uint32_t end) { Tokens.push_back(Token(type, start, end, CurPos)); }
 
   char advance();
 
