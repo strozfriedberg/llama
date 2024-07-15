@@ -16,7 +16,7 @@ public:
 
 class LlamaLexer {
 public:
-  LlamaLexer(const std::string& input) : Input(input), CurIdx(0) {};
+  LlamaLexer(const std::string& input) : Input(input), CurIdx(0), CurPos() {};
 
   void scanTokens();
   void scanToken();
@@ -35,10 +35,12 @@ public:
 
   std::string_view getLexeme(int idx) const;
   char getCurChar() const;
+  StreamPosition getCurPos() const { return CurPos; }
   const std::vector<Token>& getTokens() const { return Tokens; }
 
 private:
   const std::string& Input;
   size_t CurIdx;
+  StreamPosition CurPos;
   std::vector<Token> Tokens;
 };

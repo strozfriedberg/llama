@@ -414,3 +414,9 @@ TEST_CASE("scanTokensFullRule") {
   REQUIRE(tokens[11].Type == TokenType::CLOSE_BRACE);
   REQUIRE(tokens[12].Type == TokenType::END_OF_FILE);
 }
+TEST_CASE("streamPosition") {
+  LlamaLexer lexer("rule");
+  REQUIRE(lexer.getCurPos().Offset == 0);
+  REQUIRE(lexer.getCurPos().LineNum == 0);
+  REQUIRE(lexer.getCurPos().ColNum == 0);
+}
