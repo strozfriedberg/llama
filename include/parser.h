@@ -45,7 +45,7 @@ void LlamaParser::parseHashSection() {
   if (!matchAny(TokenType::COLON)) {
     throw ParserError("Expected colon");
   }
-  while (std::apply([&](auto... types) { return checkAny(types...); }, Llama::hashTokenTypes)) {
+  while (checkAny(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3)) {
     parseHashExpr();
   }
 }
@@ -61,7 +61,7 @@ void LlamaParser::parseHashExpr() {
 }
 
 void LlamaParser::parseHash() {
-  if (!std::apply([&](auto... types) { return matchAny(types...); }, Llama::hashTokenTypes)) {
+  if (!matchAny(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3)) {
     throw ParserError("Expected hash type");
   }
 }
