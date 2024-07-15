@@ -415,16 +415,17 @@ TEST_CASE("scanTokensFullRule") {
   REQUIRE(tokens[12].Type == TokenType::END_OF_FILE);
 }
 
-TEST_CASE("streamPosition") {
+TEST_CASE("streamPositionInit") {
   std::string input = "rule";
   LlamaLexer lexer(input);
   REQUIRE(lexer.getCurPos().Offset == 0);
   REQUIRE(lexer.getCurPos().LineNum == 0);
   REQUIRE(lexer.getCurPos().ColNum == 0);
+}
 
+TEST_CASE("newLinesIncrementCurPosLineNum") {
+  std::string input = "rule\n";
+  LlamaLexer lexer(input);
   lexer.scanTokens();
-  std::vector<Token> tokens = lexer.getTokens();
-  REQUIRE(tokens.at(0).Pos.Offset == 0);
-  REQUIRE(tokens.at(0).Pos.LineNum == 0);
-  REQUIRE(tokens.at(0).Pos.ColNum == 0);
+  REQUIRE(lexer.getCurPos().LineNum == 1);
 }

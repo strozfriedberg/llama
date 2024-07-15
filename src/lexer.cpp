@@ -15,8 +15,8 @@ void LlamaLexer::scanToken() {
   uint32_t start = CurIdx;
   char c = advance();
   switch(c) {
-    case '\t':
-    case '\n':
+    case '\t': break;
+    case '\n': CurPos.LineNum++; break;
     case '\r':
     case ' ': break;
 
