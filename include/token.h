@@ -90,6 +90,13 @@ namespace Llama {
   };
 }
 
+struct StreamPosition {
+public:
+  uint32_t Offset  = 0,
+           LineNum = 0,
+           ColNum  = 0;
+};
+
 class Token {
 public:
   Token(TokenType type, uint32_t start, uint32_t end) : Type(type), Start(start), End(end) {}
