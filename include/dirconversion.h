@@ -4,6 +4,7 @@
 #include <filesystem>
 
 #include "jsoncons_wrapper.h"
+#include "filesignatures.h"
 
 namespace fs = std::filesystem;
 
@@ -16,23 +17,9 @@ namespace DirUtils {
   fs::file_time_type mtime(const fs::directory_entry& de);
 }
 
-struct magic {
-  struct check {
-    std::string compare_type;
-    unsigned long long offset;
-    std::vector<char> value;
-  };
-  std::vector<check> checks;
-  std::string description;
-  std::map<std::string, std::string> extensions;
-  std::string pattern;
-  std::vector<std::string> tags;
-};
-
 class DirConverter {
-  std::vector<magic> magics;
+  Magics magics;
 
-  void readMagics();
 public:
   DirConverter();
   jsoncons::json convertMeta(const fs::directory_entry& de) const;

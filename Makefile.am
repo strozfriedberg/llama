@@ -16,6 +16,7 @@ src_llama_common = \
 	src/fieldhasher.cpp \
 	src/filerecord.cpp \
 	src/filescheduler.cpp \
+	src/filesignatures.cpp \
 	src/hex.cpp \
 	src/inodeandblocktrackerimpl.cpp \
 	src/inputreader.cpp \

@@ -159,85 +159,18 @@ jsoncons::json DirConverter::convertName(const fs::directory_entry& de) const {
 }
 
 DirConverter::DirConverter() {
-  readMagics();
+  std::string magics_file("./magics.json");
+  SignatureUtil su;
+  auto result = su.readMagics(magics_file);
+  if (result.has_error()) {
+    throw std::runtime_error("Couldn't open file: " + magics_file);
+  }
+  this->magics = result.value();
+
   for (auto it = this->magics.begin(); it != this->magics.end(); ++it) {
     printf("value desc %s, pattern %s\n", it->description.c_str(), it->pattern.c_str());
     for (auto check : it->checks) {
-      printf("\tcmp_type %s, offset %llu, value %lu\n", check.compare_type.c_str(), check.offset, check.value.size());
+      printf("\tcmp_type %d, offset %llu, value %lu\n", (int)check.compare_type, check.offset, check.value.size());
     }
-  }
-}
-
-void DirConverter::readMagics() {
-  std::ifstream is("./magics.json");
-  auto json(jsoncons::json::parse(is));
-
-  // set of helper functions
-
-  auto startsWith = [](const std::string& s, const std::string& prefix) -> bool {
-    return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
-    };
-
-  auto parseOffset = [&startsWith](std::string s) -> unsigned long long {
-    std::stringstream ss;
-    if (startsWith(s, "0x") || startsWith(s, "0X")) {
-      ss << std::hex << s.substr(2);
-    }
-    else {
-      ss << std::dec << s;
-    }
-    unsigned long long v;
-    ss >> v;
-    return v;
-    };
-
-  auto char2int = [](char input) -> int {
-    if (input >= '0' && input <= '9')
-      return input - '0';
-    if (input >= 'A' && input <= 'F')
-      return input - 'A' + 10;
-    if (input >= 'a' && input <= 'f')
-      return input - 'a' + 10;
-    return 0;
-    };
-
-  // accept 0xABCD (or 1234), return [0xAB, 0xCD] (or [12, 34])
-  auto str2bin = [char2int, startsWith](const std::string& src) -> std::vector<char> {
-    bool hex = startsWith(src, "0x") || startsWith(src, "0X");
-    std::vector<char> dst(src.length() / 2 - hex);
-    auto di = dst.begin();
-    for (size_t i = hex * 2; i < src.length(); i += 2) {
-      *di++ = (char2int(src[i]) * (hex ? 16 : 10) + char2int(src[i + 1]));
-    }
-    return dst;
-    };
-
-  for (const auto& magic_json : json.array_range()) {
-    magic m;
-    if (magic_json.contains("checks")) {
-      for (const auto& check : magic_json["checks"].array_range()) {
-        m.checks.push_back(magic::check{
-          check["compare_type"].as_string(),
-          parseOffset(check["offset"].as_string()),
-          str2bin(check["value"].as_string()) });
-      }
-    }
-    if (magic_json.contains("pattern")) {
-      m.pattern = magic_json["pattern"].as_string();
-    }
-    if (magic_json.contains("description")) {
-      m.description = magic_json["description"].as_string();
-    }
-    if (magic_json.contains("tags")) {
-      for (const auto& tag : magic_json["tags"].array_range()) {
-        m.tags.push_back(tag.as_string());
-      }
-    }
-    if (magic_json.contains("extensions")) {
-      for (const auto& ext : magic_json["extensions"].object_range()) {
-        m.extensions[ext.key()] = ext.value().as_string();
-      }
-    }
-    this->magics.push_back(m);
   }
 }
