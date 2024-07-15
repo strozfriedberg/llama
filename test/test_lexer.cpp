@@ -418,18 +418,18 @@ TEST_CASE("scanTokensFullRule") {
 TEST_CASE("streamPositionInit") {
   std::string input = "rule";
   LlamaLexer lexer(input);
-  REQUIRE(lexer.LineNum == 1);
-  REQUIRE(lexer.ColNum == 1);
+  REQUIRE(lexer.Pos.LineNum == 1);
+  REQUIRE(lexer.Pos.ColNum == 1);
 }
 
 TEST_CASE("newLinesIncrementCurPosLineNum") {
   std::string input = "rule\n";
   LlamaLexer lexer(input);
-  REQUIRE(lexer.LineNum == 1);
-  REQUIRE(lexer.ColNum == 1);
+  REQUIRE(lexer.Pos.LineNum == 1);
+  REQUIRE(lexer.Pos.ColNum == 1);
   lexer.scanToken();
-  REQUIRE(lexer.ColNum == 5);
+  REQUIRE(lexer.Pos.ColNum == 5);
   lexer.scanToken();
-  REQUIRE(lexer.LineNum == 2);
-  REQUIRE(lexer.ColNum == 1);
+  REQUIRE(lexer.Pos.LineNum == 2);
+  REQUIRE(lexer.Pos.ColNum == 1);
 }
