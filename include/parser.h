@@ -29,6 +29,7 @@ public:
   void parseHash();
   void parseArgList();
   void parseOperator();
+  void parseConditionFunc();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -86,5 +87,17 @@ void LlamaParser::parseOperator() {
     TokenType::GREATER_THAN_EQUAL,
     TokenType::LESS_THAN,
     TokenType::LESS_THAN_EQUAL
+  );
+}
+
+void LlamaParser::parseConditionFunc() {
+  mustParse(
+    "Expected condition function at ",
+    TokenType::ALL,
+    TokenType::ANY,
+    TokenType::OFFSET,
+    TokenType::COUNT,
+    TokenType::COUNT_HAS_HITS,
+    TokenType::LENGTH
   );
 }

@@ -164,3 +164,15 @@ TEST_CASE("parseOperatorDoesNotThrowIfOperator") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseOperator());
 }
+
+TEST_CASE("parseConditionFuncThrowsIfNotConditionFunc") {
+  std::string input = "notAConditionFunc";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseConditionFunc(), ParserError);
+}
+
+TEST_CASE("parseConditionFuncDoesNotThrowIfConditionFunc") {
+  std::string input = "all";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseConditionFunc());
+}
