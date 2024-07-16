@@ -92,6 +92,10 @@ namespace Llama {
 
 class LineCol {
 public:
+  std::string toString() const {
+    return "line " + std::to_string(LineNum) + " column " + std::to_string(ColNum);
+  }
+
   uint32_t LineNum,
            ColNum;
 };
