@@ -26,7 +26,7 @@ public:
   void parseNumber();
   void parseEncodingsList();
 
-  void addToken(TokenType type, uint32_t start, uint32_t end, StreamPosition pos);
+  void addToken(TokenType type, uint32_t start, uint32_t end, LineCol pos);
 
   char advance();
 
@@ -37,7 +37,7 @@ public:
   char getCurChar() const;
   const std::vector<Token>& getTokens() const { return Tokens; }
 
-  StreamPosition Pos = {1, 1};
+  LineCol Pos = {1, 1};
 private:
   const std::string& Input;
   size_t CurIdx;

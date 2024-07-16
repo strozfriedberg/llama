@@ -90,7 +90,7 @@ namespace Llama {
   };
 }
 
-class StreamPosition {
+class LineCol {
 public:
   uint32_t LineNum,
            ColNum;
@@ -98,10 +98,10 @@ public:
 
 class Token {
 public:
-  Token(TokenType type, uint32_t start, uint32_t end, StreamPosition pos)
+  Token(TokenType type, uint32_t start, uint32_t end, LineCol pos)
        : Type(type), Start(start), End(end), Pos(pos){}
 
   TokenType Type;
   uint32_t Start, End;
-  StreamPosition Pos;
+  LineCol Pos;
 };

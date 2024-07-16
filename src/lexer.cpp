@@ -13,7 +13,7 @@ void LlamaLexer::scanTokens() {
 
 void LlamaLexer::scanToken() {
   uint32_t start = CurIdx;
-  StreamPosition pos(Pos);
+  LineCol pos(Pos);
   char c = advance();
   switch(c) {
     case '\t': break;
@@ -58,7 +58,7 @@ void LlamaLexer::scanToken() {
 
 void LlamaLexer::parseIdentifier() {
   uint32_t start = CurIdx;
-  StreamPosition pos(Pos);
+  LineCol pos(Pos);
   if (CurIdx > 0) {
     start--;
   }
@@ -80,7 +80,7 @@ void LlamaLexer::parseIdentifier() {
 
 void LlamaLexer::parseString() {
   uint32_t start = CurIdx;
-  StreamPosition pos(Pos);
+  LineCol pos(Pos);
   while(getCurChar() != '"' && !isAtEnd()) {
     advance();
   }
@@ -94,7 +94,7 @@ void LlamaLexer::parseString() {
 
 void LlamaLexer::parseNumber() {
   uint32_t start = CurIdx;
-  StreamPosition pos(Pos);
+  LineCol pos(Pos);
   if (CurIdx > 0) {
     start--;
   }
@@ -107,7 +107,7 @@ void LlamaLexer::parseNumber() {
 }
 
 void LlamaLexer::parseEncodingsList() {
-  StreamPosition pos(Pos);
+  LineCol pos(Pos);
   if (match('=')) {
     addToken(TokenType::EQUAL, CurIdx-1, CurIdx, pos);
     uint32_t start = CurIdx;
@@ -122,7 +122,7 @@ void LlamaLexer::parseEncodingsList() {
   }
 }
 
-void LlamaLexer::addToken(TokenType type, uint32_t start, uint32_t end, StreamPosition pos) {
+void LlamaLexer::addToken(TokenType type, uint32_t start, uint32_t end, LineCol pos) {
   Tokens.push_back(Token(type, start, end, pos));
 }
 
