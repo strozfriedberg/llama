@@ -152,3 +152,15 @@ TEST_CASE("parseArgListDoesNotThrowIfIdentifierAfterComma") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseArgList());
 }
+
+TEST_CASE("parseOperatorThrowsIfNotOperator") {
+  std::string input = "notAnOperator";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseOperator(), ParserError);
+}
+
+TEST_CASE("parseOperatorDoesNotThrowIfOperator") {
+  std::string input = "==";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseOperator());
+}

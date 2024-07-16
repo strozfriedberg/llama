@@ -28,6 +28,7 @@ public:
   void parseHashExpr();
   void parseHash();
   void parseArgList();
+  void parseOperator();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -74,4 +75,16 @@ void LlamaParser::parseArgList() {
   while (matchAny(TokenType::COMMA)) {
     mustParse("Expected identifier at ", TokenType::IDENTIFIER);
   }
+}
+
+void LlamaParser::parseOperator() {
+  mustParse(
+    "Expected operator at ",
+    TokenType::EQUAL_EQUAL,
+    TokenType::NOT_EQUAL,
+    TokenType::GREATER_THAN,
+    TokenType::GREATER_THAN_EQUAL,
+    TokenType::LESS_THAN,
+    TokenType::LESS_THAN_EQUAL
+  );
 }
