@@ -1,6 +1,8 @@
 // file_signatures.cpp
 //
 
+#include "filesignatures.h"
+
 #include <iostream>
 #include <string>
 #include <map>
@@ -12,7 +14,6 @@
 #include <boost/algorithm/string.hpp>
 #include <jsoncons/json.hpp>
 
-#include "filesignatures.h"
 
 auto makeUnexpected(const std::string& s) {
     return boost::outcome_v2::failure(s);
@@ -38,9 +39,11 @@ expected<CompareType> parse_compare_type(std::string_view s) {
     return makeUnexpected(std::string("Unknown compare_type: ") + std::string(s));
 }
 
-bool magic::check::compare(Binary const& expected_value) {
-    if (this->value.size() != expected_value.size())
+bool magic::check::compare(Binary const& data) const {
+    if (data.size() < this->value.size() + offset)
         return false;
+
+    auto expected_value = Binary(&data[offset], &data[offset + value.size()]);
 
     switch (this->compare_type) {
         case CompareType::Eq:
@@ -75,6 +78,52 @@ bool magic::check::compare(Binary const& expected_value) {
             throw std::range_error("compare: impossible");
     }
     return false;
+}
+
+size_t magic::get_pattern_length(bool only_significant) const {
+    auto i = 0;
+    size_t count = 0;
+    char prev_c = 0;
+
+    while (i < pattern.size()) {
+        auto c = pattern[i];
+        if (c == '\\') {
+            if (pattern[i + 1] == 'x') {
+                count += 1;
+                i += 4;
+            } else { // \\u0000
+                count += 1;
+                i += 6;
+            }
+        }
+        else if (c == '{') {
+            auto j = pattern.find('}', i + 1);
+            auto i2 = pattern.find(',', i + 1);
+            
+            if ((0 <= i2) && (i2 < j))
+                i = i2;
+
+            auto x = std::stoi(pattern.substr(i + 1, j));
+            i = j + 1;
+            count += only_significant && prev_c == '.' ? 0 : x;
+        }
+        else if (c == '[') {
+            auto j = pattern.find(']', i + 1);
+            i = j + 1;
+            count += 1;
+        }
+        else if (c == '.') {
+            i += 1;
+            count += only_significant ? 0 : 1;
+        }
+        else {
+            count += 1;
+            i += 1;
+        }
+        prev_c = c;
+    }
+
+    return count * 4;
 }
 
 expected<Magics> SignatureUtil::readMagics(std::string_view path) {
@@ -161,12 +210,15 @@ expected<Magics> SignatureUtil::readMagics(std::string_view path) {
     }
 }
 
-/*
+#ifdef SELF_MAIN
+
+#include "fmt/core.h"
+
 std::string dump(Binary const& data) {
     std::string result;
     result.reserve(data.size() * 2);
     for (auto v : data) {
-        auto tmp = std::format("{:02x}", v);
+        auto tmp = fmt::format("{:02x}", v);
         result.push_back(tmp[0]);
         result.push_back(tmp[1]);
     }
@@ -174,6 +226,8 @@ std::string dump(Binary const& data) {
     return result;
 }
 
+#include <magic_enum/magic_enum.hpp>
+#include <boost/iostreams/device/mapped_file.hpp>
 using namespace boost::iostreams;
 
 int main(int argc, char* argv[]) {
@@ -185,46 +239,19 @@ int main(int argc, char* argv[]) {
     SignatureUtil   su;
     auto result = su.readMagics(argv[1]);
     mapped_file     mmap(argv[2], mapped_file::readonly);
-    auto            data = mmap.const_data();
+    auto            data = reinterpret_cast<const uint8_t*>(mmap.const_data());
 
     if (result) {
         auto magics = result.value();
-        std::cout << "Ok!\n";
+        
         for (auto magic : magics) {
             for (auto check : magic.checks) {
-                Binary expected_value;
+                //std::cout << fmt::format("{}, {:x}, '{}'\n", 
+                //    magic_enum::enum_name(check.compare_type), check.offset, dump(expected_value));
 
-                if (check.value.starts_with("0x")) {
-                    if (auto value = unhexlify(check.value.substr(2))) {
-                        expected_value = value.value();
-                    }
-                    else {
-                        std::cout << "Error: " << value.error() << "\n";
-                        return 3;
-                    }
-                }
-                else {
-                    expected_value = Binary(check.value.begin(), check.value.end());
-                }
-
-                std::println("{}, {:x}, '{}'",
-                    magic_enum::enum_name(check.compare_type), check.offset, dump(expected_value));
-
-                auto offset = check.offset;
-                auto compare_type = check.compare_type;
-                auto size = (compare_type == CompareType::Or || compare_type == CompareType::Nor) ? 1 : expected_value.size();
-
-                if (offset + size > mmap.size()) {
-                    std::cerr << "Error: offset + size (" << offset + size << ") > filesize(" << mmap.size() << "\n";
-                    return 4;
-                }
-
-                auto value = Binary(data + offset, data + offset + size);
-                //TODO: pre_process
-                if (compare(value, expected_value, compare_type)) {
-                    std::println("value '{}' {} expected_value '{}' -> true",
-                        dump(value), magic_enum::enum_name(check.compare_type), dump(expected_value));
-                }
+                if (check.compare(Binary(data, data + mmap.size())))
+                    std::cout << fmt::format("value '{}' {} -> true\n, pattern_length {}\n",
+                        dump(check.value), magic_enum::enum_name(check.compare_type), magic.get_pattern_length());
             }
         }
     }
@@ -234,4 +261,5 @@ int main(int argc, char* argv[]) {
     }
     return 0;
 }
-*/
+
+#endif // SELF_MAIN

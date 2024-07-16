@@ -9,7 +9,7 @@
 template <typename T>
 using expected = boost::outcome_v2::result<T, std::string>;
 
-typedef std::vector<uint8_t> Binary;
+using Binary = std::vector<uint8_t>;
 
 enum class CompareType {
     Eq, EqUpper, Ne, Gt, Lt, And, Xor, Or, Nor
@@ -21,13 +21,15 @@ struct magic {
         unsigned long long offset;
         Binary value;
 
-        bool compare(Binary const& expected_value);
+        bool compare(Binary const& data) const;
     };
     std::vector<check> checks;
     std::string description;
     std::map<std::string, std::string> extensions;
     std::string pattern;
     std::vector<std::string> tags;
+
+    size_t get_pattern_length(bool only_significant = false) const;
 };
 
 typedef std::vector<magic> Magics;
