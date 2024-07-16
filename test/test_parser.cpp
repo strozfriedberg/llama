@@ -134,3 +134,21 @@ TEST_CASE("parseHashSectionDoesNotThrowIfHashAndColon") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseHashSection());
 }
+
+TEST_CASE("parseArgListThrowsIfNotStartWithIdentifier") {
+  std::string input = "hash"; // reserved keyword - not an identifier
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseArgList(), ParserError);
+}
+
+TEST_CASE("parseArgListThrowsIfNoIdentifierAfterComma") {
+  std::string input = "s1,)"; // no identifier after comma
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseArgList(), ParserError);
+}
+
+TEST_CASE("parseArgListDoesNotThrowIfIdentifierAfterComma") {
+  std::string input = "s1, s2, s3";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseArgList());
+}

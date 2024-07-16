@@ -25,6 +25,8 @@ public:
   void parseHashExpr();
   void parseHash();
 
+  void parseArgList();
+
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
 };
@@ -63,5 +65,16 @@ void LlamaParser::parseHashExpr() {
 void LlamaParser::parseHash() {
   if (!matchAny(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3)) {
     throw ParserError("Expected hash type at ", peek().Pos);
+  }
+}
+
+void LlamaParser::parseArgList() {
+  if (!matchAny(TokenType::IDENTIFIER)) {
+    throw ParserError("Expected argument at ", peek().Pos);
+  }
+  while (matchAny(TokenType::COMMA)) {
+    if (!matchAny(TokenType::IDENTIFIER)) {
+      throw ParserError("Expected argument at ", peek().Pos);
+    }
   }
 }
