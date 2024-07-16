@@ -12,11 +12,95 @@
 #include <exception>
 
 #include <boost/algorithm/string.hpp>
+
 #include <jsoncons/json.hpp>
 
+#include "util.h"
 
-auto makeUnexpected(const std::string& s) {
-    return boost::outcome_v2::failure(s);
+LightGrep::LightGrep()
+{}
+
+LightGrep::~LightGrep() {
+    if (_prog) {
+        lg_destroy_program(_prog);
+    }
+}
+
+// TODO
+size_t get_pattern_length(std::string const& p) {
+    return p.length();
+}
+
+// return max_read
+expected<size_t> LightGrep::setup(Magics const& m) {
+    using namespace boost;
+
+    size_t max_read = 0;
+    try {
+        LG_Error* err = 0;
+        LG_HFSM fsm = lg_create_fsm(0, 0);
+        destroy_guard fsm_guard([&fsm]() { lg_destroy_fsm(fsm); });
+
+        for (auto i = 0; i < m.size(); i++) {
+
+            auto& p = m[i];
+
+            if (p.pattern.empty()) {
+                continue;
+            }
+
+            LG_KeyOptions opt = { p.fixed_string, p.case_insensetive, false };
+
+            auto pattern = lg_create_pattern();
+            destroy_guard pattern_guard([&pattern]() { lg_destroy_pattern(pattern); });
+            if (!lg_parse_pattern(pattern, p.pattern.c_str(), &opt, &err)) {
+                if (err) {
+                    auto r = makeUnexpected(err->Message);
+                    lg_free_error(err);
+                    return r;
+                }
+            }
+
+            auto pattern_len = get_pattern_length(p.pattern);
+            if (pattern_len > max_read) {
+                max_read = pattern_len;
+            }
+
+            for (auto const& encoding : p.encodings) {
+                if (!lg_add_pattern(fsm, pattern, encoding.c_str(), i, &err)) {
+                    if (err) {
+                        auto r = makeUnexpected(err->Message);
+                        lg_free_error(err);
+                        return r;
+                    }
+                }
+            }
+        }
+
+        LG_ProgramOptions opts = { 0 };
+        if (!(_prog = lg_create_program(fsm, &opts))) {
+            return makeUnexpected("lg_create_program() failed");
+        }
+    }
+    catch (std::exception const& ex) {
+        return makeUnexpected(ex.what());
+    }
+
+    return max_read;
+}
+
+expected<bool> LightGrep::search(MemoryRegion const& region, void* user_data, LG_HITCALLBACK_FN callback_fn) {
+    try {
+        LG_ContextOptions ctxOpts = { 0, 0 };
+        LG_HCONTEXT searcher = lg_create_context(_prog, &ctxOpts);
+        lg_reset_context(searcher);
+        lg_search(searcher, boost::begin(region), boost::end(region), 0, user_data, callback_fn);
+        lg_destroy_context(searcher);
+    }
+    catch (std::exception const& ex) {
+        return makeUnexpected(ex.what());
+    }
+    return true;
 }
 
 expected<CompareType> parse_compare_type(std::string_view s) {
@@ -187,6 +271,9 @@ expected<Magics> SignatureUtil::readMagics(std::string_view path) {
             if (magic_json.contains("pattern")) {
                 m.pattern = magic_json["pattern"].as_string();
             }
+            m.fixed_string = magic_json.contains("fixed_string") ? magic_json["fixed_string"].as_bool() : false;
+            m.case_insensetive = magic_json.contains("case_insensitive") ? magic_json["case_insensitive"].as_bool() : false;
+
             if (magic_json.contains("description")) {
                 m.description = magic_json["description"].as_string();
             }
@@ -199,6 +286,12 @@ expected<Magics> SignatureUtil::readMagics(std::string_view path) {
                 for (const auto& ext : magic_json["extensions"].object_range()) {
                     m.extensions[ext.key()] = ext.value().as_string();
                 }
+            }
+            if (magic_json.contains("encoding")) {
+                boost::split(m.encodings, magic_json["encoding"].as_string(), boost::is_any_of(","));
+            }
+            else {
+                m.encodings.push_back("ISO-8859-1");
             }
             magics.push_back(m);
         }
