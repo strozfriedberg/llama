@@ -158,14 +158,22 @@ jsoncons::json DirConverter::convertName(const fs::directory_entry& de) const {
   );
 }
 
-DirConverter::DirConverter() {
+DirConverter::DirConverter()
+  : max_read(0) {
   std::string magics_file("./magics.json");
   SignatureUtil su;
   auto result = su.readMagics(magics_file);
   if (result.has_error()) {
-    throw std::runtime_error("Couldn't open file: " + magics_file);
+    throw std::runtime_error("Couldn't open file: " + magics_file + std::string(", ") + result.error());
   }
   this->magics = result.value();
+
+  auto r = lg.setup(this->magics);
+  if (r.has_failure()) {
+    throw std::runtime_error("LightGrep::setup failed: " + r.error());
+  }
+
+  max_read = r.value();
 
   for (auto it = this->magics.begin(); it != this->magics.end(); ++it) {
     printf("value desc %s, pattern %s\n", it->description.c_str(), it->pattern.c_str());

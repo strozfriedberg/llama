@@ -19,6 +19,8 @@ namespace DirUtils {
 
 class DirConverter {
   Magics magics;
+  LightGrep lg;
+  size_t max_read;
 
 public:
   DirConverter();
