@@ -31,7 +31,7 @@ void LlamaLexer::scanToken() {
       break;
     }
 
-    case '"': parseString(); break;
+    case '"': parseString(pos); break;
 
     case '(': addToken(TokenType::OPEN_PAREN, start, CurIdx, pos); break;
     case ')': addToken(TokenType::CLOSE_PAREN, start, CurIdx, pos); break;
@@ -45,10 +45,10 @@ void LlamaLexer::scanToken() {
 
     default:
       if (isdigit(c)) {
-        parseNumber();
+        parseNumber(pos);
       }
       else if (isalnum(c)) {
-        parseIdentifier();
+        parseIdentifier(pos);
       }
       else {
         throw UnexpectedInputError("Unexpected input character at ", pos);
@@ -56,9 +56,8 @@ void LlamaLexer::scanToken() {
   }
 }
 
-void LlamaLexer::parseIdentifier() {
+void LlamaLexer::parseIdentifier(LineCol pos) {
   uint64_t start = CurIdx;
-  LineCol pos(Pos);
   if (CurIdx > 0) {
     start--;
   }
@@ -78,9 +77,8 @@ void LlamaLexer::parseIdentifier() {
   }
 }
 
-void LlamaLexer::parseString() {
+void LlamaLexer::parseString(LineCol pos) {
   uint64_t start = CurIdx;
-  LineCol pos(Pos);
   while(getCurChar() != '"' && !isAtEnd()) {
     advance();
   }
@@ -92,9 +90,8 @@ void LlamaLexer::parseString() {
   addToken(TokenType::DOUBLE_QUOTED_STRING, start, end, pos);
 }
 
-void LlamaLexer::parseNumber() {
+void LlamaLexer::parseNumber(LineCol pos) {
   uint64_t start = CurIdx;
-  LineCol pos(Pos);
   if (CurIdx > 0) {
     start--;
   }
@@ -111,6 +108,7 @@ void LlamaLexer::parseEncodingsList() {
   if (match('=')) {
     addToken(TokenType::EQUAL, CurIdx-1, CurIdx, pos);
     uint64_t start = CurIdx;
+    pos.ColNum++;
     while (!std::isspace(getCurChar()) && !isAtEnd()) {
       advance();
     }
