@@ -1,8 +1,8 @@
 #include "token.h"
 
-class ParserError : public std::runtime_error {
+class ParserError : public UnexpectedInputError {
 public:
-  ParserError(const std::string& message) : std::runtime_error(message) {}
+  ParserError(const std::string& message, LineCol pos) : UnexpectedInputError(message, pos) {}
 };
 
 class LlamaParser {
@@ -40,10 +40,10 @@ bool LlamaParser::matchAny(TokenTypes... types) {
 
 void LlamaParser::parseHashSection() {
   if (!matchAny(TokenType::HASH)) {
-    throw ParserError("Expected hash keyword");
+    throw ParserError("Expected hash keyword at ", peek().Pos);
   }
   if (!matchAny(TokenType::COLON)) {
-    throw ParserError("Expected colon");
+    throw ParserError("Expected colon at ", peek().Pos);
   }
   while (checkAny(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3)) {
     parseHashExpr();
@@ -53,15 +53,15 @@ void LlamaParser::parseHashSection() {
 void LlamaParser::parseHashExpr() {
   parseHash();
   if (!matchAny(TokenType::EQUAL)) {
-    throw ParserError("Expected equal sign");
+    throw ParserError("Expected equal sign at ", peek().Pos);
   }
   if (!matchAny(TokenType::DOUBLE_QUOTED_STRING)) {
-    throw ParserError("Expected double quoted string");
+    throw ParserError("Expected double quoted string at ", peek().Pos);
   }
 }
 
 void LlamaParser::parseHash() {
   if (!matchAny(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3)) {
-    throw ParserError("Expected hash type");
+    throw ParserError("Expected hash type at ", peek().Pos);
   }
 }
