@@ -26,7 +26,7 @@ void LlamaLexer::scanToken() {
         addToken(TokenType::NOT_EQUAL, start, CurIdx, pos);
       }
       else {
-        throw UnexpectedInputError("Unexpected input character: !");
+        throw UnexpectedInputError("Unexpected input character: ! at ", pos);
       }
       break;
     }
@@ -51,7 +51,7 @@ void LlamaLexer::scanToken() {
         parseIdentifier();
       }
       else {
-        throw UnexpectedInputError("Unexpected input character: " + std::string{c});
+        throw UnexpectedInputError("Unexpected input character at ", pos);
       }
   }
 }
@@ -85,7 +85,7 @@ void LlamaLexer::parseString() {
     advance();
   }
   if (isAtEnd()) {
-    throw UnexpectedInputError("Unterminated string");
+    throw UnexpectedInputError("Unterminated string at ", pos);
   }
   uint64_t end = CurIdx;
   advance(); // consume closing quote
@@ -118,7 +118,7 @@ void LlamaLexer::parseEncodingsList() {
     addToken(TokenType::ENCODINGS_LIST, start, end, pos);
   }
   else {
-    throw UnexpectedInputError("Expected '=' after 'encodings'");
+    throw UnexpectedInputError("Expected '=' after 'encodings' on line ", pos);
   }
 }
 

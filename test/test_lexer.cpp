@@ -433,3 +433,9 @@ TEST_CASE("newLinesIncrementCurPosLineNum") {
   REQUIRE(lexer.Pos.LineNum == 2);
   REQUIRE(lexer.Pos.ColNum == 1);
 }
+
+TEST_CASE("lone!ThrowsException") {
+  std::string input = "!";
+  LlamaLexer lexer(input);
+  REQUIRE_THROWS_AS(lexer.scanToken(), UnexpectedInputError);
+}
