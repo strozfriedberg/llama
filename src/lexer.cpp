@@ -12,7 +12,7 @@ void LlamaLexer::scanTokens() {
 }
 
 void LlamaLexer::scanToken() {
-  uint32_t start = CurIdx;
+  uint64_t start = CurIdx;
   LineCol pos(Pos);
   char c = advance();
   switch(c) {
@@ -57,7 +57,7 @@ void LlamaLexer::scanToken() {
 }
 
 void LlamaLexer::parseIdentifier() {
-  uint32_t start = CurIdx;
+  uint64_t start = CurIdx;
   LineCol pos(Pos);
   if (CurIdx > 0) {
     start--;
@@ -66,7 +66,7 @@ void LlamaLexer::parseIdentifier() {
     advance();
   }
 
-  uint32_t end = CurIdx;
+  uint64_t end = CurIdx;
   auto found = Llama::keywords.find(Input.substr(start, end - start));
 
   if (found != Llama::keywords.end()) {
@@ -79,7 +79,7 @@ void LlamaLexer::parseIdentifier() {
 }
 
 void LlamaLexer::parseString() {
-  uint32_t start = CurIdx;
+  uint64_t start = CurIdx;
   LineCol pos(Pos);
   while(getCurChar() != '"' && !isAtEnd()) {
     advance();
@@ -87,13 +87,13 @@ void LlamaLexer::parseString() {
   if (isAtEnd()) {
     throw UnexpectedInputError("Unterminated string");
   }
-  uint32_t end = CurIdx;
+  uint64_t end = CurIdx;
   advance(); // consume closing quote
   addToken(TokenType::DOUBLE_QUOTED_STRING, start, end, pos);
 }
 
 void LlamaLexer::parseNumber() {
-  uint32_t start = CurIdx;
+  uint64_t start = CurIdx;
   LineCol pos(Pos);
   if (CurIdx > 0) {
     start--;
@@ -102,7 +102,7 @@ void LlamaLexer::parseNumber() {
     advance();
   }
 
-  uint32_t end = CurIdx;
+  uint64_t end = CurIdx;
   addToken(TokenType::NUMBER, start, end, pos);
 }
 
@@ -110,11 +110,11 @@ void LlamaLexer::parseEncodingsList() {
   LineCol pos(Pos);
   if (match('=')) {
     addToken(TokenType::EQUAL, CurIdx-1, CurIdx, pos);
-    uint32_t start = CurIdx;
+    uint64_t start = CurIdx;
     while (!std::isspace(getCurChar()) && !isAtEnd()) {
       advance();
     }
-    uint32_t end = CurIdx;
+    uint64_t end = CurIdx;
     addToken(TokenType::ENCODINGS_LIST, start, end, pos);
   }
   else {
@@ -122,7 +122,7 @@ void LlamaLexer::parseEncodingsList() {
   }
 }
 
-void LlamaLexer::addToken(TokenType type, uint32_t start, uint32_t end, LineCol pos) {
+void LlamaLexer::addToken(TokenType type, uint64_t start, uint64_t end, LineCol pos) {
   Tokens.push_back(Token(type, start, end, pos));
 }
 

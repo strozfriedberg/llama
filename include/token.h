@@ -98,10 +98,10 @@ public:
 
 class Token {
 public:
-  Token(TokenType type, uint32_t start, uint32_t end, LineCol pos)
+  Token(TokenType type, uint64_t start, uint64_t end, LineCol pos)
        : Type(type), Start(start), End(end), Pos(pos){}
 
   TokenType Type;
-  uint32_t Start, End;
+  uint64_t Start, End;
   LineCol Pos;
 };

@@ -26,7 +26,7 @@ public:
   void parseHash();
 
   std::vector<Token> Tokens;
-  uint32_t CurIdx = 0;
+  uint64_t CurIdx = 0;
 };
 
 template <class... TokenTypes>

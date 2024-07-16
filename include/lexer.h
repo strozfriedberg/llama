@@ -26,7 +26,7 @@ public:
   void parseNumber();
   void parseEncodingsList();
 
-  void addToken(TokenType type, uint32_t start, uint32_t end, LineCol pos);
+  void addToken(TokenType type, uint64_t start, uint64_t end, LineCol pos);
 
   char advance();
 
