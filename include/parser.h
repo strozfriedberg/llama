@@ -53,8 +53,8 @@ void LlamaParser::mustParse(const std::string& errMsg, TokenTypes... types) {
 }
 
 void LlamaParser::parseHashSection() {
-  mustParse("Expected hash keyword at ", TokenType::HASH);
-  mustParse("Expected colon after hash keyword at ", TokenType::COLON);
+  mustParse("Expected hash keyword", TokenType::HASH);
+  mustParse("Expected colon after hash keyword", TokenType::COLON);
   while (checkAny(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3)) {
     parseHashExpr();
   }
@@ -62,26 +62,26 @@ void LlamaParser::parseHashSection() {
 
 void LlamaParser::parseHashExpr() {
   parseHash();
-  mustParse("Expected equal sign at ", TokenType::EQUAL);
-  mustParse("Expected double quoted string at ", TokenType::DOUBLE_QUOTED_STRING);
+  mustParse("Expected equal sign", TokenType::EQUAL);
+  mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
 }
 
 void LlamaParser::parseHash() {
   mustParse(
-    "Expected hash type at ", TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3
+    "Expected hash type", TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3
   );
 }
 
 void LlamaParser::parseArgList() {
-  mustParse("Expected identifier at ", TokenType::IDENTIFIER);
+  mustParse("Expected identifier", TokenType::IDENTIFIER);
   while (matchAny(TokenType::COMMA)) {
-    mustParse("Expected identifier at ", TokenType::IDENTIFIER);
+    mustParse("Expected identifier", TokenType::IDENTIFIER);
   }
 }
 
 void LlamaParser::parseOperator() {
   mustParse(
-    "Expected operator at ",
+    "Expected operator",
     TokenType::EQUAL_EQUAL,
     TokenType::NOT_EQUAL,
     TokenType::GREATER_THAN,
@@ -93,7 +93,7 @@ void LlamaParser::parseOperator() {
 
 void LlamaParser::parseConditionFunc() {
   mustParse(
-    "Expected condition function at ",
+    "Expected condition function",
     TokenType::ALL,
     TokenType::ANY,
     TokenType::OFFSET,
@@ -105,7 +105,7 @@ void LlamaParser::parseConditionFunc() {
 
 void LlamaParser::parseFuncCall() {
   parseConditionFunc();
-  mustParse("Expected open parenthesis at ", TokenType::OPEN_PAREN);
+  mustParse("Expected open parenthesis", TokenType::OPEN_PAREN);
   parseArgList();
-  mustParse("Expected close parenthesis at ", TokenType::CLOSE_PAREN);
+  mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
 }

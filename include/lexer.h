@@ -12,7 +12,16 @@
 class UnexpectedInputError : public std::runtime_error {
 public:
   UnexpectedInputError(const std::string& message, LineCol pos)
-  : std::runtime_error(message + pos.toString()) {}
+  : std::runtime_error(message), Position(pos) {}
+
+  std::string messageWithPos() const {
+    std::string msg(what());
+    msg += " at ";
+    msg += Position.toString();
+    return msg;
+  }
+
+  LineCol Position;
 };
 
 class LlamaLexer {
