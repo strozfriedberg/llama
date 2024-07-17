@@ -176,3 +176,15 @@ TEST_CASE("parseConditionFuncDoesNotThrowIfConditionFunc") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseConditionFunc());
 }
+
+TEST_CASE("parseFuncCall") {
+  std::string input = "all(s1, s2, s3)";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseFuncCall());
+}
+
+TEST_CASE("parseFuncCallThrowsIfNoCloseParen") {
+  std::string input = "all(s1, s2, s3";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseFuncCall(), ParserError);
+}

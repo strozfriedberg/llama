@@ -30,6 +30,7 @@ public:
   void parseArgList();
   void parseOperator();
   void parseConditionFunc();
+  void parseFuncCall();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -100,4 +101,11 @@ void LlamaParser::parseConditionFunc() {
     TokenType::COUNT_HAS_HITS,
     TokenType::LENGTH
   );
+}
+
+void LlamaParser::parseFuncCall() {
+  parseConditionFunc();
+  mustParse("Expected open parenthesis at ", TokenType::OPEN_PAREN);
+  parseArgList();
+  mustParse("Expected close parenthesis at ", TokenType::CLOSE_PAREN);
 }
