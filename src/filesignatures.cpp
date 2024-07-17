@@ -164,7 +164,7 @@ bool magic::check::compare(Binary const& data) const {
     return false;
 }
 
-size_t magic::get_pattern_length(bool only_significant) const {
+size_t get_pattern_length(std::string const& pattern, bool only_significant) {
     auto i = 0;
     size_t count = 0;
     char prev_c = 0;
@@ -208,6 +208,10 @@ size_t magic::get_pattern_length(bool only_significant) const {
     }
 
     return count * 4;
+}
+
+size_t magic::get_pattern_length(bool only_significant) const {
+    return ::get_pattern_length(pattern, only_significant);
 }
 
 expected<Magics> SignatureUtil::readMagics(std::string_view path) {
@@ -356,3 +360,54 @@ int main(int argc, char* argv[]) {
 }
 
 #endif // SELF_MAIN
+
+#ifndef SELF_MAIN
+
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
+#include <catch2/generators/catch_generators_adapters.hpp>
+
+namespace {
+    struct Item {
+        std::string pattern;
+        size_t len;
+        Item(std::string const& pattern, size_t len) {
+            this->pattern = pattern;
+            this->len = len;
+        }
+    };
+
+    struct VerifiedDataGenerator : public Catch::Generators::IGenerator<Item>{
+        jsoncons::json data;
+        jsoncons::json::const_array_iterator current;
+
+        VerifiedDataGenerator(std::string_view path) : data(std::vector<int>()) {
+            std::ifstream is(path.data());
+            
+            if (is.fail())
+                throw std::exception((std::string("Error: bad path ") + std::string(path)).c_str());
+
+            data = jsoncons::json(jsoncons::json::parse(is));
+            current = data.array_range().cbegin();
+        }
+
+        Item const& get() const override {
+            auto pair = *current;
+            return Item(pair.at(0).as<std::string>(), pair.at(1).as<int>());
+        }
+
+        bool next() override {
+            if (current == data.array_range().end())
+                return false;
+
+            current++;
+            return true;
+        }
+    };
+}
+
+TEST_CASE("Compare with verified data", "[get_pattern_length]") {
+    auto data = GENERATE(VerifiedDataGenerator("../test/data/calculated_by_python.json")).get();
+    REQUIRE(::get_pattern_length(data.pattern, true) == data.len);
+}
+#endif // ! SELF_MAIN
