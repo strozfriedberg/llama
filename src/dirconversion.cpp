@@ -5,6 +5,7 @@
 #include <system_error>
 #include <fstream>
 
+#include <boost/algorithm/string.hpp>
 namespace fs = std::filesystem;
 
 std::string DirUtils::fileTypeString(fs::file_type type) {
@@ -138,6 +139,9 @@ jsoncons::json DirConverter::convertAttr(const fs::directory_entry& de) const {
 }
 
 jsoncons::json DirConverter::convertName(const fs::directory_entry& de) const {
+  std::string sig_desc;
+  std::vector<std::string> sig_tags;
+  get_signature(de, &sig_desc, &sig_tags);
   return jsoncons::json(
     jsoncons::json_object_arg,
     {
@@ -150,16 +154,69 @@ jsoncons::json DirConverter::convertName(const fs::directory_entry& de) const {
 //      { "date_added", name.date_added },
       { "type",      DirUtils::fileTypeString(DirUtils::fileType(de)) },
       { "flags",     NAME_FLAG_ALLOC },
-
-      // TODO
-      { "sig_desc",  "" },
-      { "sig_tags", "[\"tag1\", \"tag2\"]" }
+      { "sig_desc",  sig_desc },
+      { "sig_tags",  sig_tags }
     }
   );
 }
 
-DirConverter::DirConverter()
-  : max_read(0) {
+struct lg_callback_context {
+  const DirConverter* self;
+  std::string ext;
+  std::string* sig_desc;
+  std::vector<std::string>* sig_tags;
+  size_t hit_count;
+};
+
+void DirConverter::lg_callbackfn(void* userData, const LG_SearchHit* const hit) {
+  auto ctx = (lg_callback_context*)userData;
+  auto p = ctx->self->magics[hit->KeywordIndex];
+  printf("hit %llu, %llu, %lu, pattern: %s\n", hit->Start, hit->End, hit->KeywordIndex,
+    p.pattern.c_str());
+  if (ctx->sig_tags) {
+    *ctx->sig_tags = p.tags;
+  }
+  if (ctx->sig_desc) {
+    printf("looking for ext %s\n", ctx->ext.c_str());
+    if (p.extensions.count(ctx->ext)) {
+      *ctx->sig_desc = p.extensions[ctx->ext];
+    }
+    else {
+      *ctx->sig_desc = p.description;
+    }
+  }
+  ctx->hit_count++;
+}
+
+void DirConverter::get_signature(const fs::directory_entry& de, std::string* sig_desc, std::vector<std::string>* sig_tags) const {
+  std::error_code ec;
+  if (!de.is_regular_file(ec) || ec) {
+    return;
+  }
+  std::ifstream ifs(de.path(), std::ios::binary);
+  if (ifs) {
+    auto ext = de.path().extension().u8string();
+    if (!ext.empty()) {
+      boost::algorithm::to_upper(ext);
+      if (ext.length() > 1) {
+        // clean dot
+        ext = ext.substr(1);
+      }
+    }
+    lg_callback_context ctx{ this, ext, sig_desc, sig_tags, 0 };
+    auto readed = ifs.readsome((char*)read_buf.data(), read_buf.size());
+    if (lg.search(MemoryRegion(read_buf.data(), read_buf.data() + readed), &ctx, &DirConverter::lg_callbackfn)) {
+      //
+    }
+    if (ctx.hit_count == 0) {
+      // TODO
+      // file_signatures.py 174 - 180
+    }
+  }
+}
+
+
+DirConverter::DirConverter() {
   std::string magics_file("./magics.json");
   SignatureUtil su;
   auto result = su.readMagics(magics_file);
@@ -173,12 +230,15 @@ DirConverter::DirConverter()
     throw std::runtime_error("LightGrep::setup failed: " + r.error());
   }
 
-  max_read = r.value();
+  auto max_read = r.value();
+  read_buf.resize(max_read);
 
-  for (auto it = this->magics.begin(); it != this->magics.end(); ++it) {
-    printf("value desc %s, pattern %s\n", it->description.c_str(), it->pattern.c_str());
-    for (auto check : it->checks) {
-      printf("\tcmp_type %d, offset %llu, value %lu\n", (int)check.compare_type, check.offset, check.value.size());
-    }
-  }
+  // printf("max_read: %lu\n", max_read);
+
+  // for (auto it = this->magics.begin(); it != this->magics.end(); ++it) {
+  //   printf("value desc %s, pattern %s\n", it->description.c_str(), it->pattern.c_str());
+  //   for (auto check : it->checks) {
+  //     printf("\tcmp_type %d, offset %llu, value %lu\n", (int)check.compare_type, check.offset, check.value.size());
+  //   }
+  // }
 }

@@ -20,7 +20,10 @@ namespace DirUtils {
 class DirConverter {
   Magics magics;
   LightGrep lg;
-  size_t max_read;
+  std::vector<char> read_buf;
+
+  static void lg_callbackfn(void* userData, const LG_SearchHit* const hit);
+  void get_signature(const fs::directory_entry& de, std::string* sig_desc, std::vector<std::string>* sig_tags) const;
 
 public:
   DirConverter();
