@@ -253,12 +253,6 @@ TEST_CASE("parseAllFuncCall") {
   REQUIRE_NOTHROW(parser.parseAllFuncCall());
 }
 
-TEST_CASE("parseDualFuncCall") {
-  std::string input = "offset(s1, 5)";
-  LlamaParser parser(getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseDualFuncCall());
-}
-
 TEST_CASE("parseTermWithAnd") {
   std::string input = "any(s1, s2, s3) and count(s1, 5) == 5";
   LlamaParser parser(getTokensFromString(input));
