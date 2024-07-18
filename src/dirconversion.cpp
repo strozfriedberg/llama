@@ -170,8 +170,9 @@ struct lg_callback_context {
 
 void DirConverter::lg_callbackfn(void* userData, const LG_SearchHit* const hit) {
   auto ctx = (lg_callback_context*)userData;
-  if (hit->KeywordIndex < ctx->min_hit_index) {
-    ctx->min_hit_index = hit->KeywordIndex;
+  auto hit_info = lg_prog_pattern_info(ctx->self->lg.get_lg_prog(), hit->KeywordIndex);
+  if (hit_info && hit_info->UserIndex < ctx->min_hit_index) {
+    ctx->min_hit_index = hit_info->UserIndex;
   }
 }
 
@@ -198,12 +199,10 @@ void DirConverter::get_signature(const fs::directory_entry& de, std::string* sig
     if (ctx.min_hit_index != std::numeric_limits<size_t>::max()) {
       // we got hit
       auto p = this->magics[ctx.min_hit_index];
-      printf("pattern hit: %s\n", p.pattern.c_str());
       if (sig_tags) {
         *sig_tags = p.tags;
       }
       if (sig_desc) {
-        printf("looking for ext %s\n", ext.c_str());
         if (p.extensions.count(ext)) {
           *sig_desc = p.extensions[ext];
         }
@@ -211,6 +210,8 @@ void DirConverter::get_signature(const fs::directory_entry& de, std::string* sig
           *sig_desc = p.description;
         }
       }
+      printf("%s, pattern hit(%lu): %s, desc %s, tags %s\n",
+        de.path().c_str(), ctx.min_hit_index, p.pattern.c_str(), sig_desc->c_str(), sig_tags->size() ? sig_tags->at(0).c_str() : "");
     }
     else {
       // no hits? search manually

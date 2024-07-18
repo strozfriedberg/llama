@@ -90,7 +90,7 @@ expected<bool> LightGrep::search(MemoryRegion const& region, void* user_data, LG
         LG_ContextOptions ctxOpts = { 0, 0 };
         LG_HCONTEXT searcher = lg_create_context(_prog, &ctxOpts);
         lg_reset_context(searcher);
-        lg_search(searcher, boost::begin(region), boost::end(region), 0, user_data, callback_fn);
+        lg_starts_with(searcher, boost::begin(region), boost::end(region), 0, user_data, callback_fn);
         lg_destroy_context(searcher);
     }
     catch (std::exception const& ex) {
