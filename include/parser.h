@@ -33,6 +33,7 @@ public:
   void parseFuncCall();
   void parseStringMod();
   void parseEncodings();
+  void parseStringDef();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -128,4 +129,13 @@ void LlamaParser::parseStringMod() {
 void LlamaParser::parseEncodings() {
   mustParse("Expected equal sign after encodings keyword", TokenType::EQUAL);
   mustParse("Expected encodings list", TokenType::ENCODINGS_LIST);
+}
+
+void LlamaParser::parseStringDef() {
+  mustParse("Expected identifier", TokenType::IDENTIFIER);
+  mustParse("Expected equal sign", TokenType::EQUAL);
+  mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
+  while (checkAny(TokenType::NOCASE, TokenType::FIXED, TokenType::ENCODINGS)) {
+    parseStringMod();
+  }
 }
