@@ -177,8 +177,8 @@ void LlamaParser::parseTerm() {
 }
 
 void LlamaParser::parseFactor() {
-  if (checkAny(TokenType::OPEN_PAREN)) {
-    // parse expr
+  if (matchAny(TokenType::OPEN_PAREN)) {
+    parseExpr();
   }
   else if (checkAny(TokenType::ALL)) {
     parseAllFuncCall();
