@@ -9,6 +9,10 @@ std::vector<Token> getTokensFromString(const std::string& input) {
   return lexer.getTokens();
 }
 
+Token makeToken(TokenType type) {
+  return Token(type, 0, 0, {0, 0});
+}
+
 TEST_CASE("LlamaParser") {
   std::vector<Token> tokens;
   LlamaParser parser(tokens);
@@ -208,7 +212,7 @@ TEST_CASE("parseEncodingsThrowsIfNotEncodings") {
 }
 
 TEST_CASE("parseEncodingsDoesNotThrowIfEncodings") {
-  std::vector<Token> tokens = {Token(TokenType::EQUAL), Token(TokenType::ENCODINGS_LIST)};
+  std::vector<Token> tokens = {makeToken(TokenType::EQUAL), makeToken(TokenType::ENCODINGS_LIST)};
   LlamaParser parser(tokens);
   REQUIRE_NOTHROW(parser.parseEncodings());
 }
