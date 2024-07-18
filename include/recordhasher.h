@@ -4,6 +4,8 @@
 #include "jsoncons_wrapper.h"
 #include "treehasher.h"
 
+struct Dirent;
+
 class RecordHasher {
 public:
   FieldHash hashRun(const jsoncons::json& r);
@@ -15,6 +17,8 @@ public:
   FieldHash hashInode(const jsoncons::json& r);
 
   FieldHash hashDirent(const jsoncons::json& r);
+
+  FieldHash hashDirent(const Dirent& r);
 
 private:
   TreeHasher Hasher;

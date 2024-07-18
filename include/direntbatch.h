@@ -10,6 +10,7 @@
 #include "throw.h"
 
 struct Dirent {
+  std::string Id;
   std::string Path;
   std::string Name;
   std::string Shrt_name;
@@ -34,6 +35,19 @@ struct Dirent {
   ):
     Path(p), Name(n), Shrt_name(shrt), Type(type), Flags(flags),
     Meta_addr(meta), Par_addr(parent), Meta_seq(meta_seq), Par_seq(par_seq) {}
+
+  bool operator==(const Dirent& other) const {
+    return Id == other.Id &&
+           Path == other.Path &&
+           Name == other.Name &&
+           Shrt_name == other.Shrt_name &&
+           Type == other.Type &&
+           Flags == other.Flags &&
+           Meta_addr == other.Meta_addr &&
+           Par_addr == other.Par_addr &&
+           Meta_seq == other.Meta_seq &&
+           Par_seq == other.Par_seq;
+  }
 };
 
 struct DirentBatch {

@@ -6,15 +6,15 @@ bool DirentStack::empty() const {
   return Stack.empty();
 }
 
-const jsoncons::json& DirentStack::top() const {
-  return Stack.top().Record;
+const Dirent& DirentStack::top() const {
+  return Stack.top().Rec;
 }
 
-jsoncons::json DirentStack::pop() {
+Dirent DirentStack::pop() {
   // pop the record and trim back the path
   Element& e = Stack.top();
   Path.resize(e.LastPathSepIndex);
-  jsoncons::json rec{std::move(e.Record)};
+  Dirent rec{std::move(e.Rec)};
   Stack.pop();
 
   // hash the record
@@ -22,30 +22,24 @@ jsoncons::json DirentStack::pop() {
   std::string hash = hexEncode(&fhash.hash, sizeof(fhash.hash));
 
   // add the hash to the parent, if any
-  if (!Stack.empty()) {
-    Stack.top().Record["children"].push_back(hash);
-  }
+//  if (!Stack.empty()) {
+//    Stack.top().Record["children"].push_back(hash);
+//  }
 
   // put the hash into the record
-  rec["hash"] = std::move(hash);
+  rec.Id = std::move(hash);
 
   return rec;
 }
 
-void DirentStack::push(const std::string& filename, jsoncons::json&& rec) {
-  push(filename.c_str(), std::move(rec));
-}
-
-void DirentStack::push(const char* filename, jsoncons::json&& rec) {
-  const size_t sep_idx = Path.length();
-  if (sep_idx > 0) {
+void DirentStack::push(Dirent&& rec) {
+  const size_t len = Path.length();
+  if (len > 0) {
     Path.append("/");
   }
-  Path.append(filename);
+  Path.append(rec.Name);
 
-  rec["path"] = Path;
-  rec["children"] = jsoncons::json(jsoncons::json_array_arg);
-  rec["streams"] = jsoncons::json(jsoncons::json_array_arg);
+  rec.Path = Path;
 
-  Stack.push({sep_idx, std::move(rec)});
+  Stack.push({std::move(rec), len});
 }

@@ -15,9 +15,9 @@ public:
 
   virtual ~DirReader() {}
 
-  virtual void setInputHandler(std::shared_ptr<InputHandler> in) override;
+  virtual void setInputHandler(const std::shared_ptr<InputHandler>& in) override;
 
-  virtual void setOutputHandler(std::shared_ptr<OutputHandler> in) override;
+  virtual void setOutputHandler(const std::shared_ptr<OutputHandler>& out) override;
 
   virtual bool startReading() override;
 
