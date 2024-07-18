@@ -27,10 +27,7 @@ public:
   void parseHashSection();
   void parseHashExpr();
   void parseHash();
-  void parseArgList();
   void parseOperator();
-  void parseConditionFunc();
-  void parseFuncCall();
   void parseStringMod();
   void parseEncodings();
   void parseStringDef();
@@ -85,13 +82,6 @@ void LlamaParser::parseHash() {
   );
 }
 
-void LlamaParser::parseArgList() {
-  mustParse("Expected identifier", TokenType::IDENTIFIER);
-  while (matchAny(TokenType::COMMA)) {
-    mustParse("Expected identifier", TokenType::IDENTIFIER);
-  }
-}
-
 void LlamaParser::parseOperator() {
   mustParse(
     "Expected operator",
@@ -102,25 +92,6 @@ void LlamaParser::parseOperator() {
     TokenType::LESS_THAN,
     TokenType::LESS_THAN_EQUAL
   );
-}
-
-void LlamaParser::parseConditionFunc() {
-  mustParse(
-    "Expected condition function",
-    TokenType::ALL,
-    TokenType::ANY,
-    TokenType::OFFSET,
-    TokenType::COUNT,
-    TokenType::COUNT_HAS_HITS,
-    TokenType::LENGTH
-  );
-}
-
-void LlamaParser::parseFuncCall() {
-  parseConditionFunc();
-  mustParse("Expected open parenthesis", TokenType::OPEN_PAREN);
-  parseArgList();
-  mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
 }
 
 void LlamaParser::parseStringMod() {
