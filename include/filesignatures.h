@@ -59,4 +59,5 @@ public:
     ~LightGrep();
     expected<size_t> setup(Magics const& m);
     expected<bool> search(MemoryRegion const& region, void* user_data, LG_HITCALLBACK_FN callback_fn) const;
+    LG_HPROGRAM get_lg_prog() const{ return _prog; }
 };
