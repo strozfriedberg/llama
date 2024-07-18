@@ -13,8 +13,6 @@
 
 #include "fieldhash.h"
 
-bool operator==(const FieldHash& l, const FieldHash& r);
-
 std::ostream& operator<<(std::ostream&, const FieldHash& r);
 
 class FieldHasher {

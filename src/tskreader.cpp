@@ -6,6 +6,7 @@
 #include "inputhandler.h"
 #include "outputhandler.h"
 
+#include "tskconversion.h"
 #include "tskfacade.h"
 #include "tsktimestamps.h"
 
@@ -45,7 +46,8 @@ bool TskReader::startReading() {
   if (ret) {
     // wrap up the walk
     while (!Dirents.empty()) {
-      Output->outputDirent(Dirents.pop());
+//      Output->outputDirent(Dirents.pop());
+      Dirents.pop();
     }
     Output->outputImage(Asm.dump());
 
@@ -102,12 +104,15 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
   // handle the name
   if (fs_file->name) {
     const TSK_INUM_T par_addr =  fs_file->name->par_addr;
+    Dirent dirent;
 
-    while (!Dirents.empty() && par_addr != Dirents.top()["meta_addr"]) {
-      Output->outputDirent(Dirents.pop());
+    while (!Dirents.empty() && par_addr != Dirents.top().Meta_addr) {
+//      Output->outputDirent(Dirents.pop());
+      Dirents.pop();
     }
     // std::cerr << par_addr << " -> " << fs_file->meta->addr << '\n';
-    Dirents.push(fs_file->name->name, Tsk->convertName(*fs_file->name));
+    TskUtils::convertNameToDirent(Dirents.top().Path, *fs_file->name, dirent);
+    Dirents.push(std::move(dirent));
   }
 
   // handle the meta

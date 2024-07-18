@@ -30,11 +30,11 @@ public:
 
   bool open();
 
-  virtual void setInputHandler(std::shared_ptr<InputHandler> in) override {
+  virtual void setInputHandler(const std::shared_ptr<InputHandler>& in) override {
     Input = in;
   }
 
-  virtual void setOutputHandler(std::shared_ptr<OutputHandler> out) override {
+  virtual void setOutputHandler(const std::shared_ptr<OutputHandler>& out) override {
     Output = out;
   }
 
