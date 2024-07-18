@@ -37,9 +37,29 @@ string_mod          = encodings | FIXED | NOCASE;
 
 encodings           = ENCODINGS EQUAL ENCODINGS_LIST;
 
-func_call           = condition_func OPEN_PAREN arg_list CLOSE_PAREN;
+condition_expr      = func_call (operator number)?;
 
-arg_list            = IDENTIFIER ( COMMA IDENTIFIER )*;
+expr                = term (OR term)*;
+
+term                = factor (AND factor)*;
+
+factor              = OPEN_PAREN expr CLOSE_PAREN
+                    | literal
+                    | func_call
+                    | all_func_call
+                    | any_func_call
+                    | dual_func_call;
+
+all_func_call       = ALL OPEN_PAREN CLOSE_PAREN;
+
+any_func_call       = ANY OPEN_PAREN IDENTIFIER (COMMA IDENTIFIER)*; CLOSE_PAREN;
+
+dual_func_call      = dual_func OPEN_PAREN IDENTIFIER (COMMA NUMBER)? CLOSE_PAREN;
+
+dual_func           = OFFSET
+                    | COUNT_HAS_HITS
+                    | COUNT
+                    | LENGTH;
 
 file_metadata       = CREATED
                     | MODIFIED
@@ -50,22 +70,12 @@ literal             = IDENTIFIER
                     | NUMBER
                     ;
 
-condition_func      = ANY 
-                    | ALL 
-                    | OFFSET 
-                    | COUNT_HAS_HITS 
-                    | COUNT 
-                    | LENGTH
-                    ;
-
 operator            = EQUAL_EQUAL
                     | NOT_EQUAL
                     | LESS_THAN 
                     | LESS_THAN_EQUAL
                     | GREATER_THAN
                     | GREATER_THAN_EQUAL
-                    | AND
-                    | OR
                     ;
 
 hash                = MD5
