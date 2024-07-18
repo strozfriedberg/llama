@@ -171,7 +171,7 @@ void LlamaParser::parseAllFuncCall() {
 
 void LlamaParser::parseTerm() {
   parseFactor();
-  while (checkAny(TokenType::AND)) {
+  while (matchAny(TokenType::AND)) {
     parseFactor();
   }
 }
