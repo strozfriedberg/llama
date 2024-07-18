@@ -41,6 +41,7 @@ public:
   void parseExpr();
   void parseConditionSection();
   void parseSignatureSection();
+  void parseGrepSection();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -214,4 +215,13 @@ void LlamaParser::parseSignatureSection() {
   mustParse("Expected colon after signature keyword", TokenType::COLON);
   mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
   while (matchAny(TokenType::DOUBLE_QUOTED_STRING)) {}
+}
+
+void LlamaParser::parseGrepSection() {
+  mustParse("Expected grep keyword", TokenType::GREP);
+  mustParse("Expected colon after grep keyword", TokenType::COLON);
+  if (checkAny(TokenType::STRINGS)) {
+    parseStringsSection();
+  }
+  parseConditionSection();
 }

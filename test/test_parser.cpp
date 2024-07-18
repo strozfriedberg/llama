@@ -252,3 +252,16 @@ TEST_CASE("parseSignatureSection") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseSignatureSection());
 }
+
+TEST_CASE("parseGrepSection") {
+  std::string input = R"(
+  grep:
+    strings:
+      a = "test" encodings=UTF-8 nocase fixed
+      b = "test2" encodings=UTF-8 nocase fixed
+    condition:
+      any(a, b) and offset(a, 5) == 5
+)";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseGrepSection());
+}
