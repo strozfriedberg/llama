@@ -109,6 +109,8 @@ public:
   Token(TokenType type, uint64_t start, uint64_t end, LineCol pos)
        : Type(type), Start(start), End(end), Pos(pos){}
 
+  Token(TokenType type) : Type(type), Start(0), End(0), Pos({0, 0}) {}
+
   TokenType Type;
   uint64_t Start, End;
   LineCol Pos;

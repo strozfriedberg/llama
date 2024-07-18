@@ -200,3 +200,15 @@ TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseStringMod());
 }
+
+TEST_CASE("parseEncodingsThrowsIfNotEncodings") {
+  std::string input = "notEncodings";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseEncodings(), ParserError);
+}
+
+TEST_CASE("parseEncodingsDoesNotThrowIfEncodings") {
+  std::vector<Token> tokens = {Token(TokenType::EQUAL), Token(TokenType::ENCODINGS_LIST)};
+  LlamaParser parser(tokens);
+  REQUIRE_NOTHROW(parser.parseEncodings());
+}

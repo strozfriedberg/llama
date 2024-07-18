@@ -32,6 +32,7 @@ public:
   void parseConditionFunc();
   void parseFuncCall();
   void parseStringMod();
+  void parseEncodings();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -122,4 +123,9 @@ void LlamaParser::parseStringMod() {
     return;
   }
   throw ParserError("Expected string modifier", peek().Pos);
+}
+
+void LlamaParser::parseEncodings() {
+  mustParse("Expected equal sign after encodings keyword", TokenType::EQUAL);
+  mustParse("Expected encodings list", TokenType::ENCODINGS_LIST);
 }
