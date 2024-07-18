@@ -282,3 +282,9 @@ TEST_CASE("parseExpr") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseExpr());
 }
+
+TEST_CASE("parseConditionSection") {
+  std::string input = "condition:\n  (any(s1, s2, s3) and count(s1, 5) == 5)\nor all(s1, s2, s3)";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseConditionSection());
+}
