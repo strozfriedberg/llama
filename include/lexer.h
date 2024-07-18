@@ -11,7 +11,17 @@
 
 class UnexpectedInputError : public std::runtime_error {
 public:
-  UnexpectedInputError(const std::string& message) : std::runtime_error(message) {}
+  UnexpectedInputError(const std::string& message, LineCol pos)
+  : std::runtime_error(message), Position(pos) {}
+
+  std::string messageWithPos() const {
+    std::string msg(what());
+    msg += " at ";
+    msg += Position.toString();
+    return msg;
+  }
+
+  LineCol Position;
 };
 
 class LlamaLexer {
@@ -21,9 +31,9 @@ public:
   void scanTokens();
   void scanToken();
 
-  void parseIdentifier();
-  void parseString();
-  void parseNumber();
+  void parseIdentifier(LineCol pos);
+  void parseString(LineCol pos);
+  void parseNumber(LineCol pos);
   void parseEncodingsList();
 
   void addToken(TokenType type, uint64_t start, uint64_t end, LineCol pos);

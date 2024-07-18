@@ -134,3 +134,57 @@ TEST_CASE("parseHashSectionDoesNotThrowIfHashAndColon") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseHashSection());
 }
+
+TEST_CASE("parseArgListThrowsIfNotStartWithIdentifier") {
+  std::string input = "hash"; // reserved keyword - not an identifier
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseArgList(), ParserError);
+}
+
+TEST_CASE("parseArgListThrowsIfNoIdentifierAfterComma") {
+  std::string input = "s1,)"; // no identifier after comma
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseArgList(), ParserError);
+}
+
+TEST_CASE("parseArgListDoesNotThrowIfIdentifierAfterComma") {
+  std::string input = "s1, s2, s3";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseArgList());
+}
+
+TEST_CASE("parseOperatorThrowsIfNotOperator") {
+  std::string input = "notAnOperator";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseOperator(), ParserError);
+}
+
+TEST_CASE("parseOperatorDoesNotThrowIfOperator") {
+  std::string input = "==";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseOperator());
+}
+
+TEST_CASE("parseConditionFuncThrowsIfNotConditionFunc") {
+  std::string input = "notAConditionFunc";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseConditionFunc(), ParserError);
+}
+
+TEST_CASE("parseConditionFuncDoesNotThrowIfConditionFunc") {
+  std::string input = "all";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseConditionFunc());
+}
+
+TEST_CASE("parseFuncCall") {
+  std::string input = "all(s1, s2, s3)";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseFuncCall());
+}
+
+TEST_CASE("parseFuncCallThrowsIfNoCloseParen") {
+  std::string input = "all(s1, s2, s3";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseFuncCall(), ParserError);
+}
