@@ -42,8 +42,6 @@ expr                = term (OR term)*;
 term                = factor (AND factor)*;
 
 factor              = OPEN_PAREN expr CLOSE_PAREN
-                    | literal
-                    | func_call
                     | all_func_call
                     | any_func_call
                     | dual_func_call;

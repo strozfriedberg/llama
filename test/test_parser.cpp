@@ -282,3 +282,9 @@ TEST_CASE("parseDualFuncWithoutOperatorThrows") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseDualFuncCall(), ParserError);
 }
+
+TEST_CASE("parseExpr") {
+  std::string input = "(any(s1, s2, s3) and count(s1, 5) == 5) or all(s1, s2, s3)";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseExpr());
+}

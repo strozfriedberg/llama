@@ -41,6 +41,7 @@ public:
   void parseAllFuncCall();
   void parseFactor();
   void parseTerm();
+  void parseExpr();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -217,5 +218,12 @@ void LlamaParser::parseFactor() {
     TokenType::LENGTH
   )) {
     parseDualFuncCall();
+  }
+}
+
+void LlamaParser::parseExpr() {
+  parseTerm();
+  while (matchAny(TokenType::OR)) {
+    parseTerm();
   }
 }
