@@ -228,3 +228,15 @@ TEST_CASE("parseStringDefDoesNotThrowIfStringDef") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseStringDef());
 }
+
+TEST_CASE("parseStringsSectionThrowsIfNotStrings") {
+  std::string input = "rule";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseStringsSection(), ParserError);
+}
+
+TEST_CASE("parseStringsSectionDoesNotThrowIfStrings") {
+  std::string input = "strings:\n  a = \"test\" encodings=UTF-8 nocase fixed\n b = \"test\" encodings=UTF-8 nocase fixed";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseStringsSection());
+}

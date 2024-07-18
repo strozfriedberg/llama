@@ -34,6 +34,7 @@ public:
   void parseStringMod();
   void parseEncodings();
   void parseStringDef();
+  void parseStringsSection();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -137,5 +138,13 @@ void LlamaParser::parseStringDef() {
   mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
   while (checkAny(TokenType::NOCASE, TokenType::FIXED, TokenType::ENCODINGS)) {
     parseStringMod();
+  }
+}
+
+void LlamaParser::parseStringsSection() {
+  mustParse("Expected strings keyword", TokenType::STRINGS);
+  mustParse("Expected colon after strings keyword", TokenType::COLON);
+  while (checkAny(TokenType::IDENTIFIER)) {
+    parseStringDef();
   }
 }
