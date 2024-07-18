@@ -8,7 +8,6 @@ PoolOutputHandler::PoolOutputHandler(boost::asio::thread_pool& pool, std::shared
   Out(out),
   ImageRecBuf("recs/image", 4 * 1024, [this](const OutputChunk& c) { Out->outputImage(c); }),
   InodesRecBuf("recs/inodes", 16 * 1024 * 1024, [this](const OutputChunk& c) { Out->outputInode(c); }),
-  DirentsRecBuf("recs/dirents", 16 * 1024 * 1024, [this](const OutputChunk& c) { Out->outputDirent(c); }),
   Closed(false)
 {}
 
@@ -20,7 +19,7 @@ void PoolOutputHandler::outputImage(const FileRecord& rec) {
   ImageRecBuf.write(rec.str());
 }
 
-void PoolOutputHandler::outputDirent(const FileRecord& rec) {
+void PoolOutputHandler::outputDirent(const Dirent& rec) {
 /*
   if (Closed) {
     // we might still have some records in FileRecBuf, but the
@@ -35,7 +34,7 @@ void PoolOutputHandler::outputDirent(const FileRecord& rec) {
   }
 */
   boost::asio::post(RecStrand, [=]() {
-    DirentsRecBuf.write(rec.str());
+    DirentsBatch.add(rec);
   });
 }
 
@@ -68,10 +67,6 @@ void PoolOutputHandler::close() {
 
   if (ImageRecBuf.size()) {
     ImageRecBuf.flush();
-  }
-
-  if (DirentsRecBuf.size()) {
-    DirentsRecBuf.flush();
   }
 
   if (InodesRecBuf.size()) {

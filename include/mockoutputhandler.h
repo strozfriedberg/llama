@@ -1,5 +1,6 @@
 #pragma once
 
+#include "direntbatch.h"
 #include "outputhandler.h"
 
 class MockOutputHandler: public OutputHandler {
@@ -10,7 +11,7 @@ public:
     Images.push_back(rec);
   }
 
-  virtual void outputDirent(const FileRecord& rec) override {
+  virtual void outputDirent(const Dirent& rec) override {
     Dirents.push_back(rec);
   }
 
@@ -32,6 +33,6 @@ public:
 
   std::vector<FileRecord> OutFiles; // TODO: remove
   std::vector<FileRecord> Images;
-  std::vector<FileRecord> Dirents;
+  std::vector<Dirent> Dirents;
   std::vector<FileRecord> Inodes;
 };

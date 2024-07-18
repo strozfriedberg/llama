@@ -1,6 +1,7 @@
 #pragma once
 
 #include "boost_asio.h"
+#include "direntbatch.h"
 #include "outputhandler.h"
 #include "recordbuffer.h"
 
@@ -15,7 +16,7 @@ public:
 
   virtual void outputImage(const FileRecord& rec) override;
 
-  virtual void outputDirent(const FileRecord& rec) override;
+  virtual void outputDirent(const Dirent& rec) override;
 
   virtual void outputInode(const FileRecord& rec) override;
 
@@ -35,7 +36,8 @@ private:
 
   RecordBuffer ImageRecBuf;
   RecordBuffer InodesRecBuf;
-  RecordBuffer DirentsRecBuf;
+  
+  DirentBatch DirentsBatch;
 
   bool Closed;
 };

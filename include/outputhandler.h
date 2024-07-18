@@ -5,6 +5,7 @@
 #include <string>
 
 struct FileRecord;
+struct Dirent;
 
 class OutputHandler {
 public:
@@ -12,7 +13,7 @@ public:
 
   virtual void outputImage(const FileRecord& rec) = 0;
 
-  virtual void outputDirent(const FileRecord& rec) = 0;
+  virtual void outputDirent(const Dirent& rec) = 0;
 
   virtual void outputInode(const FileRecord& rec) = 0;
 
