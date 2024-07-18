@@ -165,27 +165,14 @@ struct lg_callback_context {
   std::string ext;
   std::string* sig_desc;
   std::vector<std::string>* sig_tags;
-  size_t hit_count;
+  size_t min_hit_index;
 };
 
 void DirConverter::lg_callbackfn(void* userData, const LG_SearchHit* const hit) {
   auto ctx = (lg_callback_context*)userData;
-  auto p = ctx->self->magics[hit->KeywordIndex];
-  printf("hit %llu, %llu, %lu, pattern: %s\n", hit->Start, hit->End, hit->KeywordIndex,
-    p.pattern.c_str());
-  if (ctx->sig_tags) {
-    *ctx->sig_tags = p.tags;
+  if (hit->KeywordIndex < ctx->min_hit_index) {
+    ctx->min_hit_index = hit->KeywordIndex;
   }
-  if (ctx->sig_desc) {
-    printf("looking for ext %s\n", ctx->ext.c_str());
-    if (p.extensions.count(ctx->ext)) {
-      *ctx->sig_desc = p.extensions[ctx->ext];
-    }
-    else {
-      *ctx->sig_desc = p.description;
-    }
-  }
-  ctx->hit_count++;
 }
 
 void DirConverter::get_signature(const fs::directory_entry& de, std::string* sig_desc, std::vector<std::string>* sig_tags) const {
@@ -203,12 +190,30 @@ void DirConverter::get_signature(const fs::directory_entry& de, std::string* sig
         ext = ext.substr(1);
       }
     }
-    lg_callback_context ctx{ this, ext, sig_desc, sig_tags, 0 };
+    lg_callback_context ctx{ this, ext, sig_desc, sig_tags, std::numeric_limits<size_t>::max() };
     auto readed = ifs.readsome((char*)read_buf.data(), read_buf.size());
     if (lg.search(MemoryRegion(read_buf.data(), read_buf.data() + readed), &ctx, &DirConverter::lg_callbackfn)) {
       //
     }
-    if (ctx.hit_count == 0) {
+    if (ctx.min_hit_index != std::numeric_limits<size_t>::max()) {
+      // we got hit
+      auto p = this->magics[ctx.min_hit_index];
+      printf("pattern hit: %s\n", p.pattern.c_str());
+      if (sig_tags) {
+        *sig_tags = p.tags;
+      }
+      if (sig_desc) {
+        printf("looking for ext %s\n", ext.c_str());
+        if (p.extensions.count(ext)) {
+          *sig_desc = p.extensions[ext];
+        }
+        else {
+          *sig_desc = p.description;
+        }
+      }
+    }
+    else {
+      // no hits? search manually
       // TODO
       // file_signatures.py 174 - 180
     }

@@ -10,6 +10,7 @@
 #include <string_view>
 #include <cctype>
 #include <exception>
+#include <algorithm>
 
 #include <boost/algorithm/string.hpp>
 
@@ -36,7 +37,7 @@ expected<size_t> LightGrep::setup(Magics const& m) {
         LG_HFSM fsm = lg_create_fsm(0, 0);
         destroy_guard fsm_guard([&fsm]() { lg_destroy_fsm(fsm); });
 
-        for (auto i = 0; i < m.size(); i++) {
+        for (std::size_t i = 0; i < m.size(); i++) {
 
             auto& p = m[i];
 
@@ -290,6 +291,11 @@ expected<Magics> SignatureUtil::readMagics(std::string_view path) {
             }
             magics.push_back(m);
         }
+
+        // resort magics by pattern size in desceding order ('bigger' patterns first)
+        std::sort(begin(magics), end(magics), [](magic const& a, magic const& b) {
+            return a.get_pattern_length(true) > b.get_pattern_length(true);
+            });
 
         return magics;
     }
