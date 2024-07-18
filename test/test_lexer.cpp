@@ -464,3 +464,17 @@ TEST_CASE("lone!ThrowsException") {
   LlamaLexer lexer(input);
   REQUIRE_THROWS_AS(lexer.scanToken(), UnexpectedInputError);
 }
+
+TEST_CASE("andKeyword") {
+  std::string input = "and";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier({0,0});
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::AND);
+}
+
+TEST_CASE("orKeyword") {
+  std::string input = "or";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier({0,0});
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::OR);
+}

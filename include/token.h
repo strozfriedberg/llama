@@ -33,7 +33,8 @@ enum class TokenType {
   ENCODINGS,
   NOCASE,
   FIXED,
-
+  AND,
+  OR,
 
   // punctuation
   OPEN_BRACE,
@@ -86,7 +87,9 @@ namespace Llama {
     {"blake3", TokenType::BLAKE3},
     {"encodings", TokenType::ENCODINGS},
     {"nocase", TokenType::NOCASE},
-    {"fixed", TokenType::FIXED}
+    {"fixed", TokenType::FIXED},
+    {"and", TokenType::AND},
+    {"or", TokenType::OR}
   };
 }
 
