@@ -372,15 +372,14 @@ namespace {
     struct Item {
         std::string pattern;
         size_t len;
-        Item(std::string const& pattern, size_t len) {
-            this->pattern = pattern;
-            this->len = len;
-        }
+        Item() = default;
+        Item(std::string const& pattern_, size_t len_):pattern(pattern_), len(len_) { }
     };
 
     struct VerifiedDataGenerator : public Catch::Generators::IGenerator<Item>{
         jsoncons::json data;
-        jsoncons::json::const_array_iterator current;
+        jsoncons::json::const_array_iterator current_ptr;
+        Item current;
 
         VerifiedDataGenerator(std::string_view path) : data(std::vector<int>()) {
             std::ifstream is(path.data());
@@ -389,26 +388,30 @@ namespace {
                 throw std::exception((std::string("Error: bad path ") + std::string(path)).c_str());
 
             data = jsoncons::json(jsoncons::json::parse(is));
-            current = data.array_range().cbegin();
+            current_ptr = data.array_range().cbegin();
         }
 
         Item const& get() const override {
-            auto pair = *current;
-            return Item(pair.at(0).as<std::string>(), pair.at(1).as<int>());
+            return current;
         }
 
         bool next() override {
-            if (current == data.array_range().end())
+            current_ptr++;
+            if (current_ptr == data.array_range().end())
                 return false;
 
-            current++;
+            auto pair = *current_ptr;
+            current = Item(pair.at(0).as<std::string>(), pair.at(1).as<int>());
             return true;
         }
     };
 }
 
 TEST_CASE("Compare with verified data", "[get_pattern_length]") {
-    auto data = GENERATE(VerifiedDataGenerator("../test/data/calculated_by_python.json")).get();
-    REQUIRE(::get_pattern_length(data.pattern, true) == data.len);
+    auto generator = VerifiedDataGenerator("test/data/calculated_by_python.json");
+    while (generator.next()) {
+        auto data = generator.get();
+        REQUIRE(::get_pattern_length(data.pattern, true) == data.len);
+    }
 }
 #endif // ! SELF_MAIN
