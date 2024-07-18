@@ -12,10 +12,6 @@ non_grep_section   = file_metadata_section
                    | hash_section
                    | signature_section;
 
-expr                = expr operator expr 
-                    | func_call
-                    | literal;
-
 meta_section        = META COLON string_def+;
 
 file_metadata_section = FILE_METADATA COLON file_metadata_def+;
@@ -30,7 +26,7 @@ hash_expr           = hash EQUAL DOUBLE_QUOTED_STRING;
 
 strings_section     = STRINGS COLON string_def+;
 
-condition_section   = CONDITION COLON expr;
+condition_section   = CONDITION COLON func_call+;
 
 file_metadata_def   = file_metadata EQUAL DOUBLE_QUOTED_STRING
                     | FILESIZE EQUAL NUMBER;

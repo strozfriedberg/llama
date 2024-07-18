@@ -35,6 +35,7 @@ public:
   void parseEncodings();
   void parseStringDef();
   void parseStringsSection();
+  void parseConditionSection();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -146,5 +147,20 @@ void LlamaParser::parseStringsSection() {
   mustParse("Expected colon after strings keyword", TokenType::COLON);
   while (checkAny(TokenType::IDENTIFIER)) {
     parseStringDef();
+  }
+}
+
+void LlamaParser::parseConditionSection() {
+  mustParse("Expected condition keyword", TokenType::CONDITION);
+  mustParse("Expected colon after condition keyword", TokenType::COLON);
+  while (checkAny(
+    TokenType::ALL,
+    TokenType::ANY,
+    TokenType::OFFSET,
+    TokenType::COUNT,
+    TokenType::COUNT_HAS_HITS,
+    TokenType::LENGTH
+  )) {
+    parseFuncCall();
   }
 }

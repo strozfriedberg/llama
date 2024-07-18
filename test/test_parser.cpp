@@ -240,3 +240,9 @@ TEST_CASE("parseStringsSectionDoesNotThrowIfStrings") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseStringsSection());
 }
+
+TEST_CASE("parseConditionSectionDoesNotThrowIfCondition") {
+  std::string input = "condition:\n  all(s1, s2, s3)";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseConditionSection());
+}
