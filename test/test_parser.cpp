@@ -241,8 +241,20 @@ TEST_CASE("parseStringsSectionDoesNotThrowIfStrings") {
   REQUIRE_NOTHROW(parser.parseStringsSection());
 }
 
-TEST_CASE("parseConditionSectionDoesNotThrowIfCondition") {
-  std::string input = "condition:\n  all(s1, s2, s3)";
+TEST_CASE("parseAnyFuncCall") {
+  std::string input = "any(s1, s2, s3)";
   LlamaParser parser(getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseConditionSection());
+  REQUIRE_NOTHROW(parser.parseAnyFuncCall());
+}
+
+TEST_CASE("parseAllFuncCall") {
+  std::string input = "all()";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseAllFuncCall());
+}
+
+TEST_CASE("parseDualFuncCall") {
+  std::string input = "offset(s1, 5)";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseDualFuncCall());
 }

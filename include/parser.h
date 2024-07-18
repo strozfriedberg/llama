@@ -35,7 +35,10 @@ public:
   void parseEncodings();
   void parseStringDef();
   void parseStringsSection();
-  void parseConditionSection();
+  void parseNumber();
+  void parseDualFuncCall();
+  void parseAnyFuncCall();
+  void parseAllFuncCall();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -150,17 +153,38 @@ void LlamaParser::parseStringsSection() {
   }
 }
 
-void LlamaParser::parseConditionSection() {
-  mustParse("Expected condition keyword", TokenType::CONDITION);
-  mustParse("Expected colon after condition keyword", TokenType::COLON);
-  while (checkAny(
-    TokenType::ALL,
-    TokenType::ANY,
+void LlamaParser::parseNumber() {
+  mustParse("Expected number", TokenType::NUMBER);
+}
+
+void LlamaParser::parseDualFuncCall() {
+  mustParse(
+    "Expected function name",
     TokenType::OFFSET,
     TokenType::COUNT,
     TokenType::COUNT_HAS_HITS,
     TokenType::LENGTH
-  )) {
-    parseFuncCall();
+  );
+  mustParse("Expected open parenthesis", TokenType::OPEN_PAREN);
+  mustParse("Expected identifier", TokenType::IDENTIFIER);
+  if (matchAny(TokenType::COMMA)) {
+    parseNumber();
   }
+  mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
+}
+
+void LlamaParser::parseAnyFuncCall() {
+  mustParse("Expected function name", TokenType::ANY);
+  mustParse("Expected open parenthesis", TokenType::OPEN_PAREN);
+  mustParse("Expected identifier", TokenType::IDENTIFIER);
+  while (matchAny(TokenType::COMMA)) {
+    mustParse("Expected identifier", TokenType::IDENTIFIER);
+  }
+  mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
+}
+
+void LlamaParser::parseAllFuncCall() {
+  mustParse("Expected function name", TokenType::ALL);
+  mustParse("Expected open parenthesis", TokenType::OPEN_PAREN);
+  mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
 }

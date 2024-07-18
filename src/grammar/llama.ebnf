@@ -26,7 +26,7 @@ hash_expr           = hash EQUAL DOUBLE_QUOTED_STRING;
 
 strings_section     = STRINGS COLON string_def+;
 
-condition_section   = CONDITION COLON func_call+;
+condition_section   = CONDITION COLON expr+;
 
 file_metadata_def   = file_metadata EQUAL DOUBLE_QUOTED_STRING
                     | FILESIZE EQUAL NUMBER;
@@ -36,8 +36,6 @@ string_def          = IDENTIFIER EQUAL DOUBLE_QUOTED_STRING string_mod+;
 string_mod          = encodings | FIXED | NOCASE;
 
 encodings           = ENCODINGS EQUAL ENCODINGS_LIST;
-
-condition_expr      = func_call (operator number)?;
 
 expr                = term (OR term)*;
 
