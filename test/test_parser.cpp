@@ -276,3 +276,9 @@ TEST_CASE("parseDualFuncCallWithOperator") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseDualFuncCall());
 }
+
+TEST_CASE("parseDualFuncWithoutOperatorThrows") {
+  std::string input = "offset(s1, 5)";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseDualFuncCall(), ParserError);
+}

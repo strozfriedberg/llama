@@ -173,17 +173,8 @@ void LlamaParser::parseDualFuncCall() {
     parseNumber();
   }
   mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
-  if (checkAny(
-    TokenType::EQUAL_EQUAL,
-    TokenType::NOT_EQUAL,
-    TokenType::GREATER_THAN,
-    TokenType::GREATER_THAN_EQUAL,
-    TokenType::LESS_THAN,
-    TokenType::LESS_THAN_EQUAL
-  )) {
-    parseOperator();
-    parseNumber();
-  }
+  parseOperator();
+  parseNumber();
 }
 
 void LlamaParser::parseAnyFuncCall() {
