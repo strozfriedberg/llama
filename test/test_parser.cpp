@@ -188,3 +188,15 @@ TEST_CASE("parseFuncCallThrowsIfNoCloseParen") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseFuncCall(), ParserError);
 }
+
+TEST_CASE("parseStringModThrowsIfNotStringMod") {
+  std::string input = "notAStringMod";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseStringMod(), ParserError);
+}
+
+TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
+  std::string input = "nocase";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseStringMod());
+}

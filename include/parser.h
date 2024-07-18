@@ -31,6 +31,7 @@ public:
   void parseOperator();
   void parseConditionFunc();
   void parseFuncCall();
+  void parseStringMod();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -108,4 +109,17 @@ void LlamaParser::parseFuncCall() {
   mustParse("Expected open parenthesis", TokenType::OPEN_PAREN);
   parseArgList();
   mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
+}
+
+void LlamaParser::parseStringMod() {
+  if (matchAny(TokenType::NOCASE)) {
+    return;
+  }
+  if (matchAny(TokenType::FIXED)) {
+    return;
+  }
+  if (matchAny(TokenType::ENCODINGS)) {
+    return;
+  }
+  throw ParserError("Expected string modifier", peek().Pos);
 }
