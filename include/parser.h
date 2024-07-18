@@ -102,9 +102,11 @@ void LlamaParser::parseStringMod() {
     return;
   }
   if (matchAny(TokenType::ENCODINGS)) {
-    return;
+    parseEncodings();
   }
-  throw ParserError("Expected string modifier", peek().Pos);
+  else{
+    throw ParserError("Expected string modifier", peek().Pos);
+  }
 }
 
 void LlamaParser::parseEncodings() {
