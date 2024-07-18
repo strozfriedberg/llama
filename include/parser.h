@@ -39,6 +39,8 @@ public:
   void parseDualFuncCall();
   void parseAnyFuncCall();
   void parseAllFuncCall();
+  void parseFactor();
+  void parseTerm();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -171,6 +173,17 @@ void LlamaParser::parseDualFuncCall() {
     parseNumber();
   }
   mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
+  if (checkAny(
+    TokenType::EQUAL_EQUAL,
+    TokenType::NOT_EQUAL,
+    TokenType::GREATER_THAN,
+    TokenType::GREATER_THAN_EQUAL,
+    TokenType::LESS_THAN,
+    TokenType::LESS_THAN_EQUAL
+  )) {
+    parseOperator();
+    parseNumber();
+  }
 }
 
 void LlamaParser::parseAnyFuncCall() {
@@ -187,4 +200,31 @@ void LlamaParser::parseAllFuncCall() {
   mustParse("Expected function name", TokenType::ALL);
   mustParse("Expected open parenthesis", TokenType::OPEN_PAREN);
   mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
+}
+
+void LlamaParser::parseTerm() {
+  parseFactor();
+  while (checkAny(TokenType::AND)) {
+    parseFactor();
+  }
+}
+
+void LlamaParser::parseFactor() {
+  if (checkAny(TokenType::OPEN_PAREN)) {
+    // parse expr
+  }
+  else if (checkAny(TokenType::ALL)) {
+    parseAllFuncCall();
+  }
+  else if (checkAny(TokenType::ANY)) {
+    parseAnyFuncCall();
+  }
+  else if (checkAny(
+    TokenType::OFFSET,
+    TokenType::COUNT,
+    TokenType::COUNT_HAS_HITS,
+    TokenType::LENGTH
+  )) {
+    parseDualFuncCall();
+  }
 }
