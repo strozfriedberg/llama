@@ -43,6 +43,7 @@ public:
   void parseTerm();
   void parseExpr();
   void parseConditionSection();
+  void parseSignatureSection();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -233,4 +234,11 @@ void LlamaParser::parseConditionSection() {
   mustParse("Expected condition keyword", TokenType::CONDITION);
   mustParse("Expected colon after condition keyword", TokenType::COLON);
   parseExpr();
+}
+
+void LlamaParser::parseSignatureSection() {
+  mustParse("Expected signature keyword", TokenType::SIGNATURE);
+  mustParse("Expected colon after signature keyword", TokenType::COLON);
+  mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
+  while (matchAny(TokenType::DOUBLE_QUOTED_STRING)) {}
 }

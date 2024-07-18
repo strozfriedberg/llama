@@ -288,3 +288,9 @@ TEST_CASE("parseConditionSection") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseConditionSection());
 }
+
+TEST_CASE("parseSignatureSection") {
+  std::string input = "signature:\n \"EXE\"\n\"MUI\"";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseSignatureSection());
+}
