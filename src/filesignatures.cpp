@@ -8,8 +8,9 @@
 #include <map>
 #include <fstream>
 #include <string_view>
-#include <cctype> 
+#include <cctype>
 #include <exception>
+#include <algorithm>
 
 #include <boost/algorithm/string.hpp>
 
@@ -26,11 +27,6 @@ LightGrep::~LightGrep() {
     }
 }
 
-// TODO
-size_t get_pattern_length(std::string const& p) {
-    return p.length();
-}
-
 // return max_read
 expected<size_t> LightGrep::setup(Magics const& m) {
     using namespace boost;
@@ -41,7 +37,7 @@ expected<size_t> LightGrep::setup(Magics const& m) {
         LG_HFSM fsm = lg_create_fsm(0, 0);
         destroy_guard fsm_guard([&fsm]() { lg_destroy_fsm(fsm); });
 
-        for (auto i = 0; i < m.size(); i++) {
+        for (std::size_t i = 0; i < m.size(); i++) {
 
             auto& p = m[i];
 
@@ -61,7 +57,7 @@ expected<size_t> LightGrep::setup(Magics const& m) {
                 }
             }
 
-            auto pattern_len = get_pattern_length(p.pattern);
+            auto pattern_len = p.get_pattern_length(false);
             if (pattern_len > max_read) {
                 max_read = pattern_len;
             }
@@ -89,7 +85,7 @@ expected<size_t> LightGrep::setup(Magics const& m) {
     return max_read;
 }
 
-expected<bool> LightGrep::search(MemoryRegion const& region, void* user_data, LG_HITCALLBACK_FN callback_fn) {
+expected<bool> LightGrep::search(MemoryRegion const& region, void* user_data, LG_HITCALLBACK_FN callback_fn) const {
     try {
         LG_ContextOptions ctxOpts = { 0, 0 };
         LG_HCONTEXT searcher = lg_create_context(_prog, &ctxOpts);
@@ -183,7 +179,7 @@ size_t get_pattern_length(std::string const& pattern, bool only_significant) {
         else if (c == '{') {
             auto j = pattern.find('}', i + 1);
             auto i2 = pattern.find(',', i + 1);
-            
+
             if ((0 <= i2) && (i2 < j))
                 i = i2;
 
@@ -300,6 +296,11 @@ expected<Magics> SignatureUtil::readMagics(std::string_view path) {
             magics.push_back(m);
         }
 
+        // resort magics by pattern size in desceding order ('bigger' patterns first)
+        std::sort(begin(magics), end(magics), [](magic const& a, magic const& b) {
+            return a.get_pattern_length(true) > b.get_pattern_length(true);
+            });
+
         return magics;
     }
     catch (std::exception& e) {
@@ -340,10 +341,10 @@ int main(int argc, char* argv[]) {
 
     if (result) {
         auto magics = result.value();
-        
+
         for (auto magic : magics) {
             for (auto check : magic.checks) {
-                //std::cout << fmt::format("{}, {:x}, '{}'\n", 
+                //std::cout << fmt::format("{}, {:x}, '{}'\n",
                 //    magic_enum::enum_name(check.compare_type), check.offset, dump(expected_value));
 
                 if (check.compare(Binary(data, data + mmap.size())))

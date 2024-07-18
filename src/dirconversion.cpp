@@ -5,6 +5,7 @@
 #include <system_error>
 #include <fstream>
 
+#include <boost/algorithm/string.hpp>
 namespace fs = std::filesystem;
 
 std::string DirUtils::fileTypeString(fs::file_type type) {
@@ -138,6 +139,9 @@ jsoncons::json DirConverter::convertAttr(const fs::directory_entry& de) const {
 }
 
 jsoncons::json DirConverter::convertName(const fs::directory_entry& de) const {
+  std::string sig_desc;
+  std::vector<std::string> sig_tags;
+  get_signature(de, &sig_desc, &sig_tags);
   return jsoncons::json(
     jsoncons::json_object_arg,
     {
@@ -150,16 +154,74 @@ jsoncons::json DirConverter::convertName(const fs::directory_entry& de) const {
 //      { "date_added", name.date_added },
       { "type",      DirUtils::fileTypeString(DirUtils::fileType(de)) },
       { "flags",     NAME_FLAG_ALLOC },
-
-      // TODO
-      { "sig_desc",  "" },
-      { "sig_tags", "[\"tag1\", \"tag2\"]" }
+      { "sig_desc",  sig_desc },
+      { "sig_tags",  sig_tags }
     }
   );
 }
 
-DirConverter::DirConverter()
-  : max_read(0) {
+struct lg_callback_context {
+  const DirConverter* self;
+  std::string ext;
+  std::string* sig_desc;
+  std::vector<std::string>* sig_tags;
+  size_t min_hit_index;
+};
+
+void DirConverter::lg_callbackfn(void* userData, const LG_SearchHit* const hit) {
+  auto ctx = (lg_callback_context*)userData;
+  if (hit->KeywordIndex < ctx->min_hit_index) {
+    ctx->min_hit_index = hit->KeywordIndex;
+  }
+}
+
+void DirConverter::get_signature(const fs::directory_entry& de, std::string* sig_desc, std::vector<std::string>* sig_tags) const {
+  std::error_code ec;
+  if (!de.is_regular_file(ec) || ec) {
+    return;
+  }
+  std::ifstream ifs(de.path(), std::ios::binary);
+  if (ifs) {
+    auto ext = de.path().extension().u8string();
+    if (!ext.empty()) {
+      boost::algorithm::to_upper(ext);
+      if (ext.length() > 1) {
+        // clean dot
+        ext = ext.substr(1);
+      }
+    }
+    lg_callback_context ctx{ this, ext, sig_desc, sig_tags, std::numeric_limits<size_t>::max() };
+    auto readed = ifs.readsome((char*)read_buf.data(), read_buf.size());
+    if (lg.search(MemoryRegion(read_buf.data(), read_buf.data() + readed), &ctx, &DirConverter::lg_callbackfn)) {
+      //
+    }
+    if (ctx.min_hit_index != std::numeric_limits<size_t>::max()) {
+      // we got hit
+      auto p = this->magics[ctx.min_hit_index];
+      printf("pattern hit: %s\n", p.pattern.c_str());
+      if (sig_tags) {
+        *sig_tags = p.tags;
+      }
+      if (sig_desc) {
+        printf("looking for ext %s\n", ext.c_str());
+        if (p.extensions.count(ext)) {
+          *sig_desc = p.extensions[ext];
+        }
+        else {
+          *sig_desc = p.description;
+        }
+      }
+    }
+    else {
+      // no hits? search manually
+      // TODO
+      // file_signatures.py 174 - 180
+    }
+  }
+}
+
+
+DirConverter::DirConverter() {
   std::string magics_file("./magics.json");
   SignatureUtil su;
   auto result = su.readMagics(magics_file);
@@ -173,12 +235,15 @@ DirConverter::DirConverter()
     throw std::runtime_error("LightGrep::setup failed: " + r.error());
   }
 
-  max_read = r.value();
+  auto max_read = r.value();
+  read_buf.resize(max_read);
 
-  for (auto it = this->magics.begin(); it != this->magics.end(); ++it) {
-    printf("value desc %s, pattern %s\n", it->description.c_str(), it->pattern.c_str());
-    for (auto check : it->checks) {
-      printf("\tcmp_type %d, offset %llu, value %lu\n", (int)check.compare_type, check.offset, check.value.size());
-    }
-  }
+  // printf("max_read: %lu\n", max_read);
+
+  // for (auto it = this->magics.begin(); it != this->magics.end(); ++it) {
+  //   printf("value desc %s, pattern %s\n", it->description.c_str(), it->pattern.c_str());
+  //   for (auto check : it->checks) {
+  //     printf("\tcmp_type %d, offset %llu, value %lu\n", (int)check.compare_type, check.offset, check.value.size());
+  //   }
+  // }
 }
