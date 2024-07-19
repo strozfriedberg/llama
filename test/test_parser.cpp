@@ -265,3 +265,21 @@ TEST_CASE("parseGrepSection") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseGrepSection());
 }
+
+TEST_CASE("parseFileMetadataDefFileSize") {
+  std::string input = "filesize > 100";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseFileMetadataDef());
+}
+
+TEST_CASE("parseFileMetadataDefCreated") {
+  std::string input = "created >= \"2024-05-06\"";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseFileMetadataDef());
+}
+
+TEST_CASE("parseFileMetadataDefModified") {
+  std::string input = "modified >= \"2024-05-06\"";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseFileMetadataDef());
+}

@@ -42,6 +42,7 @@ public:
   void parseConditionSection();
   void parseSignatureSection();
   void parseGrepSection();
+  void parseFileMetadataDef();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -224,4 +225,18 @@ void LlamaParser::parseGrepSection() {
     parseStringsSection();
   }
   parseConditionSection();
+}
+
+void LlamaParser::parseFileMetadataDef() {
+  if (matchAny(TokenType::CREATED, TokenType::MODIFIED)) {
+    parseOperator();
+    mustParse("Expected double quoted string containing date", TokenType::DOUBLE_QUOTED_STRING);
+  }
+  else if (matchAny(TokenType::FILESIZE)) {
+    parseOperator();
+    mustParse("Expected number", TokenType::NUMBER);
+  }
+  else {
+    throw ParserError("Expected created, modified, or filesize", peek().Pos);
+  }
 }
