@@ -283,3 +283,14 @@ TEST_CASE("parseFileMetadataDefModified") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseFileMetadataDef());
 }
+
+TEST_CASE("parseFileMetadataSection") {
+  std::string input = R"(
+  file_metadata:
+    created > "2023-05-04"
+    modified < "2023-05-06"
+    filesize >= 100
+  )";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseFileMetadataSection());
+}

@@ -43,6 +43,7 @@ public:
   void parseSignatureSection();
   void parseGrepSection();
   void parseFileMetadataDef();
+  void parseFileMetadataSection();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -238,5 +239,13 @@ void LlamaParser::parseFileMetadataDef() {
   }
   else {
     throw ParserError("Expected created, modified, or filesize", peek().Pos);
+  }
+}
+
+void LlamaParser::parseFileMetadataSection() {
+  mustParse("Expected file_metadata section", TokenType::FILE_METADATA);
+  mustParse("Expected colon", TokenType::COLON);
+  while (checkAny(TokenType::CREATED, TokenType::MODIFIED, TokenType::FILESIZE)) {
+    parseFileMetadataDef();
   }
 }
