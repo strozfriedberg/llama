@@ -161,7 +161,7 @@ bool magic::check::compare(Binary const& data) const {
 }
 
 size_t get_pattern_length(std::string const& pattern, bool only_significant) {
-    auto i = 0;
+    std::size_t i = 0;
     size_t count = 0;
     char prev_c = 0;
 
@@ -180,7 +180,7 @@ size_t get_pattern_length(std::string const& pattern, bool only_significant) {
             auto j = pattern.find('}', i + 1);
             auto i2 = pattern.find(',', i + 1);
 
-            if ((0 <= i2) && (i2 < j))
+            if (i2 < j)
                 i = i2;
 
             auto x = std::stoi(pattern.substr(i + 1, j));
@@ -361,57 +361,3 @@ int main(int argc, char* argv[]) {
 }
 
 #endif // SELF_MAIN
-
-#ifndef SELF_MAIN
-
-#include <catch2/catch_test_macros.hpp>
-#include <catch2/generators/catch_generators.hpp>
-#include <catch2/generators/catch_generators_adapters.hpp>
-
-namespace {
-    struct Item {
-        std::string pattern;
-        size_t len;
-        Item() = default;
-        Item(std::string const& pattern_, size_t len_):pattern(pattern_), len(len_) { }
-    };
-
-    struct VerifiedDataGenerator : public Catch::Generators::IGenerator<Item>{
-        jsoncons::json data;
-        jsoncons::json::const_array_iterator current_ptr;
-        Item current;
-
-        VerifiedDataGenerator(std::string_view path) : data(std::vector<int>()) {
-            std::ifstream is(path.data());
-            
-            if (is.fail())
-                throw std::exception((std::string("Error: bad path ") + std::string(path)).c_str());
-
-            data = jsoncons::json(jsoncons::json::parse(is));
-            current_ptr = data.array_range().cbegin();
-        }
-
-        Item const& get() const override {
-            return current;
-        }
-
-        bool next() override {
-            current_ptr++;
-            if (current_ptr == data.array_range().end())
-                return false;
-
-            auto pair = *current_ptr;
-            current = Item(pair.at(0).as<std::string>(), pair.at(1).as<int>());
-            return true;
-        }
-    };
-}
-
-TEST_CASE("Compare with verified data", "[get_pattern_length]") {
-    auto generator = VerifiedDataGenerator("test/data/calculated_by_python.json");
-    while (generator.next()) {
-        auto data = generator.get();
-        REQUIRE(::get_pattern_length(data.pattern, true) == data.len);
-    }
-}
-#endif // ! SELF_MAIN

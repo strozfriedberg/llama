@@ -40,6 +40,8 @@ struct magic {
     size_t get_pattern_length(bool only_significant = false) const;
 };
 
+size_t get_pattern_length(std::string const& pattern, bool only_significant);
+
 typedef std::vector<magic> Magics;
 
 class SignatureUtil {
