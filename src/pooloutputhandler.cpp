@@ -1,13 +1,15 @@
 #include "filerecord.h"
+#include "llamaduck.h"
 #include "outputwriter.h"
 #include "pooloutputhandler.h"
 
-PoolOutputHandler::PoolOutputHandler(boost::asio::thread_pool& pool, std::shared_ptr<OutputWriter> out):
+PoolOutputHandler::PoolOutputHandler(boost::asio::thread_pool& pool, LlamaDBConnection& conn, std::shared_ptr<OutputWriter> out):
   MainStrand(pool.get_executor()),
   RecStrand(pool.get_executor()),
-  Out(out),
+  Appender(conn.get(), "dirent"),
   ImageRecBuf("recs/image", 4 * 1024, [this](const OutputChunk& c) { Out->outputImage(c); }),
   InodesRecBuf("recs/inodes", 16 * 1024 * 1024, [this](const OutputChunk& c) { Out->outputInode(c); }),
+  Out(out),
   Closed(false)
 {}
 

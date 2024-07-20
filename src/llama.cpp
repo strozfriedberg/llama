@@ -62,7 +62,7 @@ void Llama::search() {
     std::filesystem::path outdir(Opts->Output);
     std::filesystem::create_directories(outdir);
     auto out = std::shared_ptr<OutputWriter>(new OutputTar(outdir / "llama", Opts->OutputCodec));
-    auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, out));
+    auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, DbConn, out));
 
     auto protoProc = std::make_shared<Processor>(LgProg);
     auto scheduler = std::make_shared<FileScheduler>(Pool, protoProc, outh, Opts);
