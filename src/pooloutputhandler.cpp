@@ -3,6 +3,8 @@
 #include "outputwriter.h"
 #include "pooloutputhandler.h"
 
+#include <iostream>
+
 PoolOutputHandler::PoolOutputHandler(boost::asio::thread_pool& pool, LlamaDBConnection& conn, std::shared_ptr<OutputWriter> out):
   MainStrand(pool.get_executor()),
   RecStrand(pool.get_executor()),
@@ -35,8 +37,14 @@ void PoolOutputHandler::outputDirent(const Dirent& rec) {
     });
   }
 */
-  boost::asio::post(RecStrand, [=]() {
+//  std::cerr << "outputDirent\n";
+  boost::asio::post(RecStrand, [&, rec]() {
     DirentsBatch.add(rec);
+    if (DirentsBatch.size() >= 1000) {
+      DirentsBatch.copyToDB(Appender.get());
+      Appender.flush();
+//      std::cerr << "wrote 1000 dirents\n";
+    }
   });
 }
 
@@ -73,6 +81,12 @@ void PoolOutputHandler::close() {
 
   if (InodesRecBuf.size()) {
     InodesRecBuf.flush();
+  }
+  if (DirentsBatch.size()) {
+    auto num = DirentsBatch.size();
+    DirentsBatch.copyToDB(Appender.get());
+    Appender.flush();
+  //  std::cerr << "wrote " << num << " dirents\n";
   }
 
   Out->close();

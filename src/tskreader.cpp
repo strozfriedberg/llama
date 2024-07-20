@@ -46,8 +46,8 @@ bool TskReader::startReading() {
   if (ret) {
     // wrap up the walk
     while (!Dirents.empty()) {
-//      Output->outputDirent(Dirents.pop());
-      Dirents.pop();
+      Output->outputDirent(Dirents.pop());
+//      Dirents.pop();
     }
     Output->outputImage(Asm.dump());
 
@@ -107,11 +107,11 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
     Dirent dirent;
 
     while (!Dirents.empty() && par_addr != Dirents.top().Meta_addr) {
-//      Output->outputDirent(Dirents.pop());
-      Dirents.pop();
+      Output->outputDirent(Dirents.pop());
+//      Dirents.pop();
     }
     // std::cerr << par_addr << " -> " << fs_file->meta->addr << '\n';
-    TskUtils::convertNameToDirent(Dirents.top().Path, *fs_file->name, dirent);
+    TskUtils::convertNameToDirent("", *fs_file->name, dirent);
     Dirents.push(std::move(dirent));
   }
 

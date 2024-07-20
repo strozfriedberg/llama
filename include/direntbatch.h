@@ -130,5 +130,8 @@ struct DirentBatch {
       state = duckdb_appender_end_row(appender);
       THROW_IF(state == DuckDBError, "Failed call to end_row");
     }
+    Buf.clear();
+    Offsets.clear();
+    Nums.clear();
   }
 };
