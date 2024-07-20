@@ -41,15 +41,15 @@ expected<size_t> LightGrep::setup(Magics const& m) {
 
             auto& p = m[i];
 
-            if (p.pattern.empty()) {
+            if (p->pattern.empty()) {
                 continue;
             }
 
-            LG_KeyOptions opt = { p.fixed_string, p.case_insensetive, false };
+            LG_KeyOptions opt = { p->fixed_string, p->case_insensetive, false };
 
             auto pattern = lg_create_pattern();
             destroy_guard pattern_guard([&pattern]() { lg_destroy_pattern(pattern); });
-            if (!lg_parse_pattern(pattern, p.pattern.c_str(), &opt, &err)) {
+            if (!lg_parse_pattern(pattern, p->pattern.c_str(), &opt, &err)) {
                 if (err) {
                     auto r = makeUnexpected(err->Message);
                     lg_free_error(err);
@@ -57,12 +57,12 @@ expected<size_t> LightGrep::setup(Magics const& m) {
                 }
             }
 
-            auto pattern_len = p.get_pattern_length(false);
+            auto pattern_len = p->get_pattern_length(false);
             if (pattern_len > max_read) {
                 max_read = pattern_len;
             }
 
-            for (auto const& encoding : p.encodings) {
+            for (auto const& encoding : p->encodings) {
                 if (!lg_add_pattern(fsm, pattern, encoding.c_str(), i, &err)) {
                     if (err) {
                         auto r = makeUnexpected(err->Message);
@@ -90,7 +90,7 @@ expected<bool> LightGrep::search(MemoryRegion const& region, void* user_data, LG
         LG_ContextOptions ctxOpts = { 0, 0 };
         LG_HCONTEXT searcher = lg_create_context(_prog, &ctxOpts);
         lg_reset_context(searcher);
-        lg_starts_with(searcher, boost::begin(region), boost::end(region), 0, user_data, callback_fn);
+        lg_starts_with(searcher, (const char*)boost::begin(region), (const char*)boost::end(region), 0, user_data, callback_fn);
         lg_destroy_context(searcher);
     }
     catch (std::exception const& ex) {
@@ -119,43 +119,48 @@ expected<CompareType> parse_compare_type(std::string_view s) {
     return makeUnexpected(std::string("Unknown compare_type: ") + std::string(s));
 }
 
+bool iequals(char lhs, char rhs) {
+    std::locale loc;
+    return std::toupper(lhs, loc) == std::toupper(rhs, loc);
+}
+
 bool magic::check::compare(Binary const& data) const {
-    if (data.size() < this->value.size() + offset)
+    if (data.size() < value.size() + offset)
         return false;
 
     auto expected_value = Binary(&data[offset], &data[offset + value.size()]);
 
-    switch (this->compare_type) {
+    switch (compare_type) {
         case CompareType::Eq:
-            return this->value == expected_value;
+            return value == expected_value;
         case CompareType::EqUpper:
-            return boost::iequals(value, expected_value);
+            return boost::equals(value, expected_value, iequals);
         case CompareType::Ne:
-            return this->value != expected_value;
+            return value != expected_value;
         case CompareType::Gt:
-            return this->value > expected_value;
+            return value > expected_value;
         case CompareType::Lt:
-            return this->value < expected_value;
+            return value < expected_value;
         case CompareType::And:
-            return this->value == expected_value; // '&': operator.eq,
+            return value == expected_value; // '&': operator.eq,
         case CompareType::Xor:
             throw std::runtime_error("compare: CompareType::Xor is not implemented yet");
         case CompareType::Or: {
             uint8_t result = 0;
-            for (std::size_t i = 0; i < this->value.size(); ++i) {
-                result |= this->value[i] | expected_value[i];
+            for (std::size_t i = 0; i < value.size(); ++i) {
+                result |= value[i] | expected_value[i];
             }
             return result != 0;
         }
         case CompareType::Nor: {
             uint8_t result = 0;
-            for (std::size_t i = 0; i < this->value.size(); ++i) {
-                result |= this->value[i] | expected_value[i];
+            for (std::size_t i = 0; i < value.size(); ++i) {
+                result |= value[i] | expected_value[i];
             }
             return result == 0;
         }
         default:
-            throw std::range_error("compare: impossible");
+            throw std::range_error("compare: impossible OP " + std::to_string((int)compare_type));
     }
     return false;
 }
@@ -293,13 +298,8 @@ expected<Magics> SignatureUtil::readMagics(std::string_view path) {
             else {
                 m.encodings.push_back("ISO-8859-1");
             }
-            magics.push_back(m);
+            magics.push_back(std::make_shared<magic>(m));
         }
-
-        // resort magics by pattern size in desceding order ('bigger' patterns first)
-        std::sort(begin(magics), end(magics), [](magic const& a, magic const& b) {
-            return a.get_pattern_length(true) > b.get_pattern_length(true);
-            });
 
         return magics;
     }
