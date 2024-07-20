@@ -192,8 +192,9 @@ void DirConverter::get_signature(const fs::directory_entry& de, std::string* sig
 
     lg_callback_context ctx{ this, std::numeric_limits<size_t>::max() };
     auto readed = ifs.readsome((char*)read_buf.data(), read_buf.size());
-    if (lg.search(MemoryRegion(read_buf.data(), read_buf.data() + readed), &ctx, &DirConverter::lg_callbackfn)) {
-      //
+    auto lg_err = lg.search(MemoryRegion(read_buf.data(), read_buf.data() + readed), &ctx, &DirConverter::lg_callbackfn);
+    if (lg_err.has_error()) {
+      throw std::runtime_error("lg.search() failed on file: " + de.path().string() + std::string(", error: ") + lg_err.error());
     }
     auto signature_hit = [&sig_tags, &sig_desc, &ext](magic const& m) {
       if (sig_tags) {
