@@ -23,6 +23,7 @@ class DirConverter {
   Magics signature_list;
 
   LightGrep lg;
+  // size of the buffer - max value of get_pattern_length(false)
   Binary read_buf;
 
   static void lg_callbackfn(void* userData, const LG_SearchHit* const hit);
