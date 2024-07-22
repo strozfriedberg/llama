@@ -128,41 +128,55 @@ bool magic::check::compare(Binary const& data) const {
     if (data.size() < value.size() + offset)
         return false;
 
-    auto expected_value = Binary(&data[offset], &data[offset + value.size()]);
-
+    auto eq = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
+        return *a == *b;
+        };
+    auto eqUp = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
+        return iequals(*a, *b);
+        };
+    auto ne = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
+        return *a != *b;
+        };
+    auto gt = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
+        return *a > *b;
+        };
+    auto lt = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
+        return *a < *b;
+        };
+    auto _and = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
+        return *a == *b;
+        };
+    auto _xor = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
+        return ~((int8_t)*a ^ (int8_t)*b);
+        };
+    auto _or = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
+        return *a | *b;
+        };
+    auto nor = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
+        return !(*a | *b);
+        };
+    std::function<bool(Binary::const_iterator const&, Binary::const_iterator const&)> fn;
     switch (compare_type) {
-        case CompareType::Eq:
-            return value == expected_value;
-        case CompareType::EqUpper:
-            return boost::equals(value, expected_value, iequals);
-        case CompareType::Ne:
-            return value != expected_value;
-        case CompareType::Gt:
-            return value > expected_value;
-        case CompareType::Lt:
-            return value < expected_value;
-        case CompareType::And:
-            return value == expected_value; // '&': operator.eq,
-        case CompareType::Xor:
-            throw std::runtime_error("compare: CompareType::Xor is not implemented yet");
-        case CompareType::Or: {
-            uint8_t result = 0;
-            for (std::size_t i = 0; i < value.size(); ++i) {
-                result |= value[i] | expected_value[i];
-            }
-            return result != 0;
-        }
-        case CompareType::Nor: {
-            uint8_t result = 0;
-            for (std::size_t i = 0; i < value.size(); ++i) {
-                result |= value[i] | expected_value[i];
-            }
-            return result == 0;
-        }
-        default:
-            throw std::range_error("compare: impossible OP " + std::to_string((int)compare_type));
+    case CompareType::Eq:      fn = eq;   break;
+    case CompareType::EqUpper: fn = eqUp; break;
+    case CompareType::Ne:      fn = ne;   break;
+    case CompareType::Gt:      fn = gt;   break;
+    case CompareType::Lt:      fn = lt;   break;
+    case CompareType::And:     fn = _and; break;
+    case CompareType::Xor:     fn = _xor; break;
+    case CompareType::Or:      fn = _or;  break;
+    case CompareType::Nor:     fn = nor;  break;
+    default:
+        throw std::range_error("compare: impossible OP " + std::to_string((int)compare_type));
     }
-    return false;
+
+    bool result = true;
+    for (auto data_value = data.begin() + offset, expected_value = value.begin();
+        result && expected_value != value.end();
+        data_value++, expected_value++) {
+        result = fn(data_value, expected_value);
+    }
+    return result;
 }
 
 size_t get_pattern_length(std::string const& pattern, bool only_significant) {
