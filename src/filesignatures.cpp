@@ -171,8 +171,9 @@ bool magic::check::compare(Binary const& data) const {
     }
 
     bool result = true;
-    for (auto data_value = data.begin() + offset, expected_value = value.begin();
-        result && expected_value != value.end();
+    auto the_value = this->pre_process.size() > 0 ? this->pre_process : this->value;
+    for (auto data_value = data.begin() + offset, expected_value = the_value.cbegin();
+        result && expected_value != the_value.end();
         data_value++, expected_value++) {
         result = fn(data_value, expected_value);
     }
@@ -277,12 +278,15 @@ expected<Magics> SignatureUtil::readMagics(std::string_view path) {
             magic m;
             if (magic_json.contains("checks")) {
                 for (const auto& check : magic_json["checks"].array_range()) {
-                    if (auto compare_type = parse_compare_type(check["compare_type"].as_string()))
+                    if (auto compare_type = parse_compare_type(check["compare_type"].as_string())){
+                        auto pre_process = check.contains("pre_process") ? str2bin(magic_json["pre_process"].as_string()) : Binary();
+
                         m.checks.push_back(magic::check{
-                          compare_type.value(),
-                          parseOffset(check["offset"].as_string()),
-                          str2bin(check["value"].as_string()) });
-                    else {
+                            compare_type.value(),
+                            parseOffset(check["offset"].as_string()),
+                            str2bin(check["value"].as_string()),
+                            pre_process });
+                    } else {
                         return makeUnexpected(compare_type.error());
                     }
                 }
@@ -316,9 +320,11 @@ expected<Magics> SignatureUtil::readMagics(std::string_view path) {
         }
 
         // resort magics by pattern size in desceding order ('bigger' patterns first)
-        std::sort(begin(magics), end(magics), [](magic const& a, magic const& b) {
-            return a.get_pattern_length(true) > b.get_pattern_length(true);
+        auto a = begin(magics);
+        std::sort(begin(magics), end(magics), [](std::shared_ptr<magic> a, std::shared_ptr<magic> b) {
+            return a->get_pattern_length(true) > b->get_pattern_length(true);
             });
+
 
         return magics;
     }
