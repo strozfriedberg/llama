@@ -19,8 +19,12 @@ namespace DirUtils {
 
 class DirConverter {
   Magics magics;
+  std::map<std::string, std::shared_ptr<magic>> signature_dict;
+  Magics signature_list;
+
   LightGrep lg;
-  std::vector<char> read_buf;
+  // size of the buffer - max value of get_pattern_length(false)
+  Binary read_buf;
 
   static void lg_callbackfn(void* userData, const LG_SearchHit* const hit);
   void get_signature(const fs::directory_entry& de, std::string* sig_desc, std::vector<std::string>* sig_tags) const;

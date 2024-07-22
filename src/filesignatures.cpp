@@ -41,15 +41,15 @@ expected<size_t> LightGrep::setup(Magics const& m) {
 
             auto& p = m[i];
 
-            if (p.pattern.empty()) {
+            if (p->pattern.empty()) {
                 continue;
             }
 
-            LG_KeyOptions opt = { p.fixed_string, p.case_insensetive, false };
+            LG_KeyOptions opt = { p->fixed_string, p->case_insensetive, false };
 
             auto pattern = lg_create_pattern();
             destroy_guard pattern_guard([&pattern]() { lg_destroy_pattern(pattern); });
-            if (!lg_parse_pattern(pattern, p.pattern.c_str(), &opt, &err)) {
+            if (!lg_parse_pattern(pattern, p->pattern.c_str(), &opt, &err)) {
                 if (err) {
                     auto r = makeUnexpected(err->Message);
                     lg_free_error(err);
@@ -57,12 +57,12 @@ expected<size_t> LightGrep::setup(Magics const& m) {
                 }
             }
 
-            auto pattern_len = p.get_pattern_length(false);
+            auto pattern_len = p->get_pattern_length(false);
             if (pattern_len > max_read) {
                 max_read = pattern_len;
             }
 
-            for (auto const& encoding : p.encodings) {
+            for (auto const& encoding : p->encodings) {
                 if (!lg_add_pattern(fsm, pattern, encoding.c_str(), i, &err)) {
                     if (err) {
                         auto r = makeUnexpected(err->Message);
@@ -90,7 +90,7 @@ expected<bool> LightGrep::search(MemoryRegion const& region, void* user_data, LG
         LG_ContextOptions ctxOpts = { 0, 0 };
         LG_HCONTEXT searcher = lg_create_context(_prog, &ctxOpts);
         lg_reset_context(searcher);
-        lg_starts_with(searcher, boost::begin(region), boost::end(region), 0, user_data, callback_fn);
+        lg_starts_with(searcher, (const char*)boost::begin(region), (const char*)boost::end(region), 0, user_data, callback_fn);
         lg_destroy_context(searcher);
     }
     catch (std::exception const& ex) {
@@ -119,44 +119,62 @@ expected<CompareType> parse_compare_type(std::string_view s) {
     return makeUnexpected(std::string("Unknown compare_type: ") + std::string(s));
 }
 
+bool iequals(char lhs, char rhs) {
+    std::locale loc;
+    return std::toupper(lhs, loc) == std::toupper(rhs, loc);
+}
+
 bool magic::check::compare(Binary const& data) const {
-    if (data.size() < this->value.size() + offset)
+    if (data.size() < value.size() + offset)
         return false;
 
-    auto value = this->pre_process.size() > 0 ? this->pre_process : this->value;
-    auto expected_value = Binary(&data[offset], &data[offset + value.size()]);
+    auto eq = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
+        return *a == *b;
+        };
+    auto eqUp = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
+        return iequals(*a, *b);
+        };
+    auto ne = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
+        return *a != *b;
+        };
+    auto gt = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
+        return *a > *b;
+        };
+    auto lt = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
+        return *a < *b;
+        };
+    auto _and = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
+        return *a == *b;
+        };
+    auto _xor = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
+        return ~((int8_t)*a ^ (int8_t)*b);
+        };
+    auto _or = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
+        return *a | *b;
+        };
+    auto nor = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
+        return !(*a | *b);
+        };
+    std::function<bool(Binary::const_iterator const&, Binary::const_iterator const&)> fn;
+    switch (compare_type) {
+    case CompareType::Eq:      fn = eq;   break;
+    case CompareType::EqUpper: fn = eqUp; break;
+    case CompareType::Ne:      fn = ne;   break;
+    case CompareType::Gt:      fn = gt;   break;
+    case CompareType::Lt:      fn = lt;   break;
+    case CompareType::And:     fn = _and; break;
+    case CompareType::Xor:     fn = _xor; break;
+    case CompareType::Or:      fn = _or;  break;
+    case CompareType::Nor:     fn = nor;  break;
+    default:
+        throw std::range_error("compare: impossible OP " + std::to_string((int)compare_type));
+    }
 
-    switch (this->compare_type) {
-        case CompareType::Eq:
-            return value == expected_value;
-        case CompareType::EqUpper:
-            return boost::iequals(value, expected_value);
-        case CompareType::Ne:
-            return value != expected_value;
-        case CompareType::Gt:
-            return value > expected_value;
-        case CompareType::Lt:
-            return value < expected_value;
-        case CompareType::And:
-            return value == expected_value; // '&': operator.eq,
-        case CompareType::Xor:
-            throw std::runtime_error("compare: CompareType::Xor is not implemented yet");
-        case CompareType::Or: {
-            uint8_t result = 0;
-            for (std::size_t i = 0; i < value.size(); ++i) {
-                result |= value[i] | expected_value[i];
-            }
-            return result != 0;
-        }
-        case CompareType::Nor: {
-            uint8_t result = 0;
-            for (std::size_t i = 0; i < value.size(); ++i) {
-                result |= value[i] | expected_value[i];
-            }
-            return result == 0;
-        }
-        default:
-            throw std::range_error("compare: impossible");
+    bool result = true;
+    for (auto data_value = data.begin() + offset, expected_value = value.begin();
+        result && expected_value != value.end();
+        data_value++, expected_value++) {
+        result = fn(data_value, expected_value);
     }
     return false;
 }
@@ -259,15 +277,12 @@ expected<Magics> SignatureUtil::readMagics(std::string_view path) {
             magic m;
             if (magic_json.contains("checks")) {
                 for (const auto& check : magic_json["checks"].array_range()) {
-                    if (auto compare_type = parse_compare_type(check["compare_type"].as_string())){
-                        auto pre_process = check.contains("pre_process") ? str2bin(magic_json["pre_process"].as_string()) : Binary();
-
+                    if (auto compare_type = parse_compare_type(check["compare_type"].as_string()))
                         m.checks.push_back(magic::check{
-                            compare_type.value(),
-                            parseOffset(check["offset"].as_string()),
-                            str2bin(check["value"].as_string()),
-                            pre_process });
-                    } else {
+                          compare_type.value(),
+                          parseOffset(check["offset"].as_string()),
+                          str2bin(check["value"].as_string()) });
+                    else {
                         return makeUnexpected(compare_type.error());
                     }
                 }
@@ -297,7 +312,7 @@ expected<Magics> SignatureUtil::readMagics(std::string_view path) {
             else {
                 m.encodings.push_back("ISO-8859-1");
             }
-            magics.push_back(m);
+            magics.push_back(std::make_shared<magic>(m));
         }
 
         // resort magics by pattern size in desceding order ('bigger' patterns first)
@@ -377,17 +392,17 @@ namespace {
         std::string pattern;
         size_t len;
         Item() = default;
-        Item(std::string const& pattern_, size_t len_):pattern(pattern_), len(len_) { }
+        Item(std::string const& pattern_, size_t len_) :pattern(pattern_), len(len_) {}
     };
 
-    struct VerifiedDataGenerator : public Catch::Generators::IGenerator<Item>{
+    struct VerifiedDataGenerator : public Catch::Generators::IGenerator<Item> {
         jsoncons::json data;
         jsoncons::json::const_array_iterator current_ptr;
         Item current;
 
         VerifiedDataGenerator(std::string_view path) : data(std::vector<int>()) {
             std::ifstream is(path.data());
-            
+
             if (is.fail())
                 throw std::exception((std::string("Error: bad path ") + std::string(path)).c_str());
 
@@ -419,3 +434,4 @@ TEST_CASE("Compare with verified data", "[get_pattern_length]") {
     }
 }
 #endif // ! SELF_MAIN
+

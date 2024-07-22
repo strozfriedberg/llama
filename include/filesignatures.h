@@ -12,6 +12,7 @@ template <typename T>
 using expected = boost::outcome_v2::result<T, std::string>;
 
 using Binary = std::vector<uint8_t>;
+
 inline auto makeUnexpected(const std::string& s) {
     return boost::outcome_v2::failure(s);
 }
@@ -41,7 +42,9 @@ struct magic {
     size_t get_pattern_length(bool only_significant = false) const;
 };
 
-typedef std::vector<magic> Magics;
+size_t get_pattern_length(std::string const& pattern, bool only_significant);
+
+typedef std::vector<std::shared_ptr<magic>> Magics;
 
 class SignatureUtil {
     Magics magics;
@@ -50,7 +53,7 @@ public:
     [[nodiscard]] expected<Magics> readMagics(std::string_view path);
 };
 
-typedef boost::iterator_range<const char*> MemoryRegion;
+typedef boost::iterator_range<const uint8_t*> MemoryRegion;
 
 class LightGrep {
     LG_HPROGRAM _prog;

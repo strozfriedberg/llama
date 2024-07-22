@@ -6,6 +6,7 @@
 #include <fstream>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 namespace fs = std::filesystem;
 
 std::string DirUtils::fileTypeString(fs::file_type type) {
@@ -162,9 +163,6 @@ jsoncons::json DirConverter::convertName(const fs::directory_entry& de) const {
 
 struct lg_callback_context {
   const DirConverter* self;
-  std::string ext;
-  std::string* sig_desc;
-  std::vector<std::string>* sig_tags;
   size_t min_hit_index;
 };
 
@@ -191,32 +189,63 @@ void DirConverter::get_signature(const fs::directory_entry& de, std::string* sig
         ext = ext.substr(1);
       }
     }
-    lg_callback_context ctx{ this, ext, sig_desc, sig_tags, std::numeric_limits<size_t>::max() };
+
+    lg_callback_context ctx{ this, std::numeric_limits<size_t>::max() };
     auto readed = ifs.readsome((char*)read_buf.data(), read_buf.size());
-    if (lg.search(MemoryRegion(read_buf.data(), read_buf.data() + readed), &ctx, &DirConverter::lg_callbackfn)) {
-      //
+    auto lg_err = lg.search(MemoryRegion(read_buf.data(), read_buf.data() + readed), &ctx, &DirConverter::lg_callbackfn);
+    if (lg_err.has_error()) {
+      throw std::runtime_error("lg.search() failed on file: " + de.path().string() + std::string(", error: ") + lg_err.error());
     }
-    if (ctx.min_hit_index != std::numeric_limits<size_t>::max()) {
-      // we got hit
-      auto p = this->magics[ctx.min_hit_index];
+    auto signature_hit = [&sig_tags, &sig_desc, &ext](magic const& m) {
       if (sig_tags) {
-        *sig_tags = p.tags;
+        *sig_tags = m.tags;
       }
       if (sig_desc) {
-        if (p.extensions.count(ext)) {
-          *sig_desc = p.extensions[ext];
+        if (m.extensions.count(ext)) {
+          *sig_desc = m.extensions.at(ext);
         }
         else {
-          *sig_desc = p.description;
+          *sig_desc = m.description;
         }
       }
-      printf("%s, pattern hit(%lu): %s, desc %s, tags %s\n",
-        de.path().c_str(), ctx.min_hit_index, p.pattern.c_str(), sig_desc->c_str(), sig_tags->size() ? sig_tags->at(0).c_str() : "");
+      };
+    if (ctx.min_hit_index != std::numeric_limits<size_t>::max()) {
+      // hit
+      auto p = *this->magics[ctx.min_hit_index];
+      signature_hit(p);
+      return;
     }
-    else {
-      // no hits? search manually
-      // TODO
-      // file_signatures.py 174 - 180
+
+    // no hits? search manually
+
+    // by "ext"
+    auto s = signature_dict.find(ext);
+    if (s != signature_dict.end()) {
+      auto m = *s->second;
+      // by default if checks is empty - make a hit
+      bool all_checks_passed = true;
+      BOOST_FOREACH(auto check_it, m.checks) {
+        if (!(all_checks_passed = (check_it.compare(read_buf) == true)))
+          break;
+      }
+      if (all_checks_passed) {
+        // hit
+        signature_hit(m);
+        return;
+      }
+    }
+
+    // final check through all signatures
+    for (auto const& s : signature_list) {
+      bool all_checks_passed = false;
+      BOOST_FOREACH(auto check_it, s->checks) {
+        if (!(all_checks_passed = (check_it.compare(read_buf) == true)))
+          break;
+      }
+      if (all_checks_passed) {
+        signature_hit(*s);
+        return;
+      }
     }
   }
 }
@@ -229,7 +258,25 @@ DirConverter::DirConverter() {
   if (result.has_error()) {
     throw std::runtime_error("Couldn't open file: " + magics_file + std::string(", ") + result.error());
   }
-  this->magics = result.value();
+
+  auto magics = result.value();
+
+  // fill signature_dict & signature_list
+  for (auto const& m : magics) {
+    signature_list.push_back(m);
+    for (auto const& ext : m->extensions) {
+      if (signature_dict.count(ext.first) == 0) {
+        signature_dict.insert(std::pair(ext.first, m));
+      }
+    }
+  }
+
+  // resort magics by pattern size in desceding order ('bigger' patterns first)
+  std::sort(begin(magics), end(magics), [](std::shared_ptr<magic> const& a, std::shared_ptr<magic> const& b) -> bool {
+    return a->get_pattern_length(true) > b->get_pattern_length(true);
+    });
+
+  this->magics = std::move(magics);
 
   auto r = lg.setup(this->magics);
   if (r.has_failure()) {
@@ -238,13 +285,5 @@ DirConverter::DirConverter() {
 
   auto max_read = r.value();
   read_buf.resize(max_read);
-
-  // printf("max_read: %lu\n", max_read);
-
-  // for (auto it = this->magics.begin(); it != this->magics.end(); ++it) {
-  //   printf("value desc %s, pattern %s\n", it->description.c_str(), it->pattern.c_str());
-  //   for (auto check : it->checks) {
-  //     printf("\tcmp_type %d, offset %llu, value %lu\n", (int)check.compare_type, check.offset, check.value.size());
-  //   }
-  // }
 }
+
