@@ -162,6 +162,7 @@ bool Llama::init() {
 }
 
 void Llama::writeDB(const std::string& outdir) {
+  Timer dbTime(&std::cerr, "DB write time: ");
   std::string query = "EXPORT DATABASE '";
   query += outdir;
   query += "' (FORMAT PARQUET);";
