@@ -123,34 +123,35 @@ bool magic::check::compare(Binary const& data) const {
     if (data.size() < this->value.size() + offset)
         return false;
 
+    auto value = this->pre_process.size() > 0 ? this->pre_process : this->value;
     auto expected_value = Binary(&data[offset], &data[offset + value.size()]);
 
     switch (this->compare_type) {
         case CompareType::Eq:
-            return this->value == expected_value;
+            return value == expected_value;
         case CompareType::EqUpper:
             return boost::iequals(value, expected_value);
         case CompareType::Ne:
-            return this->value != expected_value;
+            return value != expected_value;
         case CompareType::Gt:
-            return this->value > expected_value;
+            return value > expected_value;
         case CompareType::Lt:
-            return this->value < expected_value;
+            return value < expected_value;
         case CompareType::And:
-            return this->value == expected_value; // '&': operator.eq,
+            return value == expected_value; // '&': operator.eq,
         case CompareType::Xor:
             throw std::runtime_error("compare: CompareType::Xor is not implemented yet");
         case CompareType::Or: {
             uint8_t result = 0;
-            for (std::size_t i = 0; i < this->value.size(); ++i) {
-                result |= this->value[i] | expected_value[i];
+            for (std::size_t i = 0; i < value.size(); ++i) {
+                result |= value[i] | expected_value[i];
             }
             return result != 0;
         }
         case CompareType::Nor: {
             uint8_t result = 0;
-            for (std::size_t i = 0; i < this->value.size(); ++i) {
-                result |= this->value[i] | expected_value[i];
+            for (std::size_t i = 0; i < value.size(); ++i) {
+                result |= value[i] | expected_value[i];
             }
             return result == 0;
         }
@@ -258,12 +259,15 @@ expected<Magics> SignatureUtil::readMagics(std::string_view path) {
             magic m;
             if (magic_json.contains("checks")) {
                 for (const auto& check : magic_json["checks"].array_range()) {
-                    if (auto compare_type = parse_compare_type(check["compare_type"].as_string()))
+                    if (auto compare_type = parse_compare_type(check["compare_type"].as_string())){
+                        auto pre_process = check.contains("pre_process") ? str2bin(magic_json["pre_process"].as_string()) : Binary();
+
                         m.checks.push_back(magic::check{
-                          compare_type.value(),
-                          parseOffset(check["offset"].as_string()),
-                          str2bin(check["value"].as_string()) });
-                    else {
+                            compare_type.value(),
+                            parseOffset(check["offset"].as_string()),
+                            str2bin(check["value"].as_string()),
+                            pre_process });
+                    } else {
                         return makeUnexpected(compare_type.error());
                     }
                 }
