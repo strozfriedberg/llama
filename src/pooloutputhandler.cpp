@@ -24,26 +24,11 @@ void PoolOutputHandler::outputImage(const FileRecord& rec) {
 }
 
 void PoolOutputHandler::outputDirent(const Dirent& rec) {
-/*
-  if (Closed) {
-    // we might still have some records in FileRecBuf, but the
-    // threadpool has gone away and the MainStrand can no longer be
-    // posted to, so just call into the function directly.
-    Out->outputDirent(rec);
-  }
-  else {
-    boost::asio::post(MainStrand, [=](){
-      Out->outputDirent(rec);
-    });
-  }
-*/
-//  std::cerr << "outputDirent\n";
   boost::asio::post(RecStrand, [&, rec]() {
     DirentsBatch.add(rec);
     if (DirentsBatch.size() >= 1000) {
       DirentsBatch.copyToDB(Appender.get());
       Appender.flush();
-//      std::cerr << "wrote 1000 dirents\n";
     }
   });
 }
