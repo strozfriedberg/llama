@@ -21,17 +21,23 @@ enum class CompareType {
     Eq, EqUpper, Ne, Gt, Lt, And, Xor, Or, Nor
 };
 
+struct Offset {
+    uint64_t    count;
+    bool        from_start;
+};
+
 struct magic {
     struct check {
         CompareType compare_type;
-        unsigned long long offset;
-        Binary value;
+        Offset      offset;
+        Binary      value;
         Binary pre_process;
 
         bool compare(Binary const& data) const;
     };
     std::vector<check> checks;
     std::string description;
+    std::string id;
     std::map<std::string, std::string> extensions;
     std::string pattern;
     bool fixed_string;

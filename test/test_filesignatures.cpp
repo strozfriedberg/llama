@@ -48,9 +48,43 @@ namespace {
 }
 
 TEST_CASE("Compare with verified data", "[get_pattern_length]") {
-    auto generator = VerifiedDataGenerator("test/data/calculated_by_python.json");
+    auto generator = VerifiedDataGenerator("test/data/pattern_lengths.json");
     while (generator.next()) {
         auto data = generator.get();
         REQUIRE(::get_pattern_length(data.pattern, true) == data.len);
+    }
+}
+
+TEST_CASE("Parsing offsets", "[parseOffset]") {
+    std::string magics_file("./magics.json");
+    SignatureUtil su;
+    auto result = su.readMagics(magics_file);
+
+    if (result.has_error()) {
+        throw std::runtime_error("Couldn't open file: " + magics_file + std::string(", ") + result.error());
+    }
+
+    auto offsets_json = "test/data/offsets.json";
+    std::ifstream is(offsets_json);
+
+    if (is.fail())
+        throw std::runtime_error(std::string("Error: offsets_json bad path ") + std::string(offsets_json));
+
+    auto const & magics = result.value();
+    auto const json = jsoncons::json(jsoncons::json::parse(is));
+
+    for (auto magic : magics) {
+        if (magic->checks.size() > 0) {
+            auto const & item_ptr = json.find(magic->id);
+            if (item_ptr != json.object_range().end()) {
+                auto item = (*item_ptr).value().array_range().cbegin();
+                std::string str_offset = item[0].as_cstring();
+                long int_offset = item[1].as_integer<long>();
+                int whence = item[2].as_integer<int>();
+                REQUIRE(int_offset == magic->checks[0].offset.count);
+                REQUIRE(whence == (magic->checks[0].offset.from_start ? 0 : 2));
+            }
+
+        }
     }
 }
