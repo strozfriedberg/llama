@@ -26,6 +26,7 @@ struct magic {
         CompareType compare_type;
         unsigned long long offset;
         Binary value;
+        Binary pre_process;
 
         bool compare(Binary const& data) const;
     };
