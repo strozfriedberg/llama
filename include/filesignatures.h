@@ -31,19 +31,19 @@ struct magic {
         CompareType compare_type;
         Offset      offset;
         Binary      value;
-        Binary pre_process;
+        Binary      pre_process;
 
         bool compare(Binary const& data) const;
     };
-    std::vector<check> checks;
-    std::string description;
-    std::string id;
-    std::map<std::string, std::string> extensions;
-    std::string pattern;
-    bool fixed_string;
-    bool case_insensetive;
-    std::vector<std::string> encodings;
-    std::vector<std::string> tags;
+    std::vector<check>                  checks;
+    std::string                         description;
+    std::string                         id;
+    std::map<std::string, std::string>  extensions;
+    std::string                         pattern;
+    bool                                fixed_string;
+    bool                                case_insensetive;
+    std::vector<std::string>            encodings;
+    std::vector<std::string>            tags;
 
     size_t get_pattern_length(bool only_significant = false) const;
 };
