@@ -128,34 +128,34 @@ bool magic::check::compare(Binary const& data) const {
     if (data.size() < value.size() + offset)
         return false;
 
-    auto eq = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
-        return *a == *b;
+    auto eq = [](uint8_t const& a, uint8_t const& b) -> bool {
+        return a == b;
         };
-    auto eqUp = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
-        return iequals(*a, *b);
+    auto eqUp = [](uint8_t const& a, uint8_t const& b) -> bool {
+        return iequals((char)a, (char)b);
         };
-    auto ne = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
-        return *a != *b;
+    auto ne = [](uint8_t const& a, uint8_t const& b) -> bool {
+        return a != b;
         };
-    auto gt = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
-        return *a > *b;
+    auto gt = [](uint8_t const& a, uint8_t const& b) -> bool {
+        return a > b;
         };
-    auto lt = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
-        return *a < *b;
+    auto lt = [](uint8_t const& a, uint8_t const& b) -> bool {
+        return a < b;
         };
-    auto _and = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
-        return *a == *b;
+    auto _and = [](uint8_t const& a, uint8_t const& b) -> bool {
+        return a == b;
         };
-    auto _xor = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
-        return ~((int8_t)*a ^ (int8_t)*b);
+    auto _xor = [](uint8_t const& a, uint8_t const& b) -> bool {
+        return ~((int8_t)a ^ (int8_t)b);
         };
-    auto _or = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
-        return *a | *b;
+    auto _or = [](uint8_t const& a, uint8_t const& b) -> bool {
+        return a | b;
         };
-    auto nor = [](Binary::const_iterator const& a, Binary::const_iterator const& b) -> bool {
-        return !(*a | *b);
+    auto nor = [](uint8_t const& a, uint8_t const& b) -> bool {
+        return !(a | b);
         };
-    std::function<bool(Binary::const_iterator const&, Binary::const_iterator const&)> fn;
+    std::function<bool(uint8_t const&, uint8_t const&)> fn;
     switch (compare_type) {
     case CompareType::Eq:      fn = eq;   break;
     case CompareType::EqUpper: fn = eqUp; break;
@@ -171,11 +171,14 @@ bool magic::check::compare(Binary const& data) const {
     }
 
     bool result = true;
-    auto& the_value = pre_process.size() > 0 ? pre_process : value;
-    for (auto data_value = data.cbegin() + offset, expected_value = the_value.cbegin();
-        result && expected_value != the_value.cend();
+    bool need_pp = (pre_process.size() > 0);
+    for (auto data_value = data.cbegin() + offset, expected_value = value.cbegin();
+        result && expected_value != value.cend();
         data_value++, expected_value++) {
-        result = fn(data_value, expected_value);
+        auto v = (need_pp)
+            ? *data_value & *(pre_process.begin() + (data_value - data.cbegin()) % pre_process.size())
+            : *data_value;
+        result = fn(v, *expected_value);
     }
     return result;
 }
