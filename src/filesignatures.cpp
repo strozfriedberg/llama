@@ -171,12 +171,13 @@ bool magic::check::compare(Binary const& data) const {
     }
 
     bool result = true;
-    auto& the_value = pre_process.size() > 0 ? pre_process : value;
-    for (auto data_value = data.cbegin() + offset, expected_value = the_value.cbegin();
-        result && expected_value != the_value.cend();
+
+    for (auto data_value = data.begin() + offset, expected_value = value.begin();
+        result && expected_value != value.end();
         data_value++, expected_value++) {
         result = fn(data_value, expected_value);
     }
+
     return result;
 }
 
@@ -279,13 +280,28 @@ expected<Magics> SignatureUtil::readMagics(std::string_view path) {
             if (magic_json.contains("checks")) {
                 for (const auto& check : magic_json["checks"].array_range()) {
                     if (auto compare_type = parse_compare_type(check["compare_type"].as_string())) {
-                        auto pre_process = check.contains("pre_process") ? str2bin(check["pre_process"].as_string()) : Binary();
+                        Binary value = str2bin(check["value"].as_string());
+
+                        if (check.contains("pre_process")) {
+                            auto pre_process = str2bin(check["pre_process"].as_string());
+
+                            if (value.size() != pre_process.size()) {
+                                return makeUnexpected(std::string("Error: value.size() ") 
+                                    + std::to_string(value.size()) 
+                                    + std::string(" != pre_process.size() ")
+                                    + std::to_string(pre_process.size()));
+                            }
+
+                            for (size_t i = 0; i < pre_process.size(); ++i) {
+                                value[i] &= pre_process[i];
+                            }
+                        }
 
                         m.checks.push_back(magic::check{
                             compare_type.value(),
                             parseOffset(check["offset"].as_string()),
-                            str2bin(check["value"].as_string()),
-                            pre_process });
+                            value 
+                            });
                     } else {
                         return makeUnexpected(compare_type.error());
                     }
