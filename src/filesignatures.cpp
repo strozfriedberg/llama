@@ -171,17 +171,17 @@ bool magic::check::compare(Binary const& data) const {
     }
 
     bool result = true;
-    auto the_value = this->pre_process.size() > 0 ? this->pre_process : this->value;
-    for (auto data_value = data.begin() + offset, expected_value = the_value.cbegin();
-        result && expected_value != the_value.end();
+    auto& the_value = pre_process.size() > 0 ? pre_process : value;
+    for (auto data_value = data.cbegin() + offset, expected_value = the_value.cbegin();
+        result && expected_value != the_value.cend();
         data_value++, expected_value++) {
         result = fn(data_value, expected_value);
     }
-    return false;
+    return result;
 }
 
 size_t get_pattern_length(std::string const& pattern, bool only_significant) {
-    auto i = 0;
+    std::size_t i = 0;
     size_t count = 0;
     char prev_c = 0;
 
@@ -200,7 +200,7 @@ size_t get_pattern_length(std::string const& pattern, bool only_significant) {
             auto j = pattern.find('}', i + 1);
             auto i2 = pattern.find(',', i + 1);
 
-            if ((0 <= i2) && (i2 < j))
+            if (i2 < j)
                 i = i2;
 
             auto x = std::stoi(pattern.substr(i + 1, j));
@@ -278,8 +278,8 @@ expected<Magics> SignatureUtil::readMagics(std::string_view path) {
             magic m;
             if (magic_json.contains("checks")) {
                 for (const auto& check : magic_json["checks"].array_range()) {
-                    if (auto compare_type = parse_compare_type(check["compare_type"].as_string())){
-                        auto pre_process = check.contains("pre_process") ? str2bin(magic_json["pre_process"].as_string()) : Binary();
+                    if (auto compare_type = parse_compare_type(check["compare_type"].as_string())) {
+                        auto pre_process = check.contains("pre_process") ? str2bin(check["pre_process"].as_string()) : Binary();
 
                         m.checks.push_back(magic::check{
                             compare_type.value(),
@@ -319,71 +319,9 @@ expected<Magics> SignatureUtil::readMagics(std::string_view path) {
             magics.push_back(std::make_shared<magic>(m));
         }
 
-        // resort magics by pattern size in desceding order ('bigger' patterns first)
-        auto a = begin(magics);
-        std::sort(begin(magics), end(magics), [](std::shared_ptr<magic> a, std::shared_ptr<magic> b) {
-            return a->get_pattern_length(true) > b->get_pattern_length(true);
-            });
-
-
         return magics;
     }
     catch (std::exception& e) {
         return makeUnexpected(e.what());
     }
 }
-
-#ifdef SELF_MAIN
-
-#include "fmt/core.h"
-
-std::string dump(Binary const& data) {
-    std::string result;
-    result.reserve(data.size() * 2);
-    for (auto v : data) {
-        auto tmp = fmt::format("{:02x}", v);
-        result.push_back(tmp[0]);
-        result.push_back(tmp[1]);
-    }
-
-    return result;
-}
-
-#include <magic_enum/magic_enum.hpp>
-#include <boost/iostreams/device/mapped_file.hpp>
-using namespace boost::iostreams;
-
-int main(int argc, char* argv[]) {
-    if (argc < 3) {
-        std::cout << argv[0] << " <path to magic.json> <path to file_obj>\n";
-        return 3;
-    }
-
-    SignatureUtil   su;
-    auto result = su.readMagics(argv[1]);
-    mapped_file     mmap(argv[2], mapped_file::readonly);
-    auto            data = reinterpret_cast<const uint8_t*>(mmap.const_data());
-
-    if (result) {
-        auto magics = result.value();
-
-        for (auto magic : magics) {
-            for (auto check : magic.checks) {
-                //std::cout << fmt::format("{}, {:x}, '{}'\n",
-                //    magic_enum::enum_name(check.compare_type), check.offset, dump(expected_value));
-
-                if (check.compare(Binary(data, data + mmap.size())))
-                    std::cout << fmt::format("value '{}' {} -> true\n, pattern_length {}\n",
-                        dump(check.value), magic_enum::enum_name(check.compare_type), magic.get_pattern_length());
-            }
-        }
-    }
-    else {
-        std::cerr << "Error: " << result.error() << "\n";
-        return 3;
-    }
-    return 0;
-}
-
-#endif // SELF_MAIN
-
