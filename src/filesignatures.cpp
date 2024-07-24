@@ -125,14 +125,8 @@ bool iequals(char lhs, char rhs) {
 }
 
 bool magic::check::compare(Binary const& data) const {
-    if (offset.from_start) {
-        if (data.size() < value.size() + offset.count)
-            return false;
-    }
-    else {
-        if (offset.count < value.size() || data.size() < offset.count)
-            return false;
-    }
+    if (data.size() < value.size() + offset.count)
+        return false;
 
     auto eq = [](uint8_t const& a, uint8_t const& b) -> bool {
         return a == b;
@@ -178,12 +172,12 @@ bool magic::check::compare(Binary const& data) const {
 
     bool result = true;
     bool need_pp = (pre_process.size() > 0);
-    for (auto data_value = data.cbegin() + (offset.from_start ? offset.count : data.size() - offset.count), 
-        expected_value = value.cbegin();
+    for (auto data_value = data.cbegin() + offset.count, expected_value = value.cbegin();
         result && expected_value != value.cend();
-        data_value++, expected_value++) {
+        data_value++, expected_value++)
+    {
         auto v = (need_pp)
-            ? *data_value & *(pre_process.begin() + (data_value - offset - data.cbegin()) % pre_process.size())
+            ? *data_value & *(pre_process.begin() + (data_value - offset.count - data.cbegin()) % pre_process.size())
             : *data_value;
         result = fn(v, *expected_value);
     }
@@ -255,18 +249,22 @@ expected<Magics> SignatureUtil::readMagics(std::string_view path) {
             bool from_start = true;
 
             if (startsWith(s, "Z")) {
-                ss << std::hex << s.substr(1);
+                s = s.substr(1);
                 from_start = false;
-            } else {
-                if (startsWith(s, "0x") || startsWith(s, "0X")) {
-                    ss << std::hex << s.substr(2);
-                }
-                else {
-                    ss << std::dec << s;
-                }
             }
-            uint64_t v;
+            if (startsWith(s, "0x") || startsWith(s, "0X")) {
+                s = s.substr(2);
+                ss << std::hex << s;
+            }
+            else {
+                ss << std::dec << s;
+            }
+            long v;
             ss >> v;
+
+            if (!from_start)
+                v *= -1;
+
             return Offset{v, from_start};
             };
         auto char2uint8 = [](char input) -> uint8_t {
@@ -318,7 +316,7 @@ expected<Magics> SignatureUtil::readMagics(std::string_view path) {
                 m.description = magic_json["description"].as_string();
             }
             if (magic_json.contains("id")) {
-                m.description = magic_json["id"].as_string();
+                m.id = magic_json["id"].as_string();
             }
             if (magic_json.contains("tags")) {
                 for (const auto& tag : magic_json["tags"].array_range()) {

@@ -22,8 +22,8 @@ enum class CompareType {
 };
 
 struct Offset {
-    uint64_t    count;
-    bool        from_start;
+    long count;
+    bool from_start;
 };
 
 struct magic {

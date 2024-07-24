@@ -77,14 +77,17 @@ TEST_CASE("Parsing offsets", "[parseOffset]") {
         if (magic->checks.size() > 0) {
             auto const & item_ptr = json.find(magic->id);
             if (item_ptr != json.object_range().end()) {
-                auto item = (*item_ptr).value().array_range().cbegin();
-                std::string str_offset = item[0].as_cstring();
-                long int_offset = item[1].as_integer<long>();
-                int whence = item[2].as_integer<int>();
-                REQUIRE(int_offset == magic->checks[0].offset.count);
-                REQUIRE(whence == (magic->checks[0].offset.from_start ? 0 : 2));
+                auto item_range = (*item_ptr).value().array_range();
+                for (auto item = item_range.cbegin(); item != item_range.cend(); ++item) {
+                    auto check_item = item->array_range().cbegin();
+                    std::string str_offset = check_item[0].as_cstring();
+                    long int_offset = check_item[1].as_integer<long>();
+                    int whence = check_item[2].as_integer<int>();
+                    auto i = item - item_range.cbegin();
+                    REQUIRE(int_offset == magic->checks[i].offset.count);
+                    REQUIRE(whence == (magic->checks[i].offset.from_start ? 0 : 2));
+                }
             }
-
         }
     }
 }
