@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <filesystem>
 
 #include <lightgrep/api.h>
 #include <boost/outcome.hpp>
@@ -48,16 +49,11 @@ struct magic {
     size_t get_pattern_length(bool only_significant = false) const;
 };
 
+typedef std::shared_ptr<magic> Magic;
+
 size_t get_pattern_length(std::string const& pattern, bool only_significant);
 
-typedef std::vector<std::shared_ptr<magic>> Magics;
-
-class SignatureUtil {
-    Magics magics;
-
-public:
-    [[nodiscard]] expected<Magics> readMagics(std::string_view path);
-};
+typedef std::vector<Magic> Magics;
 
 typedef boost::iterator_range<const uint8_t*> MemoryRegion;
 
@@ -70,4 +66,21 @@ public:
     expected<size_t> setup(Magics const& m);
     expected<bool> search(MemoryRegion const& region, void* user_data, LG_HITCALLBACK_FN callback_fn) const;
     LG_HPROGRAM get_lg_prog() const{ return _prog; }
+};
+
+class FileSigAnalyzer {
+    Magics magics;
+    std::map<std::string, Magic> signature_dict;
+    Magics signature_list;
+
+    LightGrep lg;
+    // size of the buffer - max value of get_pattern_length(false)
+    Binary read_buf;
+
+    static void lg_callbackfn(void* userData, const LG_SearchHit* const hit);
+
+public:
+    FileSigAnalyzer();
+    static expected<Magics> readMagics(std::string_view path);
+    expected<bool> get_signature(const std::filesystem::directory_entry& de, Magic& result) const;
 };

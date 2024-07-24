@@ -1,8 +1,6 @@
 // file_signatures.cpp
 //
 
-#include "filesignatures.h"
-
 #include <iostream>
 #include <string>
 #include <map>
@@ -13,10 +11,14 @@
 #include <algorithm>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 
 #include <jsoncons/json.hpp>
 
+#include "filesignatures.h"
 #include "util.h"
+
+namespace fs = std::filesystem;
 
 LightGrep::LightGrep()
 {}
@@ -233,7 +235,7 @@ size_t magic::get_pattern_length(bool only_significant) const {
     return ::get_pattern_length(pattern, only_significant);
 }
 
-expected<Magics> SignatureUtil::readMagics(std::string_view path) {
+expected<Magics> FileSigAnalyzer::readMagics(std::string_view path) {
     try {
         std::ifstream is(path.data());
         if (is.fail())
@@ -341,4 +343,130 @@ expected<Magics> SignatureUtil::readMagics(std::string_view path) {
     catch (std::exception& e) {
         return makeUnexpected(e.what());
     }
+}
+
+
+struct lg_callback_context {
+    const FileSigAnalyzer* self;
+    size_t min_hit_index;
+};
+
+void FileSigAnalyzer::lg_callbackfn(void* userData, const LG_SearchHit* const hit) {
+    auto ctx = (lg_callback_context*)userData;
+    auto hit_info = lg_prog_pattern_info(ctx->self->lg.get_lg_prog(), hit->KeywordIndex);
+    if (hit_info && hit_info->UserIndex < ctx->min_hit_index) {
+        ctx->min_hit_index = hit_info->UserIndex;
+    }
+}
+
+expected<bool> FileSigAnalyzer::get_signature(const fs::directory_entry& de, Magic& result) const {
+    std::error_code ec;
+    if (!de.is_regular_file(ec) || ec) {
+        return makeUnexpected("FileSigAnalyzer is working with regular files only");
+    }
+    std::ifstream ifs(de.path(), std::ios::binary);
+    if (ifs) {
+        auto ext = de.path().extension().u8string();
+        if (!ext.empty()) {
+            boost::algorithm::to_upper(ext);
+            if (ext.length() > 1) {
+                // clean dot
+                ext = ext.substr(1);
+            }
+        }
+
+        lg_callback_context ctx{ this, std::numeric_limits<size_t>::max() };
+        auto readed = ifs.readsome((char*)read_buf.data(), read_buf.size());
+        auto lg_err = lg.search(MemoryRegion(read_buf.data(), read_buf.data() + readed), &ctx, &FileSigAnalyzer::lg_callbackfn);
+        if (lg_err.has_error()) {
+            throw std::runtime_error("lg.search() failed on file: " + de.path().string() + std::string(", error: ") + lg_err.error());
+        }
+        if (ctx.min_hit_index != std::numeric_limits<size_t>::max()) {
+            // hit
+            result = this->magics[ctx.min_hit_index];
+            return true;
+        }
+
+        // no hits? search manually
+
+        Binary check_buf(read_buf);
+
+        auto get_buf = [&ifs, this, &check_buf](Offset const& offset, std::size_t size) {
+            if (size + offset.count > read_buf.size() || offset.from_start == false) {
+                check_buf.resize(size);
+                ifs.seekg(offset.count, offset.from_start ? std::ios_base::beg : std::ios_base::end);
+                auto readed = ifs.readsome((char*)check_buf.data(), check_buf.size());
+                if (readed != (std::streamsize)size)
+                    throw std::runtime_error(("readsome(" + std::to_string(size) + ") at " + std::to_string(offset.count) + ", ", std::to_string(offset.from_start) + " failed."));
+                return check_buf;
+            }
+            return Binary(&read_buf[offset.count], &read_buf[offset.count + size]);
+            };
+
+        // by "ext"
+        auto s = signature_dict.find(ext);
+        if (s != signature_dict.end()) {
+            auto& m = s->second;
+            // by default if checks is empty - make a hit
+            bool all_checks_passed = true;
+            BOOST_FOREACH(auto check_it, m->checks) {
+                if (!(all_checks_passed = (check_it.compare(get_buf(check_it.offset, check_it.value.size())) == true)))
+                    break;
+            }
+            if (all_checks_passed) {
+                // hit
+                result = m;
+                return true;
+            }
+        }
+
+        // final check through all signatures
+        for (auto const& s : signature_list) {
+            bool all_checks_passed = false;
+            BOOST_FOREACH(auto check_it, s->checks) {
+                if (!(all_checks_passed = (check_it.compare(get_buf(check_it.offset, check_it.value.size())) == true)))
+                    break;
+            }
+            if (all_checks_passed) {
+                result = s;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+FileSigAnalyzer::FileSigAnalyzer() {
+    std::string magics_file("./magics.json");
+    auto result = readMagics(magics_file);
+    if (result.has_error()) {
+        throw std::runtime_error("Couldn't open file: " + magics_file + std::string(", ") + result.error());
+    }
+
+    auto magics = result.value();
+
+    // fill signature_dict & signature_list
+    for (auto const& m : magics) {
+        signature_list.push_back(m);
+        for (auto const& ext : m->extensions) {
+            if (signature_dict.count(ext.first) == 0) {
+                signature_dict.insert(std::pair(ext.first, m));
+            }
+        }
+    }
+
+    // resort magics by pattern size in desceding order ('bigger' patterns first)
+    std::sort(begin(magics), end(magics), [](Magic const& a, Magic const& b) -> bool {
+        return a->get_pattern_length(true) > b->get_pattern_length(true);
+        });
+
+    this->magics = std::move(magics);
+
+    auto r = lg.setup(this->magics);
+    if (r.has_failure()) {
+        throw std::runtime_error("LightGrep::setup failed: " + r.error());
+    }
+
+    auto max_read = r.value();
+    read_buf.resize(max_read);
 }

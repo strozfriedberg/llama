@@ -57,8 +57,8 @@ TEST_CASE("Compare with verified data", "[get_pattern_length]") {
 
 TEST_CASE("Parsing offsets", "[parseOffset]") {
     std::string magics_file("./magics.json");
-    SignatureUtil su;
-    auto result = su.readMagics(magics_file);
+    FileSigAnalyzer fsa;
+    auto result = fsa.readMagics(magics_file);
 
     if (result.has_error()) {
         throw std::runtime_error("Couldn't open file: " + magics_file + std::string(", ") + result.error());
