@@ -1,4 +1,5 @@
 
+#include <boost/filesystem/operations.hpp>
 #include <jsoncons/json.hpp>
 #include <fstream>
 
@@ -9,19 +10,13 @@
 #include "filesignatures.h"
 
 namespace {
-    struct Item {
-        std::string pattern;
-        size_t len;
-        Item() = default;
-        Item(std::string const& pattern_, size_t len_) :pattern(pattern_), len(len_) { }
-    };
-
-    struct VerifiedDataGenerator : public Catch::Generators::IGenerator<Item> {
+    template <typename ItemType>
+    struct DataGenerator : public Catch::Generators::IGenerator<ItemType> {
         jsoncons::json data;
         jsoncons::json::const_array_iterator current_ptr;
-        Item current;
+        ItemType current;
 
-        VerifiedDataGenerator(std::string_view path) : data(std::vector<int>()) {
+        DataGenerator(std::string_view path) : data(std::vector<int>()) {
             std::ifstream is(path.data());
 
             if (is.fail())
@@ -31,7 +26,7 @@ namespace {
             current_ptr = data.array_range().cbegin();
         }
 
-        Item const& get() const override {
+        ItemType const& get() const override {
             return current;
         }
 
@@ -40,15 +35,66 @@ namespace {
             if (current_ptr == data.array_range().end())
                 return false;
 
-            auto pair = *current_ptr;
-            current = Item(pair.at(0).as<std::string>(), pair.at(1).as<int>());
+            current = ItemType(*current_ptr);
             return true;
         }
     };
+
+    struct LengthItem {
+        std::string pattern;
+        size_t len;
+        LengthItem() = default;
+        LengthItem(jsoncons::json const& json) :pattern(json.at(0).as<std::string>()), len(json.at(1).as<int>()) {}
+    };
+    using LengthDataGenerator = DataGenerator<LengthItem>;
+
+    struct TestSignItem {
+        Binary  binary;
+        TestSignItem() = default;
+        TestSignItem(jsoncons::json const& json) {
+            auto char2uint8 = [](char input) -> uint8_t {
+                if (input >= '0' && input <= '9')
+                    return input - '0';
+                if (input >= 'A' && input <= 'F')
+                    return input - 'A' + 10;
+                if (input >= 'a' && input <= 'f')
+                    return input - 'a' + 10;
+                return 0;
+                };
+            auto str2bin = [char2uint8](const std::string& src) -> Binary {
+                Binary dst(src.length() / 2);
+                auto di = dst.begin();
+                for (size_t i = 0; i < src.length(); i += 2) {
+                    *di++ = (char2uint8(src[i]) * 16 + char2uint8(src[i + 1]));
+                }
+                return dst;
+                };
+            binary = str2bin(json["data"].as_string());
+        }
+    };
+    using TestSignDataGenerator = DataGenerator<TestSignItem>;
+}
+
+TEST_CASE("Compare with verified data", "[testSignatures]") {
+    auto generator = TestSignDataGenerator("test/data/test_signatures.json");
+    FileSigAnalyzer file_sig_analyzer;
+
+    while (generator.next()) {
+        auto data = generator.get();
+        auto filename = boost::filesystem::unique_path().string();
+        {
+            std::fstream s{ filename, s.binary | s.trunc | s.out };
+            s.write(reinterpret_cast<char*>(&data.binary[0]), data.binary.size());
+        }
+        std::filesystem::directory_entry de(filename);
+        Magic result;
+        auto ok = file_sig_analyzer.get_signature(de, result);
+        //REQUIRE();
+    }
 }
 
 TEST_CASE("Compare with verified data", "[get_pattern_length]") {
-    auto generator = VerifiedDataGenerator("test/data/pattern_lengths.json");
+    auto generator = LengthDataGenerator("test/data/pattern_lengths.json");
     while (generator.next()) {
         auto data = generator.get();
         REQUIRE(::get_pattern_length(data.pattern, true) == data.len);
