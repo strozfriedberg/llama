@@ -183,7 +183,7 @@ bool magic::check::compare(Binary const& data) const {
         result && expected_value != value.cend();
         data_value++, expected_value++) {
         auto v = (need_pp)
-            ? *data_value & *(pre_process.begin() + (data_value - data.cbegin()) % pre_process.size())
+            ? *data_value & *(pre_process.begin() + (data_value - offset - data.cbegin()) % pre_process.size())
             : *data_value;
         result = fn(v, *expected_value);
     }
