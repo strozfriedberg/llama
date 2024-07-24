@@ -125,9 +125,8 @@ bool iequals(char lhs, char rhs) {
 }
 
 bool magic::check::compare(Binary const& data) const {
-    if (data.size() < value.size() + offset.count)
+    if (data.size() < value.size())
         return false;
-
     auto eq = [](uint8_t const& a, uint8_t const& b) -> bool {
         return a == b;
         };
@@ -172,12 +171,12 @@ bool magic::check::compare(Binary const& data) const {
 
     bool result = true;
     bool need_pp = (pre_process.size() > 0);
-    for (auto data_value = data.cbegin() + offset.count, expected_value = value.cbegin();
+    for (auto data_value = data.cbegin(), expected_value = value.cbegin();
         result && expected_value != value.cend();
         data_value++, expected_value++)
     {
         auto v = (need_pp)
-            ? *data_value & *(pre_process.begin() + (data_value - offset.count - data.cbegin()) % pre_process.size())
+            ? *data_value & *(pre_process.begin() + (data_value - data.cbegin()) % pre_process.size())
             : *data_value;
         result = fn(v, *expected_value);
     }

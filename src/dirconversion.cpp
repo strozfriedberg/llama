@@ -218,6 +218,20 @@ void DirConverter::get_signature(const fs::directory_entry& de, std::string* sig
 
     // no hits? search manually
 
+    Binary check_buf(read_buf);
+
+    auto get_buf = [&ifs, this, &check_buf](Offset const& offset, std::size_t size) {
+      if (size + offset.count > read_buf.size() || offset.from_start == false) {
+        check_buf.resize(size);
+        ifs.seekg(offset.count, offset.from_start ? std::ios_base::beg : std::ios_base::end);
+        auto readed = ifs.readsome((char*)check_buf.data(), check_buf.size());
+        if (readed != (std::streamsize)size)
+          throw std::runtime_error(("readsome(" + std::to_string(size) + ") at " + std::to_string(offset.count) + ", ", std::to_string(offset.from_start) + " failed."));
+        return check_buf;
+      }
+      return Binary(&read_buf[offset.count], &read_buf[offset.count + size]);
+      };
+
     // by "ext"
     auto s = signature_dict.find(ext);
     if (s != signature_dict.end()) {
@@ -225,7 +239,7 @@ void DirConverter::get_signature(const fs::directory_entry& de, std::string* sig
       // by default if checks is empty - make a hit
       bool all_checks_passed = true;
       BOOST_FOREACH(auto check_it, m.checks) {
-        if (!(all_checks_passed = (check_it.compare(read_buf) == true)))
+        if (!(all_checks_passed = (check_it.compare(get_buf(check_it.offset, check_it.value.size())) == true)))
           break;
       }
       if (all_checks_passed) {
@@ -239,7 +253,7 @@ void DirConverter::get_signature(const fs::directory_entry& de, std::string* sig
     for (auto const& s : signature_list) {
       bool all_checks_passed = false;
       BOOST_FOREACH(auto check_it, s->checks) {
-        if (!(all_checks_passed = (check_it.compare(read_buf) == true)))
+        if (!(all_checks_passed = (check_it.compare(get_buf(check_it.offset, check_it.value.size())) == true)))
           break;
       }
       if (all_checks_passed) {
