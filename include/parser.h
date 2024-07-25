@@ -49,6 +49,7 @@ public:
   void parseRuleContent();
   void parseRule();
   void parseRuleDecl();
+  void startRule();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -304,3 +305,10 @@ void LlamaParser::parseRuleDecl() {
   parseRule();
   mustParse("Expected close curly brace", TokenType::CLOSE_BRACE);
 }
+
+void LlamaParser::startRule() {
+  while (!isAtEnd()) {
+    parseRuleDecl();
+  }
+}
+

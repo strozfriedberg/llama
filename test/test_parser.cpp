@@ -424,3 +424,26 @@ TEST_CASE("parseRuleDeclThrowsIfBothGrepAndNonGrepSection") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseRuleDecl(), ParserError);
 }
+
+TEST_CASE("startRule") {
+  std::string input = R"(
+  rule MyRule {
+    meta:
+      description = "test"
+    signature:
+      "EXE"
+  }
+  rule AnotherRule {
+    meta:
+      description = "test"
+    grep:
+      strings:
+        a = "test" encodings=UTF-8 nocase fixed
+        b = "test2" encodings=UTF-8 nocase fixed
+      condition:
+        any(a, b) and count(a) == 5
+  }
+  )";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.startRule());
+}
