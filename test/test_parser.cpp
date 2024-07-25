@@ -362,3 +362,32 @@ TEST_CASE("parseRuleContentNonGrep") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseRuleContent());
 }
+
+TEST_CASE("parseRule") {
+  std::string input = R"(
+  rule:
+    meta:
+      description = "test"
+    signature:
+      "EXE"
+    file_metadata:
+      created > "2023-05-04"
+      modified < "2023-05-06"
+      filesize >= 100
+  )";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseRule());
+}
+
+TEST_CASE("parseRuleWithoutMeta") {
+  std::string input = R"(
+  signature:
+      "EXE"
+  file_metadata:
+    created > "2023-05-04"
+    modified < "2023-05-06"
+    filesize >= 100
+  )";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseRule());
+}

@@ -47,6 +47,7 @@ public:
   void parseMetaSection();
   void parseNonGrepSection();
   void parseRuleContent();
+  void parseRule();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -286,4 +287,11 @@ void LlamaParser::parseRuleContent() {
       parseNonGrepSection();
     }
   }
+}
+
+void LlamaParser::parseRule() {
+  if (checkAny(TokenType::META)) {
+    parseMetaSection();
+  }
+  parseRuleContent();
 }
