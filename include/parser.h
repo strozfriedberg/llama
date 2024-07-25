@@ -48,6 +48,7 @@ public:
   void parseNonGrepSection();
   void parseRuleContent();
   void parseRule();
+  void parseRuleDecl();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -294,4 +295,12 @@ void LlamaParser::parseRule() {
     parseMetaSection();
   }
   parseRuleContent();
+}
+
+void LlamaParser::parseRuleDecl() {
+  mustParse("Expected rule keyword", TokenType::RULE);
+  mustParse("Expected identifier", TokenType::IDENTIFIER);
+  mustParse("Expected open curly brace", TokenType::OPEN_BRACE);
+  parseRule();
+  mustParse("Expected close curly brace", TokenType::CLOSE_BRACE);
 }

@@ -391,3 +391,36 @@ TEST_CASE("parseRuleWithoutMeta") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseRule());
 }
+
+TEST_CASE("parseRuleDecl") {
+  std::string input = R"(
+  rule MyRule {
+    meta:
+      description = "test"
+    signature:
+      "EXE"
+    file_metadata:
+      created > "2023-05-04"
+      modified < "2023-05-06"
+      filesize >= 100
+  }
+  )";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseRuleDecl());
+}
+
+TEST_CASE("parseRuleDeclThrowsIfBothGrepAndNonGrepSection") {
+  std::string input = R"(
+  rule MyRule {
+    grep:
+      strings:
+        a = "test" encodings=UTF-8 nocase fixed
+        b = "test2" encodings=UTF-8 nocase fixed
+      condition:
+        any(a, b) and offset(a, 5) == 5
+    hash: md5 = "test"
+  }
+  )";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseRuleDecl(), ParserError);
+}
