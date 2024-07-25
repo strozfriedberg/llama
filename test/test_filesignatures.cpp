@@ -23,7 +23,8 @@ namespace {
                 throw std::runtime_error(std::string("Error: bad path ") + std::string(path));
 
             data = jsoncons::json(jsoncons::json::parse(is));
-            current_ptr = data.array_range().cbegin();
+            if ( (current_ptr = data.array_range().cbegin()) == data.array_range().end())
+                throw std::runtime_error(std::string("Error: ") + std::string(path) + " has no data");
         }
 
         ItemType const& get() const override {
@@ -31,12 +32,8 @@ namespace {
         }
 
         bool next() override {
-            current_ptr++;
-            if (current_ptr == data.array_range().end())
-                return false;
-
             current = ItemType(*current_ptr);
-            return true;
+            return ++current_ptr != data.array_range().end();
         }
     };
 
@@ -49,7 +46,10 @@ namespace {
     using LengthDataGenerator = DataGenerator<LengthItem>;
 
     struct TestSignItem {
-        Binary  binary;
+        Binary                      binary;
+        std::string                 expected_ext;
+        std::optional<std::string>  signature_id;
+
         TestSignItem() = default;
         TestSignItem(jsoncons::json const& json) {
             auto char2uint8 = [](char input) -> uint8_t {
@@ -70,26 +70,46 @@ namespace {
                 return dst;
                 };
             binary = str2bin(json["data"].as_string());
+            expected_ext = json["expected_ext"].as_string();
+            auto sign = json["signature"];
+            if (!sign.is_null()) {
+                signature_id = sign["id"].as_string();
+            }
         }
     };
     using TestSignDataGenerator = DataGenerator<TestSignItem>;
+
+    struct tempfile : std::fstream {
+        std::string filename;
+
+        tempfile(Binary const &data, std::string const & ext) {
+            filename = boost::filesystem::unique_path().string() + "." + ext;
+            open(filename, this->binary | this->trunc | this->out);
+            write(reinterpret_cast<char const*>(&data[0]), data.size());
+            close();
+        }
+        ~tempfile() {
+            std::filesystem::remove(filename);
+        }
+    };
 }
 
-TEST_CASE("Compare with verified data", "[testSignatures]") {
+TEST_CASE("Compare with verified signatures", "[testSignatures]") {
     auto generator = TestSignDataGenerator("test/data/test_signatures.json");
     FileSigAnalyzer file_sig_analyzer;
 
     while (generator.next()) {
         auto data = generator.get();
-        auto filename = boost::filesystem::unique_path().string();
-        {
-            std::fstream s{ filename, s.binary | s.trunc | s.out };
-            s.write(reinterpret_cast<char*>(&data.binary[0]), data.binary.size());
-        }
-        std::filesystem::directory_entry de(filename);
+        tempfile    file(data.binary, data.expected_ext);
+        std::filesystem::directory_entry de(file.filename);
         Magic result;
-        auto ok = file_sig_analyzer.get_signature(de, result);
-        //REQUIRE();
+        if (file_sig_analyzer.get_signature(de, result).value()) {
+            REQUIRE(data.signature_id.has_value() == true);
+            REQUIRE(result->id == data.signature_id.value());
+        }
+        else {
+            REQUIRE(data.signature_id.has_value() == false);
+        }
     }
 }
 
