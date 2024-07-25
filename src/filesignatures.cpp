@@ -376,7 +376,11 @@ expected<bool> FileSigAnalyzer::get_signature(const fs::directory_entry& de, Mag
         }
 
         lg_callback_context ctx{ this, std::numeric_limits<size_t>::max() };
-        auto readed = ifs.readsome((char*)read_buf.data(), read_buf.size());
+        //auto readed = ifs.readsome((char*)read_buf.data(), read_buf.size());
+        auto readed = ifs.read((char*)read_buf.data(), read_buf.size()).gcount();
+        if(readed == 0) {
+            return makeUnexpected("read zero bytes from " + de.path().string());
+        }
         auto lg_err = lg.search(MemoryRegion(read_buf.data(), read_buf.data() + readed), &ctx, &FileSigAnalyzer::lg_callbackfn);
         if (lg_err.has_error()) {
             throw std::runtime_error("lg.search() failed on file: " + de.path().string() + std::string(", error: ") + lg_err.error());
@@ -394,8 +398,10 @@ expected<bool> FileSigAnalyzer::get_signature(const fs::directory_entry& de, Mag
         auto get_buf = [&ifs, this, &check_buf](Offset const& offset, std::size_t size) {
             if (size + offset.count > read_buf.size() || offset.from_start == false) {
                 check_buf.resize(size);
+                ifs.clear();
                 ifs.seekg(offset.count, offset.from_start ? std::ios_base::beg : std::ios_base::end);
-                auto readed = ifs.readsome((char*)check_buf.data(), check_buf.size());
+                //auto readed = ifs.readsome((char*)check_buf.data(), check_buf.size());
+                auto readed = ifs.read((char*)check_buf.data(), check_buf.size()).gcount();
                 if (readed != (std::streamsize)size)
                     throw std::runtime_error(("readsome(" + std::to_string(size) + ") at " + std::to_string(offset.count) + ", ", std::to_string(offset.from_start) + " failed."));
                 return check_buf;
@@ -408,7 +414,7 @@ expected<bool> FileSigAnalyzer::get_signature(const fs::directory_entry& de, Mag
         if (s != signature_dict.end()) {
             auto& m = s->second;
             // by default if checks is empty - make a hit
-            bool all_checks_passed = true;
+            bool all_checks_passed = m->checks.size() > 0;
             BOOST_FOREACH(auto check_it, m->checks) {
                 if (!(all_checks_passed = (check_it.compare(get_buf(check_it.offset, check_it.value.size())) == true)))
                     break;
