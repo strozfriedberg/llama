@@ -348,3 +348,27 @@ TEST_CASE("parseNonGrepSectionThrows") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseNonGrepSection(), ParserError);
 }
+
+TEST_CASE("parseRuleContentGrep") {
+  std::string input = R"(
+  grep:
+    strings:
+      a = "test" encodings=UTF-8 nocase fixed
+      b = "test2" encodings=UTF-8 nocase fixed
+    condition:
+      any(a, b) and offset(a, 5) == 5
+  )";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseRuleContent());
+}
+
+TEST_CASE("parseRuleContentNonGrep") {
+  std::string input = R"(
+  meta: arbitrary = "something"
+  hash: md5 = "test"
+  signature: "EXE"
+  file_metadata: created > "2023-05-04"
+  )";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseRuleContent());
+}

@@ -46,6 +46,7 @@ public:
   void parseFileMetadataSection();
   void parseMetaSection();
   void parseNonGrepSection();
+  void parseRuleContent();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -276,5 +277,16 @@ void LlamaParser::parseNonGrepSection() {
   }
   else {
     throw ParserError("Expected hash, signature, file_metadata, or meta", peek().Pos);
+  }
+}
+
+void LlamaParser::parseRuleContent() {
+  if (checkAny(TokenType::GREP)) {
+    parseGrepSection();
+  }
+  else {
+    while (checkAny(TokenType::HASH, TokenType::SIGNATURE, TokenType::FILE_METADATA, TokenType::META)) {
+      parseNonGrepSection();
+    }
   }
 }
