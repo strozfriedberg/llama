@@ -294,3 +294,57 @@ TEST_CASE("parseFileMetadataSection") {
   LlamaParser parser(getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseFileMetadataSection());
 }
+
+TEST_CASE("parseMetaSection") {
+  std::string input = R"(
+  meta:
+    arbitrary = "something"
+    another = "something else"
+  )";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseMetaSection());
+}
+
+TEST_CASE("parseNonGrepSectionHash") {
+  std::string input = R"(
+  hash: md5 = "test"
+  )";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseNonGrepSection());
+}
+
+TEST_CASE("parseNonGrepSectionSignature") {
+  std::string input = R"(
+  signature:
+    "EXE"
+    "MUI"
+  )";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseNonGrepSection());
+}
+
+TEST_CASE("parseNonGrepSectionFileMetadata") {
+  std::string input = R"(
+  file_metadata:
+    created > "2023-05-04"
+    modified < "2023-05-06"
+    filesize >= 100
+  )";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseNonGrepSection());
+}
+
+TEST_CASE("parseNonGrepSectionMeta") {
+  std::string input = R"(
+  meta:
+    arbitrary = "something"
+  )";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseNonGrepSection());
+}
+
+TEST_CASE("parseNonGrepSectionThrows") {
+  std::string input = "notHashOrSignatureOrFileMetadataOrMeta";
+  LlamaParser parser(getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseNonGrepSection(), ParserError);
+}

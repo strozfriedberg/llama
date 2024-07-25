@@ -44,6 +44,8 @@ public:
   void parseGrepSection();
   void parseFileMetadataDef();
   void parseFileMetadataSection();
+  void parseMetaSection();
+  void parseNonGrepSection();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -247,5 +249,32 @@ void LlamaParser::parseFileMetadataSection() {
   mustParse("Expected colon", TokenType::COLON);
   while (checkAny(TokenType::CREATED, TokenType::MODIFIED, TokenType::FILESIZE)) {
     parseFileMetadataDef();
+  }
+}
+
+void LlamaParser::parseMetaSection() {
+  mustParse("Expected meta keyword", TokenType::META);
+  mustParse("Expected colon", TokenType::COLON);
+  while (matchAny(TokenType::IDENTIFIER)) {
+    mustParse("Expected equal sign", TokenType::EQUAL);
+    mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
+  }
+}
+
+void LlamaParser::parseNonGrepSection() {
+  if (checkAny(TokenType::HASH)) {
+    parseHashSection();
+  }
+  else if (checkAny(TokenType::SIGNATURE)) {
+    parseSignatureSection();
+  }
+  else if (checkAny(TokenType::FILE_METADATA)) {
+    parseFileMetadataSection();
+  }
+  else if (checkAny(TokenType::META)) {
+    parseMetaSection();
+  }
+  else {
+    throw ParserError("Expected hash, signature, file_metadata, or meta", peek().Pos);
   }
 }
