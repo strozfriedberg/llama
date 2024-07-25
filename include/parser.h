@@ -272,11 +272,8 @@ void LlamaParser::parseNonGrepSection() {
   else if (checkAny(TokenType::FILE_METADATA)) {
     parseFileMetadataSection();
   }
-  else if (checkAny(TokenType::META)) {
-    parseMetaSection();
-  }
   else {
-    throw ParserError("Expected hash, signature, file_metadata, or meta", peek().Pos);
+    throw ParserError("Expected hash, signature, or file_metadata", peek().Pos);
   }
 }
 
@@ -285,7 +282,7 @@ void LlamaParser::parseRuleContent() {
     parseGrepSection();
   }
   else {
-    while (checkAny(TokenType::HASH, TokenType::SIGNATURE, TokenType::FILE_METADATA, TokenType::META)) {
+    while (checkAny(TokenType::HASH, TokenType::SIGNATURE, TokenType::FILE_METADATA)) {
       parseNonGrepSection();
     }
   }
