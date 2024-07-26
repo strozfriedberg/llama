@@ -445,5 +445,5 @@ TEST_CASE("startRule") {
   }
   )";
   LlamaParser parser(getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.startRule());
+  REQUIRE_NOTHROW(parser.parseRules());
 }
