@@ -13,9 +13,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 
-#include <jsoncons/json.hpp>
-
 #include "filesignatures.h"
+#include "jsoncons_wrapper.h"
 #include "util.h"
 
 namespace fs = std::filesystem;
@@ -25,13 +24,13 @@ namespace FileSignatures {
 LightGrep::LightGrep() {}
 
 LightGrep::~LightGrep() {
-  if (_prog) {
-    lg_destroy_program(_prog);
+  if (Prog) {
+    lg_destroy_program(Prog);
   }
 }
 
 // return max_read
-expected<size_t> LightGrep::setup(Magics const &m) {
+expected<size_t> LightGrep::setup(MagicsType const &m) {
   using namespace boost;
 
   size_t max_read = 0;
@@ -44,16 +43,16 @@ expected<size_t> LightGrep::setup(Magics const &m) {
 
       auto &p = m[i];
 
-      if (p->pattern.empty()) {
+      if (p->Pattern.empty()) {
         continue;
       }
 
-      LG_KeyOptions opt = {p->fixed_string, p->case_insensetive, false};
+      LG_KeyOptions opt = {p->FixedString, p->CaseInsensetive, false};
 
       auto pattern = lg_create_pattern();
       destroy_guard pattern_guard(
           [&pattern]() { lg_destroy_pattern(pattern); });
-      if (!lg_parse_pattern(pattern, p->pattern.c_str(), &opt, &err)) {
+      if (!lg_parse_pattern(pattern, p->Pattern.c_str(), &opt, &err)) {
         if (err) {
           auto r = makeUnexpected(err->Message);
           lg_free_error(err);
@@ -61,12 +60,12 @@ expected<size_t> LightGrep::setup(Magics const &m) {
         }
       }
 
-      auto pattern_len = p->get_pattern_length(false);
+      auto pattern_len = p->getPatternLength(false);
       if (pattern_len > max_read) {
         max_read = pattern_len;
       }
 
-      for (auto const &encoding : p->encodings) {
+      for (auto const &encoding : p->Encodings) {
         if (!lg_add_pattern(fsm, pattern, encoding.c_str(), i, &err)) {
           if (err) {
             auto r = makeUnexpected(err->Message);
@@ -78,7 +77,7 @@ expected<size_t> LightGrep::setup(Magics const &m) {
     }
 
     LG_ProgramOptions opts = {0};
-    if (!(_prog = lg_create_program(fsm, &opts))) {
+    if (!(Prog = lg_create_program(fsm, &opts))) {
       return makeUnexpected("lg_create_program() failed");
     }
   } catch (std::exception const &ex) {
@@ -92,7 +91,7 @@ expected<bool> LightGrep::search(MemoryRegion const &region, void *user_data,
                                  LG_HITCALLBACK_FN callback_fn) const {
   try {
     LG_ContextOptions ctxOpts = {0, 0};
-    LG_HCONTEXT searcher = lg_create_context(_prog, &ctxOpts);
+    LG_HCONTEXT searcher = lg_create_context(Prog, &ctxOpts);
     lg_reset_context(searcher);
     lg_starts_with(searcher, (const char *)boost::begin(region),
                    (const char *)boost::end(region), 0, user_data, callback_fn);
@@ -115,7 +114,7 @@ expected<CompareType> parse_compare_type(std::string_view s) {
     return val->second;
   }
 
-  return makeUnexpected(std::string("Unknown compare_type: ") + std::string(s));
+  return makeUnexpected(std::string("Unknown compareType: ") + std::string(s));
 }
 
 bool iequals(char lhs, char rhs) {
@@ -123,8 +122,8 @@ bool iequals(char lhs, char rhs) {
   return std::toupper(lhs, loc) == std::toupper(rhs, loc);
 }
 
-bool magic::check::compare(Binary const &data) const {
-  if (data.size() < value.size())
+bool Magic::Check::compare(Binary const &data) const {
+  if (data.size() < Value.size())
     return false;
   auto eq = [](uint8_t const &a, uint8_t const &b) -> bool { return a == b; };
   auto eqUp = [](uint8_t const &a, uint8_t const &b) -> bool {
@@ -142,7 +141,7 @@ bool magic::check::compare(Binary const &data) const {
     return !(a | b);
   };
   std::function<bool(uint8_t const &, uint8_t const &)> fn;
-  switch (compare_type) {
+  switch (CompareOp) {
   case CompareType::Eq:
     fn = eq;
     break;
@@ -172,25 +171,24 @@ bool magic::check::compare(Binary const &data) const {
     break;
   default:
     throw std::range_error("compare: impossible OP " +
-                           std::to_string((int)compare_type));
+                           std::to_string((int)CompareOp));
   }
 
   bool result = true;
-  bool need_pp = (pre_process.size() > 0);
-  for (auto data_value = data.cbegin(), expected_value = value.cbegin();
-       result && expected_value != value.cend();
+  bool need_pp = (PreProcess.size() > 0);
+  for (auto data_value = data.cbegin(), expected_value = Value.cbegin();
+       result && expected_value != Value.cend();
        data_value++, expected_value++) {
-    auto v =
-        (need_pp)
-            ? *data_value & *(pre_process.begin() +
-                              (data_value - data.cbegin()) % pre_process.size())
-            : *data_value;
+    auto v = (need_pp) ? *data_value &
+                             *(PreProcess.begin() +
+                               (data_value - data.cbegin()) % PreProcess.size())
+                       : *data_value;
     result = fn(v, *expected_value);
   }
   return result;
 }
 
-size_t get_pattern_length(std::string const &pattern, bool only_significant) {
+size_t getPatternLength(std::string const &pattern, bool only_significant) {
   std::size_t i = 0;
   size_t count = 0;
   char prev_c = 0;
@@ -232,11 +230,11 @@ size_t get_pattern_length(std::string const &pattern, bool only_significant) {
   return count * 4;
 }
 
-size_t magic::get_pattern_length(bool only_significant) const {
-  return FileSignatures::get_pattern_length(pattern, only_significant);
+size_t Magic::getPatternLength(bool only_significant) const {
+  return FileSignatures::getPatternLength(Pattern, only_significant);
 }
 
-Offset parseOffset(std::string s) {
+OffsetType parseOffset(std::string s) {
   std::stringstream ss;
   bool from_start = true;
 
@@ -256,7 +254,7 @@ Offset parseOffset(std::string s) {
   if (!from_start)
     v *= -1;
 
-  return Offset{v, from_start};
+  return OffsetType{v, from_start};
 }
 
 uint8_t char2uint8(char input) {
@@ -280,7 +278,7 @@ Binary str2bin(const std::string &src) {
   return dst;
 }
 
-expected<Magics> FileSigAnalyzer::readMagics(std::string_view path) {
+expected<MagicsType> FileSigAnalyzer::readMagics(std::string_view path) {
   try {
     std::ifstream is(path.data());
     if (is.fail())
@@ -289,58 +287,58 @@ expected<Magics> FileSigAnalyzer::readMagics(std::string_view path) {
 
     auto json(jsoncons::json::parse(is));
 
-    Magics magics;
+    MagicsType magics;
     for (const auto &magic_json : json.array_range()) {
-      magic m;
+      Magic m;
       if (magic_json.contains("checks")) {
         for (const auto &check : magic_json["checks"].array_range()) {
           if (auto compare_type =
                   parse_compare_type(check["compare_type"].as_string())) {
-            auto pre_process = check.contains("pre_process")
-                                   ? str2bin(check["pre_process"].as_string())
-                                   : Binary();
+            auto preprocess = check.contains("pre_process")
+                                  ? str2bin(check["pre_process"].as_string())
+                                  : Binary();
 
-            m.checks.push_back(magic::check{
+            m.Checks.push_back(Magic::Check{
                 compare_type.value(), parseOffset(check["offset"].as_string()),
-                str2bin(check["value"].as_string()), pre_process});
+                str2bin(check["value"].as_string()), preprocess});
           } else {
             return makeUnexpected(compare_type.error());
           }
         }
       }
       if (magic_json.contains("pattern")) {
-        m.pattern = magic_json["pattern"].as_string();
+        m.Pattern = magic_json["pattern"].as_string();
       }
-      m.fixed_string = magic_json.contains("fixed_string")
-                           ? magic_json["fixed_string"].as_bool()
-                           : false;
-      m.case_insensetive = magic_json.contains("case_insensitive")
-                               ? magic_json["case_insensitive"].as_bool()
-                               : false;
+      m.FixedString = magic_json.contains("fixed_string")
+                          ? magic_json["fixed_string"].as_bool()
+                          : false;
+      m.CaseInsensetive = magic_json.contains("case_insensitive")
+                              ? magic_json["case_insensitive"].as_bool()
+                              : false;
 
       if (magic_json.contains("description")) {
-        m.description = magic_json["description"].as_string();
+        m.Description = magic_json["description"].as_string();
       }
       if (magic_json.contains("id")) {
-        m.id = magic_json["id"].as_string();
+        m.Id = magic_json["id"].as_string();
       }
       if (magic_json.contains("tags")) {
         for (const auto &tag : magic_json["tags"].array_range()) {
-          m.tags.push_back(tag.as_string());
+          m.Tags.push_back(tag.as_string());
         }
       }
       if (magic_json.contains("extensions")) {
         for (const auto &ext : magic_json["extensions"].object_range()) {
-          m.extensions[ext.key()] = ext.value().as_string();
+          m.Extensions[ext.key()] = ext.value().as_string();
         }
       }
       if (magic_json.contains("encoding")) {
-        boost::split(m.encodings, magic_json["encoding"].as_string(),
+        boost::split(m.Encodings, magic_json["encoding"].as_string(),
                      boost::is_any_of(","));
       } else {
-        m.encodings.push_back("ISO-8859-1");
+        m.Encodings.push_back("ISO-8859-1");
       }
-      magics.push_back(std::make_shared<magic>(m));
+      magics.push_back(std::make_shared<Magic>(m));
     }
 
     return magics;
@@ -354,18 +352,18 @@ struct lg_callback_context {
   size_t min_hit_index;
 };
 
-void FileSigAnalyzer::lg_callbackfn(void *userData,
-                                    const LG_SearchHit *const hit) {
+void FileSigAnalyzer::lgCallbackfn(void *userData,
+                                   const LG_SearchHit *const hit) {
   auto ctx = (lg_callback_context *)userData;
   auto hit_info =
-      lg_prog_pattern_info(ctx->self->lg.get_lg_prog(), hit->KeywordIndex);
+      lg_prog_pattern_info(ctx->self->Lg.get_lg_prog(), hit->KeywordIndex);
   if (hit_info && hit_info->UserIndex < ctx->min_hit_index) {
     ctx->min_hit_index = hit_info->UserIndex;
   }
 }
 
-expected<bool> FileSigAnalyzer::get_signature(const fs::directory_entry &de,
-                                              Magic &result) const {
+expected<bool> FileSigAnalyzer::getSignature(const fs::directory_entry &de,
+                                             MagicPtr &result) const {
   std::error_code ec;
   if (!de.is_regular_file(ec) || ec) {
     return makeUnexpected("FileSigAnalyzer is working with regular files only");
@@ -382,31 +380,31 @@ expected<bool> FileSigAnalyzer::get_signature(const fs::directory_entry &de,
     }
 
     lg_callback_context ctx{this, std::numeric_limits<size_t>::max()};
-    auto readed = ifs.read((char *)read_buf.data(), read_buf.size()).gcount();
+    auto readed = ifs.read((char *)ReadBuf.data(), ReadBuf.size()).gcount();
     if (readed == 0) {
       return makeUnexpected("read zero bytes from " + de.path().string());
     }
     auto lg_err =
-        lg.search(MemoryRegion(read_buf.data(), read_buf.data() + readed), &ctx,
-                  &FileSigAnalyzer::lg_callbackfn);
+        Lg.search(MemoryRegion(ReadBuf.data(), ReadBuf.data() + readed), &ctx,
+                  &FileSigAnalyzer::lgCallbackfn);
     if (lg_err.has_error()) {
       throw std::runtime_error(
-          "lg.search() failed on file: " + de.path().string() +
+          "Lg.search() failed on file: " + de.path().string() +
           std::string(", error: ") + lg_err.error());
     }
     if (ctx.min_hit_index != std::numeric_limits<size_t>::max()) {
       // hit
-      result = this->magics[ctx.min_hit_index];
+      result = this->Magics[ctx.min_hit_index];
       return true;
     }
 
     // no hits? search manually
 
-    Binary check_buf(read_buf);
+    Binary check_buf(ReadBuf);
 
-    auto get_buf = [&ifs, this, &check_buf](Offset const &offset,
+    auto get_buf = [&ifs, this, &check_buf](OffsetType const &offset,
                                             std::size_t size) {
-      if (size + offset.count > read_buf.size() || offset.from_start == false) {
+      if (size + offset.count > ReadBuf.size() || offset.from_start == false) {
         check_buf.resize(size);
         ifs.clear();
         ifs.seekg(offset.count,
@@ -420,18 +418,18 @@ expected<bool> FileSigAnalyzer::get_signature(const fs::directory_entry &de,
                std::to_string(offset.from_start) + " failed."));
         return check_buf;
       }
-      return Binary(&read_buf[offset.count], &read_buf[offset.count + size]);
+      return Binary(&ReadBuf[offset.count], &ReadBuf[offset.count + size]);
     };
 
     // by "ext"
-    auto s = signature_dict.find(ext);
-    if (s != signature_dict.end()) {
+    auto s = SignatureDict.find(ext);
+    if (s != SignatureDict.end()) {
       auto &m = s->second;
-      bool all_checks_passed = m->checks.size() > 0;
-      BOOST_FOREACH (auto check_it, m->checks) {
+      bool all_checks_passed = m->Checks.size() > 0;
+      BOOST_FOREACH (auto check_it, m->Checks) {
         if (!(all_checks_passed =
-                  (check_it.compare(get_buf(check_it.offset,
-                                            check_it.value.size())) == true)))
+                  (check_it.compare(get_buf(check_it.Offset,
+                                            check_it.Value.size())) == true)))
           break;
       }
       if (all_checks_passed) {
@@ -442,12 +440,12 @@ expected<bool> FileSigAnalyzer::get_signature(const fs::directory_entry &de,
     }
 
     // final check through all signatures
-    for (auto const &s : signature_list) {
+    for (auto const &s : SignatureList) {
       bool all_checks_passed = false;
-      BOOST_FOREACH (auto check_it, s->checks) {
+      BOOST_FOREACH (auto check_it, s->Checks) {
         if (!(all_checks_passed =
-                  (check_it.compare(get_buf(check_it.offset,
-                                            check_it.value.size())) == true)))
+                  (check_it.compare(get_buf(check_it.Offset,
+                                            check_it.Value.size())) == true)))
           break;
       }
       if (all_checks_passed) {
@@ -469,31 +467,31 @@ FileSigAnalyzer::FileSigAnalyzer() {
 
   auto magics = result.value();
 
-  // fill signature_dict & signature_list
+  // fill SignatureDict & SignatureList
   for (auto const &m : magics) {
-    signature_list.push_back(m);
-    for (auto const &ext : m->extensions) {
-      if (signature_dict.count(ext.first) == 0) {
-        signature_dict.insert(std::pair(ext.first, m));
+    SignatureList.push_back(m);
+    for (auto const &ext : m->Extensions) {
+      if (SignatureDict.count(ext.first) == 0) {
+        SignatureDict.insert(std::pair(ext.first, m));
       }
     }
   }
 
   // resort magics by pattern size in desceding order ('bigger' patterns first)
   std::sort(begin(magics), end(magics),
-            [](Magic const &a, Magic const &b) -> bool {
-              return a->get_pattern_length(true) > b->get_pattern_length(true);
+            [](MagicPtr const &a, MagicPtr const &b) -> bool {
+              return a->getPatternLength(true) > b->getPatternLength(true);
             });
 
-  this->magics = std::move(magics);
+  this->Magics = std::move(magics);
 
-  auto r = lg.setup(this->magics);
+  auto r = Lg.setup(this->Magics);
   if (r.has_failure()) {
     throw std::runtime_error("LightGrep::setup failed: " + r.error());
   }
 
   auto max_read = r.value();
-  read_buf.resize(max_read);
+  ReadBuf.resize(max_read);
 }
 
 } // namespace FileSignatures

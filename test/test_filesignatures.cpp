@@ -41,12 +41,12 @@ struct DataGenerator : public Catch::Generators::IGenerator<ItemType> {
 };
 
 struct LengthItem {
-  std::string pattern;
-  size_t len;
+  std::string Pattern;
+  size_t Len;
 
   LengthItem() = default;
   LengthItem(jsoncons::json const &json)
-      : pattern(json.at(0).as<std::string>()), len(json.at(1).as<int>()) {}
+      : Pattern(json.at(0).as<std::string>()), Len(json.at(1).as<int>()) {}
 };
 
 using LengthDataGenerator = DataGenerator<LengthItem>;
@@ -69,15 +69,15 @@ struct TestSignItem {
 using TestSignDataGenerator = DataGenerator<TestSignItem>;
 
 struct tempfile : std::fstream {
-  fs::path filename;
+  fs::path Filename;
 
   tempfile(Binary const &data, std::string const &ext) {
-    filename = fs::temp_directory_path() / fs::path("test_filesign." + ext);
-    open(filename, this->binary | this->trunc | this->out);
+    Filename = fs::temp_directory_path() / fs::path("test_filesign." + ext);
+    open(Filename, this->binary | this->trunc | this->out);
     write(reinterpret_cast<char const *>(data.data()), data.size());
     close();
   }
-  ~tempfile() { std::filesystem::remove(filename); }
+  ~tempfile() { std::filesystem::remove(Filename); }
 };
 } // namespace
 
@@ -88,22 +88,22 @@ TEST_CASE("Compare with verified signatures", "[testSignatures]") {
   while (generator.next()) {
     auto data = generator.get();
     tempfile file(data.binary, data.expected_ext);
-    std::filesystem::directory_entry de(file.filename);
-    Magic result;
-    if (file_sig_analyzer.get_signature(de, result).value()) {
+    std::filesystem::directory_entry de(file.Filename);
+    MagicPtr result;
+    if (file_sig_analyzer.getSignature(de, result).value()) {
       REQUIRE(data.signature_id.has_value() == true);
-      REQUIRE(result->id == data.signature_id.value());
+      REQUIRE(result->Id == data.signature_id.value());
     } else {
       REQUIRE(data.signature_id.has_value() == false);
     }
   }
 }
 
-TEST_CASE("Compare with verified data", "[get_pattern_length]") {
+TEST_CASE("Compare with verified data", "[getPatternLength]") {
   auto generator = LengthDataGenerator("test/data/pattern_lengths.json");
   while (generator.next()) {
     auto data = generator.get();
-    REQUIRE(::get_pattern_length(data.pattern, true) == data.len);
+    REQUIRE(::getPatternLength(data.Pattern, true) == data.Len);
   }
 }
 
@@ -128,8 +128,8 @@ TEST_CASE("Parsing offsets", "[parseOffset]") {
   auto const json = jsoncons::json(jsoncons::json::parse(is));
 
   for (auto magic : magics) {
-    if (magic->checks.size() > 0) {
-      auto const &item_ptr = json.find(magic->id);
+    if (magic->Checks.size() > 0) {
+      auto const &item_ptr = json.find(magic->Id);
       if (item_ptr != json.object_range().end()) {
         auto item_range = (*item_ptr).value().array_range();
         for (auto item = item_range.cbegin(); item != item_range.cend();
@@ -139,8 +139,8 @@ TEST_CASE("Parsing offsets", "[parseOffset]") {
           long int_offset = check_item[1].as_integer<long>();
           int whence = check_item[2].as_integer<int>();
           auto i = item - item_range.cbegin();
-          REQUIRE(int_offset == magic->checks[i].offset.count);
-          REQUIRE(whence == (magic->checks[i].offset.from_start ? 0 : 2));
+          REQUIRE(int_offset == magic->Checks[i].Offset.count);
+          REQUIRE(whence == (magic->Checks[i].Offset.from_start ? 0 : 2));
         }
       }
     }
