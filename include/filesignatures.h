@@ -6,7 +6,6 @@
 #include <vector>
 
 #include <boost/outcome.hpp>
-#include <boost/range/iterator_range.hpp>
 #include <lightgrep/api.h>
 
 namespace FileSignatures {
@@ -55,8 +54,6 @@ typedef std::shared_ptr<Magic> MagicPtr;
 
 typedef std::vector<MagicPtr> MagicsType;
 
-typedef boost::iterator_range<const uint8_t *> MemoryRegion;
-
 class LightGrep {
   LG_HPROGRAM Prog;
 
@@ -64,8 +61,8 @@ public:
   LightGrep();
   ~LightGrep();
   expected<size_t> setup(MagicsType const &m);
-  expected<bool> search(MemoryRegion const &region, void *user_data,
-                        LG_HITCALLBACK_FN callback_fn) const;
+  expected<bool> search(const uint8_t *start, const uint8_t *end,
+                        void *user_data, LG_HITCALLBACK_FN callback_fn) const;
   LG_HPROGRAM get_lg_prog() const { return Prog; }
 };
 

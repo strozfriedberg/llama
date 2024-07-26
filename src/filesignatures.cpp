@@ -87,14 +87,15 @@ expected<size_t> LightGrep::setup(MagicsType const &m) {
   return max_read;
 }
 
-expected<bool> LightGrep::search(MemoryRegion const &region, void *user_data,
+expected<bool> LightGrep::search(const uint8_t *start, const uint8_t *end,
+                                 void *user_data,
                                  LG_HITCALLBACK_FN callback_fn) const {
   try {
     LG_ContextOptions ctxOpts = {0, 0};
     LG_HCONTEXT searcher = lg_create_context(Prog, &ctxOpts);
     lg_reset_context(searcher);
-    lg_starts_with(searcher, (const char *)boost::begin(region),
-                   (const char *)boost::end(region), 0, user_data, callback_fn);
+    lg_starts_with(searcher, (const char *)start, (const char *)end, 0,
+                   user_data, callback_fn);
     lg_destroy_context(searcher);
   } catch (std::exception const &ex) {
     return makeUnexpected(ex.what());
@@ -384,9 +385,8 @@ expected<bool> FileSigAnalyzer::getSignature(const fs::directory_entry &de,
     if (readed == 0) {
       return makeUnexpected("read zero bytes from " + de.path().string());
     }
-    auto lg_err =
-        Lg.search(MemoryRegion(ReadBuf.data(), ReadBuf.data() + readed), &ctx,
-                  &FileSigAnalyzer::lgCallbackfn);
+    auto lg_err = Lg.search(ReadBuf.data(), ReadBuf.data() + readed, &ctx,
+                            &FileSigAnalyzer::lgCallbackfn);
     if (lg_err.has_error()) {
       throw std::runtime_error(
           "Lg.search() failed on file: " + de.path().string() +
