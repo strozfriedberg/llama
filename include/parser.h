@@ -36,7 +36,7 @@ public:
   void parseStringMod();
   void parseEncodings();
   void parseStringDef();
-  void parseStringsSection();
+  void parsePatternsSection();
   void parseNumber();
   void parseDualFuncCall();
   void parseAnyFuncCall();
@@ -138,9 +138,9 @@ void LlamaParser::parseStringDef() {
   }
 }
 
-void LlamaParser::parseStringsSection() {
-  mustParse("Expected strings keyword", TokenType::STRINGS);
-  mustParse("Expected colon after strings keyword", TokenType::COLON);
+void LlamaParser::parsePatternsSection() {
+  mustParse("Expected patterns keyword", TokenType::PATTERNS);
+  mustParse("Expected colon after patterns keyword", TokenType::COLON);
   while (checkAny(TokenType::IDENTIFIER)) {
     parseStringDef();
   }
@@ -234,8 +234,8 @@ void LlamaParser::parseSignatureSection() {
 void LlamaParser::parseGrepSection() {
   mustParse("Expected grep keyword", TokenType::GREP);
   mustParse("Expected colon after grep keyword", TokenType::COLON);
-  if (checkAny(TokenType::STRINGS)) {
-    parseStringsSection();
+  if (checkAny(TokenType::PATTERNS)) {
+    parsePatternsSection();
   }
   parseConditionSection();
 }

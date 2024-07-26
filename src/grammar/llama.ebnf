@@ -16,7 +16,7 @@ meta_section        = META COLON string_def+;
 
 file_metadata_section = FILE_METADATA COLON file_metadata_def+;
 
-grep_section        = GREP COLON string_section? condition_section;
+grep_section        = GREP COLON patterns_section? condition_section;
 
 signature_section   = SIGNATURE COLON DOUBLE_QUOTED_STRING+;
 
@@ -24,7 +24,7 @@ hash_section        = HASH COLON hash_expr+;
 
 hash_expr           = hash EQUAL DOUBLE_QUOTED_STRING;
 
-strings_section     = STRINGS COLON string_def+;
+patterns_section     = PATTERNS COLON string_def+;
 
 condition_section   = CONDITION COLON expr+;
 
@@ -110,7 +110,7 @@ FILE_METADATA       = "file_metadata";
 SIGNATURE           = "signature";
 GREP                = "grep";
 HASH                = "hash";
-STRINGS             = "strings";
+PATTERNS            = "patterns";
 CONDITION           = "condition";
 RULE                = "rule";
 CREATED             = "created";

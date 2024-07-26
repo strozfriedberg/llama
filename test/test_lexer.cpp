@@ -196,11 +196,11 @@ TEST_CASE("parseFilepathId") {
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::FILEPATH);
 }
 
-TEST_CASE("parseStringsId") {
-  std::string input = "strings";
+TEST_CASE("parsePatternsId") {
+  std::string input = "patterns";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::STRINGS);
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::PATTERNS);
 }
 
 TEST_CASE("parseAllId") {

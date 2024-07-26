@@ -189,16 +189,16 @@ TEST_CASE("parseStringDefDoesNotThrowIfStringDef") {
   REQUIRE_NOTHROW(parser.parseStringDef());
 }
 
-TEST_CASE("parseStringsSectionThrowsIfNotStrings") {
+TEST_CASE("parsePatternsSectionThrowsIfNotPatterns") {
   std::string input = "rule";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_THROWS_AS(parser.parseStringsSection(), ParserError);
+  REQUIRE_THROWS_AS(parser.parsePatternsSection(), ParserError);
 }
 
-TEST_CASE("parseStringsSectionDoesNotThrowIfStrings") {
-  std::string input = "strings:\n  a = \"test\" encodings=UTF-8 nocase fixed\n b = \"test\" encodings=UTF-8 nocase fixed";
+TEST_CASE("parsePatternsSectionDoesNotThrowIfPatterns") {
+  std::string input = "patterns:\n  a = \"test\" encodings=UTF-8 nocase fixed\n b = \"test\" encodings=UTF-8 nocase fixed";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseStringsSection());
+  REQUIRE_NOTHROW(parser.parsePatternsSection());
 }
 
 TEST_CASE("parseAnyFuncCall") {
@@ -258,7 +258,7 @@ TEST_CASE("parseSignatureSection") {
 TEST_CASE("parseGrepSection") {
   std::string input = R"(
   grep:
-    strings:
+    patterns:
       a = "test" encodings=UTF-8 nocase fixed
       b = "test2" encodings=UTF-8 nocase fixed
     condition:
@@ -345,7 +345,7 @@ TEST_CASE("parseNonGrepSectionThrows") {
 TEST_CASE("parseRuleContentGrep") {
   std::string input = R"(
   grep:
-    strings:
+    patterns:
       a = "test" encodings=UTF-8 nocase fixed
       b = "test2" encodings=UTF-8 nocase fixed
     condition:
@@ -415,7 +415,7 @@ TEST_CASE("parseRuleDeclThrowsIfBothGrepAndNonGrepSection") {
   std::string input = R"(
   rule MyRule {
     grep:
-      strings:
+      patterns:
         a = "test" encodings=UTF-8 nocase fixed
         b = "test2" encodings=UTF-8 nocase fixed
       condition:
@@ -439,7 +439,7 @@ TEST_CASE("startRule") {
     meta:
       description = "test"
     grep:
-      strings:
+      patterns:
         a = "test" encodings=UTF-8 nocase fixed
         b = "test2" encodings=UTF-8 nocase fixed
       condition:
