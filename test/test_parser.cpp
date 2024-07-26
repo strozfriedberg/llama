@@ -445,5 +445,6 @@ TEST_CASE("startRule") {
   }
   )";
   LlamaParser parser(getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseRules());
+  std::vector<Rule> rules;
+  REQUIRE_NOTHROW(rules = parser.parseRules());
 }

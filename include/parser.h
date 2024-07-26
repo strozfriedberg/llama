@@ -5,6 +5,11 @@ public:
   ParserError(const std::string& message, LineCol pos) : UnexpectedInputError(message, pos) {}
 };
 
+class Rule {
+public:
+  std::string Name;
+};
+
 class LlamaParser {
 public:
   LlamaParser(const std::vector<Token>& tokens) : Tokens(tokens) {}
@@ -49,7 +54,7 @@ public:
   void parseRuleContent();
   void parseRule();
   void parseRuleDecl();
-  void parseRules();
+  std::vector<Rule> parseRules();
 
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
@@ -306,9 +311,11 @@ void LlamaParser::parseRuleDecl() {
   mustParse("Expected close curly brace", TokenType::CLOSE_BRACE);
 }
 
-void LlamaParser::parseRules() {
+std::vector<Rule> LlamaParser::parseRules() {
+  std::vector<Rule> rules;
   while (!isAtEnd()) {
     parseRuleDecl();
   }
+  return rules;
 }
 
