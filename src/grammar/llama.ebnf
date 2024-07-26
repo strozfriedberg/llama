@@ -12,7 +12,7 @@ non_grep_section   = file_metadata_section
                    | hash_section
                    | signature_section;
 
-meta_section        = META COLON string_def+;
+meta_section        = META COLON pattern_def+;
 
 file_metadata_section = FILE_METADATA COLON file_metadata_def+;
 
@@ -24,16 +24,16 @@ hash_section        = HASH COLON hash_expr+;
 
 hash_expr           = hash EQUAL DOUBLE_QUOTED_STRING;
 
-patterns_section     = PATTERNS COLON string_def+;
+patterns_section     = PATTERNS COLON pattern_def+;
 
 condition_section   = CONDITION COLON expr+;
 
 file_metadata_def   = file_metadata EQUAL DOUBLE_QUOTED_STRING
                     | FILESIZE EQUAL NUMBER;
 
-string_def          = IDENTIFIER EQUAL DOUBLE_QUOTED_STRING string_mod+;
+pattern_def          = IDENTIFIER EQUAL DOUBLE_QUOTED_STRING pattern_mod+;
 
-string_mod          = encodings | FIXED | NOCASE;
+pattern_mod          = encodings | FIXED | NOCASE;
 
 encodings           = ENCODINGS EQUAL ENCODINGS_LIST;
 

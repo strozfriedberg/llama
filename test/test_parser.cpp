@@ -155,13 +155,13 @@ TEST_CASE("parseOperatorDoesNotThrowIfOperator") {
 TEST_CASE("parseStringModThrowsIfNotStringMod") {
   std::string input = "notAStringMod";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_THROWS_AS(parser.parseStringMod(), ParserError);
+  REQUIRE_THROWS_AS(parser.parsePatternMod(), ParserError);
 }
 
 TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
   std::string input = "nocase";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseStringMod());
+  REQUIRE_NOTHROW(parser.parsePatternMod());
 }
 
 TEST_CASE("parseEncodingsThrowsIfNotEncodings") {
@@ -180,13 +180,13 @@ TEST_CASE("parseEncodingsDoesNotThrowIfEncodings") {
 TEST_CASE("parseStringDefThrowsIfNotStringDef") {
   std::string input = "rule";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_THROWS_AS(parser.parseStringDef(), ParserError);
+  REQUIRE_THROWS_AS(parser.parsePatternDef(), ParserError);
 }
 
 TEST_CASE("parseStringDefDoesNotThrowIfStringDef") {
   std::string input = "a = \"test\" encodings=UTF-8 nocase fixed";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseStringDef());
+  REQUIRE_NOTHROW(parser.parsePatternDef());
 }
 
 TEST_CASE("parsePatternsSectionThrowsIfNotPatterns") {

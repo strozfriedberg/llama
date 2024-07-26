@@ -33,9 +33,9 @@ public:
   void parseHashExpr();
   void parseHash();
   void parseOperator();
-  void parseStringMod();
+  void parsePatternMod();
   void parseEncodings();
-  void parseStringDef();
+  void parsePatternDef();
   void parsePatternsSection();
   void parseNumber();
   void parseDualFuncCall();
@@ -109,7 +109,7 @@ void LlamaParser::parseOperator() {
   );
 }
 
-void LlamaParser::parseStringMod() {
+void LlamaParser::parsePatternMod() {
   if (matchAny(TokenType::NOCASE)) {
     return;
   }
@@ -120,7 +120,7 @@ void LlamaParser::parseStringMod() {
     parseEncodings();
   }
   else{
-    throw ParserError("Expected string modifier", peek().Pos);
+    throw ParserError("Expected pattern modifier", peek().Pos);
   }
 }
 
@@ -129,12 +129,12 @@ void LlamaParser::parseEncodings() {
   mustParse("Expected encodings list", TokenType::ENCODINGS_LIST);
 }
 
-void LlamaParser::parseStringDef() {
+void LlamaParser::parsePatternDef() {
   mustParse("Expected identifier", TokenType::IDENTIFIER);
   mustParse("Expected equal sign", TokenType::EQUAL);
   mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
   while (checkAny(TokenType::NOCASE, TokenType::FIXED, TokenType::ENCODINGS)) {
-    parseStringMod();
+    parsePatternMod();
   }
 }
 
@@ -142,7 +142,7 @@ void LlamaParser::parsePatternsSection() {
   mustParse("Expected patterns keyword", TokenType::PATTERNS);
   mustParse("Expected colon after patterns keyword", TokenType::COLON);
   while (checkAny(TokenType::IDENTIFIER)) {
-    parseStringDef();
+    parsePatternDef();
   }
 }
 
