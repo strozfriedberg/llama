@@ -12,7 +12,7 @@ enum class TokenType {
   FILE_METADATA,
   SIGNATURE,
   GREP,
-  STRINGS,
+  PATTERNS,
   HASH,
   CONDITION,
   CREATED,
@@ -33,7 +33,8 @@ enum class TokenType {
   ENCODINGS,
   NOCASE,
   FIXED,
-
+  AND,
+  OR,
 
   // punctuation
   OPEN_BRACE,
@@ -66,7 +67,7 @@ namespace Llama {
     {"file_metadata", TokenType::FILE_METADATA},
     {"signature", TokenType::SIGNATURE},
     {"grep", TokenType::GREP},
-    {"strings", TokenType::STRINGS},
+    {"patterns", TokenType::PATTERNS},
     {"hash", TokenType::HASH},
     {"condition", TokenType::CONDITION},
     {"created", TokenType::CREATED},
@@ -86,7 +87,9 @@ namespace Llama {
     {"blake3", TokenType::BLAKE3},
     {"encodings", TokenType::ENCODINGS},
     {"nocase", TokenType::NOCASE},
-    {"fixed", TokenType::FIXED}
+    {"fixed", TokenType::FIXED},
+    {"and", TokenType::AND},
+    {"or", TokenType::OR}
   };
 }
 
@@ -108,6 +111,8 @@ class Token {
 public:
   Token(TokenType type, uint64_t start, uint64_t end, LineCol pos)
        : Type(type), Start(start), End(end), Pos(pos){}
+
+  size_t length() const { return End - Start; }
 
   TokenType Type;
   uint64_t Start, End;

@@ -196,11 +196,11 @@ TEST_CASE("parseFilepathId") {
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::FILEPATH);
 }
 
-TEST_CASE("parseStringsId") {
-  std::string input = "strings";
+TEST_CASE("parsePatternsId") {
+  std::string input = "patterns";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::STRINGS);
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::PATTERNS);
 }
 
 TEST_CASE("parseAllId") {
@@ -463,4 +463,18 @@ TEST_CASE("lone!ThrowsException") {
   std::string input = "!";
   LlamaLexer lexer(input);
   REQUIRE_THROWS_AS(lexer.scanToken(), UnexpectedInputError);
+}
+
+TEST_CASE("andKeyword") {
+  std::string input = "and";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier({0,0});
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::AND);
+}
+
+TEST_CASE("orKeyword") {
+  std::string input = "or";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier({0,0});
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::OR);
 }
