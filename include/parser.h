@@ -12,7 +12,7 @@ public:
 
 class LlamaParser {
 public:
-  LlamaParser(const std::vector<Token>& tokens) : Tokens(tokens) {}
+  LlamaParser(const std::string& input, const std::vector<Token>& tokens) : Input(input), Tokens(tokens) {}
 
   Token previous() const { return Tokens.at(CurIdx - 1); }
   Token peek() const { return Tokens.at(CurIdx); }
@@ -56,6 +56,7 @@ public:
   Rule parseRuleDecl();
   std::vector<Rule> parseRules();
 
+  std::string Input;
   std::vector<Token> Tokens;
   uint64_t CurIdx = 0;
 };

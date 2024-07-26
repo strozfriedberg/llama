@@ -15,39 +15,40 @@ Token makeToken(TokenType type) {
 
 TEST_CASE("LlamaParser") {
   std::vector<Token> tokens;
-  LlamaParser parser(tokens);
+  std::string input = "";
+  LlamaParser parser(input, tokens);
 }
 
 TEST_CASE("TestLlamaParserPrevious") {
   std::string input = "rule { meta: description = \"test\" }";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   parser.CurIdx = 1;
   REQUIRE(parser.previous().Type == TokenType::RULE);
 }
 
 TEST_CASE("TestLlamaParserPeek") {
   std::string input = "rule { meta: description = \"test\" }";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   parser.CurIdx = 1;
   REQUIRE(parser.peek().Type == TokenType::OPEN_BRACE);
 }
 
 TEST_CASE("TestLlamaParserIsAtEndTrue") {
   std::string input = "rule";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   parser.advance();
   REQUIRE(parser.isAtEnd());
 }
 
 TEST_CASE("TestLlamaParserIsAtEndFalse") {
   std::string input = "rule";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_FALSE(parser.isAtEnd());
 }
 
 TEST_CASE("TestLlamaParserAdvance") {
   std::string input = "rule { meta: description = \"test\" }";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   parser.advance();
   REQUIRE(parser.previous().Type == TokenType::RULE);
   REQUIRE(parser.peek().Type == TokenType::OPEN_BRACE);
@@ -55,201 +56,202 @@ TEST_CASE("TestLlamaParserAdvance") {
 
 TEST_CASE("TestLlamaParserCheckTrue") {
   std::string input = "rule { meta: description = \"test\" }";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE(parser.checkAny(TokenType::RULE));
 }
 
 TEST_CASE("TestLlamaParserCheckFalse") {
   std::string input = "rule { meta: description = \"test\" }";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_FALSE(parser.checkAny(TokenType::OPEN_BRACE));
 }
 
 TEST_CASE("TestLlamaParserMatchTrue") {
   std::string input = "rule { meta: description = \"test\" }";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE(parser.matchAny(TokenType::RULE));
   REQUIRE(parser.CurIdx == 1);
 }
 
 TEST_CASE("TestLlamaParserMatchFalse") {
   std::string input = "rule { meta: description = \"test\" }";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_FALSE(parser.matchAny(TokenType::OPEN_BRACE));
   REQUIRE(parser.CurIdx == 0);
 }
 
 TEST_CASE("TestLlamaParserMatchMultipleTrue") {
   std::string input = "rule { meta: description = \"test\" }";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE(parser.matchAny(TokenType::RULE, TokenType::META));
 }
 
 TEST_CASE("TestLlamaParserMatchMultipleFalse") {
   std::string input = "rule { meta: description = \"test\" }";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_FALSE(parser.matchAny(TokenType::OPEN_BRACE, TokenType::META));
 }
 
 TEST_CASE("parseHashThrowsIfNotHash") {
   std::string input = "notAHash";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseHash(), ParserError);
 }
 
 TEST_CASE("parseHashDoesNotThrowIfHash") {
   std::string input = "md5";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseHash());
 }
 
 TEST_CASE("parseHashExprThrowsIfNotEqual") {
   std::string input = "md5 notEqual";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseHashExpr(), ParserError);
 }
 
 TEST_CASE("parseHashExprThrowsIfNotDoubleQuotedString") {
   std::string input = "md5 = notDoubleQuotedString";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseHashExpr(), ParserError);
 }
 
 TEST_CASE("parseHashExprDoesNotThrowIfEqualAndDoubleQuotedString") {
   std::string input = "md5 = \"test\"";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseHashExpr());
 }
 
 TEST_CASE("parseHashSectionThrowsIfNotHash") {
   std::string input = "notAHash";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseHashSection(), ParserError);
 }
 
 TEST_CASE("parseHashSectionThrowsIfNotColon") {
   std::string input = "hash notColon";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseHashSection(), ParserError);
 }
 
 TEST_CASE("parseHashSectionDoesNotThrowIfHashAndColon") {
   std::string input = "hash: md5 = \"test\"";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseHashSection());
 }
 
 TEST_CASE("parseOperatorThrowsIfNotOperator") {
   std::string input = "notAnOperator";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseOperator(), ParserError);
 }
 
 TEST_CASE("parseOperatorDoesNotThrowIfOperator") {
   std::string input = "==";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseOperator());
 }
 
 TEST_CASE("parseStringModThrowsIfNotStringMod") {
   std::string input = "notAStringMod";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseStringMod(), ParserError);
 }
 
 TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
   std::string input = "nocase";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseStringMod());
 }
 
 TEST_CASE("parseEncodingsThrowsIfNotEncodings") {
   std::string input = "notEncodings";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseEncodings(), ParserError);
 }
 
 TEST_CASE("parseEncodingsDoesNotThrowIfEncodings") {
+  std::string input = "encodings=UTF-8";
   std::vector<Token> tokens = {makeToken(TokenType::EQUAL), makeToken(TokenType::ENCODINGS_LIST)};
-  LlamaParser parser(tokens);
+  LlamaParser parser(input, tokens);
   REQUIRE_NOTHROW(parser.parseEncodings());
 }
 
 TEST_CASE("parseStringDefThrowsIfNotStringDef") {
   std::string input = "rule";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseStringDef(), ParserError);
 }
 
 TEST_CASE("parseStringDefDoesNotThrowIfStringDef") {
   std::string input = "a = \"test\" encodings=UTF-8 nocase fixed";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseStringDef());
 }
 
 TEST_CASE("parseStringsSectionThrowsIfNotStrings") {
   std::string input = "rule";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseStringsSection(), ParserError);
 }
 
 TEST_CASE("parseStringsSectionDoesNotThrowIfStrings") {
   std::string input = "strings:\n  a = \"test\" encodings=UTF-8 nocase fixed\n b = \"test\" encodings=UTF-8 nocase fixed";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseStringsSection());
 }
 
 TEST_CASE("parseAnyFuncCall") {
   std::string input = "any(s1, s2, s3)";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseAnyFuncCall());
 }
 
 TEST_CASE("parseAllFuncCall") {
   std::string input = "all()";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseAllFuncCall());
 }
 
 TEST_CASE("parseTermWithAnd") {
   std::string input = "any(s1, s2, s3) and count(s1, 5) == 5";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseTerm());
 }
 
 TEST_CASE("parseTermWithoutAnd") {
   std::string input = "any(s1, s2, s3)";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseTerm());
 }
 
 TEST_CASE("parseDualFuncCallWithOperator") {
   std::string input = "offset(s1, 5) == 5";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseDualFuncCall());
 }
 
 TEST_CASE("parseDualFuncWithoutOperatorThrows") {
   std::string input = "offset(s1, 5)";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseDualFuncCall(), ParserError);
 }
 
 TEST_CASE("parseExpr") {
   std::string input = "(any(s1, s2, s3) and count(s1, 5) == 5) or all(s1, s2, s3)";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseExpr());
 }
 
 TEST_CASE("parseConditionSection") {
   std::string input = "condition:\n  (any(s1, s2, s3) and count(s1, 5) == 5)\nor all(s1, s2, s3)";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseConditionSection());
 }
 
 TEST_CASE("parseSignatureSection") {
   std::string input = "signature:\n \"EXE\"\n\"MUI\"";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseSignatureSection());
 }
 
@@ -262,25 +264,25 @@ TEST_CASE("parseGrepSection") {
     condition:
       any(a, b) and offset(a, 5) == 5
 )";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseGrepSection());
 }
 
 TEST_CASE("parseFileMetadataDefFileSize") {
   std::string input = "filesize > 100";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseFileMetadataDef());
 }
 
 TEST_CASE("parseFileMetadataDefCreated") {
   std::string input = "created >= \"2024-05-06\"";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseFileMetadataDef());
 }
 
 TEST_CASE("parseFileMetadataDefModified") {
   std::string input = "modified >= \"2024-05-06\"";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseFileMetadataDef());
 }
 
@@ -291,7 +293,7 @@ TEST_CASE("parseFileMetadataSection") {
     modified < "2023-05-06"
     filesize >= 100
   )";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseFileMetadataSection());
 }
 
@@ -301,7 +303,7 @@ TEST_CASE("parseMetaSection") {
     arbitrary = "something"
     another = "something else"
   )";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseMetaSection());
 }
 
@@ -309,7 +311,7 @@ TEST_CASE("parseNonGrepSectionHash") {
   std::string input = R"(
   hash: md5 = "test"
   )";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseNonGrepSection());
 }
 
@@ -319,7 +321,7 @@ TEST_CASE("parseNonGrepSectionSignature") {
     "EXE"
     "MUI"
   )";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseNonGrepSection());
 }
 
@@ -330,13 +332,13 @@ TEST_CASE("parseNonGrepSectionFileMetadata") {
     modified < "2023-05-06"
     filesize >= 100
   )";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseNonGrepSection());
 }
 
 TEST_CASE("parseNonGrepSectionThrows") {
   std::string input = "notHashOrSignatureOrFileMetadata";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseNonGrepSection(), ParserError);
 }
 
@@ -349,7 +351,7 @@ TEST_CASE("parseRuleContentGrep") {
     condition:
       any(a, b) and offset(a, 5) == 5
   )";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseRuleContent());
 }
 
@@ -359,7 +361,7 @@ TEST_CASE("parseRuleContentNonGrep") {
   signature: "EXE"
   file_metadata: created > "2023-05-04"
   )";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseRuleContent());
 }
 
@@ -375,7 +377,7 @@ TEST_CASE("parseRule") {
       modified < "2023-05-06"
       filesize >= 100
   )";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseRule());
 }
 
@@ -388,7 +390,7 @@ TEST_CASE("parseRuleWithoutMeta") {
     modified < "2023-05-06"
     filesize >= 100
   )";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseRule());
 }
 
@@ -405,7 +407,7 @@ TEST_CASE("parseRuleDecl") {
       filesize >= 100
   }
   )";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseRuleDecl());
 }
 
@@ -421,7 +423,7 @@ TEST_CASE("parseRuleDeclThrowsIfBothGrepAndNonGrepSection") {
     hash: md5 = "test"
   }
   )";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseRuleDecl(), ParserError);
 }
 
@@ -444,7 +446,7 @@ TEST_CASE("startRule") {
         any(a, b) and count(a) == 5
   }
   )";
-  LlamaParser parser(getTokensFromString(input));
+  LlamaParser parser(input, getTokensFromString(input));
   std::vector<Rule> rules;
   REQUIRE_NOTHROW(rules = parser.parseRules());
   REQUIRE(rules.size() == 2);
