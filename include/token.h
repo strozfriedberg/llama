@@ -112,6 +112,8 @@ public:
   Token(TokenType type, uint64_t start, uint64_t end, LineCol pos)
        : Type(type), Start(start), End(end), Pos(pos){}
 
+  size_t length() const { return End - Start; }
+
   TokenType Type;
   uint64_t Start, End;
   LineCol Pos;
