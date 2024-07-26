@@ -10,6 +10,9 @@
 #include "filesignatures.h"
 
 namespace {
+    using namespace FileSignatures;
+    namespace fs = std::filesystem;
+
     template <typename ItemType>
     struct DataGenerator : public Catch::Generators::IGenerator<ItemType> {
         jsoncons::json data;
@@ -40,9 +43,13 @@ namespace {
     struct LengthItem {
         std::string pattern;
         size_t len;
+
         LengthItem() = default;
-        LengthItem(jsoncons::json const& json) :pattern(json.at(0).as<std::string>()), len(json.at(1).as<int>()) {}
+        LengthItem(jsoncons::json const& json)
+            : pattern(json.at(0).as<std::string>()), len(json.at(1).as<int>())
+        {}
     };
+
     using LengthDataGenerator = DataGenerator<LengthItem>;
 
     struct TestSignItem {
@@ -52,23 +59,6 @@ namespace {
 
         TestSignItem() = default;
         TestSignItem(jsoncons::json const& json) {
-            auto char2uint8 = [](char input) -> uint8_t {
-                if (input >= '0' && input <= '9')
-                    return input - '0';
-                if (input >= 'A' && input <= 'F')
-                    return input - 'A' + 10;
-                if (input >= 'a' && input <= 'f')
-                    return input - 'a' + 10;
-                return 0;
-                };
-            auto str2bin = [char2uint8](const std::string& src) -> Binary {
-                Binary dst(src.length() / 2);
-                auto di = dst.begin();
-                for (size_t i = 0; i < src.length(); i += 2) {
-                    *di++ = (char2uint8(src[i]) * 16 + char2uint8(src[i + 1]));
-                }
-                return dst;
-                };
             binary = str2bin(json["data"].as_string());
             expected_ext = json["expected_ext"].as_string();
             auto sign = json["signature"];
@@ -80,12 +70,12 @@ namespace {
     using TestSignDataGenerator = DataGenerator<TestSignItem>;
 
     struct tempfile : std::fstream {
-        std::string filename;
+        fs::path filename;
 
         tempfile(Binary const &data, std::string const & ext) {
-            filename = boost::filesystem::unique_path().string() + "." + ext;
+            filename = fs::temp_directory_path() / fs::path("test_filesign." + ext);
             open(filename, this->binary | this->trunc | this->out);
-            write(reinterpret_cast<char const*>(&data[0]), data.size());
+            write(reinterpret_cast<char const*>(data.data()), data.size());
             close();
         }
         ~tempfile() {
