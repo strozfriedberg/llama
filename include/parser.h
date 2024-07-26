@@ -308,6 +308,7 @@ Rule LlamaParser::parseRuleDecl() {
   Rule rule;
   mustParse("Expected rule keyword", TokenType::RULE);
   mustParse("Expected identifier", TokenType::IDENTIFIER);
+  rule.Name = Input.substr(previous().Start, previous().length());
   mustParse("Expected open curly brace", TokenType::OPEN_BRACE);
   parseRule();
   mustParse("Expected close curly brace", TokenType::CLOSE_BRACE);

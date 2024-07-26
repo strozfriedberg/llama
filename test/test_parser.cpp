@@ -450,4 +450,6 @@ TEST_CASE("startRule") {
   std::vector<Rule> rules;
   REQUIRE_NOTHROW(rules = parser.parseRules());
   REQUIRE(rules.size() == 2);
+  REQUIRE(rules.at(0).Name == "MyRule");
+  REQUIRE(rules.at(1).Name == "AnotherRule");
 }
