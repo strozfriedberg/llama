@@ -9,6 +9,8 @@
 #include <boost/outcome.hpp>
 #include <boost/range/iterator_range.hpp>
 
+namespace FileSignatures {
+
 template <typename T>
 using expected = boost::outcome_v2::result<T, std::string>;
 
@@ -84,3 +86,14 @@ public:
     static expected<Magics> readMagics(std::string_view path);
     expected<bool> get_signature(const std::filesystem::directory_entry& de, Magic& result) const;
 };
+
+inline bool startsWith(const std::string& s, const std::string& prefix) {
+    return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
+}
+
+Offset parseOffset(std::string s);
+uint8_t char2uint8(char input);
+// accept 0xABCD (or 1234), return [0xAB, 0xCD] (or [12, 34])
+Binary str2bin(const std::string& src);
+
+} // namespace FileSignatures

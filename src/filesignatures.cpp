@@ -20,6 +20,8 @@
 
 namespace fs = std::filesystem;
 
+namespace FileSignatures {
+
 LightGrep::LightGrep()
 {}
 
@@ -232,7 +234,52 @@ size_t get_pattern_length(std::string const& pattern, bool only_significant) {
 }
 
 size_t magic::get_pattern_length(bool only_significant) const {
-    return ::get_pattern_length(pattern, only_significant);
+    return FileSignatures::get_pattern_length(pattern, only_significant);
+}
+
+Offset parseOffset(std::string s) {
+    std::stringstream ss;
+    bool from_start = true;
+
+    if (startsWith(s, "Z")) {
+        s = s.substr(1);
+        from_start = false;
+    }
+    if (startsWith(s, "0x") || startsWith(s, "0X")) {
+        s = s.substr(2);
+        ss << std::hex << s;
+    }
+    else {
+        ss << std::dec << s;
+    }
+    long v;
+    ss >> v;
+
+    if (!from_start)
+        v *= -1;
+
+    return Offset{ v, from_start };
+}
+
+uint8_t char2uint8(char input) {
+    if (input >= '0' && input <= '9')
+        return input - '0';
+    if (input >= 'A' && input <= 'F')
+        return input - 'A' + 10;
+    if (input >= 'a' && input <= 'f')
+        return input - 'a' + 10;
+    return 0;
+}
+
+// accept 0xABCD (or 1234), return [0xAB, 0xCD] (or [12, 34])
+Binary str2bin(const std::string& src) {
+    bool hex = startsWith(src, "0x") || startsWith(src, "0X");
+    Binary dst(src.length() / 2 - hex);
+    auto di = dst.begin();
+    for (size_t i = hex * 2; i < src.length(); i += 2) {
+        *di++ = (char2uint8(src[i]) * (hex ? 16 : 10) + char2uint8(src[i + 1]));
+    }
+    return dst;
 }
 
 expected<Magics> FileSigAnalyzer::readMagics(std::string_view path) {
@@ -242,52 +289,6 @@ expected<Magics> FileSigAnalyzer::readMagics(std::string_view path) {
             return makeUnexpected(std::string("Error: bad path ") + std::string(path));
 
         auto json(jsoncons::json::parse(is));
-        auto startsWith = [](const std::string& s, const std::string& prefix) -> bool {
-            return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
-            };
-        auto parseOffset = [&startsWith](std::string s) -> Offset {
-            std::stringstream ss;
-            bool from_start = true;
-
-            if (startsWith(s, "Z")) {
-                s = s.substr(1);
-                from_start = false;
-            }
-            if (startsWith(s, "0x") || startsWith(s, "0X")) {
-                s = s.substr(2);
-                ss << std::hex << s;
-            }
-            else {
-                ss << std::dec << s;
-            }
-            long v;
-            ss >> v;
-
-            if (!from_start)
-                v *= -1;
-
-            return Offset{v, from_start};
-            };
-        auto char2uint8 = [](char input) -> uint8_t {
-            if (input >= '0' && input <= '9')
-                return input - '0';
-            if (input >= 'A' && input <= 'F')
-                return input - 'A' + 10;
-            if (input >= 'a' && input <= 'f')
-                return input - 'a' + 10;
-            return 0;
-            };
-
-        // accept 0xABCD (or 1234), return [0xAB, 0xCD] (or [12, 34])
-        auto str2bin = [char2uint8, startsWith](const std::string& src) -> Binary {
-            bool hex = startsWith(src, "0x") || startsWith(src, "0X");
-            Binary dst(src.length() / 2 - hex);
-            auto di = dst.begin();
-            for (size_t i = hex * 2; i < src.length(); i += 2) {
-                *di++ = (char2uint8(src[i]) * (hex ? 16 : 10) + char2uint8(src[i + 1]));
-            }
-            return dst;
-            };
 
         Magics magics;
         for (const auto& magic_json : json.array_range()) {
@@ -376,7 +377,6 @@ expected<bool> FileSigAnalyzer::get_signature(const fs::directory_entry& de, Mag
         }
 
         lg_callback_context ctx{ this, std::numeric_limits<size_t>::max() };
-        //auto readed = ifs.readsome((char*)read_buf.data(), read_buf.size());
         auto readed = ifs.read((char*)read_buf.data(), read_buf.size()).gcount();
         if(readed == 0) {
             return makeUnexpected("read zero bytes from " + de.path().string());
@@ -400,10 +400,9 @@ expected<bool> FileSigAnalyzer::get_signature(const fs::directory_entry& de, Mag
                 check_buf.resize(size);
                 ifs.clear();
                 ifs.seekg(offset.count, offset.from_start ? std::ios_base::beg : std::ios_base::end);
-                //auto readed = ifs.readsome((char*)check_buf.data(), check_buf.size());
                 auto readed = ifs.read((char*)check_buf.data(), check_buf.size()).gcount();
                 if (readed != (std::streamsize)size)
-                    throw std::runtime_error(("readsome(" + std::to_string(size) + ") at " + std::to_string(offset.count) + ", ", std::to_string(offset.from_start) + " failed."));
+                    throw std::runtime_error(("read(" + std::to_string(size) + ") at " + std::to_string(offset.count) + ", ", std::to_string(offset.from_start) + " failed."));
                 return check_buf;
             }
             return Binary(&read_buf[offset.count], &read_buf[offset.count + size]);
@@ -413,7 +412,6 @@ expected<bool> FileSigAnalyzer::get_signature(const fs::directory_entry& de, Mag
         auto s = signature_dict.find(ext);
         if (s != signature_dict.end()) {
             auto& m = s->second;
-            // by default if checks is empty - make a hit
             bool all_checks_passed = m->checks.size() > 0;
             BOOST_FOREACH(auto check_it, m->checks) {
                 if (!(all_checks_passed = (check_it.compare(get_buf(check_it.offset, check_it.value.size())) == true)))
@@ -476,3 +474,5 @@ FileSigAnalyzer::FileSigAnalyzer() {
     auto max_read = r.value();
     read_buf.resize(max_read);
 }
+
+} // namespace FileSignatures
