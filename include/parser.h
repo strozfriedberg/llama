@@ -53,7 +53,7 @@ public:
   void parseNonGrepSection();
   void parseRuleContent();
   void parseRule();
-  void parseRuleDecl();
+  Rule parseRuleDecl();
   std::vector<Rule> parseRules();
 
   std::vector<Token> Tokens;
@@ -303,18 +303,20 @@ void LlamaParser::parseRule() {
   parseRuleContent();
 }
 
-void LlamaParser::parseRuleDecl() {
+Rule LlamaParser::parseRuleDecl() {
+  Rule rule;
   mustParse("Expected rule keyword", TokenType::RULE);
   mustParse("Expected identifier", TokenType::IDENTIFIER);
   mustParse("Expected open curly brace", TokenType::OPEN_BRACE);
   parseRule();
   mustParse("Expected close curly brace", TokenType::CLOSE_BRACE);
+  return rule;
 }
 
 std::vector<Rule> LlamaParser::parseRules() {
   std::vector<Rule> rules;
   while (!isAtEnd()) {
-    parseRuleDecl();
+    rules.push_back(parseRuleDecl());
   }
   return rules;
 }
