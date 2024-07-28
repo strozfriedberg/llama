@@ -121,7 +121,10 @@ TEST_CASE("parseHashExprThrowsIfNotDoubleQuotedString") {
 TEST_CASE("parseHashExprDoesNotThrowIfEqualAndDoubleQuotedString") {
   std::string input = "md5 = \"test\"";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseHashExpr());
+  HashExpr expr;
+  REQUIRE_NOTHROW(expr = parser.parseHashExpr());
+  REQUIRE(expr.Alg == "md5");
+  REQUIRE(expr.Val == "test");
 }
 
 TEST_CASE("parseHashSectionThrowsIfNotHash") {

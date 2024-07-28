@@ -10,6 +10,11 @@ struct MetaSection {
   std::unordered_map<std::string, std::string> Fields;
 };
 
+struct HashExpr {
+  std::string Alg;
+  std::string Val;
+};
+
 struct HashSection {
   std::unordered_map<std::string, std::vector<std::string>> Hashes;
 };
@@ -39,7 +44,7 @@ public:
   void mustParse(const std::string& errMsg, TokenTypes... types);
 
   void parseHashSection();
-  void parseHashExpr();
+  HashExpr parseHashExpr();
   std::string parseHash();
   void parseOperator();
   void parsePatternMod();
@@ -93,10 +98,13 @@ void LlamaParser::parseHashSection() {
   }
 }
 
-void LlamaParser::parseHashExpr() {
-  parseHash();
+HashExpr LlamaParser::parseHashExpr() {
+  HashExpr hashExpr;
+  hashExpr.Alg = parseHash();
   mustParse("Expected equal sign", TokenType::EQUAL);
   mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
+  hashExpr.Val = Input.substr(previous().Start, previous().length());
+  return hashExpr;
 }
 
 std::string LlamaParser::parseHash() {
