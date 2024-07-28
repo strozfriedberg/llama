@@ -10,8 +10,7 @@ struct Section {
   std::unordered_map<std::string, std::string> Fields;
 };
 
-class Rule {
-public:
+struct Rule {
   std::string Name;
   Section Meta;
 };
