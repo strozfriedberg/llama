@@ -1,13 +1,19 @@
 #include "token.h"
+#include <unordered_map>
 
 class ParserError : public UnexpectedInputError {
 public:
   ParserError(const std::string& message, LineCol pos) : UnexpectedInputError(message, pos) {}
 };
 
+struct Section {
+  std::unordered_map<std::string, std::string> Fields;
+};
+
 class Rule {
 public:
   std::string Name;
+  Section Meta;
 };
 
 class LlamaParser {
@@ -50,7 +56,7 @@ public:
   void parseGrepSection();
   void parseFileMetadataDef();
   void parseFileMetadataSection();
-  void parseMetaSection();
+  Section parseMetaSection();
   void parseNonGrepSection();
   void parseRuleContent();
   void parseRule();
@@ -300,13 +306,18 @@ void LlamaParser::parseFileMetadataSection() {
   }
 }
 
-void LlamaParser::parseMetaSection() {
+Section LlamaParser::parseMetaSection() {
+  Section meta;
   mustParse("Expected meta keyword", TokenType::META);
   mustParse("Expected colon", TokenType::COLON);
   while (matchAny(TokenType::IDENTIFIER)) {
+    std::string key = Input.substr(previous().Start, previous().length());
     mustParse("Expected equal sign", TokenType::EQUAL);
     mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
+    std::string value = Input.substr(previous().Start, previous().length());
+    meta.Fields.insert(std::make_pair(key, value));
   }
+  return meta;
 }
 
 void LlamaParser::parseNonGrepSection() {

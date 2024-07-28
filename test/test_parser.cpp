@@ -309,7 +309,11 @@ TEST_CASE("parseMetaSection") {
     another = "something else"
   )";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseMetaSection());
+  Section meta;
+  REQUIRE_NOTHROW(meta = parser.parseMetaSection());
+  REQUIRE(meta.Fields.size() == 2);
+  REQUIRE(meta.Fields.find("arbitrary")->second == "something");
+  REQUIRE(meta.Fields.find("another")->second == "something else");
 }
 
 TEST_CASE("parseNonGrepSectionHash") {
