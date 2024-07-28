@@ -368,6 +368,8 @@ TEST_CASE("parseRuleDecl") {
   rule MyRule {
     meta:
       description = "test"
+    hash:
+      md5 = "abcdef"
     signature:
       "EXE"
     file_metadata:
@@ -377,7 +379,9 @@ TEST_CASE("parseRuleDecl") {
   }
   )";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseRuleDecl());
+  Rule rule;
+  REQUIRE_NOTHROW(rule = parser.parseRuleDecl());
+  REQUIRE(rule.Hash.Hashes.size() == 1);
 }
 
 TEST_CASE("parseRuleDeclThrowsIfBothGrepAndNonGrepSection") {

@@ -22,6 +22,7 @@ struct HashSection {
 struct Rule {
   std::string Name;
   MetaSection Meta;
+  HashSection Hash;
 };
 
 class LlamaParser {
@@ -337,7 +338,7 @@ void LlamaParser::parseRule(Rule& rule) {
     rule.Meta = parseMetaSection();
   }
   if (checkAny(TokenType::HASH)) {
-    parseHashSection();
+    rule.Hash = parseHashSection();
   }
   if (checkAny(TokenType::SIGNATURE)) {
     parseSignatureSection();
