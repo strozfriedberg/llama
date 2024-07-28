@@ -19,6 +19,10 @@ struct HashSection {
   std::vector<HashExpr> Hashes;
 };
 
+struct SignatureSection {
+  std::vector<std::string> Signatures;
+};
+
 struct Rule {
   std::string Name;
   MetaSection Meta;
