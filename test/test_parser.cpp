@@ -386,6 +386,7 @@ TEST_CASE("parseRuleDecl") {
   Rule rule;
   REQUIRE_NOTHROW(rule = parser.parseRuleDecl());
   REQUIRE(rule.Hash.Hashes.size() == 1);
+  REQUIRE(rule.Signature.Signatures.size() == 1);
 }
 
 TEST_CASE("parseRuleDeclThrowsIfSectionsAreOutOfOrder") {
