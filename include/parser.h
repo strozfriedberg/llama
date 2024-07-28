@@ -10,6 +10,10 @@ struct MetaSection {
   std::unordered_map<std::string, std::string> Fields;
 };
 
+struct HashSection {
+  std::unordered_map<std::string, std::vector<std::string>> Hashes;
+};
+
 struct Rule {
   std::string Name;
   MetaSection Meta;
