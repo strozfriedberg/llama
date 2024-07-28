@@ -40,7 +40,7 @@ public:
 
   void parseHashSection();
   void parseHashExpr();
-  void parseHash();
+  std::string parseHash();
   void parseOperator();
   void parsePatternMod();
   void parseEncodings();
@@ -99,10 +99,11 @@ void LlamaParser::parseHashExpr() {
   mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
 }
 
-void LlamaParser::parseHash() {
+std::string LlamaParser::parseHash() {
   mustParse(
     "Expected hash type", TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3
   );
+  return Input.substr(previous().Start, previous().length());
 }
 
 void LlamaParser::parseOperator() {
