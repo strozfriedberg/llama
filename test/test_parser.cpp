@@ -316,64 +316,6 @@ TEST_CASE("parseMetaSection") {
   REQUIRE(meta.Fields.find("another")->second == "something else");
 }
 
-TEST_CASE("parseNonGrepSectionHash") {
-  std::string input = R"(
-  hash: md5 = "test"
-  )";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseNonGrepSection());
-}
-
-TEST_CASE("parseNonGrepSectionSignature") {
-  std::string input = R"(
-  signature:
-    "EXE"
-    "MUI"
-  )";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseNonGrepSection());
-}
-
-TEST_CASE("parseNonGrepSectionFileMetadata") {
-  std::string input = R"(
-  file_metadata:
-    created > "2023-05-04"
-    modified < "2023-05-06"
-    filesize >= 100
-  )";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseNonGrepSection());
-}
-
-TEST_CASE("parseNonGrepSectionThrows") {
-  std::string input = "notHashOrSignatureOrFileMetadata";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_THROWS_AS(parser.parseNonGrepSection(), ParserError);
-}
-
-TEST_CASE("parseRuleContentGrep") {
-  std::string input = R"(
-  grep:
-    patterns:
-      a = "test" encodings=UTF-8 nocase fixed
-      b = "test2" encodings=UTF-8 nocase fixed
-    condition:
-      any(a, b) and offset(a, 5) == 5
-  )";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseRuleContent());
-}
-
-TEST_CASE("parseRuleContentNonGrep") {
-  std::string input = R"(
-  hash: md5 = "test"
-  signature: "EXE"
-  file_metadata: created > "2023-05-04"
-  )";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseRuleContent());
-}
-
 TEST_CASE("parseRule") {
   std::string input = R"(
   rule:

@@ -56,8 +56,6 @@ public:
   void parseFileMetadataDef();
   void parseFileMetadataSection();
   Section parseMetaSection();
-  void parseNonGrepSection();
-  void parseRuleContent();
   void parseRule(Rule& rule);
   Rule parseRuleDecl();
   std::vector<Rule> parseRules();
@@ -319,37 +317,23 @@ Section LlamaParser::parseMetaSection() {
   return meta;
 }
 
-void LlamaParser::parseNonGrepSection() {
-  if (checkAny(TokenType::HASH)) {
-    parseHashSection();
-  }
-  else if (checkAny(TokenType::SIGNATURE)) {
-    parseSignatureSection();
-  }
-  else if (checkAny(TokenType::FILE_METADATA)) {
-    parseFileMetadataSection();
-  }
-  else {
-    throw ParserError("Expected hash, signature, or file_metadata", peek().Pos);
-  }
-}
-
-void LlamaParser::parseRuleContent() {
-  if (checkAny(TokenType::GREP)) {
-    parseGrepSection();
-  }
-  else {
-    while (checkAny(TokenType::HASH, TokenType::SIGNATURE, TokenType::FILE_METADATA)) {
-      parseNonGrepSection();
-    }
-  }
-}
-
 void LlamaParser::parseRule(Rule& rule) {
   if (checkAny(TokenType::META)) {
     rule.Meta = parseMetaSection();
   }
-  parseRuleContent();
+  if (checkAny(TokenType::HASH)) {
+    parseHashSection();
+  }
+  if (checkAny(TokenType::SIGNATURE)) {
+    parseSignatureSection();
+  }
+  if (checkAny(TokenType::FILE_METADATA)) {
+    parseFileMetadataSection();
+  }
+  if (checkAny(TokenType::GREP)) {
+    parseGrepSection();
+  }
+
 }
 
 Rule LlamaParser::parseRuleDecl() {

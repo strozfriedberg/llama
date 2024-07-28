@@ -2,15 +2,7 @@ start_rule          = rule_decl+ EOF;
 
 rule_decl           = RULE IDENTIFIER OPEN_BRACE rule CLOSE_BRACE;
 
-rule                = meta_section? rule_content;
-
-(* Rules can either have a grep section or one of the non-grep sections, but not both. *)
-rule_content        = grep_section
-                    | non_grep_section+;
-
-non_grep_section   = file_metadata_section
-                   | hash_section
-                   | signature_section;
+rule                = meta_section? hash_section? signature_section? file_metadata_section? grep_section?;
 
 meta_section        = META COLON pattern_def+;
 
