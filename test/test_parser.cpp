@@ -384,7 +384,7 @@ TEST_CASE("parseRuleDecl") {
   REQUIRE(rule.Hash.Hashes.size() == 1);
 }
 
-TEST_CASE("parseRuleDeclThrowsIfBothGrepAndNonGrepSection") {
+TEST_CASE("parseRuleDeclThrowsIfSectionsAreOutOfOrder") {
   std::string input = R"(
   rule MyRule {
     grep:
