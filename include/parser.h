@@ -6,13 +6,13 @@ public:
   ParserError(const std::string& message, LineCol pos) : UnexpectedInputError(message, pos) {}
 };
 
-struct Section {
+struct MetaSection {
   std::unordered_map<std::string, std::string> Fields;
 };
 
 struct Rule {
   std::string Name;
-  Section Meta;
+  MetaSection Meta;
 };
 
 class LlamaParser {
@@ -55,7 +55,7 @@ public:
   void parseGrepSection();
   void parseFileMetadataDef();
   void parseFileMetadataSection();
-  Section parseMetaSection();
+  MetaSection parseMetaSection();
   void parseRule(Rule& rule);
   Rule parseRuleDecl();
   std::vector<Rule> parseRules();
@@ -303,8 +303,8 @@ void LlamaParser::parseFileMetadataSection() {
   }
 }
 
-Section LlamaParser::parseMetaSection() {
-  Section meta;
+MetaSection LlamaParser::parseMetaSection() {
+  MetaSection meta;
   mustParse("Expected meta keyword", TokenType::META);
   mustParse("Expected colon", TokenType::COLON);
   while (matchAny(TokenType::IDENTIFIER)) {
