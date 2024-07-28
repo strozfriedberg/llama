@@ -145,6 +145,17 @@ TEST_CASE("parseHashSectionDoesNotThrowIfHashAndColon") {
   REQUIRE_NOTHROW(parser.parseHashSection());
 }
 
+TEST_CASE("parseHashSectionMultipleAlg") {
+  std::string input = "hash: md5 = \"test\"\nsha1 = \"abcdef\"";
+  LlamaParser parser(input, getTokensFromString(input));
+  HashSection hashSection;
+  REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
+  REQUIRE(hashSection.Hashes.at(0).Alg == TokenType::MD5);
+  REQUIRE(hashSection.Hashes.at(0).Val == "test");
+  REQUIRE(hashSection.Hashes.at(1).Alg == TokenType::SHA1);
+  REQUIRE(hashSection.Hashes.at(1).Val == "abcdef");
+}
+
 TEST_CASE("parseOperatorThrowsIfNotOperator") {
   std::string input = "notAnOperator";
   LlamaParser parser(input, getTokensFromString(input));

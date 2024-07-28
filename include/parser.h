@@ -16,7 +16,7 @@ struct HashExpr {
 };
 
 struct HashSection {
-  std::unordered_map<std::string, std::vector<std::string>> Hashes;
+  std::vector<HashExpr> Hashes;
 };
 
 struct Rule {
@@ -43,7 +43,7 @@ public:
   template <class... TokenTypes>
   void mustParse(const std::string& errMsg, TokenTypes... types);
 
-  void parseHashSection();
+  HashSection parseHashSection();
   HashExpr parseHashExpr();
   TokenType parseHash();
   void parseOperator();
@@ -90,12 +90,14 @@ void LlamaParser::mustParse(const std::string& errMsg, TokenTypes... types) {
   }
 }
 
-void LlamaParser::parseHashSection() {
+HashSection LlamaParser::parseHashSection() {
   mustParse("Expected hash keyword", TokenType::HASH);
   mustParse("Expected colon after hash keyword", TokenType::COLON);
+  HashSection hashSection;
   while (checkAny(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3)) {
-    parseHashExpr();
+    hashSection.Hashes.push_back(parseHashExpr());
   }
+  return hashSection;
 }
 
 HashExpr LlamaParser::parseHashExpr() {
