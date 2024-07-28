@@ -11,7 +11,7 @@ struct MetaSection {
 };
 
 struct HashExpr {
-  std::string Alg;
+  TokenType Alg;
   std::string Val;
 };
 
@@ -45,7 +45,7 @@ public:
 
   void parseHashSection();
   HashExpr parseHashExpr();
-  std::string parseHash();
+  TokenType parseHash();
   void parseOperator();
   void parsePatternMod();
   void parseEncodings();
@@ -107,11 +107,11 @@ HashExpr LlamaParser::parseHashExpr() {
   return hashExpr;
 }
 
-std::string LlamaParser::parseHash() {
+TokenType LlamaParser::parseHash() {
   mustParse(
     "Expected hash type", TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3
   );
-  return Input.substr(previous().Start, previous().length());
+  return previous().Type;
 }
 
 void LlamaParser::parseOperator() {
