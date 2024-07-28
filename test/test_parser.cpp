@@ -387,7 +387,8 @@ TEST_CASE("parseRule") {
       filesize >= 100
   )";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseRule());
+  Rule rule;
+  REQUIRE_NOTHROW(parser.parseRule(rule));
 }
 
 TEST_CASE("parseRuleWithoutMeta") {
@@ -400,7 +401,8 @@ TEST_CASE("parseRuleWithoutMeta") {
     filesize >= 100
   )";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseRule());
+  Rule rule;
+  REQUIRE_NOTHROW(parser.parseRule(rule));
 }
 
 TEST_CASE("parseRuleDecl") {
@@ -461,6 +463,7 @@ TEST_CASE("startRule") {
   REQUIRE_NOTHROW(rules = parser.parseRules());
   REQUIRE(rules.size() == 2);
   REQUIRE(rules.at(0).Name == "MyRule");
+  REQUIRE(rules.at(0).Meta.Fields.find("description")->second == "test");
   REQUIRE(rules.at(1).Name == "AnotherRule");
 }
 

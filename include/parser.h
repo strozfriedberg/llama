@@ -58,7 +58,7 @@ public:
   Section parseMetaSection();
   void parseNonGrepSection();
   void parseRuleContent();
-  void parseRule();
+  void parseRule(Rule& rule);
   Rule parseRuleDecl();
   std::vector<Rule> parseRules();
 
@@ -345,9 +345,9 @@ void LlamaParser::parseRuleContent() {
   }
 }
 
-void LlamaParser::parseRule() {
+void LlamaParser::parseRule(Rule& rule) {
   if (checkAny(TokenType::META)) {
-    parseMetaSection();
+    rule.Meta = parseMetaSection();
   }
   parseRuleContent();
 }
@@ -358,7 +358,7 @@ Rule LlamaParser::parseRuleDecl() {
   mustParse("Expected identifier", TokenType::IDENTIFIER);
   rule.Name = Input.substr(previous().Start, previous().length());
   mustParse("Expected open curly brace", TokenType::OPEN_BRACE);
-  parseRule();
+  parseRule(rule);
   mustParse("Expected close curly brace", TokenType::CLOSE_BRACE);
   return rule;
 }
