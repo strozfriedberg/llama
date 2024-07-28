@@ -65,7 +65,7 @@ public:
   void parseTerm();
   void parseExpr();
   void parseConditionSection();
-  void parseSignatureSection();
+  SignatureSection parseSignatureSection();
   void parseGrepSection();
   void parseFileMetadataDef();
   void parseFileMetadataSection();
@@ -285,11 +285,16 @@ void LlamaParser::parseConditionSection() {
   parseExpr();
 }
 
-void LlamaParser::parseSignatureSection() {
+SignatureSection LlamaParser::parseSignatureSection() {
+  SignatureSection signatureSection;
   mustParse("Expected signature keyword", TokenType::SIGNATURE);
   mustParse("Expected colon after signature keyword", TokenType::COLON);
   mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-  while (matchAny(TokenType::DOUBLE_QUOTED_STRING)) {}
+  signatureSection.Signatures.push_back(Input.substr(previous().Start, previous().length()));
+  while (matchAny(TokenType::DOUBLE_QUOTED_STRING)) {
+    signatureSection.Signatures.push_back(Input.substr(previous().Start, previous().length()));
+  }
+  return signatureSection;
 }
 
 void LlamaParser::parseGrepSection() {

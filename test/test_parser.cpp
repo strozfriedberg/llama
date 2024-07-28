@@ -273,7 +273,11 @@ TEST_CASE("parseConditionSection") {
 TEST_CASE("parseSignatureSection") {
   std::string input = "signature:\n \"EXE\"\n\"MUI\"";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseSignatureSection());
+  SignatureSection section;
+  REQUIRE_NOTHROW(section = parser.parseSignatureSection());
+  REQUIRE(section.Signatures.size() == 2);
+  REQUIRE(section.Signatures.at(0) == "EXE");
+  REQUIRE(section.Signatures.at(1) == "MUI");
 }
 
 TEST_CASE("parseGrepSection") {
