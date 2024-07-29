@@ -23,6 +23,12 @@ struct SignatureSection {
   std::vector<std::string> Signatures;
 };
 
+struct FileMetadataExpr {
+  TokenType Property;
+  TokenType Operator;
+  std::string Value;
+};
+
 struct Rule {
   std::string Name;
   MetaSection Meta;
