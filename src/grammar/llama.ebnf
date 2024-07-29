@@ -80,8 +80,8 @@ hash                = MD5
                     | BLAKE3
                     ;
 
-hex_string          = OPEN_BRACE \s+ hex+ \s+ CLOSE_BRACE;
-hex                 = [0-9a-fA-F][0-9a-fA-F]\s+;
+hex_string          = '0x' hex_digit+;
+hex_digit           = [0-9a-fA-F];
 
 OPEN_BRACE          = "{";
 CLOSE_BRACE         = "}";
