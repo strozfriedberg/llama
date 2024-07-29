@@ -505,3 +505,10 @@ TEST_CASE("parseMultiLineCommentThrowsIfUnterminated") {
   LlamaLexer lexer(input);
   REQUIRE_THROWS_AS(lexer.parseMultiLineComment(), UnexpectedInputError);
 }
+
+TEST_CASE("parseRuleWithMultiLineComment") {
+  std::string input = "rule /* this is a multi \n line comment */ MyRule {}";
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  REQUIRE(lexer.getTokens().size() == 5);
+}

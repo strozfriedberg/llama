@@ -41,6 +41,9 @@ void LlamaLexer::scanToken() {
       if (match('/')) {
         parseSingleLineComment();
       }
+      else if (match('*')) {
+        parseMultiLineComment();
+      }
       else {
         throw UnexpectedInputError("Unexpected input character: / at ", pos);
       }
