@@ -363,6 +363,25 @@ void FileSigAnalyzer::lgCallbackfn(void *userData,
   }
 }
 
+Binary FileSigAnalyzer::getBuf(std::ifstream &ifs, Binary &check_buf,
+                               OffsetType const &offset,
+                               std::size_t size) const {
+  if (size + offset.count > ReadBuf.size() || offset.from_start == false) {
+    check_buf.resize(size);
+    ifs.clear();
+    ifs.seekg(offset.count,
+              offset.from_start ? std::ios_base::beg : std::ios_base::end);
+    auto readed = ifs.read((char *)check_buf.data(), check_buf.size()).gcount();
+    if (readed != (std::streamsize)size)
+      throw std::runtime_error(
+          ("read(" + std::to_string(size) + ") at " +
+               std::to_string(offset.count) + ", ",
+           std::to_string(offset.from_start) + " failed."));
+    return check_buf;
+  }
+  return Binary(&ReadBuf[offset.count], &ReadBuf[offset.count + size]);
+}
+
 expected<bool> FileSigAnalyzer::getSignature(const fs::directory_entry &de,
                                              MagicPtr &result) const {
   std::error_code ec;
@@ -402,25 +421,6 @@ expected<bool> FileSigAnalyzer::getSignature(const fs::directory_entry &de,
 
     Binary check_buf(ReadBuf);
 
-    auto get_buf = [&ifs, this, &check_buf](OffsetType const &offset,
-                                            std::size_t size) {
-      if (size + offset.count > ReadBuf.size() || offset.from_start == false) {
-        check_buf.resize(size);
-        ifs.clear();
-        ifs.seekg(offset.count,
-                  offset.from_start ? std::ios_base::beg : std::ios_base::end);
-        auto readed =
-            ifs.read((char *)check_buf.data(), check_buf.size()).gcount();
-        if (readed != (std::streamsize)size)
-          throw std::runtime_error(
-              ("read(" + std::to_string(size) + ") at " +
-                   std::to_string(offset.count) + ", ",
-               std::to_string(offset.from_start) + " failed."));
-        return check_buf;
-      }
-      return Binary(&ReadBuf[offset.count], &ReadBuf[offset.count + size]);
-    };
-
     // by "ext"
     auto s = SignatureDict.find(ext);
     if (s != SignatureDict.end()) {
@@ -428,8 +428,8 @@ expected<bool> FileSigAnalyzer::getSignature(const fs::directory_entry &de,
       bool all_checks_passed = m->Checks.size() > 0;
       BOOST_FOREACH (auto check_it, m->Checks) {
         if (!(all_checks_passed =
-                  (check_it.compare(get_buf(check_it.Offset,
-                                            check_it.Value.size())) == true)))
+                  (check_it.compare(getBuf(ifs, check_buf, check_it.Offset,
+                                           check_it.Value.size())) == true)))
           break;
       }
       if (all_checks_passed) {
@@ -444,8 +444,8 @@ expected<bool> FileSigAnalyzer::getSignature(const fs::directory_entry &de,
       bool all_checks_passed = false;
       BOOST_FOREACH (auto check_it, s->Checks) {
         if (!(all_checks_passed =
-                  (check_it.compare(get_buf(check_it.Offset,
-                                            check_it.Value.size())) == true)))
+                  (check_it.compare(getBuf(ifs, check_buf, check_it.Offset,
+                                           check_it.Value.size())) == true)))
           break;
       }
       if (all_checks_passed) {

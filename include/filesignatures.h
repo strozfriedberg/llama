@@ -75,6 +75,8 @@ class FileSigAnalyzer {
   // size of the buffer - max value of getPatternLength(false)
   Binary ReadBuf;
 
+  Binary getBuf(std::ifstream &ifs, Binary &check_buf, OffsetType const &offset,
+                std::size_t size) const;
   static void lgCallbackfn(void *userData, const LG_SearchHit *const hit);
 
 public:
