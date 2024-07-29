@@ -512,3 +512,9 @@ TEST_CASE("parseRuleWithMultiLineComment") {
   lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 5);
 }
+
+TEST_CASE("peekWhenSizeIsZeroShouldReturnNullChar") {
+  std::string input = "";
+  LlamaLexer lexer(input);
+  REQUIRE(lexer.peek() == '\0');
+}
