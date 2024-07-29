@@ -137,6 +137,17 @@ void LlamaLexer::parseSingleLineComment() {
   }
 }
 
+void LlamaLexer::parseMultiLineComment() {
+  while (getCurChar() != '*' && peek() != '/' && !isAtEnd()) {
+    advance();
+  }
+  if (isAtEnd()) {
+    throw UnexpectedInputError("Unterminated multi-line comment at ", Pos);
+  }
+  advance(); // consume *
+  advance(); // consume /
+}
+
 void LlamaLexer::addToken(TokenType type, uint64_t start, uint64_t end, LineCol pos) {
   Tokens.push_back(Token(type, start, end, pos));
 }
