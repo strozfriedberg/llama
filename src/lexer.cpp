@@ -173,7 +173,7 @@ std::string_view LlamaLexer::getLexeme(int idx) const {
 }
 
 char LlamaLexer::getCurChar() const {
-  if (CurIdx >= Input.size()) {
+  if (isAtEnd()) {
     return '\0';
   }
   else {
