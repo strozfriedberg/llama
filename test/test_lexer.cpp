@@ -518,3 +518,16 @@ TEST_CASE("peekWhenSizeIsZeroShouldReturnNullChar") {
   LlamaLexer lexer(input);
   REQUIRE(lexer.peek() == '\0');
 }
+
+TEST_CASE("peekWhenNextToLastShouldReturnNullChar") {
+  std::string input = "a";
+  LlamaLexer lexer(input);
+  REQUIRE(lexer.peek() == '\0');
+}
+
+TEST_CASE("peekWhenAtEndShouldReturnNullChar") {
+  std::string input = "a";
+  LlamaLexer lexer(input);
+  lexer.advance();
+  REQUIRE(lexer.peek() == '\0');
+}
