@@ -485,3 +485,10 @@ TEST_CASE("parseSingleLineCommentIsIgnored") {
   lexer.parseSingleLineComment();
   REQUIRE(lexer.isAtEnd());
 }
+
+TEST_CASE("parseSingleLineComment") {
+  std::string input = "//this is a comment";
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  REQUIRE(lexer.isAtEnd());
+}
