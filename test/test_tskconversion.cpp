@@ -485,13 +485,14 @@ TEST_CASE("testConvertTskFsNameToDirent") {
 
   REQUIRE("/usr/tmp/" == d.Path);
   REQUIRE("woowoowoo" == d.Name);
-  REQUIRE("WOOWOO~1" == d.Shrt_name);
+  REQUIRE("WOOWOO~1" == d.ShortName);
   REQUIRE("Domain Socket" == d.Type);
   REQUIRE("Allocated" == d.Flags);
 
-  REQUIRE(7 == d.Meta_addr);
-  REQUIRE(231 == d.Par_addr);
+  REQUIRE(7 == d.MetaAddr);
+  REQUIRE(231 == d.ParentAddr);
 
-  REQUIRE(6 == d.Meta_seq);
-  REQUIRE(72 == d.Par_seq);
+  REQUIRE(6 == d.MetaSeq);
+  REQUIRE(72 == d.ParentSeq);
 }
+

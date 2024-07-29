@@ -5,9 +5,9 @@
 
 std::ostream& operator<<(std::ostream& os, const Dirent& dirent) {
   os << "{\"Id\":\"" << dirent.Id << "\", \"Path\": \"" << dirent.Path << "\", \"Name\": \"" << dirent.Name << 
-    "\", \"Shrt_name\": \"" << dirent.Shrt_name << "\", \"Type\": \"" << dirent.Type << "\", \"Flags\": \"" << dirent.Flags << 
-    "\", \"Meta_addr\": " << dirent.Meta_addr << ", \"Par_addr\": " << dirent.Par_addr << ", \"Meta_seq\": " << dirent.Meta_seq << 
-    ", \"Par_seq\": " << dirent.Par_seq << "}";
+    "\", \"ShortName\": \"" << dirent.ShortName << "\", \"Type\": \"" << dirent.Type << "\", \"Flags\": \"" << dirent.Flags << 
+    "\", \"MetaAddr\": " << dirent.MetaAddr << ", \"ParentAddr\": " << dirent.ParentAddr << ", \"MetaSeq\": " << dirent.MetaSeq << 
+    ", \"ParentSeq\": " << dirent.ParentSeq << "}";
   return os;
 }
 

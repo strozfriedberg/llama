@@ -96,13 +96,13 @@ FieldHash RecordHasher::hashDirent(const Dirent& r) {
   Hasher.hash_em(
     r.Path,
     r.Name,
-    r.Shrt_name,
+    r.ShortName,
     r.Type,
     r.Flags,
-    r.Meta_addr,
-    r.Par_addr,
-    r.Meta_seq,
-    r.Par_seq
+    r.MetaAddr,
+    r.ParentAddr,
+    r.MetaSeq,
+    r.ParentSeq
   );
   return Hasher.get_hash();
 }

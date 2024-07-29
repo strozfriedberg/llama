@@ -102,10 +102,10 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
 
   // handle the name
   if (fs_file->name) {
-    const TSK_INUM_T par_addr =  fs_file->name->par_addr;
+    const TSK_INUM_T parentAddr =  fs_file->name->par_addr;
     Dirent dirent;
 
-    while (!Dirents.empty() && par_addr != Dirents.top().Meta_addr) {
+    while (!Dirents.empty() && parentAddr != Dirents.top().MetaAddr) {
       Output->outputDirent(Dirents.pop());
     }
     // std::cerr << par_addr << " -> " << fs_file->meta->addr << '\n';

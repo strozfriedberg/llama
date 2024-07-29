@@ -372,16 +372,16 @@ void TskUtils::convertNameToDirent(const std::string& path, const TSK_FS_NAME& n
   dirent.Path = path;
 
   dirent.Name = extractString(name.name, name.name_size);
-  dirent.Shrt_name = extractString(name.shrt_name, name.shrt_name_size);
+  dirent.ShortName = extractString(name.shrt_name, name.shrt_name_size);
 
   dirent.Type = nameType(name.type);
   dirent.Flags = nameFlags(name.flags);
 
-  dirent.Meta_addr = name.meta_addr;
-  dirent.Par_addr = name.par_addr;
+  dirent.MetaAddr = name.meta_addr;
+  dirent.ParentAddr = name.par_addr;
 
-  dirent.Meta_seq = name.meta_seq;
-  dirent.Par_seq = name.par_seq;
+  dirent.MetaSeq = name.meta_seq;
+  dirent.ParentSeq = name.par_seq;
 }
 
 std::unique_ptr<TimestampGetter> TskUtils::makeTimestampGetter(TSK_FS_TYPE_ENUM fstype) {

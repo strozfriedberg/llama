@@ -13,15 +13,15 @@ struct Dirent {
   std::string Id;
   std::string Path;
   std::string Name;
-  std::string Shrt_name;
+  std::string ShortName;
 
   std::string Type;
   std::string Flags;
 
-  uint64_t Meta_addr;
-  uint64_t Par_addr;
-  uint64_t Meta_seq;
-  uint64_t Par_seq;
+  uint64_t MetaAddr;
+  uint64_t ParentAddr;
+  uint64_t MetaSeq;
+  uint64_t ParentSeq;
 
   Dirent(const std::string& p = "",
          const std::string& n = "",
@@ -30,23 +30,23 @@ struct Dirent {
          const std::string& flags = "",
          uint64_t meta = 0,
          uint64_t parent = 0,
-         uint64_t meta_seq = 0,
-         uint64_t par_seq = 0
+         uint64_t metaSeq = 0,
+         uint64_t parentSeq = 0
   ):
-    Path(p), Name(n), Shrt_name(shrt), Type(type), Flags(flags),
-    Meta_addr(meta), Par_addr(parent), Meta_seq(meta_seq), Par_seq(par_seq) {}
+    Path(p), Name(n), ShortName(shrt), Type(type), Flags(flags),
+    MetaAddr(meta), ParentAddr(parent), MetaSeq(metaSeq), ParentSeq(parentSeq) {}
 
   bool operator==(const Dirent& other) const {
     return Id == other.Id &&
            Path == other.Path &&
            Name == other.Name &&
-           Shrt_name == other.Shrt_name &&
+           ShortName == other.ShortName &&
            Type == other.Type &&
            Flags == other.Flags &&
-           Meta_addr == other.Meta_addr &&
-           Par_addr == other.Par_addr &&
-           Meta_seq == other.Meta_seq &&
-           Par_seq == other.Par_seq;
+           MetaAddr == other.MetaAddr &&
+           ParentAddr == other.ParentAddr &&
+           MetaSeq == other.MetaSeq &&
+           ParentSeq == other.ParentSeq;
   }
 };
 
@@ -54,16 +54,16 @@ struct DirentBatch {
   struct StrOffsets {
     size_t PathOffset,
            NameOffset,
-           ShrtOffset,
+           ShortOffset,
            TypeOffset,
            FlagsOffset;
   };
 
   struct Uint64Vals {
-    uint64_t Meta_addr,
-             Par_addr,
-             Meta_seq,
-             Par_seq;
+    uint64_t MetaAddr,
+             ParentAddr,
+             MetaSeq,
+             ParentSeq;
   };
 
   size_t size() const { return Offsets.size(); }
@@ -73,14 +73,14 @@ struct DirentBatch {
   std::vector<Uint64Vals> Nums;
 
   static bool createTable(duckdb_connection& dbconn, const std::string& table) {
-    std::string query = "CREATE TABLE " + table + " (path VARCHAR, name VARCHAR, shrt_name VARCHAR, type VARCHAR, flags VARCHAR, meta_addr UBIGINT, par_addr UBIGINT, meta_seq UBIGINT, par_seq UBIGINT);";
+    std::string query = "CREATE TABLE " + table + " (path VARCHAR, name VARCHAR, short_name VARCHAR, type VARCHAR, flags VARCHAR, meta_addr UBIGINT, parent_addr UBIGINT, meta_seq UBIGINT, parent_seq UBIGINT);";
     return DuckDBSuccess == duckdb_query(dbconn, query.c_str(), nullptr);
   }
 
   void add(const Dirent& dent) {
     size_t pathSize = dent.Path.size() + 1;
     size_t nameSize = dent.Name.size() + 1;
-    size_t shrtSize = dent.Shrt_name.size() + 1;
+    size_t shrtSize = dent.ShortName.size() + 1;
     size_t typeSize = dent.Type.size() + 1;
     size_t flagsSize = dent.Flags.size() + 1;
     size_t startOffset = Buf.size();
@@ -94,12 +94,12 @@ struct DirentBatch {
 
     std::copy_n(dent.Path.begin(), pathSize, Buf.begin() + offsets.PathOffset);
     std::copy_n(dent.Name.begin(), nameSize, Buf.begin() + offsets.NameOffset);
-    std::copy_n(dent.Shrt_name.begin(), shrtSize, Buf.begin() + offsets.ShrtOffset);
+    std::copy_n(dent.ShortName.begin(), shrtSize, Buf.begin() + offsets.ShortOffset);
     std::copy_n(dent.Type.begin(), typeSize, Buf.begin() + offsets.TypeOffset);
     std::copy_n(dent.Flags.begin(), flagsSize, Buf.begin() + offsets.FlagsOffset);
 
     Offsets.push_back(offsets);
-    Nums.push_back(Uint64Vals{dent.Meta_addr, dent.Par_addr, dent.Meta_seq, dent.Par_seq});
+    Nums.push_back(Uint64Vals{dent.MetaAddr, dent.ParentAddr, dent.MetaSeq, dent.ParentSeq});
   }
 
   void copyToDB(duckdb_appender& appender) {
@@ -110,7 +110,7 @@ struct DirentBatch {
       THROW_IF(state == DuckDBError, "Failed to append path");
       state = duckdb_append_varchar(appender, Buf.data() + offsets.NameOffset);
       THROW_IF(state == DuckDBError, "Failed to append name");
-      state = duckdb_append_varchar(appender, Buf.data() + offsets.ShrtOffset);
+      state = duckdb_append_varchar(appender, Buf.data() + offsets.ShortOffset);
       THROW_IF(state == DuckDBError, "Failed to append shrt_name");
       state = duckdb_append_varchar(appender, Buf.data() + offsets.TypeOffset);
       THROW_IF(state == DuckDBError, "Failed to append type");
@@ -118,14 +118,14 @@ struct DirentBatch {
       THROW_IF(state == DuckDBError, "Failed to append flags");
 
       auto& nums(Nums[i]);
-      state = duckdb_append_uint64(appender, nums.Meta_addr);
+      state = duckdb_append_uint64(appender, nums.MetaAddr);
       THROW_IF(state == DuckDBError, "Failed to append meta_addr");
-      state = duckdb_append_uint64(appender, nums.Par_addr);
-      THROW_IF(state == DuckDBError, "Failed to append par_addr");
-      state = duckdb_append_uint64(appender, nums.Meta_seq);
+      state = duckdb_append_uint64(appender, nums.ParentAddr);
+      THROW_IF(state == DuckDBError, "Failed to append parent_addr");
+      state = duckdb_append_uint64(appender, nums.MetaSeq);
       THROW_IF(state == DuckDBError, "Failed to append meta_seq");
-      state = duckdb_append_uint64(appender, nums.Par_seq);
-      THROW_IF(state == DuckDBError, "Failed to append par_seq");
+      state = duckdb_append_uint64(appender, nums.ParentSeq);
+      THROW_IF(state == DuckDBError, "Failed to append parent_seq");
 
       state = duckdb_appender_end_row(appender);
       THROW_IF(state == DuckDBError, "Failed call to end_row");
