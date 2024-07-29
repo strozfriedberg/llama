@@ -132,9 +132,11 @@ void LlamaParser::parseEncodings() {
 void LlamaParser::parsePatternDef() {
   mustParse("Expected identifier", TokenType::IDENTIFIER);
   mustParse("Expected equal sign", TokenType::EQUAL);
-  mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-  while (checkAny(TokenType::NOCASE, TokenType::FIXED, TokenType::ENCODINGS)) {
-    parsePatternMod();
+  mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING, TokenType::HEX_STRING);
+  if (previous().Type == TokenType::DOUBLE_QUOTED_STRING) {
+    while (checkAny(TokenType::NOCASE, TokenType::FIXED, TokenType::ENCODINGS)) {
+      parsePatternMod();
+    }
   }
 }
 

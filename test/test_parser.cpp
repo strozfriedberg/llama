@@ -201,6 +201,12 @@ TEST_CASE("parsePatternsSectionDoesNotThrowIfPatterns") {
   REQUIRE_NOTHROW(parser.parsePatternsSection());
 }
 
+TEST_CASE("parsePatternsSectionWithHexStrings") {
+  std::string input = "patterns:\n  a = 0x1234\nb = \"test\" encodings=UTF-8 nocase fixed";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parsePatternsSection());
+}
+
 TEST_CASE("parseAnyFuncCall") {
   std::string input = "any(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
