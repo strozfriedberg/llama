@@ -564,3 +564,12 @@ TEST_CASE("parseSingleLineCommentWithMultiLineCommentWithNewlineThrows") {
   LlamaLexer lexer(input);
   REQUIRE_THROWS_AS(lexer.scanTokens(), UnexpectedInputError);
 }
+
+TEST_CASE("parseMultiLineCommentIncreasesLineNumAndResetsColumnNum") {
+  std::string input = "/* this is a multi-line comment\n\n\n*/";
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  REQUIRE(lexer.getTokens().size() == 1);
+  REQUIRE(lexer.Pos.LineNum == 4);
+  REQUIRE(lexer.Pos.ColNum == 3);
+}

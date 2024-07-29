@@ -142,6 +142,10 @@ void LlamaLexer::parseSingleLineComment() {
 
 void LlamaLexer::parseMultiLineComment() {
   while (getCurChar() != '*' && !isAtEnd()) {
+    if (getCurChar() == '\n') {
+      Pos.LineNum++;
+      Pos.ColNum = 0;
+    }
     advance();
   }
   if (isAtEnd()) {
