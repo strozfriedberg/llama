@@ -531,3 +531,36 @@ TEST_CASE("peekWhenAtEndShouldReturnNullChar") {
   lexer.advance();
   REQUIRE(lexer.peek() == '\0');
 }
+
+TEST_CASE("parseSingleLineCommentWithinMultiLineComment") {
+  std::string input = "/* this \nis a // single line comment */";
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  REQUIRE(lexer.getTokens().size() == 1);
+}
+
+TEST_CASE("parseMultiLineCommentWithManyAsterisks") {
+  std::string input = "/******************* this is a multi-line \ncomment *******************/";
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  REQUIRE(lexer.getTokens().size() == 1);
+}
+
+TEST_CASE("parseMultiLineCommentUnterminatedComplex") {
+  std::string input = "/* /// ***** /*  //";
+  LlamaLexer lexer(input);
+  REQUIRE_THROWS_AS(lexer.scanTokens(), UnexpectedInputError);
+}
+
+TEST_CASE("parseSingleLineCommentWithMultiLineCommentIsIgnored") {
+  std::string input = "// this is a single line comment /* this is a multi-line comment*/";
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  REQUIRE(lexer.getTokens().size() == 1);
+}
+
+TEST_CASE("parseSingleLineCommentWithMultiLineCommentWithNewlineThrows") {
+  std::string input = "// this is a single line comment /* this is a multi-line comment with a newline \n*/";
+  LlamaLexer lexer(input);
+  REQUIRE_THROWS_AS(lexer.scanTokens(), UnexpectedInputError);
+}
