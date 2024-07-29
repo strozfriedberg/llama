@@ -478,3 +478,10 @@ TEST_CASE("orKeyword") {
   lexer.parseIdentifier({0,0});
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::OR);
 }
+
+TEST_CASE("parseSingleLineCommentIsIgnored") {
+  std::string input = "this is a comment";
+  LlamaLexer lexer(input);
+  lexer.parseSingleLineComment();
+  REQUIRE(lexer.isAtEnd());
+}

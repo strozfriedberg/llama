@@ -120,6 +120,12 @@ void LlamaLexer::parseEncodingsList() {
   }
 }
 
+void LlamaLexer::parseSingleLineComment() {
+  while (getCurChar() != '\n' && !isAtEnd()) {
+    advance();
+  }
+}
+
 void LlamaLexer::addToken(TokenType type, uint64_t start, uint64_t end, LineCol pos) {
   Tokens.push_back(Token(type, start, end, pos));
 }
