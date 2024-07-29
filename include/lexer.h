@@ -34,6 +34,7 @@ public:
   void parseIdentifier(LineCol pos);
   void parseString(LineCol pos);
   void parseNumber(LineCol pos);
+  void parseHexString(LineCol pos);
   void parseEncodingsList();
 
   void addToken(TokenType type, uint64_t start, uint64_t end, LineCol pos);
