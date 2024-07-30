@@ -442,6 +442,7 @@ TEST_CASE("startRule") {
       patterns:
         a = "test" encodings=UTF-8 nocase fixed
         b = "test2" encodings=UTF-8 nocase fixed
+        c = { 34 56 78 ab cd EF }
       condition:
         any(a, b) and count(a) == 5
   }
