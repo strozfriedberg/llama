@@ -157,8 +157,7 @@ void LlamaParser::parseNumber() {
 }
 
 std::string LlamaParser::parseHexString() {
-  std::string hexDigit;
-  std::string hexString = "";
+  std::string hexDigit, hexString;
   while (!checkAny(TokenType::CLOSE_BRACE) && !isAtEnd()) {
     if (matchAny(TokenType::IDENTIFIER, TokenType::NUMBER)) {
       hexDigit = Input.substr(previous().Start, previous().length());
