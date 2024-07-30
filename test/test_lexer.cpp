@@ -478,28 +478,3 @@ TEST_CASE("orKeyword") {
   lexer.parseIdentifier({0,0});
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::OR);
 }
-
-TEST_CASE("parseHexString") {
-  std::string input = "123456789abcdef";
-  LlamaLexer lexer(input);
-  lexer.parseHexString({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::HEX_STRING);
-  REQUIRE(lexer.getTokens().at(0).length() == 15);
-  REQUIRE(input.substr(lexer.getTokens().at(0).Start, lexer.getTokens().at(0).length()) == "123456789abcdef");
-}
-
-TEST_CASE("scanTokensWithHexString") {
-  std::string input = "patterns: h1 = 0x123def\nh2 = 0x456abc";
-  LlamaLexer lexer(input);
-  lexer.scanTokens();
-  REQUIRE(lexer.getTokens().size() == 9);
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::PATTERNS);
-  REQUIRE(lexer.getTokens().at(1).Type == TokenType::COLON);
-  REQUIRE(lexer.getTokens().at(2).Type == TokenType::IDENTIFIER);
-  REQUIRE(lexer.getTokens().at(3).Type == TokenType::EQUAL);
-  REQUIRE(lexer.getTokens().at(4).Type == TokenType::HEX_STRING);
-  REQUIRE(lexer.getTokens().at(5).Type == TokenType::IDENTIFIER);
-  REQUIRE(lexer.getTokens().at(6).Type == TokenType::EQUAL);
-  REQUIRE(lexer.getTokens().at(7).Type == TokenType::HEX_STRING);
-  REQUIRE(lexer.getTokens().at(8).Type == TokenType::END_OF_FILE);
-}

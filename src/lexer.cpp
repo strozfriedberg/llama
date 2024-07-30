@@ -36,15 +36,6 @@ void LlamaLexer::scanToken() {
     case '(': addToken(TokenType::OPEN_PAREN, start, CurIdx, pos); break;
     case ')': addToken(TokenType::CLOSE_PAREN, start, CurIdx, pos); break;
     case ',': addToken(TokenType::COMMA, start, CurIdx, pos); break;
-    case '0': {
-      if (match('x')) {
-        parseHexString(pos);
-      }
-      else {
-        parseNumber(pos);
-      }
-      break;
-    }
     case ':': addToken(TokenType::COLON, start, CurIdx, pos); break;
     case '<': addToken(match('=') ? TokenType::LESS_THAN_EQUAL : TokenType::LESS_THAN, start, CurIdx, pos); break;
     case '=': addToken(match('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL, start, CurIdx, pos); break;
@@ -110,15 +101,6 @@ void LlamaLexer::parseNumber(LineCol pos) {
 
   uint64_t end = CurIdx;
   addToken(TokenType::NUMBER, start, end, pos);
-}
-
-void LlamaLexer::parseHexString(LineCol pos) {
-  uint64_t start = CurIdx;
-  while (isxdigit(getCurChar())) {
-    advance();
-  }
-  uint64_t end = CurIdx;
-  addToken(TokenType::HEX_STRING, start, end, pos);
 }
 
 void LlamaLexer::parseEncodingsList() {
