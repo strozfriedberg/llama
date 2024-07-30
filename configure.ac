@@ -189,9 +189,16 @@ AC_CHECK_HEADERS([jsoncons/json.hpp], [], [AC_MSG_ERROR([Couldn't find jsoncons/
 #
 AC_CHECK_HEADERS([duckdb.h], [], [AC_MSG_ERROR([Couldn't find duckdb.h])])
 
-TMP_LIBS="$LIBS"
-AC_CHECK_LIB([duckdb], [duckdb_library_version], [], [AC_MSG_ERROR([Couldn't find duckdb_static library])])
-DUCKDB_LIBS="$LIBS"
+if test "x$enable_shared" != "xyes"; then
+  DUCKDB_LIBNAME=duckdb_static
+  DUCKDB_MORELIBS="-lduckdb_fastpforlib -lduckdb_fmt -lduckdb_fsst -lduckdb_hyperloglog -lduckdb_mbedtls -lduckdb_miniz -lduckdb_pg_query -lduckdb_re2 -lduckdb_skiplistlib -lduckdb_utf8proc -lduckdb_yyjson -lparquet_extension -lws2_32 -lrstrtmgr"
+else
+  DUCKDB_LIBNAME=duckdb
+  DUCKDB_MORELIBS=
+fi
+
+AC_CHECK_LIB([$DUCKDB_LIBNAME], [duckdb_library_version], [], [AC_MSG_ERROR([Couldn't find duckdb library])], [$DUCKDB_MORELIBS])
+DUCKDB_LIBS="$LIBS $DUCKDB_MORELIBS"
 LIBS="$TMP_LIBS"
 
 AC_SUBST([DUCKDB_LIBS])
