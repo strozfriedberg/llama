@@ -474,3 +474,9 @@ TEST_CASE("parseHexStringThrowsIfInvalidHex") {
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseHexString(), ParserError);
 }
+
+TEST_CASE("parseHexStringThrowsIfNotTwoByteDigits") {
+  std::string input = "{ 5 }";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseHexString(), ParserError);
+}
