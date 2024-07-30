@@ -136,7 +136,7 @@ void LlamaParser::parsePatternDef() {
   if (matchAny(TokenType::DOUBLE_QUOTED_STRING)) {
     parsePatternMod();
   }
-  else if (checkAny(TokenType::OPEN_BRACE)) {
+  else if (matchAny(TokenType::OPEN_BRACE)) {
     parseHexString();
   }
   else {
@@ -157,7 +157,6 @@ void LlamaParser::parseNumber() {
 }
 
 std::string LlamaParser::parseHexString() {
-  mustParse("Expected open brace", TokenType::OPEN_BRACE);
   std::string hexDigit;
   std::string hexString = "";
   while (!checkAny(TokenType::CLOSE_BRACE) && !isAtEnd()) {

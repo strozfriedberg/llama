@@ -450,7 +450,7 @@ TEST_CASE("startRule") {
 }
 
 TEST_CASE("parseHexString") {
-  std::string input = "{ 34 56 78 9f }";
+  std::string input = "34 56 78 9f }";
   LlamaParser parser(input, getTokensFromString(input));
   std::string hexStr;
   REQUIRE_NOTHROW(hexStr = parser.parseHexString());
@@ -458,19 +458,19 @@ TEST_CASE("parseHexString") {
 }
 
 TEST_CASE("parseHexStringThrowsIfUnterminated") {
-  std::string input = "{ 34 56 78 9f";
+  std::string input = "34 56 78 9f";
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseHexString(), ParserError);
 }
 
 TEST_CASE("parseHexStringThrowsIfInvalidHex") {
-  std::string input = "{ 34 56 78 9z }";
+  std::string input = "34 56 78 9z }";
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseHexString(), ParserError);
 }
 
 TEST_CASE("parseHexStringThrowsIfNotTwoByteDigits") {
-  std::string input = "{ 5 }";
+  std::string input = "5 }";
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseHexString(), ParserError);
 }
