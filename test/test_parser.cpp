@@ -468,3 +468,9 @@ TEST_CASE("parseHexStringThrowsIfUnterminated") {
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseHexString(), ParserError);
 }
+
+TEST_CASE("parseHexStringThrowsIfInvalidHex") {
+  std::string input = "{ 34 56 78 9z }";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseHexString(), ParserError);
+}

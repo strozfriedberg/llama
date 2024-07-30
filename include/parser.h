@@ -161,10 +161,17 @@ void LlamaParser::parseNumber() {
 
 std::string LlamaParser::parseHexString() {
   mustParse("Expected open brace", TokenType::OPEN_BRACE);
+  std::string hexDigit;
   std::string hexString = "";
   while (!checkAny(TokenType::CLOSE_BRACE) && !isAtEnd()) {
     if (matchAny(TokenType::IDENTIFIER, TokenType::NUMBER)) {
-      hexString += Input.substr(previous().Start, previous().length());
+      hexDigit = Input.substr(previous().Start, previous().length());
+      for (char c : hexDigit) {
+        if (!isxdigit(c)) {
+          throw ParserError("Invalid hex digit", previous().Pos);
+        }
+      }
+      hexString += hexDigit;
     }
   }
   if (isAtEnd()) {
