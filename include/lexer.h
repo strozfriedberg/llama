@@ -36,7 +36,7 @@ public:
   void parseNumber(LineCol pos);
   void parseEncodingsList();
   void parseSingleLineComment();
-  void parseMultiLineComment();
+  void parseMultiLineComment(LineCol pos);
 
   void addToken(TokenType type, uint64_t start, uint64_t end, LineCol pos);
 

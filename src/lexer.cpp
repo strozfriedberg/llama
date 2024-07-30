@@ -42,7 +42,7 @@ void LlamaLexer::scanToken() {
         parseSingleLineComment();
       }
       else if (match('*')) {
-        parseMultiLineComment();
+        parseMultiLineComment(pos);
       }
       else {
         throw UnexpectedInputError("Unexpected input character: / at ", pos);
@@ -140,7 +140,7 @@ void LlamaLexer::parseSingleLineComment() {
   }
 }
 
-void LlamaLexer::parseMultiLineComment() {
+void LlamaLexer::parseMultiLineComment(LineCol pos) {
   while (getCurChar() != '*' && !isAtEnd()) {
     if (getCurChar() == '\n') {
       Pos.LineNum++;
@@ -149,7 +149,7 @@ void LlamaLexer::parseMultiLineComment() {
     advance();
   }
   if (isAtEnd()) {
-    throw UnexpectedInputError("Unterminated multi-line comment at ", Pos);
+    throw UnexpectedInputError("Unterminated multi-line comment at ", pos);
   }
   if (peek() == '/') {
     advance(); // consume *
@@ -157,7 +157,7 @@ void LlamaLexer::parseMultiLineComment() {
   }
   else {
     advance();
-    parseMultiLineComment();
+    parseMultiLineComment(pos);
   }
 }
 

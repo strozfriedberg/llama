@@ -496,14 +496,14 @@ TEST_CASE("parseSingleLineComment") {
 TEST_CASE("parseMultiLineCommentIsIgnored") {
   std::string input = "this is a\nmulti-line comment */";
   LlamaLexer lexer(input);
-  lexer.parseMultiLineComment();
+  lexer.parseMultiLineComment({0,0});
   REQUIRE(lexer.isAtEnd());
 }
 
 TEST_CASE("parseMultiLineCommentThrowsIfUnterminated") {
   std::string input = "this is a\nmulti-line comment";
   LlamaLexer lexer(input);
-  REQUIRE_THROWS_AS(lexer.parseMultiLineComment(), UnexpectedInputError);
+  REQUIRE_THROWS_AS(lexer.parseMultiLineComment({0,0}), UnexpectedInputError);
 }
 
 TEST_CASE("parseRuleWithMultiLineComment") {
