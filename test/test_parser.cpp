@@ -453,3 +453,17 @@ TEST_CASE("startRule") {
   REQUIRE(rules.at(0).Name == "MyRule");
   REQUIRE(rules.at(1).Name == "AnotherRule");
 }
+
+TEST_CASE("parseHexString") {
+  std::string input = "{ 34 56 78 9f }";
+  LlamaParser parser(input, getTokensFromString(input));
+  std::string hexStr;
+  REQUIRE_NOTHROW(hexStr = parser.parseHexString());
+  REQUIRE(hexStr == "3456789f");
+}
+
+TEST_CASE("parseHexStringThrowsIfUnterminated") {
+  std::string input = "{ 34 56 78 9f";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseHexString(), ParserError);
+}

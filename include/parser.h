@@ -38,6 +38,7 @@ public:
   void parsePatternDef();
   void parsePatternsSection();
   void parseNumber();
+  std::string parseHexString();
   void parseDualFuncCall();
   void parseAnyFuncCall();
   void parseAllFuncCall();
@@ -132,9 +133,17 @@ void LlamaParser::parseEncodings() {
 void LlamaParser::parsePatternDef() {
   mustParse("Expected identifier", TokenType::IDENTIFIER);
   mustParse("Expected equal sign", TokenType::EQUAL);
-  mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-  while (checkAny(TokenType::NOCASE, TokenType::FIXED, TokenType::ENCODINGS)) {
-    parsePatternMod();
+
+  if (matchAny(TokenType::DOUBLE_QUOTED_STRING)) {
+    while (checkAny(TokenType::NOCASE, TokenType::FIXED, TokenType::ENCODINGS)) {
+      parsePatternMod();
+    }
+  }
+  else if (checkAny(TokenType::OPEN_BRACE)) {
+    parseHexString();
+  }
+  else {
+    throw ParserError("Expected double quoted string or hex string", peek().Pos);
   }
 }
 
@@ -148,6 +157,21 @@ void LlamaParser::parsePatternsSection() {
 
 void LlamaParser::parseNumber() {
   mustParse("Expected number", TokenType::NUMBER);
+}
+
+std::string LlamaParser::parseHexString() {
+  mustParse("Expected open brace", TokenType::OPEN_BRACE);
+  std::string hexString = "";
+  while (!checkAny(TokenType::CLOSE_BRACE) && !isAtEnd()) {
+    if (matchAny(TokenType::IDENTIFIER, TokenType::NUMBER)) {
+      hexString += Input.substr(previous().Start, previous().length());
+    }
+  }
+  if (isAtEnd()) {
+    throw ParserError("Unterminated hex string", peek().Pos);
+  }
+  mustParse("Expected close brace", TokenType::CLOSE_BRACE);
+  return hexString;
 }
 
 void LlamaParser::parseDualFuncCall() {
