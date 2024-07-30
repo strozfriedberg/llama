@@ -152,12 +152,6 @@ TEST_CASE("parseOperatorDoesNotThrowIfOperator") {
   REQUIRE_NOTHROW(parser.parseOperator());
 }
 
-TEST_CASE("parseStringModThrowsIfNotStringMod") {
-  std::string input = "notAStringMod";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_THROWS_AS(parser.parsePatternMod(), ParserError);
-}
-
 TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
   std::string input = "nocase";
   LlamaParser parser(input, getTokensFromString(input));

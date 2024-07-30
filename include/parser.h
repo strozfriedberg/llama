@@ -111,17 +111,16 @@ void LlamaParser::parseOperator() {
 }
 
 void LlamaParser::parsePatternMod() {
-  if (matchAny(TokenType::NOCASE)) {
-    return;
-  }
-  if (matchAny(TokenType::FIXED)) {
-    return;
-  }
-  if (matchAny(TokenType::ENCODINGS)) {
-    parseEncodings();
-  }
-  else{
-    throw ParserError("Expected pattern modifier", peek().Pos);
+  while (checkAny(TokenType::NOCASE, TokenType::FIXED, TokenType::ENCODINGS)) {
+    if (matchAny(TokenType::NOCASE)) {
+      continue;
+    }
+    else if (matchAny(TokenType::FIXED)) {
+      continue;
+    }
+    else if (matchAny(TokenType::ENCODINGS)) {
+      parseEncodings();
+    }
   }
 }
 
@@ -135,9 +134,7 @@ void LlamaParser::parsePatternDef() {
   mustParse("Expected equal sign", TokenType::EQUAL);
 
   if (matchAny(TokenType::DOUBLE_QUOTED_STRING)) {
-    while (checkAny(TokenType::NOCASE, TokenType::FIXED, TokenType::ENCODINGS)) {
-      parsePatternMod();
-    }
+    parsePatternMod();
   }
   else if (checkAny(TokenType::OPEN_BRACE)) {
     parseHexString();
