@@ -175,7 +175,7 @@ std::string LlamaParser::parseHexString() {
   if (isAtEnd()) {
     throw ParserError("Unterminated hex string", peek().Pos);
   }
-  if (hexString.size() % 2 != 0) {
+  if (hexString.size() & 1) {
     throw ParserError("Odd number of hex digits", peek().Pos);
   }
   mustParse("Expected close brace", TokenType::CLOSE_BRACE);
