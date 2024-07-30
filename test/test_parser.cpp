@@ -474,3 +474,9 @@ TEST_CASE("parseHexStringThrowsIfNotTwoByteDigits") {
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseHexString(), ParserError);
 }
+
+TEST_CASE("parseHexStringThrowsIfNotNumberOrIdentifier") {
+  std::string input = "(8) }";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseHexString(), ParserError);
+}

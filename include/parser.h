@@ -168,6 +168,9 @@ std::string LlamaParser::parseHexString() {
       }
       hexString += hexDigit;
     }
+    else {
+      throw ParserError("Expected hex digit", peek().Pos);
+    }
   }
   if (isAtEnd()) {
     throw ParserError("Unterminated hex string", peek().Pos);
