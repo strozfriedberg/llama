@@ -178,6 +178,9 @@ std::string LlamaParser::parseHexString() {
   if (hexString.size() & 1) {
     throw ParserError("Odd number of hex digits", peek().Pos);
   }
+  if (hexString.size() == 0) {
+    throw ParserError("Empty hex string", peek().Pos);
+  }
   mustParse("Expected close brace", TokenType::CLOSE_BRACE);
   return hexString;
 }

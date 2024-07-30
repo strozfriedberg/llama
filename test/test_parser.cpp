@@ -480,3 +480,9 @@ TEST_CASE("parseHexStringThrowsIfNotNumberOrIdentifier") {
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseHexString(), ParserError);
 }
+
+TEST_CASE("parseHexStringThrowIfEmpty") {
+  std::string input = "}";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseHexString(), ParserError);
+}
