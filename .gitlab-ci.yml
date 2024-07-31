@@ -24,6 +24,22 @@ variables:
       - "staging"
     description: "Where to build"
 
+build llama local:
+  stage: build
+  image: registry.fedoraproject.org/fedora:40
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
+  variables:
+    CI_BUILD: "true"
+  tags:
+    - shell
+    - dfirdev
+    - aws-ci
+    - aws
+  script:
+    - ./.gitlab/build_make_world.sh
+
 .build_fast base:
   stage: build
   rules:
@@ -57,7 +73,7 @@ build fast (windows shared 64):
     BUILD_LOCATION: "production"
     BUILD_TARGET: "windows"
     BUILD_LINKAGE: "shared"
-    CODEBUILD_PROJECT_NAME: "StateMachineMakeWorldConstr-B1BwAQgT9ve6"
+    CODEBUILD_PROJECT_NAME: "StateMachineMakeWorldConstr-NAVOvkOPLJUX" 
 
 build fast (window static 64):
   extends: .build_fast base
@@ -65,12 +81,7 @@ build fast (window static 64):
     BUILD_LOCATION: "production"
     BUILD_TARGET: "windows"
     BUILD_LINKAGE: "static"
-    CODEBUILD_PROJECT_NAME: "StateMachineMakeWorldConstr-B1BwAQgT9ve6"
-
-  trigger:
-    project: soldev/cyberdev/make_world
-    branch: $MAKE_WORLD_DEFAULT_BRANCH
-    strategy: depend
+    CODEBUILD_PROJECT_NAME: "StateMachineMakeWorldConstr-ZEgKst6Hv4Xr" 
 
 build:
   stage: build
