@@ -25,6 +25,9 @@ struct OffsetType {
 };
 
 using Binary = std::vector<uint8_t>;
+using String = std::string;
+using Strings = std::vector<String>;
+using String2StringMap = std::unordered_map<String, String>;
 
 struct Magic {
   struct Check {
@@ -35,24 +38,26 @@ struct Magic {
 
     bool compare(Binary const &data) const;
   };
-  std::vector<Check> Checks;
-  std::string Description;
-  std::string Id;
-  std::unordered_map<std::string, std::string> Extensions;
-  std::string Pattern;
+  using ChecksType = std::vector<Check>;
+
+  ChecksType Checks;
+  String Description;
+  String Id;
+  String2StringMap Extensions;
+  String Pattern;
   bool FixedString;
   bool CaseInsensetive;
-  std::vector<std::string> Encodings;
-  std::vector<std::string> Tags;
+  Strings Encodings;
+  Strings Tags;
 
   size_t getPatternLength(bool only_significant = false) const;
 };
 
-size_t getPatternLength(std::string const &pattern, bool only_significant);
+using MagicPtr = std::shared_ptr<Magic>;
+using MagicsType = std::vector<MagicPtr>;
+using String2MagicMap = std::unordered_map<String, MagicPtr>;
 
-typedef std::shared_ptr<Magic> MagicPtr;
-
-typedef std::vector<MagicPtr> MagicsType;
+size_t getPatternLength(String const &pattern, bool only_significant);
 
 class LightGrep {
   LG_HPROGRAM Prog;
@@ -68,15 +73,19 @@ public:
 
 class FileSigAnalyzer {
   MagicsType Magics;
-  std::unordered_map<std::string, MagicPtr> SignatureDict;
+  String2MagicMap SignatureDict;
   MagicsType SignatureList;
 
   LightGrep Lg;
   // size of the buffer - max value of getPatternLength(false)
   Binary ReadBuf;
 
-  Binary getBuf(std::ifstream &ifs, Binary &check_buf, OffsetType const &offset,
-                std::size_t size) const;
+  expected<Binary> getBuf(std::ifstream &ifs, Binary &check_buf,
+                          OffsetType const &offset, std::size_t size) const;
+  expected<bool> doCheck(MagicPtr magic, std::ifstream &ifs, Binary &check_buf,
+                         MagicPtr &result) const;
+  expected<bool> lgSearch(const uint8_t *start, const uint8_t *end,
+                          MagicPtr &result) const;
   static void lgCallbackfn(void *userData, const LG_SearchHit *const hit);
 
 public:

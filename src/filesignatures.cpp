@@ -363,9 +363,9 @@ void FileSigAnalyzer::lgCallbackfn(void *userData,
   }
 }
 
-Binary FileSigAnalyzer::getBuf(std::ifstream &ifs, Binary &check_buf,
-                               OffsetType const &offset,
-                               std::size_t size) const {
+expected<Binary> FileSigAnalyzer::getBuf(std::ifstream &ifs, Binary &check_buf,
+                                         OffsetType const &offset,
+                                         std::size_t size) const {
   if (size + offset.count > ReadBuf.size() || offset.from_start == false) {
     check_buf.resize(size);
     ifs.clear();
@@ -373,13 +373,56 @@ Binary FileSigAnalyzer::getBuf(std::ifstream &ifs, Binary &check_buf,
               offset.from_start ? std::ios_base::beg : std::ios_base::end);
     auto readed = ifs.read((char *)check_buf.data(), check_buf.size()).gcount();
     if (readed != (std::streamsize)size)
-      throw std::runtime_error(
-          ("read(" + std::to_string(size) + ") at " +
-               std::to_string(offset.count) + ", ",
-           std::to_string(offset.from_start) + " failed."));
+      return makeUnexpected(("read(" + std::to_string(size) + ") at " +
+                                 std::to_string(offset.count) + ", ",
+                             std::to_string(offset.from_start) + " failed."));
+
     return check_buf;
   }
   return Binary(&ReadBuf[offset.count], &ReadBuf[offset.count + size]);
+}
+
+expected<bool> FileSigAnalyzer::lgSearch(const uint8_t *start,
+                                         const uint8_t *end,
+                                         MagicPtr &result) const {
+  lg_callback_context ctx{this, std::numeric_limits<size_t>::max()};
+
+  auto lg_err = Lg.search(start, end, &ctx, &FileSigAnalyzer::lgCallbackfn);
+
+  if (lg_err.has_error()) {
+    return makeUnexpected("Lg.search() error: " + lg_err.error());
+  }
+
+  if (ctx.min_hit_index != std::numeric_limits<size_t>::max()) {
+    // hit
+    result = this->Magics[ctx.min_hit_index];
+    return true;
+  }
+
+  return false;
+}
+
+expected<bool> FileSigAnalyzer::doCheck(MagicPtr magic, std::ifstream &ifs,
+                                        Binary &check_buf,
+                                        MagicPtr &result) const {
+  bool all_checks_passed = magic->Checks.size() > 0;
+  BOOST_FOREACH (auto check_it, magic->Checks) {
+    if (auto data =
+            getBuf(ifs, check_buf, check_it.Offset, check_it.Value.size())) {
+      if (!(all_checks_passed = (check_it.compare(data.value()) == true)))
+        break;
+    } else {
+      return makeUnexpected(data.error());
+    }
+  }
+
+  if (all_checks_passed) {
+    // hit
+    result = magic;
+    return true;
+  }
+
+  return false;
 }
 
 expected<bool> FileSigAnalyzer::getSignature(const fs::directory_entry &de,
@@ -399,23 +442,18 @@ expected<bool> FileSigAnalyzer::getSignature(const fs::directory_entry &de,
       }
     }
 
-    lg_callback_context ctx{this, std::numeric_limits<size_t>::max()};
     auto readed = ifs.read((char *)ReadBuf.data(), ReadBuf.size()).gcount();
     if (readed == 0) {
       return makeUnexpected("read zero bytes from " + de.path().string());
     }
-    auto lg_err = Lg.search(ReadBuf.data(), ReadBuf.data() + readed, &ctx,
-                            &FileSigAnalyzer::lgCallbackfn);
-    if (lg_err.has_error()) {
-      throw std::runtime_error(
-          "Lg.search() failed on file: " + de.path().string() +
-          std::string(", error: ") + lg_err.error());
-    }
-    if (ctx.min_hit_index != std::numeric_limits<size_t>::max()) {
-      // hit
-      result = this->Magics[ctx.min_hit_index];
+
+    if (auto lg_result =
+            lgSearch(ReadBuf.data(), ReadBuf.data() + readed, result);
+        !lg_result) {
+      return makeUnexpected(lg_result.error() +
+                            "on file: " + de.path().string());
+    } else if (lg_result.value())
       return true;
-    }
 
     // no hits? search manually
 
@@ -424,33 +462,23 @@ expected<bool> FileSigAnalyzer::getSignature(const fs::directory_entry &de,
     // by "ext"
     auto s = SignatureDict.find(ext);
     if (s != SignatureDict.end()) {
-      auto &m = s->second;
-      bool all_checks_passed = m->Checks.size() > 0;
-      BOOST_FOREACH (auto check_it, m->Checks) {
-        if (!(all_checks_passed =
-                  (check_it.compare(getBuf(ifs, check_buf, check_it.Offset,
-                                           check_it.Value.size())) == true)))
-          break;
-      }
-      if (all_checks_passed) {
-        // hit
-        result = m;
-        return true;
+      if (auto ok = doCheck(s->second, ifs, check_buf, result)) {
+        if (ok.value()) {
+          return true;
+        }
+      } else {
+        return makeUnexpected(ok.error());
       }
     }
 
     // final check through all signatures
     for (auto const &s : SignatureList) {
-      bool all_checks_passed = false;
-      BOOST_FOREACH (auto check_it, s->Checks) {
-        if (!(all_checks_passed =
-                  (check_it.compare(getBuf(ifs, check_buf, check_it.Offset,
-                                           check_it.Value.size())) == true)))
-          break;
-      }
-      if (all_checks_passed) {
-        result = s;
-        return true;
+      if (auto ok = doCheck(s, ifs, check_buf, result)) {
+        if (ok.value()) {
+          return true;
+        }
+      } else {
+        return makeUnexpected(ok.error());
       }
     }
   }
