@@ -123,58 +123,40 @@ bool iequals(char lhs, char rhs) {
   return std::toupper(lhs, loc) == std::toupper(rhs, loc);
 }
 
+using Comparator =
+    std::unordered_map<CompareType,
+                       std::function<bool(uint8_t const &, uint8_t const &)>>;
+static Comparator COMPARATORS = {
+    {CompareType::Eq,
+     [](uint8_t const &a, uint8_t const &b) -> bool { return a == b; }},
+    {CompareType::EqUpper,
+     [](uint8_t const &a, uint8_t const &b) -> bool {
+       return iequals((char)a, (char)b);
+     }},
+    {CompareType::Eq,
+     [](uint8_t const &a, uint8_t const &b) -> bool { return a != b; }},
+    {CompareType::Gt,
+     [](uint8_t const &a, uint8_t const &b) -> bool { return a > b; }},
+    {CompareType::Lt,
+     [](uint8_t const &a, uint8_t const &b) -> bool { return a < b; }},
+    {CompareType::And,
+     [](uint8_t const &a, uint8_t const &b) -> bool { return a == b; }},
+    {CompareType::Xor,
+     [](uint8_t const &a, uint8_t const &b) -> bool {
+       return ~((int8_t)a ^ (int8_t)b);
+     }},
+    {CompareType::Or,
+     [](uint8_t const &a, uint8_t const &b) -> bool { return a | b; }},
+    {CompareType::Nor,
+     [](uint8_t const &a, uint8_t const &b) -> bool { return !(a | b); }},
+};
+
 bool Magic::Check::compare(Binary const &data) const {
   if (data.size() < Value.size())
     return false;
-  auto eq = [](uint8_t const &a, uint8_t const &b) -> bool { return a == b; };
-  auto eqUp = [](uint8_t const &a, uint8_t const &b) -> bool {
-    return iequals((char)a, (char)b);
-  };
-  auto ne = [](uint8_t const &a, uint8_t const &b) -> bool { return a != b; };
-  auto gt = [](uint8_t const &a, uint8_t const &b) -> bool { return a > b; };
-  auto lt = [](uint8_t const &a, uint8_t const &b) -> bool { return a < b; };
-  auto _and = [](uint8_t const &a, uint8_t const &b) -> bool { return a == b; };
-  auto _xor = [](uint8_t const &a, uint8_t const &b) -> bool {
-    return ~((int8_t)a ^ (int8_t)b);
-  };
-  auto _or = [](uint8_t const &a, uint8_t const &b) -> bool { return a | b; };
-  auto nor = [](uint8_t const &a, uint8_t const &b) -> bool {
-    return !(a | b);
-  };
-  std::function<bool(uint8_t const &, uint8_t const &)> fn;
-  switch (CompareOp) {
-  case CompareType::Eq:
-    fn = eq;
-    break;
-  case CompareType::EqUpper:
-    fn = eqUp;
-    break;
-  case CompareType::Ne:
-    fn = ne;
-    break;
-  case CompareType::Gt:
-    fn = gt;
-    break;
-  case CompareType::Lt:
-    fn = lt;
-    break;
-  case CompareType::And:
-    fn = _and;
-    break;
-  case CompareType::Xor:
-    fn = _xor;
-    break;
-  case CompareType::Or:
-    fn = _or;
-    break;
-  case CompareType::Nor:
-    fn = nor;
-    break;
-  default:
-    throw std::range_error("compare: impossible OP " +
-                           std::to_string((int)CompareOp));
-  }
 
+  std::function<bool(uint8_t const &, uint8_t const &)> fn =
+      COMPARATORS[CompareOp];
   bool result = true;
   bool need_pp = (PreProcess.size() > 0);
   for (auto data_value = data.cbegin(), expected_value = Value.cbegin();
@@ -189,7 +171,7 @@ bool Magic::Check::compare(Binary const &data) const {
   return result;
 }
 
-size_t getPatternLength(std::string const &pattern, bool only_significant) {
+size_t getPatternLength(String const &pattern, bool only_significant) {
   std::size_t i = 0;
   size_t count = 0;
   char prev_c = 0;
@@ -235,7 +217,7 @@ size_t Magic::getPatternLength(bool only_significant) const {
   return FileSignatures::getPatternLength(Pattern, only_significant);
 }
 
-OffsetType parseOffset(std::string s) {
+OffsetType parseOffset(String s) {
   std::stringstream ss;
   bool from_start = true;
 
@@ -269,7 +251,7 @@ uint8_t char2uint8(char input) {
 }
 
 // accept 0xABCD (or 1234), return [0xAB, 0xCD] (or [12, 34])
-Binary str2bin(const std::string &src) {
+Binary str2bin(String const &src) {
   bool hex = startsWith(src, "0x") || startsWith(src, "0X");
   Binary dst(src.length() / 2 - hex);
   auto di = dst.begin();
@@ -283,8 +265,7 @@ expected<MagicsType> FileSigAnalyzer::readMagics(std::string_view path) {
   try {
     std::ifstream is(path.data());
     if (is.fail())
-      return makeUnexpected(std::string("Error: bad path ") +
-                            std::string(path));
+      return makeUnexpected(String("Error: bad path ") + String(path));
 
     auto json(jsoncons::json::parse(is));
 
@@ -456,7 +437,6 @@ expected<bool> FileSigAnalyzer::getSignature(const fs::directory_entry &de,
       return true;
 
     // no hits? search manually
-
     Binary check_buf(ReadBuf);
 
     // by "ext"
@@ -486,7 +466,7 @@ expected<bool> FileSigAnalyzer::getSignature(const fs::directory_entry &de,
 }
 
 FileSigAnalyzer::FileSigAnalyzer() {
-  std::string magics_file("./magics.json");
+  String magics_file("./magics.json");
   auto result = readMagics(magics_file);
   if (result.has_error()) {
     throw std::runtime_error("Couldn't open file: " + magics_file +
