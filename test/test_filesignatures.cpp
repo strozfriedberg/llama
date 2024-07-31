@@ -34,8 +34,10 @@ struct DataGenerator : public Catch::Generators::IGenerator<ItemType> {
   ItemType const &get() const override { return current; }
 
   bool next() override {
-    current = ItemType(*current_ptr);
-    return ++current_ptr != data.array_range().end();
+      if (current_ptr == data.array_range().end())
+          return false;
+      current = ItemType(*current_ptr++);
+      return true;
   }
 };
 
