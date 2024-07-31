@@ -54,6 +54,7 @@ enum class TokenType {
   // user-defined tokens
   IDENTIFIER,
   DOUBLE_QUOTED_STRING,
+  HEX_STRING,
   NUMBER,
   ENCODINGS_LIST,
 

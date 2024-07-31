@@ -38,6 +38,7 @@ public:
   void parsePatternDef();
   void parsePatternsSection();
   void parseNumber();
+  std::string parseHexString();
   void parseDualFuncCall();
   void parseAnyFuncCall();
   void parseAllFuncCall();
@@ -110,17 +111,16 @@ void LlamaParser::parseOperator() {
 }
 
 void LlamaParser::parsePatternMod() {
-  if (matchAny(TokenType::NOCASE)) {
-    return;
-  }
-  if (matchAny(TokenType::FIXED)) {
-    return;
-  }
-  if (matchAny(TokenType::ENCODINGS)) {
-    parseEncodings();
-  }
-  else{
-    throw ParserError("Expected pattern modifier", peek().Pos);
+  while (checkAny(TokenType::NOCASE, TokenType::FIXED, TokenType::ENCODINGS)) {
+    if (matchAny(TokenType::NOCASE)) {
+      continue;
+    }
+    else if (matchAny(TokenType::FIXED)) {
+      continue;
+    }
+    else if (matchAny(TokenType::ENCODINGS)) {
+      parseEncodings();
+    }
   }
 }
 
@@ -132,9 +132,15 @@ void LlamaParser::parseEncodings() {
 void LlamaParser::parsePatternDef() {
   mustParse("Expected identifier", TokenType::IDENTIFIER);
   mustParse("Expected equal sign", TokenType::EQUAL);
-  mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-  while (checkAny(TokenType::NOCASE, TokenType::FIXED, TokenType::ENCODINGS)) {
+
+  if (matchAny(TokenType::DOUBLE_QUOTED_STRING)) {
     parsePatternMod();
+  }
+  else if (matchAny(TokenType::OPEN_BRACE)) {
+    parseHexString();
+  }
+  else {
+    throw ParserError("Expected double quoted string or hex string", peek().Pos);
   }
 }
 
@@ -148,6 +154,35 @@ void LlamaParser::parsePatternsSection() {
 
 void LlamaParser::parseNumber() {
   mustParse("Expected number", TokenType::NUMBER);
+}
+
+std::string LlamaParser::parseHexString() {
+  std::string hexDigit, hexString;
+  while (!checkAny(TokenType::CLOSE_BRACE) && !isAtEnd()) {
+    if (matchAny(TokenType::IDENTIFIER, TokenType::NUMBER)) {
+      hexDigit = Input.substr(previous().Start, previous().length());
+      for (char c : hexDigit) {
+        if (!isxdigit(c)) {
+          throw ParserError("Invalid hex digit", previous().Pos);
+        }
+      }
+      hexString += hexDigit;
+    }
+    else {
+      throw ParserError("Expected hex digit", peek().Pos);
+    }
+  }
+  if (isAtEnd()) {
+    throw ParserError("Unterminated hex string", peek().Pos);
+  }
+  if (hexString.size() & 1) {
+    throw ParserError("Odd number of hex digits", peek().Pos);
+  }
+  if (hexString.size() == 0) {
+    throw ParserError("Empty hex string", peek().Pos);
+  }
+  mustParse("Expected close brace", TokenType::CLOSE_BRACE);
+  return hexString;
 }
 
 void LlamaParser::parseDualFuncCall() {

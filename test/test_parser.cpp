@@ -152,12 +152,6 @@ TEST_CASE("parseOperatorDoesNotThrowIfOperator") {
   REQUIRE_NOTHROW(parser.parseOperator());
 }
 
-TEST_CASE("parseStringModThrowsIfNotStringMod") {
-  std::string input = "notAStringMod";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_THROWS_AS(parser.parsePatternMod(), ParserError);
-}
-
 TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
   std::string input = "nocase";
   LlamaParser parser(input, getTokensFromString(input));
@@ -442,6 +436,7 @@ TEST_CASE("startRule") {
       patterns:
         a = "test" encodings=UTF-8 nocase fixed
         b = "test2" encodings=UTF-8 nocase fixed
+        c = { 34 56 78 ab cd EF }
       condition:
         any(a, b) and count(a) == 5
   }
@@ -452,4 +447,42 @@ TEST_CASE("startRule") {
   REQUIRE(rules.size() == 2);
   REQUIRE(rules.at(0).Name == "MyRule");
   REQUIRE(rules.at(1).Name == "AnotherRule");
+}
+
+TEST_CASE("parseHexString") {
+  std::string input = "34 56 78 9f }";
+  LlamaParser parser(input, getTokensFromString(input));
+  std::string hexStr;
+  REQUIRE_NOTHROW(hexStr = parser.parseHexString());
+  REQUIRE(hexStr == "3456789f");
+}
+
+TEST_CASE("parseHexStringThrowsIfUnterminated") {
+  std::string input = "34 56 78 9f";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseHexString(), ParserError);
+}
+
+TEST_CASE("parseHexStringThrowsIfInvalidHex") {
+  std::string input = "34 56 78 9z }";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseHexString(), ParserError);
+}
+
+TEST_CASE("parseHexStringThrowsIfNotTwoByteDigits") {
+  std::string input = "5 }";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseHexString(), ParserError);
+}
+
+TEST_CASE("parseHexStringThrowsIfNotNumberOrIdentifier") {
+  std::string input = "(8) }";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseHexString(), ParserError);
+}
+
+TEST_CASE("parseHexStringThrowIfEmpty") {
+  std::string input = "}";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseHexString(), ParserError);
 }
