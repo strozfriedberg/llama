@@ -17,6 +17,8 @@ inline auto makeUnexpected(const std::string &s) {
   return boost::outcome_v2::failure(s);
 }
 
+inline auto makeOk() { return boost::outcome_v2::success(); }
+
 enum class CompareType { Eq, EqUpper, Ne, Gt, Lt, And, Xor, Or, Nor };
 
 struct OffsetType {

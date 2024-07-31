@@ -126,32 +126,33 @@ bool iequals(char lhs, char rhs) {
 using Comparator =
     std::unordered_map<CompareType,
                        std::function<bool(uint8_t const &, uint8_t const &)>>;
-static Comparator COMPARATORS = {
-    {CompareType::Eq,
-     [](uint8_t const &a, uint8_t const &b) -> bool { return a == b; }},
-    {CompareType::EqUpper,
-     [](uint8_t const &a, uint8_t const &b) -> bool {
-       return iequals((char)a, (char)b);
-     }},
-    {CompareType::Eq,
-     [](uint8_t const &a, uint8_t const &b) -> bool { return a != b; }},
-    {CompareType::Gt,
-     [](uint8_t const &a, uint8_t const &b) -> bool { return a > b; }},
-    {CompareType::Lt,
-     [](uint8_t const &a, uint8_t const &b) -> bool { return a < b; }},
-    {CompareType::And,
-     [](uint8_t const &a, uint8_t const &b) -> bool { return a == b; }},
-    {CompareType::Xor,
-     [](uint8_t const &a, uint8_t const &b) -> bool {
-       return ~((int8_t)a ^ (int8_t)b);
-     }},
-    {CompareType::Or,
-     [](uint8_t const &a, uint8_t const &b) -> bool { return a | b; }},
-    {CompareType::Nor,
-     [](uint8_t const &a, uint8_t const &b) -> bool { return !(a | b); }},
-};
 
 bool Magic::Check::compare(Binary const &data) const {
+  static Comparator COMPARATORS = {
+      {CompareType::Eq,
+       [](uint8_t const &a, uint8_t const &b) -> bool { return a == b; }},
+      {CompareType::EqUpper,
+       [](uint8_t const &a, uint8_t const &b) -> bool {
+         return iequals((char)a, (char)b);
+       }},
+      {CompareType::Eq,
+       [](uint8_t const &a, uint8_t const &b) -> bool { return a != b; }},
+      {CompareType::Gt,
+       [](uint8_t const &a, uint8_t const &b) -> bool { return a > b; }},
+      {CompareType::Lt,
+       [](uint8_t const &a, uint8_t const &b) -> bool { return a < b; }},
+      {CompareType::And,
+       [](uint8_t const &a, uint8_t const &b) -> bool { return a == b; }},
+      {CompareType::Xor,
+       [](uint8_t const &a, uint8_t const &b) -> bool {
+         return ~((int8_t)a ^ (int8_t)b);
+       }},
+      {CompareType::Or,
+       [](uint8_t const &a, uint8_t const &b) -> bool { return a | b; }},
+      {CompareType::Nor,
+       [](uint8_t const &a, uint8_t const &b) -> bool { return !(a | b); }},
+  };
+
   if (data.size() < Value.size())
     return false;
 
@@ -261,6 +262,65 @@ Binary str2bin(String const &src) {
   return dst;
 }
 
+namespace {
+expected<void> readChecks(jsoncons::json const &magic_json, Magic &m) {
+  if (magic_json.contains("checks")) {
+    for (const auto &check : magic_json["checks"].array_range()) {
+      if (auto compare_type =
+              parse_compare_type(check["compare_type"].as_string())) {
+        auto preprocess = check.contains("pre_process")
+                              ? str2bin(check["pre_process"].as_string())
+                              : Binary();
+
+        m.Checks.push_back(Magic::Check{
+            compare_type.value(), parseOffset(check["offset"].as_string()),
+            str2bin(check["value"].as_string()), preprocess});
+      } else {
+        return makeUnexpected(compare_type.error());
+      }
+    }
+  }
+  return makeOk();
+}
+
+void readPatterns(jsoncons::json const &magic_json, Magic &m) {
+  if (magic_json.contains("pattern")) {
+    m.Pattern = magic_json["pattern"].as_string();
+  }
+  m.FixedString = magic_json.contains("fixed_string")
+                      ? magic_json["fixed_string"].as_bool()
+                      : false;
+  m.CaseInsensetive = magic_json.contains("case_insensitive")
+                          ? magic_json["case_insensitive"].as_bool()
+                          : false;
+  if (magic_json.contains("encoding")) {
+    boost::split(m.Encodings, magic_json["encoding"].as_string(),
+                 boost::is_any_of(","));
+  } else {
+    m.Encodings.push_back("ISO-8859-1");
+  }
+}
+
+void readSpecs(jsoncons::json const &magic_json, Magic &m) {
+  if (magic_json.contains("description")) {
+    m.Description = magic_json["description"].as_string();
+  }
+  if (magic_json.contains("id")) {
+    m.Id = magic_json["id"].as_string();
+  }
+  if (magic_json.contains("tags")) {
+    for (const auto &tag : magic_json["tags"].array_range()) {
+      m.Tags.push_back(tag.as_string());
+    }
+  }
+  if (magic_json.contains("extensions")) {
+    for (const auto &ext : magic_json["extensions"].object_range()) {
+      m.Extensions[ext.key()] = ext.value().as_string();
+    }
+  }
+}
+} // namespace
+
 expected<MagicsType> FileSigAnalyzer::readMagics(std::string_view path) {
   try {
     std::ifstream is(path.data());
@@ -272,54 +332,13 @@ expected<MagicsType> FileSigAnalyzer::readMagics(std::string_view path) {
     MagicsType magics;
     for (const auto &magic_json : json.array_range()) {
       Magic m;
-      if (magic_json.contains("checks")) {
-        for (const auto &check : magic_json["checks"].array_range()) {
-          if (auto compare_type =
-                  parse_compare_type(check["compare_type"].as_string())) {
-            auto preprocess = check.contains("pre_process")
-                                  ? str2bin(check["pre_process"].as_string())
-                                  : Binary();
 
-            m.Checks.push_back(Magic::Check{
-                compare_type.value(), parseOffset(check["offset"].as_string()),
-                str2bin(check["value"].as_string()), preprocess});
-          } else {
-            return makeUnexpected(compare_type.error());
-          }
-        }
-      }
-      if (magic_json.contains("pattern")) {
-        m.Pattern = magic_json["pattern"].as_string();
-      }
-      m.FixedString = magic_json.contains("fixed_string")
-                          ? magic_json["fixed_string"].as_bool()
-                          : false;
-      m.CaseInsensetive = magic_json.contains("case_insensitive")
-                              ? magic_json["case_insensitive"].as_bool()
-                              : false;
+      if (auto result = readChecks(magic_json, m); !result)
+        return makeUnexpected(result.error());
 
-      if (magic_json.contains("description")) {
-        m.Description = magic_json["description"].as_string();
-      }
-      if (magic_json.contains("id")) {
-        m.Id = magic_json["id"].as_string();
-      }
-      if (magic_json.contains("tags")) {
-        for (const auto &tag : magic_json["tags"].array_range()) {
-          m.Tags.push_back(tag.as_string());
-        }
-      }
-      if (magic_json.contains("extensions")) {
-        for (const auto &ext : magic_json["extensions"].object_range()) {
-          m.Extensions[ext.key()] = ext.value().as_string();
-        }
-      }
-      if (magic_json.contains("encoding")) {
-        boost::split(m.Encodings, magic_json["encoding"].as_string(),
-                     boost::is_any_of(","));
-      } else {
-        m.Encodings.push_back("ISO-8859-1");
-      }
+      readPatterns(magic_json, m);
+      readSpecs(magic_json, m);
+
       magics.push_back(std::make_shared<Magic>(m));
     }
 
