@@ -16,6 +16,7 @@ src_llama_common = \
 	src/fieldhasher.cpp \
 	src/filerecord.cpp \
 	src/filescheduler.cpp \
+	src/filesignatures.cpp \
 	src/hex.cpp \
 	src/inodeandblocktrackerimpl.cpp \
 	src/inputreader.cpp \
@@ -81,7 +82,8 @@ test_test_SOURCES = \
 	test/test_tskimgassembler.cpp \
 	test/test_tskreader.cpp \
 	test/test_tskreaderhelper.cpp \
-	test/test_tsktimestamps.cpp
+	test/test_tsktimestamps.cpp \
+	test/test_filesignatures.cpp
 
 test_test_CPPFLAGS = -I$(srcdir)/src $(AM_CPPFLAGS) $(CATCH2_CPPFLAGS)
 test_test_LDADD = $(CATCH2_LIBS) $(LLAMA_LIBS) $(LG_LIBS) $(TSK_LIBS) $(LIBARCHIVE_LIBS) $(YARA_LIBS) $(HASHER_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_ASIO_LIB) $(STDCXX_LIB)
