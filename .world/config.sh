@@ -12,6 +12,11 @@ if [ "$Target" != 'macos' ]; then
 fi
 
 if [ $Target = 'windows' ]; then
+  # The test for setting DUCKDB_API in duckdb.h doesn't work correctly
+  # when cross-compiling statically, so we set it here to ensure that
+  # the compiler doesn't see all the duckdb functions declared with
+  # __declspec(dllimport).
+  CPPFLAGS+=' -DDUCKDB_API= '
   LDFLAGS+=' -fstack-protector'
 fi
 
