@@ -2,6 +2,8 @@
 
 #include "tskconversion.h"
 
+#include "direntbatch.h"
+
 TEST_CASE("textExtractString") {
   using namespace TskUtils;
   REQUIRE("" == extractString("", 0));
@@ -441,20 +443,26 @@ TEST_CASE("testTskMetaConvert") {
   REQUIRE("" == js["link"]);
 }
 
+namespace {
+  void initTskFsName(TSK_FS_NAME& name) {
+    std::memset(&name, 0, sizeof(name));
+
+    name.name = const_cast<char*>("woowoowoo\0bad bad bad");
+    name.name_size = 9;
+    name.shrt_name = const_cast<char*>("WOOWOO~1");
+    name.shrt_name_size = 8;
+    name.meta_addr = 7;
+    name.meta_seq = 6;
+    name.par_addr = 231;
+    name.par_seq = 72;
+    name.type = TSK_FS_NAME_TYPE_SOCK;
+    name.flags = TSK_FS_NAME_FLAG_ALLOC;
+  }
+}
+
 TEST_CASE("testTskNameConvert") {
   TSK_FS_NAME name;
-  std::memset(&name, 0, sizeof(name));
-
-  name.name = const_cast<char*>("woowoowoo\0bad bad bad");
-  name.name_size = 9;
-  name.shrt_name = const_cast<char*>("WOOWOO~1");
-  name.shrt_name_size = 8;
-  name.meta_addr = 7;
-  name.meta_seq = 6;
-  name.par_addr = 231;
-  name.par_seq = 72;
-  name.type = TSK_FS_NAME_TYPE_SOCK;
-  name.flags = TSK_FS_NAME_FLAG_ALLOC;
+  initTskFsName(name);
 
   const jsoncons::json js = TskUtils::convertName(name);
 
@@ -467,3 +475,24 @@ TEST_CASE("testTskNameConvert") {
   REQUIRE("Domain Socket" == js["type"]);
   REQUIRE("Allocated" == js["flags"]);
 }
+
+TEST_CASE("testConvertTskFsNameToDirent") {
+  TSK_FS_NAME name;
+  initTskFsName(name);
+
+  Dirent d;
+  TskUtils::convertNameToDirent("/usr/tmp/", name, d);
+
+  REQUIRE("/usr/tmp/" == d.Path);
+  REQUIRE("woowoowoo" == d.Name);
+  REQUIRE("WOOWOO~1" == d.ShortName);
+  REQUIRE("Domain Socket" == d.Type);
+  REQUIRE("Allocated" == d.Flags);
+
+  REQUIRE(7 == d.MetaAddr);
+  REQUIRE(231 == d.ParentAddr);
+
+  REQUIRE(6 == d.MetaSeq);
+  REQUIRE(72 == d.ParentSeq);
+}
+

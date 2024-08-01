@@ -8,6 +8,8 @@
 #include "jsoncons_wrapper.h"
 #include "tsktimestamps.h"
 
+struct Dirent;
+
 namespace TskUtils {
   std::string extractString(const char* str, unsigned int size);
 
@@ -61,6 +63,8 @@ namespace TskUtils {
   jsoncons::json convertMeta(const TSK_FS_META& meta, TimestampGetter& ts);
   jsoncons::json convertAttr(const TSK_FS_ATTR& attr);
   jsoncons::json convertRun(const TSK_FS_ATTR_RUN& run);
+
+  void convertNameToDirent(const std::string& path, const TSK_FS_NAME& name, Dirent& dirent);
 
   std::unique_ptr<TimestampGetter> makeTimestampGetter(TSK_FS_TYPE_ENUM fstype);
 }

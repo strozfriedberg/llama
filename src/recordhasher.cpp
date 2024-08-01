@@ -1,5 +1,6 @@
 #include "recordhasher.h"
 
+#include "direntbatch.h"
 #include <string_view>
 
 FieldHash RecordHasher::hashRun(const jsoncons::json& r) {
@@ -89,3 +90,20 @@ FieldHash RecordHasher::hashDirent(const jsoncons::json& r) {
 
   return Hasher.get_hash();
 }
+
+FieldHash RecordHasher::hashDirent(const Dirent& r) {
+  auto h = Hasher.subhash();
+  Hasher.hash_em(
+    r.Path,
+    r.Name,
+    r.ShortName,
+    r.Type,
+    r.Flags,
+    r.MetaAddr,
+    r.ParentAddr,
+    r.MetaSeq,
+    r.ParentSeq
+  );
+  return Hasher.get_hash();
+}
+

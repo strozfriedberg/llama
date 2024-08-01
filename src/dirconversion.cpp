@@ -152,3 +152,18 @@ jsoncons::json DirConverter::convertName(const fs::directory_entry& de) const {
     }
   );
 }
+
+Dirent DirConverter::convertStdFsDEtoDirent(const fs::directory_entry& de) const {
+  return Dirent(
+    de.path().parent_path().generic_string(),
+    de.path().filename().generic_string(),
+    "",
+    DirUtils::fileTypeString(DirUtils::fileType(de)),
+    NAME_FLAG_ALLOC,
+    0,
+    0,
+    0,
+    0
+  );
+}
+

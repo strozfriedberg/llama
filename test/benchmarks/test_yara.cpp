@@ -79,6 +79,7 @@ char hex_char(uint8_t val) {
 }
 
 struct YaraPattern {
+  std::string RuleName;
   std::string Expression;
 };
 
@@ -105,10 +106,11 @@ std::string convertChar(uint8_t b) {
   return ret;
 }
 
-std::vector<YaraPattern> yaraToLG(int flags, uint8_t* bytes, unsigned int length) {
+std::vector<YaraPattern> yaraToLG(const std::string& ruleName, int flags, uint8_t* bytes, unsigned int length) {
   std::vector<YaraPattern> yps;
   if (flags & STRING_FLAGS_HEXADECIMAL) {
     YaraPattern yp;
+    yp.RuleName = ruleName;
     for (unsigned int i = 0; i < length; ++i) {
       yp.Expression += byteToHexString(bytes[i]);
     }
@@ -117,6 +119,7 @@ std::vector<YaraPattern> yaraToLG(int flags, uint8_t* bytes, unsigned int length
   }
   if (flags & STRING_FLAGS_ASCII) {
     YaraPattern yp;
+    yp.RuleName = ruleName;
     if (flags & STRING_FLAGS_FULL_WORD) {
       yp.Expression = "\\W";
     }
@@ -130,6 +133,7 @@ std::vector<YaraPattern> yaraToLG(int flags, uint8_t* bytes, unsigned int length
   }
   if (flags & STRING_FLAGS_WIDE) {
     YaraPattern yp;
+    yp.RuleName = ruleName;
     if (flags & STRING_FLAGS_FULL_WORD) {
       yp.Expression = "\\W\\z00";
     }
@@ -208,10 +212,11 @@ public:
     // WARN("yr_rules_foreach");
     yr_rules_foreach(Rules.get(), rule) {
       YR_STRING* str = nullptr;
+      std::string id(rule->identifier);
       yr_rule_strings_foreach(rule, str) {
         CAPTURE(str->length);
         CAPTURE(STRING_IS_HEX(str));
-        auto lgPats = yaraToLG(str->flags, str->string, str->length);
+        auto lgPats = yaraToLG(id, str->flags, str->string, str->length);
         ret.insert(ret.end(), lgPats.begin(), lgPats.end());
       }
     }
@@ -259,8 +264,9 @@ void lg_callback_function(
 TEST_CASE("yaraHexToLG") {
   uint8_t input[] = {0x73, 0x70, 0x72, 0x6E, 0x67, 0x00};
 
-  auto yp = yaraToLG(STRING_FLAGS_HEXADECIMAL, input, 6);
+  auto yp = yaraToLG(std::string("whatever"), STRING_FLAGS_HEXADECIMAL, input, 6);
   REQUIRE(yp.size() == 1);
+  REQUIRE(yp[0].RuleName == "whatever");
   REQUIRE(R"(\z73\z70\z72\z6e\z67\z00)" == yp[0].Expression);
 }
 
@@ -325,7 +331,7 @@ TEST_CASE("testYara") {
         WARN("could not parse null expression");
       }
       if (errPtr) {
-        WARN("could not parse '" << p.Expression << "': " << (errPtr->Message ? errPtr->Message: "unspecified"));
+        WARN("could not parse '" << p.Expression << "' from rule '" << p.RuleName << "': " << (errPtr->Message ? errPtr->Message: "unspecified"));
       }
       continue;
     }
