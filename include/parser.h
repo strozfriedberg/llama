@@ -126,7 +126,10 @@ void LlamaParser::parsePatternMod() {
 
 void LlamaParser::parseEncodings() {
   mustParse("Expected equal sign after encodings keyword", TokenType::EQUAL);
-  mustParse("Expected encodings list", TokenType::ENCODINGS_LIST);
+  mustParse("Expected encoding", TokenType::IDENTIFIER);
+  while (matchAny(TokenType::COMMA)) {
+    mustParse("Expected encoding", TokenType::IDENTIFIER);
+  }
 }
 
 void LlamaParser::parsePatternDef() {

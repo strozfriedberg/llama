@@ -66,30 +66,16 @@ TEST_CASE("parseString") {
 }
 
 TEST_CASE("parseEncodingsList") {
-  std::string input = "=UTF-8,UTF-16";
+  std::string input = "encodings=UTF-8,UTF-16";
   LlamaLexer lexer(input);
-  lexer.parseEncodingsList();
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::EQUAL);
-  REQUIRE(lexer.getTokens().at(1).Type == TokenType::ENCODINGS_LIST);
-  std::string lexeme(lexer.getLexeme(1));
-  REQUIRE(lexeme == "UTF-8,UTF-16");
-}
-
-TEST_CASE("parseEncodingsWithoutList") {
-  std::string input = "encodings";
-  LlamaLexer lexer(input);
-  REQUIRE_THROWS_AS(lexer.parseIdentifier({0,0}), UnexpectedInputError);
-}
-
-TEST_CASE("parseIdentifierEncodingsList") {
-  std::string input = "encodings=ASCII,UTF-8";
-  LlamaLexer lexer(input);
-  lexer.parseIdentifier({0,0});
+  lexer.scanTokens();
+  REQUIRE(lexer.getTokens().size() == 6);
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::ENCODINGS);
   REQUIRE(lexer.getTokens().at(1).Type == TokenType::EQUAL);
-  REQUIRE(lexer.getTokens().at(2).Type == TokenType::ENCODINGS_LIST);
-  std::string lexeme(lexer.getLexeme(2));
-  REQUIRE(lexeme == "ASCII,UTF-8");
+  REQUIRE(lexer.getTokens().at(2).Type == TokenType::IDENTIFIER);
+  REQUIRE(lexer.getTokens().at(3).Type == TokenType::COMMA);
+  REQUIRE(lexer.getTokens().at(4).Type == TokenType::IDENTIFIER);
+  REQUIRE(lexer.getTokens().at(5).Type == TokenType::END_OF_FILE);
 }
 
 TEST_CASE("parseNocase") {
@@ -456,7 +442,6 @@ TEST_CASE("parseIdentifierStringNumberLineCol") {
   REQUIRE(lexer.getTokens().at(7).Pos.ColNum == 28);
   REQUIRE(lexer.getTokens().at(8).Pos.LineNum == 2);
   REQUIRE(lexer.getTokens().at(8).Pos.ColNum == 29);
-  REQUIRE(lexer.getTokens().at(8).Type == TokenType::ENCODINGS_LIST);
 }
 
 TEST_CASE("lone!ThrowsException") {
