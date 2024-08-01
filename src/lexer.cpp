@@ -36,6 +36,20 @@ void LlamaLexer::scanToken() {
     case '(': addToken(TokenType::OPEN_PAREN, start, CurIdx, pos); break;
     case ')': addToken(TokenType::CLOSE_PAREN, start, CurIdx, pos); break;
     case ',': addToken(TokenType::COMMA, start, CurIdx, pos); break;
+
+    case '/': {
+      if (match('/')) {
+        parseSingleLineComment();
+      }
+      else if (match('*')) {
+        parseMultiLineComment(pos);
+      }
+      else {
+        throw UnexpectedInputError("Unexpected input character: / at ", pos);
+      }
+      break;
+    }
+
     case ':': addToken(TokenType::COLON, start, CurIdx, pos); break;
     case '<': addToken(match('=') ? TokenType::LESS_THAN_EQUAL : TokenType::LESS_THAN, start, CurIdx, pos); break;
     case '=': addToken(match('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL, start, CurIdx, pos); break;
@@ -120,6 +134,33 @@ void LlamaLexer::parseEncodingsList() {
   }
 }
 
+void LlamaLexer::parseSingleLineComment() {
+  while (getCurChar() != '\n' && !isAtEnd()) {
+    advance();
+  }
+}
+
+void LlamaLexer::parseMultiLineComment(LineCol pos) {
+  while (getCurChar() != '*' && !isAtEnd()) {
+    if (getCurChar() == '\n') {
+      Pos.LineNum++;
+      Pos.ColNum = 0;
+    }
+    advance();
+  }
+  if (isAtEnd()) {
+    throw UnexpectedInputError("Unterminated multi-line comment at ", pos);
+  }
+  if (peek() == '/') {
+    advance(); // consume *
+    advance(); // consume /
+  }
+  else {
+    advance();
+    parseMultiLineComment(pos);
+  }
+}
+
 void LlamaLexer::addToken(TokenType type, uint64_t start, uint64_t end, LineCol pos) {
   Tokens.push_back(Token(type, start, end, pos));
 }
@@ -145,7 +186,7 @@ std::string_view LlamaLexer::getLexeme(int idx) const {
 }
 
 char LlamaLexer::getCurChar() const {
-  if (CurIdx >= Input.size()) {
+  if (isAtEnd()) {
     return '\0';
   }
   else {

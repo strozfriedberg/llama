@@ -35,6 +35,8 @@ public:
   void parseString(LineCol pos);
   void parseNumber(LineCol pos);
   void parseEncodingsList();
+  void parseSingleLineComment();
+  void parseMultiLineComment(LineCol pos);
 
   void addToken(TokenType type, uint64_t start, uint64_t end, LineCol pos);
 
@@ -45,6 +47,7 @@ public:
 
   std::string_view getLexeme(int idx) const;
   char getCurChar() const;
+  char peek() const { return (isAtEnd() || CurIdx + 1 >= Input.size()) ? '\0' : Input.at(CurIdx + 1); }
   const std::vector<Token>& getTokens() const { return Tokens; }
 
   LineCol Pos = {1, 1};

@@ -84,6 +84,9 @@ hash                = MD5
 
 hex_string          = OPEN_BRACE (NUMBER|IDENTIFIER)+ CLOSE_BRACE;
 
+single_line_comment = "//" [^\n]*;
+multi_line_comment  = "/*" ([^*] | "*" [^/])* "*/";
+
 OPEN_BRACE          = "{";
 CLOSE_BRACE         = "}";
 OPEN_PAREN          = "(";
