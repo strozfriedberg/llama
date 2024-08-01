@@ -36,6 +36,17 @@ struct Rule {
   SignatureSection Signature;
 };
 
+struct PatternMod {
+  bool NoCase = false;
+  bool Fixed = false;
+  std::vector<std::string> Encodings;
+};
+
+struct PatternDef {
+  std::string Pattern;
+  PatternMod Mod;
+};
+
 class LlamaParser {
 public:
   LlamaParser(const std::string& input, const std::vector<Token>& tokens) : Input(input), Tokens(tokens) {}
@@ -60,7 +71,7 @@ public:
   TokenType parseHash();
   void parseOperator();
   void parsePatternMod();
-  void parseEncodings();
+  std::vector<std::string> parseEncodings();
   void parsePatternDef();
   void parsePatternsSection();
   void parseNumber();
@@ -83,6 +94,7 @@ public:
 
   std::string Input;
   std::vector<Token> Tokens;
+  std::unordered_map<std::string, std::string> Patterns;
   uint64_t CurIdx = 0;
 };
 
@@ -141,25 +153,33 @@ void LlamaParser::parseOperator() {
 }
 
 void LlamaParser::parsePatternMod() {
+  PatternMod mod;
   while (checkAny(TokenType::NOCASE, TokenType::FIXED, TokenType::ENCODINGS)) {
     if (matchAny(TokenType::NOCASE)) {
+      mod.NoCase = true;
       continue;
     }
     else if (matchAny(TokenType::FIXED)) {
+      mod.Fixed = true;
       continue;
     }
     else if (matchAny(TokenType::ENCODINGS)) {
-      parseEncodings();
+      mod.Encodings = parseEncodings();
     }
   }
 }
 
-void LlamaParser::parseEncodings() {
+std::vector<std::string> LlamaParser::parseEncodings() {
+  std::vector<std::string> encodings;
   mustParse("Expected equal sign after encodings keyword", TokenType::EQUAL);
+  std::string encoding;
   mustParse("Expected encoding", TokenType::IDENTIFIER);
+  encodings.push_back(Input.substr(previous().Start, previous().length()));
   while (matchAny(TokenType::COMMA)) {
     mustParse("Expected encoding", TokenType::IDENTIFIER);
+    encodings.push_back(Input.substr(previous().Start, previous().length()));
   }
+  return encodings;
 }
 
 void LlamaParser::parsePatternDef() {
