@@ -75,7 +75,7 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
   if (CurIdx > 0) {
     start--;
   }
-  while (isalnum(getCurChar()) || getCurChar() == '_') {
+  while (isalnum(getCurChar()) || getCurChar() == '_' || getCurChar() == '-') {
     advance();
   }
 
