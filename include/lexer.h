@@ -34,7 +34,6 @@ public:
   void parseIdentifier(LineCol pos);
   void parseString(LineCol pos);
   void parseNumber(LineCol pos);
-  void parseEncodingsList();
   void parseSingleLineComment();
   void parseMultiLineComment(LineCol pos);
 

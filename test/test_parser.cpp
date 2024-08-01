@@ -158,16 +158,27 @@ TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
   REQUIRE_NOTHROW(parser.parsePatternMod());
 }
 
-TEST_CASE("parseEncodingsThrowsIfNotEncodings") {
-  std::string input = "notEncodings";
+TEST_CASE("parseEncodingsThrowsIfNotEqualSign") {
+  std::string input = "notEqualSign";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseEncodings(), ParserError);
+}
+
+TEST_CASE("parseEncodingsIfNoEncodingAfterEqualSign") {
+  std::string input = "encodings=";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseEncodings(), ParserError);
+}
+
+TEST_CASE("parseEncodingsIfDanglingComma") {
+  std::string input = "encodings=UTF-8,";
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseEncodings(), ParserError);
 }
 
 TEST_CASE("parseEncodingsDoesNotThrowIfEncodings") {
-  std::string input = "encodings=UTF-8";
-  std::vector<Token> tokens = {makeToken(TokenType::EQUAL), makeToken(TokenType::ENCODINGS_LIST)};
-  LlamaParser parser(input, tokens);
+  std::string input = "=UTF-8";
+  LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseEncodings());
 }
 

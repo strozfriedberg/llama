@@ -75,7 +75,7 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
   if (CurIdx > 0) {
     start--;
   }
-  while (isalnum(getCurChar()) || getCurChar() == '_') {
+  while (isalnum(getCurChar()) || getCurChar() == '_' || getCurChar() == '-') {
     advance();
   }
 
@@ -84,7 +84,6 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
 
   if (found != Llama::keywords.end()) {
     addToken(found->second, start, end, pos);
-    if (found->second == TokenType::ENCODINGS) { parseEncodingsList(); }
   }
   else {
     addToken(TokenType::IDENTIFIER, start, end, pos);
@@ -115,23 +114,6 @@ void LlamaLexer::parseNumber(LineCol pos) {
 
   uint64_t end = CurIdx;
   addToken(TokenType::NUMBER, start, end, pos);
-}
-
-void LlamaLexer::parseEncodingsList() {
-  LineCol pos(Pos);
-  if (match('=')) {
-    addToken(TokenType::EQUAL, CurIdx-1, CurIdx, pos);
-    uint64_t start = CurIdx;
-    pos.ColNum++;
-    while (!std::isspace(getCurChar()) && !isAtEnd()) {
-      advance();
-    }
-    uint64_t end = CurIdx;
-    addToken(TokenType::ENCODINGS_LIST, start, end, pos);
-  }
-  else {
-    throw UnexpectedInputError("Expected '=' after 'encodings' on line ", pos);
-  }
 }
 
 void LlamaLexer::parseSingleLineComment() {
