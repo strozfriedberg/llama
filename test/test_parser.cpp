@@ -170,7 +170,7 @@ TEST_CASE("parseOperatorDoesNotThrowIfOperator") {
 }
 
 TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
-  std::string input = "s1 = \"test\" nocase";
+  std::string input = "= \"test\" nocase";
   LlamaParser parser(input, getTokensFromString(input));
   std::vector<PatternDef> defs;
   REQUIRE_NOTHROW(defs = parser.parsePatternDef());
@@ -216,7 +216,7 @@ TEST_CASE("parseStringDefThrowsIfNotStringDef") {
 }
 
 TEST_CASE("parseStringDefDoesNotThrowIfStringDef") {
-  std::string input = "a = \"test\" encodings=UTF-8 nocase fixed";
+  std::string input = "= \"test\" encodings=UTF-8 nocase fixed";
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parsePatternDef());
 }
@@ -228,9 +228,18 @@ TEST_CASE("parsePatternsSectionThrowsIfNotPatterns") {
 }
 
 TEST_CASE("parsePatternsSectionDoesNotThrowIfPatterns") {
-  std::string input = "patterns:\n  a = \"test\" encodings=UTF-8 nocase fixed\n b = \"test\" encodings=UTF-8 nocase fixed";
+  std::string input = R"(patterns:
+  a = "test" encodings=UTF-8 nocase fixed
+  b = "test2" encodings=UTF-8 nocase fixed
+  c = { 12 34 56 78 9a bc de f0 }
+  )";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parsePatternsSection());
+  PatternSection patternSection;
+  REQUIRE_NOTHROW(patternSection = parser.parsePatternsSection());
+  REQUIRE(patternSection.Patterns.size() == 3);
+  REQUIRE(patternSection.Patterns.find("a")->second.at(0).Pattern == "test");
+  REQUIRE(patternSection.Patterns.find("b")->second.at(0).Pattern == "test2");
+  REQUIRE(patternSection.Patterns.find("c")->second.at(0).Pattern == "\\z12\\z34\\z56\\z78\\z9a\\zbc\\zde\\zf0");
 }
 
 TEST_CASE("parseAnyFuncCall") {

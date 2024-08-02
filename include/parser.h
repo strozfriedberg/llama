@@ -48,6 +48,11 @@ struct PatternDef {
   int Encoding;
 };
 
+struct PatternSection {
+  std::unordered_map<std::string, std::vector<PatternDef>> Patterns;
+};
+
+
 class LlamaParser {
 public:
   LlamaParser(const std::string& input, const std::vector<Token>& tokens) : Input(input), Tokens(tokens) {}
@@ -74,7 +79,7 @@ public:
   std::vector<PatternDef> parsePatternMod();
   std::vector<int> parseEncodings();
   std::vector<PatternDef> parsePatternDef();
-  void parsePatternsSection();
+  PatternSection parsePatternsSection();
   void parseNumber();
   std::vector<PatternDef> parseHexString();
   void parseDualFuncCall();
@@ -220,7 +225,6 @@ std::vector<int> LlamaParser::parseEncodings() {
 }
 
 std::vector<PatternDef> LlamaParser::parsePatternDef() {
-  mustParse("Expected identifier", TokenType::IDENTIFIER);
   mustParse("Expected equal sign", TokenType::EQUAL);
 
   std::vector<PatternDef> defs;
@@ -236,12 +240,17 @@ std::vector<PatternDef> LlamaParser::parsePatternDef() {
   return defs;
 }
 
-void LlamaParser::parsePatternsSection() {
+PatternSection LlamaParser::parsePatternsSection() {
   mustParse("Expected patterns keyword", TokenType::PATTERNS);
   mustParse("Expected colon after patterns keyword", TokenType::COLON);
-  while (checkAny(TokenType::IDENTIFIER)) {
-    parsePatternDef();
+  PatternSection patternSection;
+  while (matchAny(TokenType::IDENTIFIER)) {
+    patternSection.Patterns.insert(std::make_pair(
+      Input.substr(previous().Start, previous().length()),
+      parsePatternDef()
+    ));
   }
+  return patternSection;
 }
 
 void LlamaParser::parseNumber() {
