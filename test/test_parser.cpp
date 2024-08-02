@@ -101,9 +101,9 @@ TEST_CASE("parseHashThrowsIfNotHash") {
 TEST_CASE("parseHashDoesNotThrowIfHash") {
   std::string input = "md5";
   LlamaParser parser(input, getTokensFromString(input));
-  TokenType hash;
+  SFHASH_HashAlgorithm hash;
   REQUIRE_NOTHROW(hash = parser.parseHash());
-  REQUIRE(hash == TokenType::MD5);
+  REQUIRE(hash == SFHASH_MD5);
 }
 
 TEST_CASE("parseHashExprThrowsIfNotEqual") {
@@ -123,7 +123,7 @@ TEST_CASE("parseHashExprDoesNotThrowIfEqualAndDoubleQuotedString") {
   LlamaParser parser(input, getTokensFromString(input));
   HashExpr expr;
   REQUIRE_NOTHROW(expr = parser.parseHashExpr());
-  REQUIRE(expr.Alg == TokenType::MD5);
+  REQUIRE(expr.Alg == SFHASH_MD5);
   REQUIRE(expr.Val == "test");
 }
 
@@ -150,9 +150,9 @@ TEST_CASE("parseHashSectionMultipleAlg") {
   LlamaParser parser(input, getTokensFromString(input));
   HashSection hashSection;
   REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
-  REQUIRE(hashSection.Hashes.at(0).Alg == TokenType::MD5);
+  REQUIRE(hashSection.Hashes.at(0).Alg == SFHASH_MD5);
   REQUIRE(hashSection.Hashes.at(0).Val == "test");
-  REQUIRE(hashSection.Hashes.at(1).Alg == TokenType::SHA1);
+  REQUIRE(hashSection.Hashes.at(1).Alg == SFHASH_SHA_1);
   REQUIRE(hashSection.Hashes.at(1).Val == "abcdef");
 }
 

@@ -1,4 +1,7 @@
 #include "token.h"
+
+#include <hasher/common.h>
+
 #include <unordered_map>
 
 class ParserError : public UnexpectedInputError {
@@ -11,7 +14,7 @@ struct MetaSection {
 };
 
 struct HashExpr {
-  TokenType Alg;
+  SFHASH_HashAlgorithm Alg;
   std::string Val;
 };
 
@@ -68,7 +71,7 @@ public:
 
   HashSection parseHashSection();
   HashExpr parseHashExpr();
-  TokenType parseHash();
+  SFHASH_HashAlgorithm parseHash();
   void parseOperator();
   void parsePatternMod();
   std::vector<std::string> parseEncodings();
@@ -133,11 +136,22 @@ HashExpr LlamaParser::parseHashExpr() {
   return hashExpr;
 }
 
-TokenType LlamaParser::parseHash() {
+SFHASH_HashAlgorithm LlamaParser::parseHash() {
   mustParse(
     "Expected hash type", TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3
   );
-  return previous().Type;
+  if (previous().Type == TokenType::MD5) {
+    return SFHASH_MD5;
+  }
+  else if (previous().Type == TokenType::SHA1) {
+    return SFHASH_SHA_1;
+  }
+  else if (previous().Type == TokenType::SHA256) {
+    return SFHASH_SHA_2_256;
+  }
+  else {
+    return SFHASH_BLAKE3;
+  }
 }
 
 void LlamaParser::parseOperator() {
