@@ -44,7 +44,7 @@ struct Rule {
 
 struct PatternDef {
   std::string Pattern;
-  LG_KeyOptions Options;
+  LG_KeyOptions Options = {0,0,0};
   int Encoding;
 };
 
