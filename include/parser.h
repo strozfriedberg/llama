@@ -42,14 +42,10 @@ struct Rule {
   SignatureSection Signature;
 };
 
-struct PatternMod {
-  LG_KeyOptions Options;
-  int Encoding;
-};
-
 struct PatternDef {
   std::string Pattern;
-  PatternMod Mod;
+  LG_KeyOptions Options;
+  int Encoding;
 };
 
 class LlamaParser {
@@ -180,11 +176,11 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
 
   while (checkAny(TokenType::NOCASE, TokenType::FIXED, TokenType::ENCODINGS)) {
     if (matchAny(TokenType::NOCASE)) {
-      patternDef.Mod.Options.CaseInsensitive = true;
+      patternDef.Options.CaseInsensitive = true;
       continue;
     }
     else if (matchAny(TokenType::FIXED)) {
-      patternDef.Mod.Options.FixedString = true;
+      patternDef.Options.FixedString = true;
       continue;
     }
     else if (matchAny(TokenType::ENCODINGS)) {
@@ -199,9 +195,9 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
   for (const int encoding : encodings) {
     PatternDef curDef = patternDef;
     if (encoding != ASCII) {
-      curDef.Mod.Options.UnicodeMode = true;
+      curDef.Options.UnicodeMode = true;
     }
-    curDef.Mod.Encoding = encoding;
+    curDef.Encoding = encoding;
     defs.push_back(curDef);
   }
 

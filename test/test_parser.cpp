@@ -176,9 +176,9 @@ TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
   REQUIRE_NOTHROW(defs = parser.parsePatternDef());
   REQUIRE(defs.size() == 1);
   REQUIRE(defs.at(0).Pattern == "test");
-  REQUIRE(defs.at(0).Mod.Encoding == lg_get_encoding_id("ASCII"));
-  REQUIRE(defs.at(0).Mod.Options.CaseInsensitive);
-  REQUIRE(!defs.at(0).Mod.Options.FixedString);
+  REQUIRE(defs.at(0).Encoding == lg_get_encoding_id("ASCII"));
+  REQUIRE(defs.at(0).Options.CaseInsensitive);
+  REQUIRE(!defs.at(0).Options.FixedString);
 }
 
 TEST_CASE("parseEncodingsThrowsIfNotEqualSign") {
