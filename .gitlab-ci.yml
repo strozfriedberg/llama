@@ -24,13 +24,13 @@ variables:
       - "staging"
     description: "Where to build"
 
-.build_fast base:
+fast linux + win64static:
   stage: build
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: manual
   variables:
-    JOB_TYPE: "build_codebuild"
+    JOB_TYPE: "build_llama"
     MERGE_PROJECT: $CI_MERGE_REQUEST_PROJECT_PATH
     MERGE_PROJECT_ID: $CI_MERGE_REQUEST_PROJECT_ID
     MERGE_SOURCE_BRANCH: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME
@@ -38,35 +38,12 @@ variables:
     MERGE_REQUEST_IID: $CI_MERGE_REQUEST_IID
     MERGE_SOURCE_COMMIT: $CI_COMMIT_SHA
     SOURCE_HEAD_COMMIT: $CI_MERGE_REQUEST_SOURCE_BRANCH_SHA
+    BUILD_LOCATION: "production"
   trigger:
     project: soldev/cyberdev/make_world
-    branch: INF-37-direct-codebuild # $MAKE_WORLD_DEFAULT_BRANCH
+    branch: llama_only # $MAKE_WORLD_DEFAULT_BRANCH
     strategy: depend
-
-build fast (linux 64):
-  extends: .build_fast base
-  variables:
-    BUILD_LOCATION: "production"
-    BUILD_TARGET: "linux"
-    BUILD_LINKAGE: "shared"
-    CODEBUILD_PROJECT_NAME: "StateMachineMakeWorldConstr-B1BwAQgT9ve6"
-
-build fast (windows shared 64):
-  extends: .build_fast base
-  variables:
-    BUILD_LOCATION: "production"
-    BUILD_TARGET: "windows"
-    BUILD_LINKAGE: "shared"
-    CODEBUILD_PROJECT_NAME: "StateMachineMakeWorldConstr-NAVOvkOPLJUX" 
-
-build fast (window static 64):
-  extends: .build_fast base
-  variables:
-    BUILD_LOCATION: "production"
-    BUILD_TARGET: "windows"
-    BUILD_LINKAGE: "static"
-    CODEBUILD_PROJECT_NAME: "StateMachineMakeWorldConstr-ZEgKst6Hv4Xr" 
-
+    
 build:
   stage: build
   rules:
