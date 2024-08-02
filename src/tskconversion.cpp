@@ -6,6 +6,7 @@
 
 #include "direntbatch.h"
 #include "hex.h"
+#include "inode.h"
 #include "schema.h"
 
 using namespace TskUtils;
@@ -382,6 +383,19 @@ void TskUtils::convertNameToDirent(const std::string& path, const TSK_FS_NAME& n
 
   dirent.MetaSeq = name.meta_seq;
   dirent.ParentSeq = name.par_seq;
+}
+
+void TskUtils::convertMetaToInode(const TSK_FS_META &meta, Inode &n) {
+  n.Addr = meta.addr;
+/*
+  n.Flags = meta.flags;
+  n.Type = metaType(meta.type);
+  n.Uid = meta.uid;
+  n.Gid = meta.gid;
+  n.Link = meta.link ? meta.link : "";
+  n.Nlink = meta.nlink;
+  n.Seq = meta.seq;
+*/
 }
 
 std::unique_ptr<TimestampGetter> TskUtils::makeTimestampGetter(TSK_FS_TYPE_ENUM fstype) {
