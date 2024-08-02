@@ -1,6 +1,8 @@
 #include "token.h"
 
 #include <hasher/common.h>
+#include <lightgrep/api.h>
+#include <lightgrep/util.h>
 
 #include <unordered_map>
 
@@ -41,14 +43,13 @@ struct Rule {
 };
 
 struct PatternMod {
-  bool NoCase = false;
-  bool Fixed = false;
-  std::vector<std::string> Encodings;
+  LG_KeyOptions Options;
+  std::vector<int> Encodings;
 };
 
 struct PatternDef {
   std::string Pattern;
-  PatternMod Mod;
+  LG_KeyOptions Mod;
 };
 
 class LlamaParser {
@@ -75,7 +76,7 @@ public:
   SFHASH_HashAlgorithm parseHash();
   void parseOperator();
   void parsePatternMod();
-  std::vector<std::string> parseEncodings();
+  std::vector<int> parseEncodings();
   void parsePatternDef();
   void parsePatternsSection();
   void parseNumber();
@@ -174,11 +175,11 @@ void LlamaParser::parsePatternMod() {
   PatternMod mod;
   while (checkAny(TokenType::NOCASE, TokenType::FIXED, TokenType::ENCODINGS)) {
     if (matchAny(TokenType::NOCASE)) {
-      mod.NoCase = true;
+      mod.Options.CaseInsensitive = true;
       continue;
     }
     else if (matchAny(TokenType::FIXED)) {
-      mod.Fixed = true;
+      mod.Options.FixedString = true;
       continue;
     }
     else if (matchAny(TokenType::ENCODINGS)) {
@@ -187,15 +188,17 @@ void LlamaParser::parsePatternMod() {
   }
 }
 
-std::vector<std::string> LlamaParser::parseEncodings() {
-  std::vector<std::string> encodings;
+std::vector<int> LlamaParser::parseEncodings() {
+  std::vector<int> encodings;
   mustParse("Expected equal sign after encodings keyword", TokenType::EQUAL);
-  std::string encoding;
+  int encoding;
   mustParse("Expected encoding", TokenType::IDENTIFIER);
-  encodings.push_back(Input.substr(previous().Start, previous().length()));
+  encoding = lg_get_encoding_id(Input.substr(previous().Start, previous().length()).c_str());
+  encodings.push_back(encoding);
   while (matchAny(TokenType::COMMA)) {
     mustParse("Expected encoding", TokenType::IDENTIFIER);
-    encodings.push_back(Input.substr(previous().Start, previous().length()));
+    encoding = lg_get_encoding_id(Input.substr(previous().Start, previous().length()).c_str());
+    encodings.push_back(encoding);
   }
   return encodings;
 }
