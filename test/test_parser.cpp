@@ -154,6 +154,7 @@ TEST_CASE("parseHashSectionMultipleAlg") {
   REQUIRE(hashSection.Hashes.at(0).Val == "test");
   REQUIRE(hashSection.Hashes.at(1).Alg == SFHASH_SHA_1);
   REQUIRE(hashSection.Hashes.at(1).Val == "abcdef");
+  REQUIRE(hashSection.HashAlgs == (SFHASH_MD5 | SFHASH_SHA_1));
 }
 
 TEST_CASE("parseOperatorThrowsIfNotOperator") {

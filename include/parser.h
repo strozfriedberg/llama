@@ -20,6 +20,7 @@ struct HashExpr {
 
 struct HashSection {
   std::vector<HashExpr> Hashes;
+  uint64_t HashAlgs = 0;
 };
 
 struct SignatureSection {
@@ -121,8 +122,11 @@ HashSection LlamaParser::parseHashSection() {
   mustParse("Expected hash keyword", TokenType::HASH);
   mustParse("Expected colon after hash keyword", TokenType::COLON);
   HashSection hashSection;
+  HashExpr hashExpr;
   while (checkAny(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3)) {
-    hashSection.Hashes.push_back(parseHashExpr());
+    hashExpr = parseHashExpr();
+    hashSection.HashAlgs |= hashExpr.Alg;
+    hashSection.Hashes.push_back(hashExpr);
   }
   return hashSection;
 }
