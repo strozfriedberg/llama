@@ -24,22 +24,6 @@ variables:
       - "staging"
     description: "Where to build"
 
-build llama local:
-  stage: build
-  image: registry.fedoraproject.org/fedora:40
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: manual
-  variables:
-    CI_BUILD: "true"
-  tags:
-    - shell
-    - dfirdev
-    - aws-ci
-    - aws
-  script:
-    - ./.gitlab/build_make_world.sh
-
 .build_fast base:
   stage: build
   rules:
