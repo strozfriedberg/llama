@@ -80,7 +80,7 @@ public:
   std::vector<int> parseEncodings();
   std::vector<PatternDef> parsePatternDef();
   PatternSection parsePatternsSection();
-  void parseNumber();
+  uint64_t parseNumber();
   std::vector<PatternDef> parseHexString();
   void parseDualFuncCall();
   void parseAnyFuncCall();
@@ -253,8 +253,9 @@ PatternSection LlamaParser::parsePatternsSection() {
   return patternSection;
 }
 
-void LlamaParser::parseNumber() {
+uint64_t LlamaParser::parseNumber() {
   mustParse("Expected number", TokenType::NUMBER);
+  return std::stoi(Input.substr(previous().Start, previous().length()));
 }
 
 std::vector<PatternDef> LlamaParser::parseHexString() {

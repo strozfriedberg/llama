@@ -491,3 +491,10 @@ TEST_CASE("parseHexStringThrowIfEmpty") {
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseHexString(), ParserError);
 }
+
+TEST_CASE("parserParseNumber") {
+  std::string input = "123456";
+  LlamaParser parser(input, getTokensFromString(input));
+  uint64_t num = parser.parseNumber();
+  REQUIRE(num == 123456);
+}
