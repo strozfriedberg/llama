@@ -170,9 +170,15 @@ TEST_CASE("parseOperatorDoesNotThrowIfOperator") {
 }
 
 TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
-  std::string input = "nocase";
+  std::string input = "s1 = \"test\" nocase";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parsePatternMod());
+  std::vector<PatternDef> defs;
+  REQUIRE_NOTHROW(defs = parser.parsePatternDef());
+  REQUIRE(defs.size() == 1);
+  REQUIRE(defs.at(0).Pattern == "test");
+  REQUIRE(defs.at(0).Mod.Encoding == lg_get_encoding_id("ASCII"));
+  REQUIRE(defs.at(0).Mod.Options.CaseInsensitive);
+  REQUIRE(!defs.at(0).Mod.Options.FixedString);
 }
 
 TEST_CASE("parseEncodingsThrowsIfNotEqualSign") {

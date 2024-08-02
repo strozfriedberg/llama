@@ -44,12 +44,12 @@ struct Rule {
 
 struct PatternMod {
   LG_KeyOptions Options;
-  std::vector<int> Encodings;
+  int Encoding;
 };
 
 struct PatternDef {
   std::string Pattern;
-  LG_KeyOptions Mod;
+  PatternMod Mod;
 };
 
 class LlamaParser {
@@ -75,9 +75,9 @@ public:
   HashExpr parseHashExpr();
   SFHASH_HashAlgorithm parseHash();
   void parseOperator();
-  void parsePatternMod();
+  std::vector<PatternDef> parsePatternMod();
   std::vector<int> parseEncodings();
-  void parsePatternDef();
+  std::vector<PatternDef> parsePatternDef();
   void parsePatternsSection();
   void parseNumber();
   std::string parseHexString();
@@ -171,21 +171,41 @@ void LlamaParser::parseOperator() {
   );
 }
 
-void LlamaParser::parsePatternMod() {
-  PatternMod mod;
+std::vector<PatternDef> LlamaParser::parsePatternMod() {
+  const int ASCII = lg_get_encoding_id("ASCII");
+  std::vector<PatternDef> defs;
+  PatternDef patternDef;
+  patternDef.Pattern = Input.substr(previous().Start, previous().length());
+  std::vector<int> encodings;
+
   while (checkAny(TokenType::NOCASE, TokenType::FIXED, TokenType::ENCODINGS)) {
     if (matchAny(TokenType::NOCASE)) {
-      mod.Options.CaseInsensitive = true;
+      patternDef.Mod.Options.CaseInsensitive = true;
       continue;
     }
     else if (matchAny(TokenType::FIXED)) {
-      mod.Options.FixedString = true;
+      patternDef.Mod.Options.FixedString = true;
       continue;
     }
     else if (matchAny(TokenType::ENCODINGS)) {
-      mod.Encodings = parseEncodings();
+      encodings = parseEncodings();
     }
   }
+
+  if (encodings.empty()) {
+    encodings.push_back(ASCII);
+  }
+
+  for (const int encoding : encodings) {
+    PatternDef curDef = patternDef;
+    if (encoding != ASCII) {
+      curDef.Mod.Options.UnicodeMode = true;
+    }
+    curDef.Mod.Encoding = encoding;
+    defs.push_back(curDef);
+  }
+
+  return defs;
 }
 
 std::vector<int> LlamaParser::parseEncodings() {
@@ -203,12 +223,13 @@ std::vector<int> LlamaParser::parseEncodings() {
   return encodings;
 }
 
-void LlamaParser::parsePatternDef() {
+std::vector<PatternDef> LlamaParser::parsePatternDef() {
   mustParse("Expected identifier", TokenType::IDENTIFIER);
   mustParse("Expected equal sign", TokenType::EQUAL);
 
+  std::vector<PatternDef> defs;
   if (matchAny(TokenType::DOUBLE_QUOTED_STRING)) {
-    parsePatternMod();
+    defs = parsePatternMod();
   }
   else if (matchAny(TokenType::OPEN_BRACE)) {
     parseHexString();
@@ -216,6 +237,7 @@ void LlamaParser::parsePatternDef() {
   else {
     throw ParserError("Expected double quoted string or hex string", peek().Pos);
   }
+  return defs;
 }
 
 void LlamaParser::parsePatternsSection() {
