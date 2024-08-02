@@ -41,7 +41,7 @@ fast linux + win64static:
     BUILD_LOCATION: "production"
   trigger:
     project: soldev/cyberdev/make_world
-    branch: INF-37-direct-codebuild # $MAKE_WORLD_DEFAULT_BRANCH
+    branch: $MAKE_WORLD_DEFAULT_BRANCH
     strategy: depend
     
 build:
