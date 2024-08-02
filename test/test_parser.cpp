@@ -166,7 +166,9 @@ TEST_CASE("parseOperatorThrowsIfNotOperator") {
 TEST_CASE("parseOperatorDoesNotThrowIfOperator") {
   std::string input = "==";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseOperator());
+  TokenType op;
+  REQUIRE_NOTHROW(op = parser.parseOperator());
+  REQUIRE(op == TokenType::EQUAL_EQUAL);
 }
 
 TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
@@ -316,7 +318,11 @@ TEST_CASE("parseGrepSection") {
 TEST_CASE("parseFileMetadataDefFileSize") {
   std::string input = "filesize > 100";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseFileMetadataDef());
+  FileMetadataDef def;
+  REQUIRE_NOTHROW(def = parser.parseFileMetadataDef());
+  REQUIRE(def.Property == TokenType::FILESIZE);
+  REQUIRE(def.Operator == TokenType::GREATER_THAN);
+  REQUIRE(def.Value == "100");
 }
 
 TEST_CASE("parseFileMetadataDefCreated") {
@@ -495,6 +501,6 @@ TEST_CASE("parseHexStringThrowIfEmpty") {
 TEST_CASE("parserParseNumber") {
   std::string input = "123456";
   LlamaParser parser(input, getTokensFromString(input));
-  uint64_t num = parser.parseNumber();
-  REQUIRE(num == 123456);
+  std::string num = parser.parseNumber();
+  REQUIRE(num == "123456");
 }

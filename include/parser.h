@@ -29,10 +29,14 @@ struct SignatureSection {
   std::vector<std::string> Signatures;
 };
 
-struct FileMetadataExpr {
+struct FileMetadataDef {
   TokenType Property;
   TokenType Operator;
   std::string Value;
+};
+
+struct FileMetadataSection {
+  std::vector<FileMetadataDef> Fields;
 };
 
 struct Rule {
@@ -75,12 +79,12 @@ public:
   HashSection parseHashSection();
   HashExpr parseHashExpr();
   SFHASH_HashAlgorithm parseHash();
-  void parseOperator();
+  TokenType parseOperator();
   std::vector<PatternDef> parsePatternMod();
   std::vector<int> parseEncodings();
   std::vector<PatternDef> parsePatternDef();
   PatternSection parsePatternsSection();
-  uint64_t parseNumber();
+  std::string parseNumber();
   std::vector<PatternDef> parseHexString();
   void parseDualFuncCall();
   void parseAnyFuncCall();
@@ -91,8 +95,8 @@ public:
   void parseConditionSection();
   SignatureSection parseSignatureSection();
   void parseGrepSection();
-  void parseFileMetadataDef();
-  void parseFileMetadataSection();
+  FileMetadataDef parseFileMetadataDef();
+  FileMetadataSection parseFileMetadataSection();
   MetaSection parseMetaSection();
   void parseRule(Rule& rule);
   Rule parseRuleDecl();
@@ -160,7 +164,7 @@ SFHASH_HashAlgorithm LlamaParser::parseHash() {
   }
 }
 
-void LlamaParser::parseOperator() {
+TokenType LlamaParser::parseOperator() {
   mustParse(
     "Expected operator",
     TokenType::EQUAL_EQUAL,
@@ -170,6 +174,7 @@ void LlamaParser::parseOperator() {
     TokenType::LESS_THAN,
     TokenType::LESS_THAN_EQUAL
   );
+  return previous().Type;
 }
 
 std::vector<PatternDef> LlamaParser::parsePatternMod() {
@@ -253,9 +258,9 @@ PatternSection LlamaParser::parsePatternsSection() {
   return patternSection;
 }
 
-uint64_t LlamaParser::parseNumber() {
+std::string LlamaParser::parseNumber() {
   mustParse("Expected number", TokenType::NUMBER);
-  return std::stoi(Input.substr(previous().Start, previous().length()));
+  return Input.substr(previous().Start, previous().length());
 }
 
 std::vector<PatternDef> LlamaParser::parseHexString() {
@@ -389,26 +394,35 @@ void LlamaParser::parseGrepSection() {
   parseConditionSection();
 }
 
-void LlamaParser::parseFileMetadataDef() {
-  if (matchAny(TokenType::CREATED, TokenType::MODIFIED)) {
-    parseOperator();
-    mustParse("Expected double quoted string containing date", TokenType::DOUBLE_QUOTED_STRING);
+FileMetadataDef LlamaParser::parseFileMetadataDef() {
+  FileMetadataDef def;
+  if (matchAny(TokenType::CREATED, TokenType::MODIFIED, TokenType::FILEPATH, TokenType::FILENAME)) {
+    def.Property = previous().Type;
+    def.Operator = parseOperator();
+    mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
+    def.Value = Input.substr(previous().Start, previous().length());
   }
   else if (matchAny(TokenType::FILESIZE)) {
-    parseOperator();
-    mustParse("Expected number", TokenType::NUMBER);
+    def.Property = previous().Type;
+    def.Operator = parseOperator();
+    def.Value = parseNumber();
   }
   else {
     throw ParserError("Expected created, modified, or filesize", peek().Pos);
   }
+  return def;
 }
 
-void LlamaParser::parseFileMetadataSection() {
+FileMetadataSection LlamaParser::parseFileMetadataSection() {
   mustParse("Expected file_metadata section", TokenType::FILE_METADATA);
   mustParse("Expected colon", TokenType::COLON);
+
+  FileMetadataSection fileMetadataSection;
   while (checkAny(TokenType::CREATED, TokenType::MODIFIED, TokenType::FILESIZE)) {
-    parseFileMetadataDef();
+    fileMetadataSection.Fields.push_back(parseFileMetadataDef());
   }
+
+  return fileMetadataSection;
 }
 
 MetaSection LlamaParser::parseMetaSection() {
