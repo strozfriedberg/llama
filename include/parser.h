@@ -76,7 +76,7 @@ public:
   std::vector<PatternDef> parsePatternDef();
   void parsePatternsSection();
   void parseNumber();
-  std::string parseHexString();
+  std::vector<PatternDef> parseHexString();
   void parseDualFuncCall();
   void parseAnyFuncCall();
   void parseAllFuncCall();
@@ -228,7 +228,7 @@ std::vector<PatternDef> LlamaParser::parsePatternDef() {
     defs = parsePatternMod();
   }
   else if (matchAny(TokenType::OPEN_BRACE)) {
-    parseHexString();
+    defs = parseHexString();
   }
   else {
     throw ParserError("Expected double quoted string or hex string", peek().Pos);
@@ -248,10 +248,15 @@ void LlamaParser::parseNumber() {
   mustParse("Expected number", TokenType::NUMBER);
 }
 
-std::string LlamaParser::parseHexString() {
+std::vector<PatternDef> LlamaParser::parseHexString() {
+  std::vector<PatternDef> defs;
+  PatternDef patternDef;
   std::string hexDigit, hexString;
   while (!checkAny(TokenType::CLOSE_BRACE) && !isAtEnd()) {
     if (matchAny(TokenType::IDENTIFIER, TokenType::NUMBER)) {
+      if (!(hexString.size() & 1)) {
+        hexString += "\\z";
+      }
       hexDigit = Input.substr(previous().Start, previous().length());
       for (char c : hexDigit) {
         if (!isxdigit(c)) {
@@ -274,7 +279,9 @@ std::string LlamaParser::parseHexString() {
     throw ParserError("Empty hex string", peek().Pos);
   }
   mustParse("Expected close brace", TokenType::CLOSE_BRACE);
-  return hexString;
+  patternDef.Pattern = hexString;
+  defs.push_back(patternDef);
+  return defs;
 }
 
 void LlamaParser::parseDualFuncCall() {

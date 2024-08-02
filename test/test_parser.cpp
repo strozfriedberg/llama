@@ -448,9 +448,9 @@ TEST_CASE("startRule") {
 TEST_CASE("parseHexString") {
   std::string input = "34 56 78 9f }";
   LlamaParser parser(input, getTokensFromString(input));
-  std::string hexStr;
-  REQUIRE_NOTHROW(hexStr = parser.parseHexString());
-  REQUIRE(hexStr == "3456789f");
+  std::vector<PatternDef> defs;
+  REQUIRE_NOTHROW(defs = parser.parseHexString());
+  REQUIRE(defs.at(0).Pattern == "\\z34\\z56\\z78\\z9f");
 }
 
 TEST_CASE("parseHexStringThrowsIfUnterminated") {
