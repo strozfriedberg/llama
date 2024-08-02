@@ -59,9 +59,14 @@ AC_ARG_ENABLE([symbols],
   [enable_symbols=yes],
   [enable_symbols=no])
 
-AS_IF([test "x$enable_symbols" != "xno"], [SYMBOLS='-g'], [SYMBOLS='-s'])
+if test "x$enable_symbols" != "xno"; then
+  AX_APPEND_COMPILE_FLAGS([-g], [LLAMA_CXXFLAGS])
+else
+  AX_APPEND_LINK_FLAGS([-s], [LLAMA_LDFLAGS])
+fi
+#AS_IF([test "x$enable_symbols" != "xno"], [SYMBOLS='-g'], [SYMBOLS=''])
 
-AX_APPEND_COMPILE_FLAGS([$SYMBOLS $OFLAGS], [LLAMA_CXXFLAGS])
+AX_APPEND_COMPILE_FLAGS([$OFLAGS], [LLAMA_CXXFLAGS])
 
 AC_MSG_NOTICE([LLAMA_CXXFLAGS: $LLAMA_CXXFLAGS])
 AC_MSG_NOTICE([CPPFLAGS: $CPPFLAGS])
