@@ -244,18 +244,6 @@ TEST_CASE("parsePatternsSectionDoesNotThrowIfPatterns") {
   REQUIRE(patternSection.Patterns.find("c")->second.at(0).Pattern == "\\z12\\z34\\z56\\z78\\z9a\\zbc\\zde\\zf0");
 }
 
-TEST_CASE("parseAnyFuncCall") {
-  std::string input = "any(s1, s2, s3)";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseAnyFuncCall());
-}
-
-TEST_CASE("parseAllFuncCall") {
-  std::string input = "all()";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseAllFuncCall());
-}
-
 TEST_CASE("parseTermWithAnd") {
   std::string input = "any(s1, s2, s3) and count(s1, 5) == 5";
   LlamaParser parser(input, getTokensFromString(input));
@@ -266,18 +254,6 @@ TEST_CASE("parseTermWithoutAnd") {
   std::string input = "any(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseTerm());
-}
-
-TEST_CASE("parseDualFuncCallWithOperator") {
-  std::string input = "offset(s1, 5) == 5";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseDualFuncCall());
-}
-
-TEST_CASE("parseDualFuncWithoutOperatorThrows") {
-  std::string input = "offset(s1, 5)";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_THROWS_AS(parser.parseDualFuncCall(), ParserError);
 }
 
 TEST_CASE("parseExpr") {

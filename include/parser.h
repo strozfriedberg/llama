@@ -92,9 +92,6 @@ public:
   PatternSection parsePatternsSection();
   std::string parseNumber();
   std::vector<PatternDef> parseHexString();
-  void parseDualFuncCall();
-  void parseAnyFuncCall();
-  void parseAllFuncCall();
   ConditionFunction parseFuncCall();
   void parseFactor();
   void parseTerm();
@@ -304,40 +301,6 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
   patternDef.Pattern = hexString;
   defs.push_back(patternDef);
   return defs;
-}
-
-void LlamaParser::parseDualFuncCall() {
-  mustParse(
-    "Expected function name",
-    TokenType::OFFSET,
-    TokenType::COUNT,
-    TokenType::COUNT_HAS_HITS,
-    TokenType::LENGTH
-  );
-  mustParse("Expected open parenthesis", TokenType::OPEN_PAREN);
-  mustParse("Expected identifier", TokenType::IDENTIFIER);
-  if (matchAny(TokenType::COMMA)) {
-    parseNumber();
-  }
-  mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
-  parseOperator();
-  parseNumber();
-}
-
-void LlamaParser::parseAnyFuncCall() {
-  mustParse("Expected function name", TokenType::ANY);
-  mustParse("Expected open parenthesis", TokenType::OPEN_PAREN);
-  mustParse("Expected identifier", TokenType::IDENTIFIER);
-  while (matchAny(TokenType::COMMA)) {
-    mustParse("Expected identifier", TokenType::IDENTIFIER);
-  }
-  mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
-}
-
-void LlamaParser::parseAllFuncCall() {
-  mustParse("Expected function name", TokenType::ALL);
-  mustParse("Expected open parenthesis", TokenType::OPEN_PAREN);
-  mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
 }
 
 void LlamaParser::parseTerm() {
