@@ -59,6 +59,8 @@ struct PatternSection {
 struct ConditionFunction {
   TokenType Name;
   std::vector<std::string> Args;
+  TokenType Operator = TokenType::NONE;
+  std::string Value;
 };
 
 class LlamaParser {
@@ -349,19 +351,8 @@ void LlamaParser::parseFactor() {
   if (matchAny(TokenType::OPEN_PAREN)) {
     parseExpr();
   }
-  else if (checkAny(TokenType::ALL)) {
-    parseAllFuncCall();
-  }
-  else if (checkAny(TokenType::ANY)) {
-    parseAnyFuncCall();
-  }
-  else if (checkAny(
-    TokenType::OFFSET,
-    TokenType::COUNT,
-    TokenType::COUNT_HAS_HITS,
-    TokenType::LENGTH
-  )) {
-    parseDualFuncCall();
+  else {
+    parseFuncCall();
   }
 }
 
@@ -374,10 +365,14 @@ ConditionFunction LlamaParser::parseFuncCall() {
     func.Args.push_back(Input.substr(previous().Start, previous().length()));
   }
   while (matchAny(TokenType::COMMA)) {
-    mustParse("Expected identifier", TokenType::IDENTIFIER);
+    mustParse("Expected identifier or number", TokenType::IDENTIFIER, TokenType::NUMBER);
     func.Args.push_back(Input.substr(previous().Start, previous().length()));
   }
   mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
+  if (matchAny(TokenType::EQUAL, TokenType::EQUAL_EQUAL, TokenType::NOT_EQUAL, TokenType::GREATER_THAN, TokenType::GREATER_THAN_EQUAL, TokenType::LESS_THAN, TokenType::LESS_THAN_EQUAL)) {
+    func.Operator = previous().Type;
+    func.Value = parseNumber();
+  }
   return func;
 }
 

@@ -525,3 +525,26 @@ TEST_CASE("parseFuncCallAll") {
   REQUIRE(func.Name == TokenType::ALL);
   REQUIRE(func.Args.size() == 0);
 }
+
+TEST_CASE("parseFuncCallWithNumber") {
+  std::string input = "count(s1, 5)";
+  LlamaParser parser(input, getTokensFromString(input));
+  ConditionFunction func;
+  REQUIRE_NOTHROW(func = parser.parseFuncCall());
+  REQUIRE(func.Name == TokenType::COUNT);
+  REQUIRE(func.Args.size() == 2);
+  REQUIRE(func.Args.at(0) == "s1");
+  REQUIRE(func.Args.at(1) == "5");
+}
+
+TEST_CASE("parseFuncCallWithOperator") {
+  std::string input = "offset(s1, 5) == 5";
+  LlamaParser parser(input, getTokensFromString(input));
+  ConditionFunction func;
+  REQUIRE_NOTHROW(func = parser.parseFuncCall());
+  REQUIRE(func.Name == TokenType::OFFSET);
+  REQUIRE(func.Args.size() == 2);
+  REQUIRE(func.Args.at(0) == "s1");
+  REQUIRE(func.Args.at(1) == "5");
+  REQUIRE(func.Value == "5");
+}
