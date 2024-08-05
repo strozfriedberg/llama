@@ -504,3 +504,24 @@ TEST_CASE("parserParseNumber") {
   std::string num = parser.parseNumber();
   REQUIRE(num == "123456");
 }
+
+TEST_CASE("parseFuncCallAny") {
+  std::string input = "any(s1, s2, s3)";
+  LlamaParser parser(input, getTokensFromString(input));
+  ConditionFunction func;
+  REQUIRE_NOTHROW(func = parser.parseFuncCall());
+  REQUIRE(func.Name == TokenType::ANY);
+  REQUIRE(func.Args.size() == 3);
+  REQUIRE(func.Args.at(0) == "s1");
+  REQUIRE(func.Args.at(1) == "s2");
+  REQUIRE(func.Args.at(2) == "s3");
+}
+
+TEST_CASE("parseFuncCallAll") {
+  std::string input = "all()";
+  LlamaParser parser(input, getTokensFromString(input));
+  ConditionFunction func;
+  REQUIRE_NOTHROW(func = parser.parseFuncCall());
+  REQUIRE(func.Name == TokenType::ALL);
+  REQUIRE(func.Args.size() == 0);
+}

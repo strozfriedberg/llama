@@ -56,6 +56,10 @@ struct PatternSection {
   std::unordered_map<std::string, std::vector<PatternDef>> Patterns;
 };
 
+struct ConditionFunction {
+  TokenType Name;
+  std::vector<std::string> Args;
+};
 
 class LlamaParser {
 public:
@@ -89,6 +93,7 @@ public:
   void parseDualFuncCall();
   void parseAnyFuncCall();
   void parseAllFuncCall();
+  ConditionFunction parseFuncCall();
   void parseFactor();
   void parseTerm();
   void parseExpr();
@@ -358,6 +363,22 @@ void LlamaParser::parseFactor() {
   )) {
     parseDualFuncCall();
   }
+}
+
+ConditionFunction LlamaParser::parseFuncCall() {
+  ConditionFunction func;
+  mustParse("Expected function name", TokenType::ALL, TokenType::ANY, TokenType::OFFSET, TokenType::COUNT, TokenType::COUNT_HAS_HITS, TokenType::LENGTH);
+  func.Name = previous().Type;
+  mustParse("Expected open parenthesis", TokenType::OPEN_PAREN);
+  if (matchAny(TokenType::IDENTIFIER)) {
+    func.Args.push_back(Input.substr(previous().Start, previous().length()));
+  }
+  while (matchAny(TokenType::COMMA)) {
+    mustParse("Expected identifier", TokenType::IDENTIFIER);
+    func.Args.push_back(Input.substr(previous().Start, previous().length()));
+  }
+  mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
+  return func;
 }
 
 void LlamaParser::parseExpr() {
