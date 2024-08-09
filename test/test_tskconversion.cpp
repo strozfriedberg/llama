@@ -529,5 +529,14 @@ TEST_CASE("testConvertTskMetaToInode") {
   TskUtils::convertMetaToInode(meta, n);
 
   REQUIRE(7 == n.Addr);
+  REQUIRE("Deleted" == n.Flags);
+  REQUIRE("File" == n.Type);
+
+  REQUIRE(21 == n.Uid);
+  REQUIRE(1026 == n.Gid);
+
+  REQUIRE("I_am_the_target" == n.LinkTarget);
+  REQUIRE(2 == n.NumLinks);
+  REQUIRE(8 == n.SeqNum);
 }
 
