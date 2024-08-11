@@ -16,6 +16,7 @@ namespace {
 
 std::string formatTimestamp(int64_t unix_time, uint32_t ns, std::ostringstream& buf) {
   std::string ret;
+  ret.reserve(30);
 
   if (0 == unix_time) {
     if (0 == ns) {
