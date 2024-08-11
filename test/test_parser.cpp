@@ -525,3 +525,13 @@ TEST_CASE("parseFuncCallWithOperator") {
   REQUIRE(func.Args.at(1) == "5");
   REQUIRE(func.Value == "5");
 }
+
+TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
+  std::string input = "any(s1, s2, s3)";
+  LlamaParser parser(input, getTokensFromString(input));
+  std::shared_ptr<Node> node;
+  REQUIRE_NOTHROW(node = parser.parseFactor());
+  REQUIRE(node->Type == NodeType::FUNC);
+  REQUIRE(std::get<ConditionFunction>(node->Value).Name == TokenType::ANY);
+  REQUIRE(std::get<ConditionFunction>(node->Value).Args.size() == 3);
+}

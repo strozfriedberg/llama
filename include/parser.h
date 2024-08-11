@@ -63,6 +63,16 @@ struct ConditionFunction {
   std::string Value;
 };
 
+enum class NodeType {
+  AND, OR, FUNC, VAL
+};
+
+struct Node {
+  std::variant<ConditionFunction, std::string> Value;
+  NodeType Type;
+  std::vector<std::unique_ptr<Node>> Children;
+};
+
 class LlamaParser {
 public:
   LlamaParser(const std::string& input, const std::vector<Token>& tokens) : Input(input), Tokens(tokens) {}
@@ -93,7 +103,7 @@ public:
   std::string parseNumber();
   std::vector<PatternDef> parseHexString();
   ConditionFunction parseFuncCall();
-  void parseFactor();
+  std::shared_ptr<Node> parseFactor();
   void parseTerm();
   void parseExpr();
   void parseConditionSection();
@@ -310,14 +320,17 @@ void LlamaParser::parseTerm() {
   }
 }
 
-void LlamaParser::parseFactor() {
+std::shared_ptr<Node> LlamaParser::parseFactor() {
+  auto node = std::make_shared<Node>();
   if (matchAny(TokenType::OPEN_PAREN)) {
     parseExpr();
     mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
   }
   else {
-    parseFuncCall();
+    node->Type = NodeType::FUNC;
+    node->Value = parseFuncCall();
   }
+  return node;
 }
 
 ConditionFunction LlamaParser::parseFuncCall() {
