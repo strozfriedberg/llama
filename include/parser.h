@@ -313,6 +313,7 @@ void LlamaParser::parseTerm() {
 void LlamaParser::parseFactor() {
   if (matchAny(TokenType::OPEN_PAREN)) {
     parseExpr();
+    mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
   }
   else {
     parseFuncCall();
