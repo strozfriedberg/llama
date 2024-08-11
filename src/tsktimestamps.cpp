@@ -12,6 +12,10 @@ CommonTimestampGetter::CommonTimestampGetter() {
   Buf << std::fixed << std::setprecision(9);
 }
 
+std::string CommonTimestampGetter::get(uint32_t unix, uint32_t fracSecs) {
+  return formatTimestamp(unix, fracSecs, Buf);
+}
+
 jsoncons::json CommonTimestampGetter::accessed(const TSK_FS_META& meta) {
   return nullEmpty(formatTimestamp(meta.atime, meta.atime_nano, Buf));
 }

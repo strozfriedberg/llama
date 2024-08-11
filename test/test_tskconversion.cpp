@@ -522,11 +522,13 @@ void initTskFsMeta(TSK_FS_META& meta) {
 }
 
 TEST_CASE("testConvertTskMetaToInode") {
+  auto tsg(TskUtils::makeTimestampGetter(TSK_FS_TYPE_NTFS));
+
   TSK_FS_META meta;
   initTskFsMeta(meta);
 
   Inode n;
-  TskUtils::convertMetaToInode(meta, n);
+  TskUtils::convertMetaToInode(meta, *tsg, n);
 
   REQUIRE(7 == n.Addr);
   REQUIRE("Deleted" == n.Flags);
@@ -538,5 +540,10 @@ TEST_CASE("testConvertTskMetaToInode") {
   REQUIRE("I_am_the_target" == n.LinkTarget);
   REQUIRE(2 == n.NumLinks);
   REQUIRE(8 == n.SeqNum);
+
+  REQUIRE("2020-01-07 02:40:22.1234567" == n.Accessed);
+  REQUIRE("1970-01-01 08:42:17.1234564" == n.Created);
+  REQUIRE("1977-06-02 18:24:30.315227845" == n.Metadata);
+  REQUIRE("1979-12-16 02:27:45.999999999" == n.Modified);
 }
 

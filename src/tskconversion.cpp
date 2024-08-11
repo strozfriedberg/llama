@@ -385,7 +385,7 @@ void TskUtils::convertNameToDirent(const std::string& path, const TSK_FS_NAME& n
   dirent.ParentSeq = name.par_seq;
 }
 
-void TskUtils::convertMetaToInode(const TSK_FS_META &meta, Inode &n) {
+void TskUtils::convertMetaToInode(const TSK_FS_META &meta, TimestampGetter& tsg, Inode &n) {
   n.Addr = meta.addr;
 
   n.Flags = metaFlags(meta.flags);
@@ -395,6 +395,11 @@ void TskUtils::convertMetaToInode(const TSK_FS_META &meta, Inode &n) {
   n.LinkTarget = meta.link ? meta.link : "";
   n.NumLinks = meta.nlink;
   n.SeqNum = meta.seq;
+
+  n.Accessed = tsg.get(meta.atime, meta.atime_nano);
+  n.Created = tsg.get(meta.crtime, meta.crtime_nano);
+  n.Metadata = tsg.get(meta.ctime, meta.ctime_nano);
+  n.Modified = tsg.get(meta.mtime, meta.mtime_nano);
 }
 
 std::unique_ptr<TimestampGetter> TskUtils::makeTimestampGetter(TSK_FS_TYPE_ENUM fstype) {
