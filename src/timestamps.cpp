@@ -54,7 +54,7 @@ std::string formatTimestamp(int64_t unix_time, uint32_t ns, std::ostringstream& 
   }
 
   // fractional seconds
-  if (ns - 1 < 999999999) {
+  if (0 < ns && ns < 1000000000) {
     buf << double(ns) / 1000000000;
     auto frac = buf.str();
     ret.append(frac.substr(1, frac.find_last_not_of('0'))); // no leading or trailing zeroes
