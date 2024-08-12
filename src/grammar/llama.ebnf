@@ -35,17 +35,11 @@ expr                = term (OR term)*;
 term                = factor (AND factor)*;
 
 factor              = OPEN_PAREN expr CLOSE_PAREN
-                    | all_func_call
-                    | any_func_call
-                    | dual_func_call;
+                    | func_call;
 
-all_func_call       = ALL OPEN_PAREN CLOSE_PAREN;
+func_call           = func OPEN_PAREN (IDENTIFIER (COMMA IDENTIFIER)*)? CLOSE_PAREN;
 
-any_func_call       = ANY OPEN_PAREN IDENTIFIER (COMMA IDENTIFIER)* CLOSE_PAREN;
-
-dual_func_call      = dual_func OPEN_PAREN IDENTIFIER (COMMA NUMBER)? CLOSE_PAREN;
-
-dual_func           = OFFSET
+func                = OFFSET
                     | COUNT_HAS_HITS
                     | COUNT
                     | LENGTH;
