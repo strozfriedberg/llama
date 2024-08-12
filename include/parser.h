@@ -106,7 +106,7 @@ public:
   std::vector<PatternDef> parseHexString();
   ConditionFunction parseFuncCall();
   std::shared_ptr<Node> parseFactor();
-  void parseTerm();
+  std::shared_ptr<Node> parseTerm();
   void parseExpr();
   void parseConditionSection();
   SignatureSection parseSignatureSection();
@@ -315,15 +315,21 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
   return defs;
 }
 
-void LlamaParser::parseTerm() {
-  parseFactor();
+std::shared_ptr<Node> LlamaParser::parseTerm() {
+  std::shared_ptr <Node> left = parseFactor();
+
   while (matchAny(TokenType::AND)) {
-    parseFactor();
+    std::shared_ptr<Node> node = std::make_shared<Node>();
+    node->Type = NodeType::AND;
+    node->Left = left;
+    node->Right = parseFactor();
+    left = node;
   }
+  return left;
 }
 
 std::shared_ptr<Node> LlamaParser::parseFactor() {
-  auto node = std::make_shared<Node>();
+  std::shared_ptr<Node> node = std::make_shared<Node>();
   if (matchAny(TokenType::OPEN_PAREN)) {
     parseExpr();
     mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);

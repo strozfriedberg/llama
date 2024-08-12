@@ -247,7 +247,13 @@ TEST_CASE("parsePatternsSectionDoesNotThrowIfPatterns") {
 TEST_CASE("parseTermWithAnd") {
   std::string input = "any(s1, s2, s3) and count(s1, 5) == 5";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseTerm());
+  std::shared_ptr<Node> node;
+  REQUIRE_NOTHROW(node = parser.parseTerm());
+  REQUIRE(node->Type == NodeType::AND);
+  REQUIRE(node->Left->Type == NodeType::FUNC);
+  REQUIRE(std::get<ConditionFunction>(node->Left->Value).Name == TokenType::ANY);
+  REQUIRE(node->Right->Type == NodeType::FUNC);
+  REQUIRE(std::get<ConditionFunction>(node->Right->Value).Name == TokenType::COUNT);
 }
 
 TEST_CASE("parseTermWithoutAnd") {
