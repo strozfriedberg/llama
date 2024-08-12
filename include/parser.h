@@ -79,6 +79,11 @@ struct ConditionSection {
   std::shared_ptr<Node> Tree;
 };
 
+struct GrepSection {
+  PatternSection Patterns;
+  ConditionSection Condition;
+};
+
 class LlamaParser {
 public:
   LlamaParser(const std::string& input, const std::vector<Token>& tokens) : Input(input), Tokens(tokens) {}
@@ -114,7 +119,7 @@ public:
   std::shared_ptr<Node> parseExpr();
   ConditionSection parseConditionSection();
   SignatureSection parseSignatureSection();
-  void parseGrepSection();
+  GrepSection parseGrepSection();
   FileMetadataDef parseFileMetadataDef();
   FileMetadataSection parseFileMetadataSection();
   MetaSection parseMetaSection();
@@ -398,13 +403,15 @@ SignatureSection LlamaParser::parseSignatureSection() {
   return signatureSection;
 }
 
-void LlamaParser::parseGrepSection() {
+GrepSection LlamaParser::parseGrepSection() {
   mustParse("Expected grep keyword", TokenType::GREP);
   mustParse("Expected colon after grep keyword", TokenType::COLON);
+  GrepSection grepSection;
   if (checkAny(TokenType::PATTERNS)) {
-    parsePatternsSection();
+    grepSection.Patterns = parsePatternsSection();
   }
-  parseConditionSection();
+  grepSection.Condition = parseConditionSection();
+  return grepSection;
 }
 
 FileMetadataDef LlamaParser::parseFileMetadataDef() {

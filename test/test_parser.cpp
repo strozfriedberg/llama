@@ -301,7 +301,14 @@ TEST_CASE("parseGrepSection") {
       any(a, b) and offset(a, 5) == 5
 )";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseGrepSection());
+  GrepSection section;
+  REQUIRE_NOTHROW(section = parser.parseGrepSection());
+  REQUIRE(section.Patterns.Patterns.size() == 2);
+  REQUIRE(section.Patterns.Patterns.find("a")->second.at(0).Pattern == "test");
+  REQUIRE(section.Patterns.Patterns.find("a")->second.at(0).Encoding == lg_get_encoding_id("UTF-8"));
+  REQUIRE(section.Condition.Tree->Type == NodeType::AND);
+  REQUIRE(section.Condition.Tree->Left->Type == NodeType::FUNC);
+  REQUIRE(section.Condition.Tree->Right->Type == NodeType::FUNC);
 }
 
 TEST_CASE("parseFileMetadataDefFileSize") {
