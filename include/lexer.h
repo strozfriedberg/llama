@@ -9,21 +9,6 @@
 
 #include "token.h"
 
-class UnexpectedInputError : public std::runtime_error {
-public:
-  UnexpectedInputError(const std::string& message, LineCol pos)
-  : std::runtime_error(message), Position(pos) {}
-
-  std::string messageWithPos() const {
-    std::string msg(what());
-    msg += " at ";
-    msg += Position.toString();
-    return msg;
-  }
-
-  LineCol Position;
-};
-
 class LlamaLexer {
 public:
   LlamaLexer(const std::string& input) : Input(input), CurIdx(0) {};

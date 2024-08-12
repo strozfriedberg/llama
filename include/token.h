@@ -1,7 +1,9 @@
 #pragma once
 
 #include <unordered_map>
+#include <string>
 #include <tuple>
+
 
 enum class TokenType {
   NONE,
@@ -118,4 +120,19 @@ public:
   TokenType Type;
   uint64_t Start, End;
   LineCol Pos;
+};
+
+class UnexpectedInputError : public std::runtime_error {
+public:
+  UnexpectedInputError(const std::string& message, LineCol pos)
+  : std::runtime_error(message), Position(pos) {}
+
+  std::string messageWithPos() const {
+    std::string msg(what());
+    msg += " at ";
+    msg += Position.toString();
+    return msg;
+  }
+
+  LineCol Position;
 };
