@@ -4,6 +4,7 @@
 #include <lightgrep/api.h>
 #include <lightgrep/util.h>
 
+#include <memory>
 #include <unordered_map>
 
 class ParserError : public UnexpectedInputError {
