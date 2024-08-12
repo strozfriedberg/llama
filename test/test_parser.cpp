@@ -265,7 +265,11 @@ TEST_CASE("parseTermWithoutAnd") {
 TEST_CASE("parseExpr") {
   std::string input = "(any(s1, s2, s3) and count(s1, 5) == 5) or all(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseExpr());
+  auto node = std::make_shared<Node>();
+  REQUIRE_NOTHROW(node = parser.parseExpr());
+  REQUIRE(node->Type == NodeType::OR);
+  REQUIRE(node->Left->Type == NodeType::AND);
+  REQUIRE(node->Right->Type == NodeType::FUNC);
 }
 
 TEST_CASE("parseConditionSection") {

@@ -107,7 +107,7 @@ public:
   ConditionFunction parseFuncCall();
   std::shared_ptr<Node> parseFactor();
   std::shared_ptr<Node> parseTerm();
-  void parseExpr();
+  std::shared_ptr<Node> parseExpr();
   void parseConditionSection();
   SignatureSection parseSignatureSection();
   void parseGrepSection();
@@ -361,11 +361,17 @@ ConditionFunction LlamaParser::parseFuncCall() {
   return func;
 }
 
-void LlamaParser::parseExpr() {
-  parseTerm();
+std::shared_ptr<Node> LlamaParser::parseExpr() {
+  std::shared_ptr<Node> left = parseTerm();
+
   while (matchAny(TokenType::OR)) {
-    parseTerm();
+    std::shared_ptr<Node> node = std::make_shared<Node>();
+    node->Type = NodeType::OR;
+    node->Left = left;
+    node->Right = parseTerm();
+    left = node;
   }
+  return left;
 }
 
 void LlamaParser::parseConditionSection() {
