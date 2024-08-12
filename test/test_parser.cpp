@@ -358,37 +358,6 @@ TEST_CASE("parseMetaSection") {
   REQUIRE(meta.Fields.find("another")->second == "something else");
 }
 
-TEST_CASE("parseRule") {
-  std::string input = R"(
-  rule:
-    meta:
-      description = "test"
-    signature:
-      "EXE"
-    file_metadata:
-      created > "2023-05-04"
-      modified < "2023-05-06"
-      filesize >= 100
-  )";
-  LlamaParser parser(input, getTokensFromString(input));
-  Rule rule;
-  REQUIRE_NOTHROW(parser.parseRule(rule));
-}
-
-TEST_CASE("parseRuleWithoutMeta") {
-  std::string input = R"(
-  signature:
-      "EXE"
-  file_metadata:
-    created > "2023-05-04"
-    modified < "2023-05-06"
-    filesize >= 100
-  )";
-  LlamaParser parser(input, getTokensFromString(input));
-  Rule rule;
-  REQUIRE_NOTHROW(parser.parseRule(rule));
-}
-
 TEST_CASE("parseRuleDecl") {
   std::string input = R"(
   rule MyRule {

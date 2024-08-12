@@ -125,7 +125,6 @@ public:
   FileMetadataDef parseFileMetadataDef();
   FileMetadataSection parseFileMetadataSection();
   MetaSection parseMetaSection();
-  void parseRule(Rule& rule);
   Rule parseRuleDecl();
   std::vector<Rule> parseRules();
 
@@ -461,7 +460,13 @@ MetaSection LlamaParser::parseMetaSection() {
   return meta;
 }
 
-void LlamaParser::parseRule(Rule& rule) {
+Rule LlamaParser::parseRuleDecl() {
+  Rule rule;
+  mustParse("Expected rule keyword", TokenType::RULE);
+  mustParse("Expected identifier", TokenType::IDENTIFIER);
+  rule.Name = Input.substr(previous().Start, previous().length());
+  mustParse("Expected open curly brace", TokenType::OPEN_BRACE);
+
   if (checkAny(TokenType::META)) {
     rule.Meta = parseMetaSection();
   }
@@ -477,16 +482,6 @@ void LlamaParser::parseRule(Rule& rule) {
   if (checkAny(TokenType::GREP)) {
     rule.Grep = parseGrepSection();
   }
-
-}
-
-Rule LlamaParser::parseRuleDecl() {
-  Rule rule;
-  mustParse("Expected rule keyword", TokenType::RULE);
-  mustParse("Expected identifier", TokenType::IDENTIFIER);
-  rule.Name = Input.substr(previous().Start, previous().length());
-  mustParse("Expected open curly brace", TokenType::OPEN_BRACE);
-  parseRule(rule);
   mustParse("Expected close curly brace", TokenType::CLOSE_BRACE);
   return rule;
 }
