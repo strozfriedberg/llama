@@ -75,6 +75,10 @@ struct Node {
   std::shared_ptr<Node> Right;
 };
 
+struct ConditionSection {
+  std::shared_ptr<Node> Tree;
+};
+
 class LlamaParser {
 public:
   LlamaParser(const std::string& input, const std::vector<Token>& tokens) : Input(input), Tokens(tokens) {}
@@ -108,7 +112,7 @@ public:
   std::shared_ptr<Node> parseFactor();
   std::shared_ptr<Node> parseTerm();
   std::shared_ptr<Node> parseExpr();
-  void parseConditionSection();
+  ConditionSection parseConditionSection();
   SignatureSection parseSignatureSection();
   void parseGrepSection();
   FileMetadataDef parseFileMetadataDef();
@@ -374,10 +378,12 @@ std::shared_ptr<Node> LlamaParser::parseExpr() {
   return left;
 }
 
-void LlamaParser::parseConditionSection() {
+ConditionSection LlamaParser::parseConditionSection() {
   mustParse("Expected condition keyword", TokenType::CONDITION);
   mustParse("Expected colon after condition keyword", TokenType::COLON);
-  parseExpr();
+  ConditionSection conditionSection;
+  conditionSection.Tree = parseExpr();
+  return conditionSection;
 }
 
 SignatureSection LlamaParser::parseSignatureSection() {
