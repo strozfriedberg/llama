@@ -2,10 +2,12 @@
 
 #include "batchhandler.h"
 #include "cli.h"
+#include "direntbatch.h"
 #include "easyfut.h"
 #include "filescheduler.h"
 #include "inputhandler.h"
 #include "inputreader.h"
+#include "llamaduck.h"
 #include "outputhandler.h"
 #include "outputtar.h"
 #include "pooloutputhandler.h"
@@ -28,7 +30,8 @@ namespace fs = std::filesystem;
 
 Llama::Llama()
     : CliParser(std::make_shared<Cli>()), Pool(),
-      LgProg(nullptr, lg_destroy_program) {}
+      LgProg(nullptr, lg_destroy_program),
+      Db(), DbConn(Db) {}
 
 int Llama::run(int argc, const char* const argv[]) {
   try {
@@ -56,7 +59,10 @@ void Llama::search() {
     Timer searchTime(&std::cerr, "Search time: ");
     // std::cout << "Number of patterns: " << lg_pattern_count(LgProg.get())
     //           << std::endl;
-    auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, Output));
+    std::filesystem::path outdir(Opts->Output);
+    std::filesystem::create_directories(outdir);
+    auto out = std::shared_ptr<OutputWriter>(new OutputTar((outdir / "llama").string(), Opts->OutputCodec));
+    auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, DbConn, out));
 
     auto protoProc = std::make_shared<Processor>(LgProg);
     auto scheduler = std::make_shared<FileScheduler>(Pool, protoProc, outh, Opts);
@@ -70,6 +76,8 @@ void Llama::search() {
     }
     Pool.join();
     std::cerr << "Hashing Time: " << scheduler->getProcessorTime() << "s\n";
+
+    writeDB(outdir.string());
     // std::cout << "All done" << std::endl;
   }
   else {
@@ -131,9 +139,9 @@ bool Llama::openInput(const std::string& input) {
   return bool(Input);
 }
 
-bool Llama::openOutput(const std::string& outputFile, Codec codec) {
-  Output.reset(new OutputTar(outputFile, codec));
-  return bool(Output);
+bool Llama::dbInit() {
+  DirentBatch::createTable(DbConn.get(), "dirent");
+  return true;
 }
 
 bool Llama::init() {
@@ -146,12 +154,18 @@ bool Llama::init() {
   auto open = make_future(Pool, [this]() {
     return openInput(this->Opts->Input);
   });
-
-  auto output = make_future(Pool, [this]() {
-    return openOutput(this->Opts->Output, this->Opts->OutputCodec);
+  
+  auto db = make_future(Pool, [this]() {
+    return dbInit();
   });
+  return readPats.get() && open.get() && db.get();
+}
 
-  bool ret = readPats.get() && open.get() && output.get();
-  return ret;
+void Llama::writeDB(const std::string& outdir) {
+  Timer dbTime(&std::cerr, "DB write time: ");
+  std::string query = "EXPORT DATABASE '";
+  query += outdir;
+  query += "' (FORMAT PARQUET);";
+  duckdb_query(DbConn.get(), query.c_str(), nullptr);
 }
 

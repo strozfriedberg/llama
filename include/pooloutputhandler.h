@@ -1,6 +1,8 @@
 #pragma once
 
 #include "boost_asio.h"
+#include "direntbatch.h"
+#include "llamaduck.h"
 #include "outputhandler.h"
 #include "recordbuffer.h"
 
@@ -9,13 +11,13 @@ class OutputWriter;
 
 class PoolOutputHandler: public OutputHandler {
 public:
-  PoolOutputHandler(boost::asio::thread_pool& pool, std::shared_ptr<OutputWriter> out);
+  PoolOutputHandler(boost::asio::thread_pool& pool, LlamaDBConnection& conn, std::shared_ptr<OutputWriter> out);
 
   virtual ~PoolOutputHandler();
 
   virtual void outputImage(const FileRecord& rec) override;
 
-  virtual void outputDirent(const FileRecord& rec) override;
+  virtual void outputDirent(const Dirent& rec) override;
 
   virtual void outputInode(const FileRecord& rec) override;
 
@@ -31,11 +33,14 @@ private:
   boost::asio::strand<boost::asio::thread_pool::executor_type> MainStrand,
                                                                RecStrand;
 
-  std::shared_ptr<OutputWriter> Out;
+  LlamaDBAppender Appender;
 
   RecordBuffer ImageRecBuf;
   RecordBuffer InodesRecBuf;
-  RecordBuffer DirentsRecBuf;
+  
+  DirentBatch DirentsBatch;
+
+  std::shared_ptr<OutputWriter> Out;
 
   bool Closed;
 };

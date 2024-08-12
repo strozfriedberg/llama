@@ -1,14 +1,17 @@
 #include "filerecord.h"
+#include "llamaduck.h"
 #include "outputwriter.h"
 #include "pooloutputhandler.h"
 
-PoolOutputHandler::PoolOutputHandler(boost::asio::thread_pool& pool, std::shared_ptr<OutputWriter> out):
+#include <iostream>
+
+PoolOutputHandler::PoolOutputHandler(boost::asio::thread_pool& pool, LlamaDBConnection& conn, std::shared_ptr<OutputWriter> out):
   MainStrand(pool.get_executor()),
   RecStrand(pool.get_executor()),
-  Out(out),
+  Appender(conn.get(), "dirent"),
   ImageRecBuf("recs/image", 4 * 1024, [this](const OutputChunk& c) { Out->outputImage(c); }),
   InodesRecBuf("recs/inodes", 16 * 1024 * 1024, [this](const OutputChunk& c) { Out->outputInode(c); }),
-  DirentsRecBuf("recs/dirents", 16 * 1024 * 1024, [this](const OutputChunk& c) { Out->outputDirent(c); }),
+  Out(out),
   Closed(false)
 {}
 
@@ -20,22 +23,13 @@ void PoolOutputHandler::outputImage(const FileRecord& rec) {
   ImageRecBuf.write(rec.str());
 }
 
-void PoolOutputHandler::outputDirent(const FileRecord& rec) {
-/*
-  if (Closed) {
-    // we might still have some records in FileRecBuf, but the
-    // threadpool has gone away and the MainStrand can no longer be
-    // posted to, so just call into the function directly.
-    Out->outputDirent(rec);
-  }
-  else {
-    boost::asio::post(MainStrand, [=](){
-      Out->outputDirent(rec);
-    });
-  }
-*/
-  boost::asio::post(RecStrand, [=]() {
-    DirentsRecBuf.write(rec.str());
+void PoolOutputHandler::outputDirent(const Dirent& rec) {
+  boost::asio::post(RecStrand, [&, rec]() {
+    DirentsBatch.add(rec);
+    if (DirentsBatch.size() >= 1000) {
+      DirentsBatch.copyToDB(Appender.get());
+      Appender.flush();
+    }
   });
 }
 
@@ -70,12 +64,14 @@ void PoolOutputHandler::close() {
     ImageRecBuf.flush();
   }
 
-  if (DirentsRecBuf.size()) {
-    DirentsRecBuf.flush();
-  }
-
   if (InodesRecBuf.size()) {
     InodesRecBuf.flush();
+  }
+  if (DirentsBatch.size()) {
+    auto num = DirentsBatch.size();
+    DirentsBatch.copyToDB(Appender.get());
+    Appender.flush();
+  //  std::cerr << "wrote " << num << " dirents\n";
   }
 
   Out->close();

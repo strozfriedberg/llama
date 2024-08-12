@@ -4,6 +4,7 @@
 #include <array>
 #include <utility>
 
+#include "direntbatch.h"
 #include "hex.h"
 #include "schema.h"
 
@@ -254,24 +255,6 @@ jsoncons::json TskUtils::convertMeta(const TSK_FS_META& meta, TimestampGetter& t
   );
 }
 
-std::unique_ptr<TimestampGetter> TskUtils::makeTimestampGetter(TSK_FS_TYPE_ENUM fstype) {
-  switch (fstype) {
-  case TSK_FS_TYPE_NTFS:
-    return std::make_unique<NTFSTimestampGetter>();
-  case TSK_FS_TYPE_FFS1: // need to double-check this list
-  case TSK_FS_TYPE_FFS1B:
-  case TSK_FS_TYPE_FFS2:
-  case TSK_FS_TYPE_EXT2:
-  case TSK_FS_TYPE_EXT3:
-  case TSK_FS_TYPE_EXT4:
-    return std::make_unique<EXTTimestampGetter>();
-  case TSK_FS_TYPE_HFS:
-    return std::make_unique<HFSTimestampGetter>();
-  default:
-    return std::make_unique<CommonTimestampGetter>();
-  }
-}
-
 std::string TskUtils::extractString(const char* str, unsigned int size) {
   return std::string(str, std::find(str, str + size, '\0'));
 }
@@ -383,4 +366,38 @@ jsoncons::json TskUtils::convertFS(const TSK_FS_INFO& fs) {
       { "rootInum", fs.root_inum }
     }
   );
+}
+
+void TskUtils::convertNameToDirent(const std::string& path, const TSK_FS_NAME& name, Dirent& dirent) {
+  dirent.Path = path;
+
+  dirent.Name = extractString(name.name, name.name_size);
+  dirent.ShortName = extractString(name.shrt_name, name.shrt_name_size);
+
+  dirent.Type = nameType(name.type);
+  dirent.Flags = nameFlags(name.flags);
+
+  dirent.MetaAddr = name.meta_addr;
+  dirent.ParentAddr = name.par_addr;
+
+  dirent.MetaSeq = name.meta_seq;
+  dirent.ParentSeq = name.par_seq;
+}
+
+std::unique_ptr<TimestampGetter> TskUtils::makeTimestampGetter(TSK_FS_TYPE_ENUM fstype) {
+  switch (fstype) {
+  case TSK_FS_TYPE_NTFS:
+    return std::make_unique<NTFSTimestampGetter>();
+  case TSK_FS_TYPE_FFS1: // need to double-check this list
+  case TSK_FS_TYPE_FFS1B:
+  case TSK_FS_TYPE_FFS2:
+  case TSK_FS_TYPE_EXT2:
+  case TSK_FS_TYPE_EXT3:
+  case TSK_FS_TYPE_EXT4:
+    return std::make_unique<EXTTimestampGetter>();
+  case TSK_FS_TYPE_HFS:
+    return std::make_unique<HFSTimestampGetter>();
+  default:
+    return std::make_unique<CommonTimestampGetter>();
+  }
 }

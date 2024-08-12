@@ -19,11 +19,11 @@ DirReader::DirReader(const std::string& path):
 {
 }
 
-void DirReader::setInputHandler(std::shared_ptr<InputHandler> in) {
+void DirReader::setInputHandler(const std::shared_ptr<InputHandler>& in) {
   Input = in;
 }
 
-void DirReader::setOutputHandler(std::shared_ptr<OutputHandler> out) {
+void DirReader::setOutputHandler(const std::shared_ptr<OutputHandler>& out) {
   Output = out;
 }
 
@@ -69,7 +69,8 @@ bool DirReader::startReading() {
   } while (!dirStack.empty());
 
   while (!Dirents.empty()) {
-    Output->outputDirent(Dirents.pop());
+    Dirents.pop();
+    //    Output->outputDirent(Dirents.pop());
   }
 
   Input->flush();
@@ -83,11 +84,12 @@ void DirReader::handleFile(const fs::directory_entry& de) {
   const std::string path = p.generic_string();
   const std::string parent_path = p.parent_path().generic_string();
 
-  while (!Dirents.empty() && parent_path != Dirents.top()["path"]) {
-    Output->outputDirent(Dirents.pop());
+  while (!Dirents.empty() && parent_path != Dirents.top().Path) {
+    Dirents.pop();
+//    Output->outputDirent(Dirents.pop());
   }
 
-  Dirents.push(filename, Conv.convertName(de));
+  Dirents.push(Conv.convertStdFsDEtoDirent(de));
 
   Input->push({
     Conv.convertMeta(de),

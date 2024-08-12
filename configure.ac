@@ -63,6 +63,12 @@ AS_IF([test "x$enable_symbols" != "xno"], [SYMBOLS='-g'], [SYMBOLS='-s'])
 
 AX_APPEND_COMPILE_FLAGS([$SYMBOLS $OFLAGS], [LLAMA_CXXFLAGS])
 
+AC_MSG_NOTICE([LLAMA_CXXFLAGS: $LLAMA_CXXFLAGS])
+AC_MSG_NOTICE([CPPFLAGS: $CPPFLAGS])
+AC_MSG_NOTICE([CXXFLAGS: $CXXFLAGS])
+AC_MSG_NOTICE([CFLAGS: $CFLAGS])
+AC_MSG_NOTICE([LDFLAGS: $LDFLAGS])
+
 PKG_CHECK_MODULES([GPT], [libprofiler], [], [ : ])
 
 # FIXME: mingw defaults to -g -O2, along with a bunch of other flags which
@@ -177,6 +183,25 @@ AC_SUBST([YARA_CPPFLAGS])
 # jsoncons
 #
 AC_CHECK_HEADERS([jsoncons/json.hpp], [], [AC_MSG_ERROR([Couldn't find jsoncons/json.hpp])])
+
+#
+# duckdb
+#
+AC_CHECK_HEADERS([duckdb.h], [], [AC_MSG_ERROR([Couldn't find duckdb.h])])
+
+if test "x$enable_shared" != "xyes"; then
+  DUCKDB_LIBNAME=duckdb_static
+  DUCKDB_MORELIBS="-lduckdb_fastpforlib -lduckdb_fmt -lduckdb_fsst -lduckdb_hyperloglog -lduckdb_mbedtls -lduckdb_miniz -lduckdb_pg_query -lduckdb_re2 -lduckdb_skiplistlib -lduckdb_utf8proc -lduckdb_yyjson -lparquet_extension -lws2_32 -lrstrtmgr"
+else
+  DUCKDB_LIBNAME=duckdb
+  DUCKDB_MORELIBS=
+fi
+
+AC_CHECK_LIB([$DUCKDB_LIBNAME], [duckdb_library_version], [], [AC_MSG_ERROR([Couldn't find duckdb library])], [$DUCKDB_MORELIBS])
+DUCKDB_LIBS="$LIBS $DUCKDB_MORELIBS"
+LIBS="$TMP_LIBS"
+
+AC_SUBST([DUCKDB_LIBS])
 
 #
 # libasan
@@ -305,6 +330,8 @@ AC_MSG_NOTICE([LIBARCHIVE_LIBS:     $LIBARCHIVE_LIBS])
 
 AC_MSG_NOTICE([YARA_CPPFLAGS: $YARA_CPPFLAGS])
 AC_MSG_NOTICE([YARA_LIBS:     $YARA_LIBS])
+
+AC_MSG_NOTICE([DUCKDB_LIBS:   $DUCKDB_LIBS])
 
 AC_MSG_NOTICE([LLAMA_CPPFLAGS: $LLAMA_CPPFLAGS])
 AC_MSG_NOTICE([LLAMA_CXXFLAGS: $LLAMA_CXXFLAGS])

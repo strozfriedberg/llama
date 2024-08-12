@@ -6,6 +6,7 @@
 #include "inputhandler.h"
 #include "outputhandler.h"
 
+#include "tskconversion.h"
 #include "tskfacade.h"
 #include "tsktimestamps.h"
 
@@ -85,10 +86,14 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
   if (!fs_file || !fs_file->meta) {
     // TODO: Can we have a nonull fs_file->name in this case?
     // nothing to process
+    // I mean, yes? of course? obviously? TSK can possibly recover deleted dirents that point to nonexistent inodes -- jls
+    // so, this is wrong and needs to be a unit test
     return false;
   }
   const TSK_FS_META& meta = *fs_file->meta;
 
+  // this is also a bug, that we can skip files based on dupe inum before writing dirent info
+  // skipping dupe inodes must come _after_ full consideration/writing of dirents. more tests. -- jls
   const uint64_t inum = meta.addr;
   if (Tracker->markInodeSeen(inum)) {
     // been here, done that
@@ -97,13 +102,15 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
 
   // handle the name
   if (fs_file->name) {
-    const TSK_INUM_T par_addr =  fs_file->name->par_addr;
+    const TSK_INUM_T parentAddr =  fs_file->name->par_addr;
+    Dirent dirent;
 
-    while (!Dirents.empty() && par_addr != Dirents.top()["meta_addr"]) {
+    while (!Dirents.empty() && parentAddr != Dirents.top().MetaAddr) {
       Output->outputDirent(Dirents.pop());
     }
     // std::cerr << par_addr << " -> " << fs_file->meta->addr << '\n';
-    Dirents.push(fs_file->name->name, Tsk->convertName(*fs_file->name));
+    TskUtils::convertNameToDirent("", *fs_file->name, dirent);
+    Dirents.push(std::move(dirent));
   }
 
   // handle the meta
@@ -115,6 +122,7 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
   TskReaderHelper::handleAttrs(
     meta, CurFsOffset, CurFsBlockSize, inum, *Tsk, *Tracker, jmeta["attrs"]
   );
+  // why on earth are we making this separate block sequence thing? it's goofy -- jls
   Input->push({std::move(jmeta), makeBlockSequence(fs_file)});
 
   return true;
@@ -139,3 +147,4 @@ std::shared_ptr<BlockSequence> TskReader::makeBlockSequence(TSK_FS_FILE* fs_file
     )
   );
 }
+
