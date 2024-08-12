@@ -2,9 +2,7 @@
 #include <cstdint>
 #include <iostream>
 #include <regex>
-#include <string>
 #include <string_view>
-#include <unordered_map>
 #include <vector>
 
 #include "token.h"
