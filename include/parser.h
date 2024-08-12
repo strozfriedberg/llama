@@ -70,7 +70,8 @@ enum class NodeType {
 struct Node {
   std::variant<ConditionFunction, std::string> Value;
   NodeType Type;
-  std::vector<std::shared_ptr<Node>> Children;
+  std::shared_ptr<Node> Left;
+  std::shared_ptr<Node> Right;
 };
 
 class LlamaParser {
