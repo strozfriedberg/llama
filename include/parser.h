@@ -6,7 +6,6 @@
 
 #include <memory>
 #include <unordered_map>
-#include <variant>
 #include <vector>
 
 class ParserError : public UnexpectedInputError {
@@ -64,7 +63,7 @@ enum class NodeType {
 };
 
 struct Node {
-  std::variant<ConditionFunction, std::string> Value;
+  ConditionFunction Value;
   NodeType Type;
   std::shared_ptr<Node> Left;
   std::shared_ptr<Node> Right;

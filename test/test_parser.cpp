@@ -251,9 +251,9 @@ TEST_CASE("parseTermWithAnd") {
   REQUIRE_NOTHROW(node = parser.parseTerm());
   REQUIRE(node->Type == NodeType::AND);
   REQUIRE(node->Left->Type == NodeType::FUNC);
-  REQUIRE(std::get<ConditionFunction>(node->Left->Value).Name == TokenType::ANY);
+  REQUIRE(node->Left->Value.Name == TokenType::ANY);
   REQUIRE(node->Right->Type == NodeType::FUNC);
-  REQUIRE(std::get<ConditionFunction>(node->Right->Value).Name == TokenType::COUNT);
+  REQUIRE(node->Right->Value.Name == TokenType::COUNT);
 }
 
 TEST_CASE("parseTermWithoutAnd") {
@@ -521,6 +521,6 @@ TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
   std::shared_ptr<Node> node;
   REQUIRE_NOTHROW(node = parser.parseFactor());
   REQUIRE(node->Type == NodeType::FUNC);
-  REQUIRE(std::get<ConditionFunction>(node->Value).Name == TokenType::ANY);
-  REQUIRE(std::get<ConditionFunction>(node->Value).Args.size() == 3);
+  REQUIRE(node->Value.Name == TokenType::ANY);
+  REQUIRE(node->Value.Args.size() == 3);
 }
