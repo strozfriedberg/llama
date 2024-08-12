@@ -40,13 +40,6 @@ struct FileMetadataSection {
   std::vector<FileMetadataDef> Fields;
 };
 
-struct Rule {
-  std::string Name;
-  MetaSection Meta;
-  HashSection Hash;
-  SignatureSection Signature;
-};
-
 struct PatternDef {
   std::string Pattern;
   LG_KeyOptions Options = {0,0,0};
@@ -82,6 +75,15 @@ struct ConditionSection {
 struct GrepSection {
   PatternSection Patterns;
   ConditionSection Condition;
+};
+
+struct Rule {
+  std::string Name;
+  MetaSection Meta;
+  HashSection Hash;
+  SignatureSection Signature;
+  FileMetadataSection FileMetadata;
+  GrepSection Grep;
 };
 
 class LlamaParser {
@@ -470,10 +472,10 @@ void LlamaParser::parseRule(Rule& rule) {
     rule.Signature = parseSignatureSection();
   }
   if (checkAny(TokenType::FILE_METADATA)) {
-    parseFileMetadataSection();
+    rule.FileMetadata = parseFileMetadataSection();
   }
   if (checkAny(TokenType::GREP)) {
-    parseGrepSection();
+    rule.Grep = parseGrepSection();
   }
 
 }

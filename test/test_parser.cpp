@@ -454,6 +454,7 @@ TEST_CASE("startRule") {
   REQUIRE(rules.at(0).Name == "MyRule");
   REQUIRE(rules.at(0).Meta.Fields.find("description")->second == "test");
   REQUIRE(rules.at(1).Name == "AnotherRule");
+  REQUIRE(rules.at(1).Grep.Patterns.Patterns.find("c")->second.at(0).Pattern == "\\z34\\z56\\z78\\zab\\zcd\\zEF");
 }
 
 TEST_CASE("parseHexString") {
