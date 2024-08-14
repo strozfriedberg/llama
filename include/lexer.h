@@ -2,27 +2,10 @@
 #include <cstdint>
 #include <iostream>
 #include <regex>
-#include <string>
 #include <string_view>
-#include <unordered_map>
 #include <vector>
 
 #include "token.h"
-
-class UnexpectedInputError : public std::runtime_error {
-public:
-  UnexpectedInputError(const std::string& message, LineCol pos)
-  : std::runtime_error(message), Position(pos) {}
-
-  std::string messageWithPos() const {
-    std::string msg(what());
-    msg += " at ";
-    msg += Position.toString();
-    return msg;
-  }
-
-  LineCol Position;
-};
 
 class LlamaLexer {
 public:

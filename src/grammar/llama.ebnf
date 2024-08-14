@@ -2,15 +2,7 @@ start_rule          = rule_decl+ EOF;
 
 rule_decl           = RULE IDENTIFIER OPEN_BRACE rule CLOSE_BRACE;
 
-rule                = meta_section? rule_content;
-
-(* Rules can either have a grep section or one of the non-grep sections, but not both. *)
-rule_content        = grep_section
-                    | non_grep_section+;
-
-non_grep_section   = file_metadata_section
-                   | hash_section
-                   | signature_section;
+rule                = meta_section? hash_section? signature_section? file_metadata_section? grep_section?;
 
 meta_section        = META COLON pattern_def+;
 
@@ -43,23 +35,19 @@ expr                = term (OR term)*;
 term                = factor (AND factor)*;
 
 factor              = OPEN_PAREN expr CLOSE_PAREN
-                    | all_func_call
-                    | any_func_call
-                    | dual_func_call;
+                    | func_call;
 
-all_func_call       = ALL OPEN_PAREN CLOSE_PAREN;
+func_call           = func OPEN_PAREN (IDENTIFIER (COMMA IDENTIFIER)*)? CLOSE_PAREN;
 
-any_func_call       = ANY OPEN_PAREN IDENTIFIER (COMMA IDENTIFIER)* CLOSE_PAREN;
-
-dual_func_call      = dual_func OPEN_PAREN IDENTIFIER (COMMA NUMBER)? CLOSE_PAREN;
-
-dual_func           = OFFSET
+func                = OFFSET
                     | COUNT_HAS_HITS
                     | COUNT
                     | LENGTH;
 
 file_metadata       = CREATED
                     | MODIFIED
+                    | FILEPATH
+                    | FILENAME
                     ;
 
 literal             = IDENTIFIER 

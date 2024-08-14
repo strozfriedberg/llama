@@ -23,6 +23,7 @@ src_llama_common = \
 	src/lexer.cpp \
 	src/llama.cpp \
 	src/outputtar.cpp \
+	src/parser.cpp \
 	src/pooloutputhandler.cpp \
 	src/processor.cpp \
 	src/readseek_impl.cpp \
