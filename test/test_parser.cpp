@@ -138,6 +138,7 @@ TEST_CASE("parseHashSectionMultipleRecords") {
   LlamaParser parser(input, getTokensFromString(input));
   HashSection hashSection;
   REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
+  REQUIRE(hashSection.FileHashRecords.size() == 2);
   REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_MD5)->second == "test");
   REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_SHA_1)->second == "abcdef");
   REQUIRE(hashSection.FileHashRecords.at(1).find(SFHASH_MD5)->second == "test2");
