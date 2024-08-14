@@ -59,7 +59,7 @@ struct ConditionFunction {
 };
 
 enum class NodeType {
-  AND, OR, FUNC, VAL
+  AND, OR, FUNC
 };
 
 struct Node {
