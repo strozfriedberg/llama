@@ -133,6 +133,16 @@ TEST_CASE("parseHashSectionMultipleAlg") {
   REQUIRE(hashSection.FileHashRecords.at(1).find(SFHASH_SHA_1)->second == "abcdef");
 }
 
+TEST_CASE("parseHashSectionMultipleRecords") {
+  std::string input = "hash: md5 = \"test\", sha1 = \"abcdef\"\nmd5 = \"test2\"";
+  LlamaParser parser(input, getTokensFromString(input));
+  HashSection hashSection;
+  REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
+  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_MD5)->second == "test");
+  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_SHA_1)->second == "abcdef");
+  REQUIRE(hashSection.FileHashRecords.at(1).find(SFHASH_MD5)->second == "test2");
+}
+
 TEST_CASE("parseOperatorThrowsIfNotOperator") {
   std::string input = "notAnOperator";
   LlamaParser parser(input, getTokensFromString(input));
