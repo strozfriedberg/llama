@@ -173,33 +173,28 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
   return defs;
 }
 
-template <typename T>
-std::shared_ptr<Node<T>> LlamaParser::parseTerm() {
-  auto left = parseFactor<T>();
+std::shared_ptr<Node> LlamaParser::parseTerm() {
+  std::shared_ptr <Node> left = parseFactor();
 
   while (matchAny(TokenType::AND)) {
-    auto node = std::make_shared<Node<T>>();
+    std::shared_ptr<Node> node = std::make_shared<Node>();
     node->Type = NodeType::AND;
     node->Left = left;
-    node->Right = parseFactor<T>();
+    node->Right = parseFactor();
     left = node;
   }
   return left;
 }
 
-template <typename T>
-std::shared_ptr<Node<T>> LlamaParser::parseFactor() {
-  auto node = std::make_shared<Node<T>>();
+std::shared_ptr<Node> LlamaParser::parseFactor() {
+  std::shared_ptr<Node> node = std::make_shared<Node>();
   if (matchAny(TokenType::OPEN_PAREN)) {
-    parseExpr<T>();
+    parseExpr();
     mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
   }
-  else if (checkAny(TokenType::ALL, TokenType::ANY, TokenType::OFFSET, TokenType::COUNT, TokenType::COUNT_HAS_HITS, TokenType::LENGTH)) {
+  else {
     node->Type = NodeType::FUNC;
     node->Value = parseFuncCall();
-  }
-  else {
-    throw ParserError("Expected function call or signature", peek().Pos);
   }
   return node;
 }
@@ -224,15 +219,14 @@ ConditionFunction LlamaParser::parseFuncCall() {
   return func;
 }
 
-template <typename T>
-std::shared_ptr<Node<T>> LlamaParser::parseExpr() {
-  auto left = parseTerm<T>();
+std::shared_ptr<Node> LlamaParser::parseExpr() {
+  std::shared_ptr<Node> left = parseTerm();
 
   while (matchAny(TokenType::OR)) {
-    auto node = std::make_shared<Node<T>>();
+    std::shared_ptr<Node> node = std::make_shared<Node>();
     node->Type = NodeType::OR;
     node->Left = left;
-    node->Right = parseTerm<T>();
+    node->Right = parseTerm();
     left = node;
   }
   return left;
@@ -242,7 +236,7 @@ ConditionSection LlamaParser::parseConditionSection() {
   mustParse("Expected condition keyword", TokenType::CONDITION);
   mustParse("Expected colon after condition keyword", TokenType::COLON);
   ConditionSection conditionSection;
-  conditionSection.Tree = parseExpr<ConditionFunction>();
+  conditionSection.Tree = parseExpr();
   return conditionSection;
 }
 

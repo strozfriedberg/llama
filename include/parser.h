@@ -59,19 +59,18 @@ struct ConditionFunction {
 };
 
 enum class NodeType {
-  AND, OR, FUNC, SIG
+  AND, OR, FUNC
 };
 
-template <typename T>
 struct Node {
-  T Value;
+  ConditionFunction Value;
   NodeType Type;
   std::shared_ptr<Node> Left;
   std::shared_ptr<Node> Right;
 };
 
 struct ConditionSection {
-  std::shared_ptr<Node<ConditionFunction>> Tree;
+  std::shared_ptr<Node> Tree;
 };
 
 struct GrepSection {
@@ -118,16 +117,9 @@ public:
   std::string parseNumber();
   std::vector<PatternDef> parseHexString();
   ConditionFunction parseFuncCall();
-
-  template <typename T>
-  std::shared_ptr<Node<T>> parseFactor();
-
-  template <typename T>
-  std::shared_ptr<Node<T>> parseTerm();
-
-  template <typename T>
-  std::shared_ptr<Node<T>> parseExpr();
-
+  std::shared_ptr<Node> parseFactor();
+  std::shared_ptr<Node> parseTerm();
+  std::shared_ptr<Node> parseExpr();
   ConditionSection parseConditionSection();
   SignatureSection parseSignatureSection();
   GrepSection parseGrepSection();
