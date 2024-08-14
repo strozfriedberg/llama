@@ -126,10 +126,8 @@ PatternSection LlamaParser::parsePatternsSection() {
   mustParse("Expected colon after patterns keyword", TokenType::COLON);
   PatternSection patternSection;
   while (matchAny(TokenType::IDENTIFIER)) {
-    patternSection.Patterns.insert(std::make_pair(
-      Input.substr(previous().Start, previous().length()),
-      parsePatternDef()
-    ));
+    std::string key = Input.substr(previous().Start, previous().length());
+    patternSection.Patterns.insert(std::make_pair(key, parsePatternDef()));
   }
   return patternSection;
 }
