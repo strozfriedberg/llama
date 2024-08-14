@@ -4,22 +4,27 @@ HashSection LlamaParser::parseHashSection() {
   mustParse("Expected hash keyword", TokenType::HASH);
   mustParse("Expected colon after hash keyword", TokenType::COLON);
   HashSection hashSection;
-  HashExpr hashExpr;
+  FileHashRecord rec;
   while (checkAny(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3)) {
-    hashExpr = parseHashExpr();
-    hashSection.HashAlgs |= hashExpr.Alg;
-    hashSection.Hashes.push_back(hashExpr);
+    rec = parseFileHashRecord();
+    hashSection.FileHashRecords.push_back(rec);
   }
   return hashSection;
 }
 
-HashExpr LlamaParser::parseHashExpr() {
-  HashExpr hashExpr;
-  hashExpr.Alg = parseHash();
+FileHashRecord LlamaParser::parseFileHashRecord() {
+  FileHashRecord record;
+  SFHASH_HashAlgorithm alg = parseHash();
   mustParse("Expected equal sign", TokenType::EQUAL);
   mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-  hashExpr.Val = Input.substr(previous().Start, previous().length());
-  return hashExpr;
+  record[alg] = Input.substr(previous().Start, previous().length());
+  while(matchAny(TokenType::COMMA)) {
+    alg = parseHash();
+    mustParse("Expected equal sign", TokenType::EQUAL);
+    mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
+    record[alg] = Input.substr(previous().Start, previous().length());
+  }
+  return record;
 }
 
 SFHASH_HashAlgorithm LlamaParser::parseHash() {

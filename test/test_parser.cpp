@@ -106,27 +106,6 @@ TEST_CASE("parseHashDoesNotThrowIfHash") {
   REQUIRE(hash == SFHASH_MD5);
 }
 
-TEST_CASE("parseHashExprThrowsIfNotEqual") {
-  std::string input = "md5 notEqual";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_THROWS_AS(parser.parseHashExpr(), ParserError);
-}
-
-TEST_CASE("parseHashExprThrowsIfNotDoubleQuotedString") {
-  std::string input = "md5 = notDoubleQuotedString";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_THROWS_AS(parser.parseHashExpr(), ParserError);
-}
-
-TEST_CASE("parseHashExprDoesNotThrowIfEqualAndDoubleQuotedString") {
-  std::string input = "md5 = \"test\"";
-  LlamaParser parser(input, getTokensFromString(input));
-  HashExpr expr;
-  REQUIRE_NOTHROW(expr = parser.parseHashExpr());
-  REQUIRE(expr.Alg == SFHASH_MD5);
-  REQUIRE(expr.Val == "test");
-}
-
 TEST_CASE("parseHashSectionThrowsIfNotHash") {
   std::string input = "notAHash";
   LlamaParser parser(input, getTokensFromString(input));
@@ -150,11 +129,8 @@ TEST_CASE("parseHashSectionMultipleAlg") {
   LlamaParser parser(input, getTokensFromString(input));
   HashSection hashSection;
   REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
-  REQUIRE(hashSection.Hashes.at(0).Alg == SFHASH_MD5);
-  REQUIRE(hashSection.Hashes.at(0).Val == "test");
-  REQUIRE(hashSection.Hashes.at(1).Alg == SFHASH_SHA_1);
-  REQUIRE(hashSection.Hashes.at(1).Val == "abcdef");
-  REQUIRE(hashSection.HashAlgs == (SFHASH_MD5 | SFHASH_SHA_1));
+  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_MD5)->second == "test");
+  REQUIRE(hashSection.FileHashRecords.at(1).find(SFHASH_SHA_1)->second == "abcdef");
 }
 
 TEST_CASE("parseOperatorThrowsIfNotOperator") {
@@ -376,7 +352,7 @@ TEST_CASE("parseRuleDecl") {
   LlamaParser parser(input, getTokensFromString(input));
   Rule rule;
   REQUIRE_NOTHROW(rule = parser.parseRuleDecl());
-  REQUIRE(rule.Hash.Hashes.size() == 1);
+  REQUIRE(rule.Hash.FileHashRecords.size() == 1);
   REQUIRE(rule.Signature.Signatures.size() == 1);
 }
 
@@ -523,4 +499,13 @@ TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
   REQUIRE(node->Type == NodeType::FUNC);
   REQUIRE(node->Value.Name == TokenType::ANY);
   REQUIRE(node->Value.Args.size() == 3);
+}
+
+TEST_CASE("parseFileHashRecord") {
+  std::string input = "md5 = \"test\", sha1 = \"test2\"";
+  LlamaParser parser(input, getTokensFromString(input));
+  FileHashRecord rec;
+  REQUIRE_NOTHROW(rec = parser.parseFileHashRecord());
+  REQUIRE(rec.find(SFHASH_MD5)->second == "test");
+  REQUIRE(rec.find(SFHASH_SHA_1)->second == "test2");
 }

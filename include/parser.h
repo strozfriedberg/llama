@@ -17,13 +17,10 @@ struct MetaSection {
   std::unordered_map<std::string, std::string> Fields;
 };
 
-struct HashExpr {
-  SFHASH_HashAlgorithm Alg;
-  std::string Val;
-};
+using FileHashRecord = std::unordered_map<SFHASH_HashAlgorithm, std::string>;
 
 struct HashSection {
-  std::vector<HashExpr> Hashes;
+  std::vector<FileHashRecord> FileHashRecords;
   uint64_t HashAlgs = 0;
 };
 
@@ -107,8 +104,8 @@ public:
   void mustParse(const std::string& errMsg, TokenTypes... types);
 
   HashSection parseHashSection();
-  HashExpr parseHashExpr();
   SFHASH_HashAlgorithm parseHash();
+  FileHashRecord parseFileHashRecord();
   TokenType parseOperator();
   std::vector<PatternDef> parsePatternMod();
   std::vector<int> parseEncodings();
