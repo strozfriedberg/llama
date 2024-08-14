@@ -141,6 +141,7 @@ TEST_CASE("parseHashSectionMultipleRecords") {
   REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_MD5)->second == "test");
   REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_SHA_1)->second == "abcdef");
   REQUIRE(hashSection.FileHashRecords.at(1).find(SFHASH_MD5)->second == "test2");
+  REQUIRE(hashSection.HashAlgs == (SFHASH_MD5 | SFHASH_SHA_1));
 }
 
 TEST_CASE("parseOperatorThrowsIfNotOperator") {

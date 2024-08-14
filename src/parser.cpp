@@ -7,6 +7,9 @@ HashSection LlamaParser::parseHashSection() {
   FileHashRecord rec;
   while (checkAny(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3)) {
     rec = parseFileHashRecord();
+    for (const auto& key : rec) {
+      hashSection.HashAlgs |= key.first;
+    }
     hashSection.FileHashRecords.push_back(rec);
   }
   return hashSection;
