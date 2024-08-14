@@ -519,3 +519,9 @@ TEST_CASE("parseFileHashRecord") {
   REQUIRE(rec.find(SFHASH_MD5)->second == "test");
   REQUIRE(rec.find(SFHASH_SHA_1)->second == "test2");
 }
+
+TEST_CASE("parseFileHashRecordThrowsIfDuplicateHashType") {
+  std::string input = "md5 = \"test\", md5 = \"test2\"";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseFileHashRecord(), ParserError);
+}

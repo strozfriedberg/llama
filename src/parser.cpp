@@ -22,6 +22,9 @@ FileHashRecord LlamaParser::parseFileHashRecord() {
     alg = parseHash();
     mustParse("Expected equal sign", TokenType::EQUAL);
     mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
+    if (record.find(alg) != record.end()) {
+      throw ParserError("Duplicate hash type", previous().Pos);
+    }
     record[alg] = Input.substr(previous().Start, previous().length());
   }
   return record;
