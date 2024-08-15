@@ -6,7 +6,6 @@
 
 #include <memory>
 #include <unordered_map>
-#include <variant>
 #include <vector>
 
 class ParserError : public UnexpectedInputError {
@@ -76,13 +75,6 @@ struct SigDefNode : public AbstractNode {
 
 struct FuncNode : public AbstractNode {
   ConditionFunction Value;
-};
-
-struct Node {
-  std::variant<ConditionFunction, SignatureDef> Value;
-  NodeType Type;
-  std::shared_ptr<Node> Left;
-  std::shared_ptr<Node> Right;
 };
 
 struct ConditionSection {
