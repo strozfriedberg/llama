@@ -37,20 +37,17 @@ SFHASH_HashAlgorithm LlamaParser::parseHash() {
   mustParse(
     "Expected hash type", TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3
   );
-  if (previous().Type == TokenType::MD5) {
-    return SFHASH_MD5;
-  }
-  else if (previous().Type == TokenType::SHA1) {
-    return SFHASH_SHA_1;
-  }
-  else if (previous().Type == TokenType::SHA256) {
-    return SFHASH_SHA_2_256;
-  }
-  else if (previous().Type == TokenType::BLAKE3) {
-    return SFHASH_BLAKE3;
-  }
-  else {
-    throw ParserError("Invalid hash type", previous().Pos);
+  switch(previous().Type) {
+    case TokenType::MD5:
+      return SFHASH_MD5;
+    case TokenType::SHA1:
+      return SFHASH_SHA_1;
+    case TokenType::SHA256:
+      return SFHASH_SHA_2_256;
+    case TokenType::BLAKE3:
+      return SFHASH_BLAKE3;
+    default:
+      throw ParserError("Invalid hash type", previous().Pos);
   }
 }
 
