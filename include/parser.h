@@ -70,10 +70,12 @@ struct Node {
 };
 
 struct SigDefNode : public Node {
+  SigDefNode() { Type = NodeType::SIG; }
   SignatureDef Value;
 };
 
 struct FuncNode : public Node {
+  FuncNode() { Type = NodeType::FUNC; }
   ConditionFunction Value;
 };
 

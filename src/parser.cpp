@@ -208,13 +208,11 @@ std::shared_ptr<Node> LlamaParser::parseFactor() {
   }
   else if (checkAny(TokenType::ANY, TokenType::ALL, TokenType::OFFSET, TokenType::COUNT, TokenType::COUNT_HAS_HITS, TokenType::LENGTH)) {
     auto funcNode = std::make_shared<FuncNode>();
-    funcNode->Type = NodeType::FUNC;
     funcNode->Value = parseFuncCall();
     node = funcNode;
   }
   else if (checkAny(TokenType::EXTENSION, TokenType::ID)) {
     auto sigDefNode = std::make_shared<SigDefNode>();
-    sigDefNode->Type = NodeType::SIG;
     sigDefNode->Value = parseSignatureDef();
     node = sigDefNode;
   }
