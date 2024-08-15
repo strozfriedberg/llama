@@ -46,8 +46,11 @@ SFHASH_HashAlgorithm LlamaParser::parseHash() {
   else if (previous().Type == TokenType::SHA256) {
     return SFHASH_SHA_2_256;
   }
-  else {
+  else if (previous().Type == TokenType::BLAKE3) {
     return SFHASH_BLAKE3;
+  }
+  else {
+    throw ParserError("Invalid hash type", previous().Pos);
   }
 }
 
