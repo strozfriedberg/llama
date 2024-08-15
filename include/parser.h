@@ -103,6 +103,8 @@ public:
   template <class... TokenTypes>
   void mustParse(const std::string& errMsg, TokenTypes... types);
 
+  void validateConditionFunc(const ConditionFunction& func);
+
   HashSection parseHashSection();
   SFHASH_HashAlgorithm parseHash();
   FileHashRecord parseFileHashRecord();

@@ -1,5 +1,44 @@
 #include "parser.h"
 
+void LlamaParser::validateConditionFunc(const ConditionFunction& func) {
+  if (func.Name == TokenType::ALL) {
+    if (func.Args.size() > 0) {
+      throw ParserError("Expected no arguments for all function", peek().Pos);
+    }
+  }
+  if (func.Name == TokenType::ANY) {
+    if (func.Args.size() < 2) {
+      throw ParserError("Expected at least two arguments", peek().Pos);
+    }
+    if (func.Operator != TokenType::NONE || !func.Value.empty()) {
+      throw ParserError("Unexpected operator or value for comparison", peek().Pos);
+    }
+  }
+  else if (func.Name == TokenType::OFFSET) {
+    if (func.Args.size() < 1 || func.Args.size() > 2) {
+      throw ParserError("Expected one or two arguments for offset function", peek().Pos);
+    }
+  }
+  else if (func.Name == TokenType::COUNT) {
+    if (func.Args.size() != 1) {
+      throw ParserError("Expected one argument for count", peek().Pos);
+    }
+  }
+  else if (func.Name == TokenType::COUNT_HAS_HITS) {
+    if (func.Args.size() < 1)  {
+      throw ParserError("Expected one or two arguments for count_has_hits function", peek().Pos);
+    }
+    if (func.Operator == TokenType::NONE || func.Value.empty()) {
+      throw ParserError("Expected operator and value for comparison", peek().Pos);
+    }
+  }
+  else if (func.Name == TokenType::LENGTH) {
+    if (func.Args.size() != 1) {
+      throw ParserError("Expected one argument", peek().Pos);
+    }
+  }
+}
+
 HashSection LlamaParser::parseHashSection() {
   mustParse("Expected hash keyword", TokenType::HASH);
   mustParse("Expected colon after hash keyword", TokenType::COLON);
