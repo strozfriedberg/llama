@@ -192,9 +192,16 @@ std::shared_ptr<Node> LlamaParser::parseFactor() {
     parseExpr();
     mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
   }
-  else {
+  else if (checkAny(TokenType::ANY, TokenType::ALL, TokenType::OFFSET, TokenType::COUNT, TokenType::COUNT_HAS_HITS, TokenType::LENGTH)) {
     node->Type = NodeType::FUNC;
     node->Value = parseFuncCall();
+  }
+  else if (checkAny(TokenType::EXTENSION, TokenType::ID)) {
+    node->Type = NodeType::SIG;
+    node->Value = parseSignatureDef();
+  }
+  else {
+    throw ParserError("Expected function call or signature definition", peek().Pos);
   }
   return node;
 }
@@ -244,12 +251,18 @@ SignatureSection LlamaParser::parseSignatureSection() {
   SignatureSection signatureSection;
   mustParse("Expected signature keyword", TokenType::SIGNATURE);
   mustParse("Expected colon after signature keyword", TokenType::COLON);
-  mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-  signatureSection.Signatures.push_back(Input.substr(previous().Start, previous().length()));
-  while (matchAny(TokenType::DOUBLE_QUOTED_STRING)) {
-    signatureSection.Signatures.push_back(Input.substr(previous().Start, previous().length()));
-  }
+  signatureSection.Tree = parseExpr();
   return signatureSection;
+}
+
+SignatureDef LlamaParser::parseSignatureDef() {
+  SignatureDef def;
+  mustParse("Expected extension or id keyword", TokenType::EXTENSION, TokenType::ID);
+  def.Attr = previous().Type;
+  mustParse("Expected equality operator sign", TokenType::EQUAL_EQUAL);
+  mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
+  def.Val = Input.substr(previous().Start, previous().length());
+  return def;
 }
 
 GrepSection LlamaParser::parseGrepSection() {

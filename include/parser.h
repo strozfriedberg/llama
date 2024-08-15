@@ -27,9 +27,11 @@ struct HashSection {
   uint64_t HashAlgs = 0;
 };
 
-struct SignatureSection {
-  std::vector<std::string> Signatures;
+struct SignatureDef {
+  TokenType Attr;
+  std::string Val;
 };
+
 
 struct FileMetadataDef {
   TokenType Property;
@@ -59,17 +61,21 @@ struct ConditionFunction {
 };
 
 enum class NodeType {
-  AND, OR, FUNC
+  AND, OR, FUNC, SIG
 };
 
 struct Node {
-  ConditionFunction Value;
+  std::variant<ConditionFunction, SignatureDef> Value;
   NodeType Type;
   std::shared_ptr<Node> Left;
   std::shared_ptr<Node> Right;
 };
 
 struct ConditionSection {
+  std::shared_ptr<Node> Tree;
+};
+
+struct SignatureSection {
   std::shared_ptr<Node> Tree;
 };
 
@@ -122,6 +128,7 @@ public:
   std::shared_ptr<Node> parseExpr();
   ConditionSection parseConditionSection();
   SignatureSection parseSignatureSection();
+  SignatureDef parseSignatureDef();
   GrepSection parseGrepSection();
   FileMetadataDef parseFileMetadataDef();
   FileMetadataSection parseFileMetadataSection();

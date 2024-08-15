@@ -247,13 +247,13 @@ TEST_CASE("parsePatternsSectionDoesNotThrowIfPatterns") {
 TEST_CASE("parseTermWithAnd") {
   std::string input = "any(s1, s2, s3) and count(s1, 5) == 5";
   LlamaParser parser(input, getTokensFromString(input));
-  std::shared_ptr<Node> node;
+  auto node = std::make_shared<Node>();
   REQUIRE_NOTHROW(node = parser.parseTerm());
   REQUIRE(node->Type == NodeType::AND);
   REQUIRE(node->Left->Type == NodeType::FUNC);
-  REQUIRE(node->Left->Value.Name == TokenType::ANY);
+  REQUIRE(std::get<ConditionFunction>(node->Left->Value).Name == TokenType::ANY);
   REQUIRE(node->Right->Type == NodeType::FUNC);
-  REQUIRE(node->Right->Value.Name == TokenType::COUNT);
+  REQUIRE(std::get<ConditionFunction>(node->Right->Value).Name == TokenType::COUNT);
 }
 
 TEST_CASE("parseTermWithoutAnd") {
@@ -282,13 +282,17 @@ TEST_CASE("parseConditionSection") {
 }
 
 TEST_CASE("parseSignatureSection") {
-  std::string input = "signature:\n \"EXE\"\n\"MUI\"";
+  std::string input = "signature:\n extension == \"EXE\" or id == \"123456789\"";
   LlamaParser parser(input, getTokensFromString(input));
   SignatureSection section;
   REQUIRE_NOTHROW(section = parser.parseSignatureSection());
-  REQUIRE(section.Signatures.size() == 2);
-  REQUIRE(section.Signatures.at(0) == "EXE");
-  REQUIRE(section.Signatures.at(1) == "MUI");
+  REQUIRE(section.Tree->Type == NodeType::OR);
+  REQUIRE(section.Tree->Left->Type == NodeType::SIG);
+  REQUIRE(std::get<SignatureDef>(section.Tree->Left->Value).Attr == TokenType::EXTENSION);
+  REQUIRE(std::get<SignatureDef>(section.Tree->Left->Value).Val == "EXE");
+  REQUIRE(section.Tree->Right->Type == NodeType::SIG);
+  REQUIRE(std::get<SignatureDef>(section.Tree->Right->Value).Attr == TokenType::ID);
+  REQUIRE(std::get<SignatureDef>(section.Tree->Right->Value).Val == "123456789");
 }
 
 TEST_CASE("parseGrepSection") {
@@ -366,7 +370,7 @@ TEST_CASE("parseRuleDecl") {
     hash:
       md5 = "abcdef"
     signature:
-      "EXE"
+      extension == "exe"
     file_metadata:
       created > "2023-05-04"
       modified < "2023-05-06"
@@ -377,7 +381,8 @@ TEST_CASE("parseRuleDecl") {
   Rule rule;
   REQUIRE_NOTHROW(rule = parser.parseRuleDecl());
   REQUIRE(rule.Hash.Hashes.size() == 1);
-  REQUIRE(rule.Signature.Signatures.size() == 1);
+  REQUIRE(std::get<SignatureDef>(rule.Signature.Tree->Value).Attr == TokenType::EXTENSION);
+  REQUIRE(std::get<SignatureDef>(rule.Signature.Tree->Value).Val == "exe");
 }
 
 TEST_CASE("parseRuleDeclThrowsIfSectionsAreOutOfOrder") {
@@ -402,7 +407,7 @@ TEST_CASE("startRule") {
     meta:
       description = "test"
     signature:
-      "EXE"
+      extension == "exe"
   }
   rule AnotherRule {
     meta:
@@ -518,9 +523,9 @@ TEST_CASE("parseFuncCallWithOperator") {
 TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
   std::string input = "any(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
-  std::shared_ptr<Node> node;
+  auto node = std::make_shared<Node>();
   REQUIRE_NOTHROW(node = parser.parseFactor());
   REQUIRE(node->Type == NodeType::FUNC);
-  REQUIRE(node->Value.Name == TokenType::ANY);
-  REQUIRE(node->Value.Args.size() == 3);
+  REQUIRE(std::get<ConditionFunction>(node->Value).Name == TokenType::ANY);
+  REQUIRE(std::get<ConditionFunction>(node->Value).Args.size() == 3);
 }
