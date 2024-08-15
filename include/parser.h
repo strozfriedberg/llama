@@ -81,10 +81,6 @@ struct ConditionSection {
   std::shared_ptr<Node> Tree;
 };
 
-struct SignatureSection {
-  std::shared_ptr<Node> Tree;
-};
-
 struct GrepSection {
   PatternSection Patterns;
   ConditionSection Condition;
@@ -94,7 +90,7 @@ struct Rule {
   std::string Name;
   MetaSection Meta;
   HashSection Hash;
-  SignatureSection Signature;
+  std::shared_ptr<Node> Signature;
   FileMetadataSection FileMetadata;
   GrepSection Grep;
 };
@@ -133,7 +129,7 @@ public:
   std::shared_ptr<Node> parseTerm();
   std::shared_ptr<Node> parseExpr();
   ConditionSection parseConditionSection();
-  SignatureSection parseSignatureSection();
+  std::shared_ptr<Node> parseSignatureSection();
   SignatureDef parseSignatureDef();
   GrepSection parseGrepSection();
   FileMetadataDef parseFileMetadataDef();

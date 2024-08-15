@@ -294,15 +294,15 @@ TEST_CASE("parseConditionSection") {
 TEST_CASE("parseSignatureSection") {
   std::string input = "signature:\n extension == \"EXE\" or id == \"123456789\"";
   LlamaParser parser(input, getTokensFromString(input));
-  SignatureSection section;
-  REQUIRE_NOTHROW(section = parser.parseSignatureSection());
-  REQUIRE(section.Tree->Type == NodeType::OR);
-  auto sigDefNodeLeft = std::static_pointer_cast<SigDefNode>(section.Tree->Left);
-  REQUIRE(section.Tree->Left->Type == NodeType::SIG);
+  std::shared_ptr<Node> node;
+  REQUIRE_NOTHROW(node = parser.parseSignatureSection());
+  REQUIRE(node->Type == NodeType::OR);
+  auto sigDefNodeLeft = std::static_pointer_cast<SigDefNode>(node->Left);
+  REQUIRE(node->Left->Type == NodeType::SIG);
   REQUIRE(sigDefNodeLeft->Value.Attr == TokenType::EXTENSION);
   REQUIRE(sigDefNodeLeft->Value.Val == "EXE");
-  auto sigDefNodeRight = std::static_pointer_cast<SigDefNode>(section.Tree->Right);
-  REQUIRE(section.Tree->Right->Type == NodeType::SIG);
+  auto sigDefNodeRight = std::static_pointer_cast<SigDefNode>(node->Right);
+  REQUIRE(node->Right->Type == NodeType::SIG);
   REQUIRE(sigDefNodeRight->Value.Attr == TokenType::ID);
   REQUIRE(sigDefNodeRight->Value.Val == "123456789");
 }
@@ -393,7 +393,7 @@ TEST_CASE("parseRuleDecl") {
   Rule rule;
   REQUIRE_NOTHROW(rule = parser.parseRuleDecl());
   REQUIRE(rule.Hash.FileHashRecords.size() == 1);
-  auto root = std::static_pointer_cast<SigDefNode>(rule.Signature.Tree);
+  auto root = std::static_pointer_cast<SigDefNode>(rule.Signature);
   REQUIRE(root->Value.Attr == TokenType::EXTENSION);
   REQUIRE(root->Value.Val == "exe");
 }

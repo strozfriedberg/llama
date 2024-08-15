@@ -265,12 +265,10 @@ ConditionSection LlamaParser::parseConditionSection() {
   return conditionSection;
 }
 
-SignatureSection LlamaParser::parseSignatureSection() {
-  SignatureSection signatureSection;
+std::shared_ptr<Node> LlamaParser::parseSignatureSection() {
   mustParse("Expected signature keyword", TokenType::SIGNATURE);
   mustParse("Expected colon after signature keyword", TokenType::COLON);
-  signatureSection.Tree = parseExpr();
-  return signatureSection;
+  return parseExpr();
 }
 
 SignatureDef LlamaParser::parseSignatureDef() {
