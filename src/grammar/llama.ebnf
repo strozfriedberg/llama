@@ -14,9 +14,9 @@ signature_section   = SIGNATURE COLON DOUBLE_QUOTED_STRING+;
 
 hash_section        = HASH COLON hash_expr+;
 
-hash_expr           = hash EQUAL DOUBLE_QUOTED_STRING;
+file_hash_record    = hash EQUAL_EQUAL DOUBLE_QUOTED_STRING (COMMA hash EQUAL_EQUAL DOUBLE_QUOTED_STRING)*;
 
-patterns_section     = PATTERNS COLON pattern_def+;
+patterns_section    = PATTERNS COLON pattern_def+;
 
 condition_section   = CONDITION COLON expr+;
 
