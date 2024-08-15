@@ -187,11 +187,11 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
   return defs;
 }
 
-std::shared_ptr<AbstractNode> LlamaParser::parseTerm() {
-  std::shared_ptr <AbstractNode> left = parseFactor();
+std::shared_ptr<Node> LlamaParser::parseTerm() {
+  std::shared_ptr <Node> left = parseFactor();
 
   while (matchAny(TokenType::AND)) {
-    std::shared_ptr<AbstractNode> node = std::make_shared<AbstractNode>();
+    std::shared_ptr<Node> node = std::make_shared<Node>();
     node->Type = NodeType::AND;
     node->Left = left;
     node->Right = parseFactor();
@@ -200,8 +200,8 @@ std::shared_ptr<AbstractNode> LlamaParser::parseTerm() {
   return left;
 }
 
-std::shared_ptr<AbstractNode> LlamaParser::parseFactor() {
-  std::shared_ptr<AbstractNode> node;
+std::shared_ptr<Node> LlamaParser::parseFactor() {
+  std::shared_ptr<Node> node;
   if (matchAny(TokenType::OPEN_PAREN)) {
     node = parseExpr();
     mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
@@ -244,11 +244,11 @@ ConditionFunction LlamaParser::parseFuncCall() {
   return func;
 }
 
-std::shared_ptr<AbstractNode> LlamaParser::parseExpr() {
-  std::shared_ptr<AbstractNode> left = parseTerm();
+std::shared_ptr<Node> LlamaParser::parseExpr() {
+  std::shared_ptr<Node> left = parseTerm();
 
   while (matchAny(TokenType::OR)) {
-    std::shared_ptr<AbstractNode> node = std::make_shared<AbstractNode>();
+    std::shared_ptr<Node> node = std::make_shared<Node>();
     node->Type = NodeType::OR;
     node->Left = left;
     node->Right = parseTerm();

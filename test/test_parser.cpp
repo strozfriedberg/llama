@@ -253,7 +253,7 @@ TEST_CASE("parsePatternsSectionDoesNotThrowIfPatterns") {
 TEST_CASE("parseTermWithAnd") {
   std::string input = "any(s1, s2, s3) and count(s1, 5) == 5";
   LlamaParser parser(input, getTokensFromString(input));
-  auto node = std::make_shared<AbstractNode>();
+  auto node = std::make_shared<Node>();
   REQUIRE_NOTHROW(node = parser.parseTerm());
   REQUIRE(node->Type == NodeType::AND);
   auto left = std::static_pointer_cast<FuncNode>(node->Left);
@@ -273,7 +273,7 @@ TEST_CASE("parseTermWithoutAnd") {
 TEST_CASE("parseExpr") {
   std::string input = "(any(s1, s2, s3) and count(s1, 5) == 5) or all(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
-  auto node = std::make_shared<AbstractNode>();
+  auto node = std::make_shared<Node>();
   REQUIRE_NOTHROW(node = parser.parseExpr());
   REQUIRE(node->Type == NodeType::OR);
   REQUIRE(node->Left);
@@ -536,7 +536,7 @@ TEST_CASE("parseFuncCallWithOperator") {
 TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
   std::string input = "any(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
-  auto node = std::make_shared<AbstractNode>();
+  auto node = std::make_shared<Node>();
   REQUIRE_NOTHROW(node = parser.parseFactor());
   REQUIRE(node->Type == NodeType::FUNC);
   auto root = std::static_pointer_cast<FuncNode>(node);

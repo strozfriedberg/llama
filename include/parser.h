@@ -61,28 +61,28 @@ enum class NodeType {
   AND, OR, FUNC, SIG
 };
 
-struct AbstractNode {
-  virtual ~AbstractNode() = default;
+struct Node {
+  virtual ~Node() = default;
 
   NodeType Type;
-  std::shared_ptr<AbstractNode> Left;
-  std::shared_ptr<AbstractNode> Right;
+  std::shared_ptr<Node> Left;
+  std::shared_ptr<Node> Right;
 };
 
-struct SigDefNode : public AbstractNode {
+struct SigDefNode : public Node {
   SignatureDef Value;
 };
 
-struct FuncNode : public AbstractNode {
+struct FuncNode : public Node {
   ConditionFunction Value;
 };
 
 struct ConditionSection {
-  std::shared_ptr<AbstractNode> Tree;
+  std::shared_ptr<Node> Tree;
 };
 
 struct SignatureSection {
-  std::shared_ptr<AbstractNode> Tree;
+  std::shared_ptr<Node> Tree;
 };
 
 struct GrepSection {
@@ -129,9 +129,9 @@ public:
   std::string parseNumber();
   std::vector<PatternDef> parseHexString();
   ConditionFunction parseFuncCall();
-  std::shared_ptr<AbstractNode> parseFactor();
-  std::shared_ptr<AbstractNode> parseTerm();
-  std::shared_ptr<AbstractNode> parseExpr();
+  std::shared_ptr<Node> parseFactor();
+  std::shared_ptr<Node> parseTerm();
+  std::shared_ptr<Node> parseExpr();
   ConditionSection parseConditionSection();
   SignatureSection parseSignatureSection();
   SignatureDef parseSignatureDef();
