@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 class ParserError : public UnexpectedInputError {
