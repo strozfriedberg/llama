@@ -4,22 +4,33 @@ HashSection LlamaParser::parseHashSection() {
   mustParse("Expected hash keyword", TokenType::HASH);
   mustParse("Expected colon after hash keyword", TokenType::COLON);
   HashSection hashSection;
-  HashExpr hashExpr;
+  FileHashRecord rec;
   while (checkAny(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3)) {
-    hashExpr = parseHashExpr();
-    hashSection.HashAlgs |= hashExpr.Alg;
-    hashSection.Hashes.push_back(hashExpr);
+    rec = parseFileHashRecord();
+    for (const auto& key : rec) {
+      hashSection.HashAlgs |= key.first;
+    }
+    hashSection.FileHashRecords.push_back(rec);
   }
   return hashSection;
 }
 
-HashExpr LlamaParser::parseHashExpr() {
-  HashExpr hashExpr;
-  hashExpr.Alg = parseHash();
-  mustParse("Expected equal sign", TokenType::EQUAL);
+FileHashRecord LlamaParser::parseFileHashRecord() {
+  FileHashRecord record;
+  SFHASH_HashAlgorithm alg = parseHash();
+  mustParse("Expected equality operator", TokenType::EQUAL_EQUAL);
   mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-  hashExpr.Val = Input.substr(previous().Start, previous().length());
-  return hashExpr;
+  record[alg] = Input.substr(previous().Start, previous().length());
+  while(matchAny(TokenType::COMMA)) {
+    alg = parseHash();
+    mustParse("Expected equality operator", TokenType::EQUAL_EQUAL);
+    mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
+    if (record.find(alg) != record.end()) {
+      throw ParserError("Duplicate hash type", previous().Pos);
+    }
+    record[alg] = Input.substr(previous().Start, previous().length());
+  }
+  return record;
 }
 
 SFHASH_HashAlgorithm LlamaParser::parseHash() {
@@ -35,8 +46,11 @@ SFHASH_HashAlgorithm LlamaParser::parseHash() {
   else if (previous().Type == TokenType::SHA256) {
     return SFHASH_SHA_2_256;
   }
-  else {
+  else if (previous().Type == TokenType::BLAKE3) {
     return SFHASH_BLAKE3;
+  }
+  else {
+    throw ParserError("Invalid hash type", previous().Pos);
   }
 }
 

@@ -106,25 +106,22 @@ TEST_CASE("parseHashDoesNotThrowIfHash") {
   REQUIRE(hash == SFHASH_MD5);
 }
 
-TEST_CASE("parseHashExprThrowsIfNotEqual") {
-  std::string input = "md5 notEqual";
+TEST_CASE("parseFileHashRecordThrowsIfNotEqualityOperator") {
+  std::string input = "md5 \"test\"";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_THROWS_AS(parser.parseHashExpr(), ParserError);
+  REQUIRE_THROWS_AS(parser.parseFileHashRecord(), ParserError);
 }
 
-TEST_CASE("parseHashExprThrowsIfNotDoubleQuotedString") {
-  std::string input = "md5 = notDoubleQuotedString";
+TEST_CASE("parseFileHashRecordThrowsIfNotString") {
+  std::string input = "md5 == 1234";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_THROWS_AS(parser.parseHashExpr(), ParserError);
+  REQUIRE_THROWS_AS(parser.parseFileHashRecord(), ParserError);
 }
 
-TEST_CASE("parseHashExprDoesNotThrowIfEqualAndDoubleQuotedString") {
-  std::string input = "md5 = \"test\"";
+TEST_CASE("parseFileHashRecordDoesNotThrowIfHashAndString") {
+  std::string input = "md5 == \"test\"";
   LlamaParser parser(input, getTokensFromString(input));
-  HashExpr expr;
-  REQUIRE_NOTHROW(expr = parser.parseHashExpr());
-  REQUIRE(expr.Alg == SFHASH_MD5);
-  REQUIRE(expr.Val == "test");
+  REQUIRE_NOTHROW(parser.parseFileHashRecord());
 }
 
 TEST_CASE("parseHashSectionThrowsIfNotHash") {
@@ -140,20 +137,29 @@ TEST_CASE("parseHashSectionThrowsIfNotColon") {
 }
 
 TEST_CASE("parseHashSectionDoesNotThrowIfHashAndColon") {
-  std::string input = "hash: md5 = \"test\"";
+  std::string input = "hash: md5 == \"test\"";
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseHashSection());
 }
 
 TEST_CASE("parseHashSectionMultipleAlg") {
-  std::string input = "hash: md5 = \"test\"\nsha1 = \"abcdef\"";
+  std::string input = "hash: md5 == \"test\"\nsha1 == \"abcdef\"";
   LlamaParser parser(input, getTokensFromString(input));
   HashSection hashSection;
   REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
-  REQUIRE(hashSection.Hashes.at(0).Alg == SFHASH_MD5);
-  REQUIRE(hashSection.Hashes.at(0).Val == "test");
-  REQUIRE(hashSection.Hashes.at(1).Alg == SFHASH_SHA_1);
-  REQUIRE(hashSection.Hashes.at(1).Val == "abcdef");
+  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_MD5)->second == "test");
+  REQUIRE(hashSection.FileHashRecords.at(1).find(SFHASH_SHA_1)->second == "abcdef");
+}
+
+TEST_CASE("parseHashSectionMultipleRecords") {
+  std::string input = "hash: md5 == \"test\", sha1 == \"abcdef\"\nmd5 == \"test2\"";
+  LlamaParser parser(input, getTokensFromString(input));
+  HashSection hashSection;
+  REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
+  REQUIRE(hashSection.FileHashRecords.size() == 2);
+  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_MD5)->second == "test");
+  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_SHA_1)->second == "abcdef");
+  REQUIRE(hashSection.FileHashRecords.at(1).find(SFHASH_MD5)->second == "test2");
   REQUIRE(hashSection.HashAlgs == (SFHASH_MD5 | SFHASH_SHA_1));
 }
 
@@ -374,7 +380,7 @@ TEST_CASE("parseRuleDecl") {
     meta:
       description = "test"
     hash:
-      md5 = "abcdef"
+      md5 == "abcdef"
     signature:
       extension == "exe"
     file_metadata:
@@ -386,7 +392,7 @@ TEST_CASE("parseRuleDecl") {
   LlamaParser parser(input, getTokensFromString(input));
   Rule rule;
   REQUIRE_NOTHROW(rule = parser.parseRuleDecl());
-  REQUIRE(rule.Hash.Hashes.size() == 1);
+  REQUIRE(rule.Hash.FileHashRecords.size() == 1);
   auto root = std::static_pointer_cast<SigDefNode>(rule.Signature.Tree);
   REQUIRE(root->Value.Attr == TokenType::EXTENSION);
   REQUIRE(root->Value.Val == "exe");
@@ -401,7 +407,7 @@ TEST_CASE("parseRuleDeclThrowsIfSectionsAreOutOfOrder") {
         b = "test2" encodings=UTF-8 nocase fixed
       condition:
         any(a, b) and offset(a, 5) == 5
-    hash: md5 = "test"
+    hash: md5 == "test"
   }
   )";
   LlamaParser parser(input, getTokensFromString(input));
@@ -536,4 +542,19 @@ TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
   auto root = std::static_pointer_cast<FuncNode>(node);
   REQUIRE(root->Value.Name == TokenType::ANY);
   REQUIRE(root->Value.Args.size() == 3);
+}
+
+TEST_CASE("parseFileHashRecord") {
+  std::string input = "md5 == \"test\", sha1 == \"test2\"";
+  LlamaParser parser(input, getTokensFromString(input));
+  FileHashRecord rec;
+  REQUIRE_NOTHROW(rec = parser.parseFileHashRecord());
+  REQUIRE(rec.find(SFHASH_MD5)->second == "test");
+  REQUIRE(rec.find(SFHASH_SHA_1)->second == "test2");
+}
+
+TEST_CASE("parseFileHashRecordThrowsIfDuplicateHashType") {
+  std::string input = "md5 == \"test\", md5 == \"test2\"";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseFileHashRecord(), ParserError);
 }
