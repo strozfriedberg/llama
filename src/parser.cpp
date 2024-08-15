@@ -173,11 +173,11 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
   return defs;
 }
 
-std::shared_ptr<Node> LlamaParser::parseTerm() {
-  std::shared_ptr <Node> left = parseFactor();
+std::shared_ptr<AbstractNode> LlamaParser::parseTerm() {
+  std::shared_ptr <AbstractNode> left = parseFactor();
 
   while (matchAny(TokenType::AND)) {
-    std::shared_ptr<Node> node = std::make_shared<Node>();
+    std::shared_ptr<AbstractNode> node = std::make_shared<AbstractNode>();
     node->Type = NodeType::AND;
     node->Left = left;
     node->Right = parseFactor();
@@ -186,19 +186,23 @@ std::shared_ptr<Node> LlamaParser::parseTerm() {
   return left;
 }
 
-std::shared_ptr<Node> LlamaParser::parseFactor() {
-  std::shared_ptr<Node> node = std::make_shared<Node>();
+std::shared_ptr<AbstractNode> LlamaParser::parseFactor() {
+  std::shared_ptr<AbstractNode> node;
   if (matchAny(TokenType::OPEN_PAREN)) {
-    parseExpr();
+    node = parseExpr();
     mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
   }
   else if (checkAny(TokenType::ANY, TokenType::ALL, TokenType::OFFSET, TokenType::COUNT, TokenType::COUNT_HAS_HITS, TokenType::LENGTH)) {
-    node->Type = NodeType::FUNC;
-    node->Value = parseFuncCall();
+    auto funcNode = std::make_shared<FuncNode>();
+    funcNode->Type = NodeType::FUNC;
+    funcNode->Value = parseFuncCall();
+    node = funcNode;
   }
   else if (checkAny(TokenType::EXTENSION, TokenType::ID)) {
-    node->Type = NodeType::SIG;
-    node->Value = parseSignatureDef();
+    auto sigDefNode = std::make_shared<SigDefNode>();
+    sigDefNode->Type = NodeType::SIG;
+    sigDefNode->Value = parseSignatureDef();
+    node = sigDefNode;
   }
   else {
     throw ParserError("Expected function call or signature definition", peek().Pos);
@@ -226,11 +230,11 @@ ConditionFunction LlamaParser::parseFuncCall() {
   return func;
 }
 
-std::shared_ptr<Node> LlamaParser::parseExpr() {
-  std::shared_ptr<Node> left = parseTerm();
+std::shared_ptr<AbstractNode> LlamaParser::parseExpr() {
+  std::shared_ptr<AbstractNode> left = parseTerm();
 
   while (matchAny(TokenType::OR)) {
-    std::shared_ptr<Node> node = std::make_shared<Node>();
+    std::shared_ptr<AbstractNode> node = std::make_shared<AbstractNode>();
     node->Type = NodeType::OR;
     node->Left = left;
     node->Right = parseTerm();

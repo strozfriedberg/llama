@@ -247,13 +247,15 @@ TEST_CASE("parsePatternsSectionDoesNotThrowIfPatterns") {
 TEST_CASE("parseTermWithAnd") {
   std::string input = "any(s1, s2, s3) and count(s1, 5) == 5";
   LlamaParser parser(input, getTokensFromString(input));
-  auto node = std::make_shared<Node>();
+  auto node = std::make_shared<AbstractNode>();
   REQUIRE_NOTHROW(node = parser.parseTerm());
   REQUIRE(node->Type == NodeType::AND);
+  auto left = std::static_pointer_cast<FuncNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::FUNC);
-  REQUIRE(std::get<ConditionFunction>(node->Left->Value).Name == TokenType::ANY);
+  REQUIRE(left->Value.Name == TokenType::ANY);
+  auto right = std::static_pointer_cast<FuncNode>(node->Right);
   REQUIRE(node->Right->Type == NodeType::FUNC);
-  REQUIRE(std::get<ConditionFunction>(node->Right->Value).Name == TokenType::COUNT);
+  REQUIRE(right->Value.Name == TokenType::COUNT);
 }
 
 TEST_CASE("parseTermWithoutAnd") {
@@ -265,10 +267,12 @@ TEST_CASE("parseTermWithoutAnd") {
 TEST_CASE("parseExpr") {
   std::string input = "(any(s1, s2, s3) and count(s1, 5) == 5) or all(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
-  auto node = std::make_shared<Node>();
+  auto node = std::make_shared<AbstractNode>();
   REQUIRE_NOTHROW(node = parser.parseExpr());
   REQUIRE(node->Type == NodeType::OR);
+  REQUIRE(node->Left);
   REQUIRE(node->Left->Type == NodeType::AND);
+  REQUIRE(node->Right);
   REQUIRE(node->Right->Type == NodeType::FUNC);
 }
 
@@ -287,12 +291,14 @@ TEST_CASE("parseSignatureSection") {
   SignatureSection section;
   REQUIRE_NOTHROW(section = parser.parseSignatureSection());
   REQUIRE(section.Tree->Type == NodeType::OR);
+  auto sigDefNodeLeft = std::static_pointer_cast<SigDefNode>(section.Tree->Left);
   REQUIRE(section.Tree->Left->Type == NodeType::SIG);
-  REQUIRE(std::get<SignatureDef>(section.Tree->Left->Value).Attr == TokenType::EXTENSION);
-  REQUIRE(std::get<SignatureDef>(section.Tree->Left->Value).Val == "EXE");
+  REQUIRE(sigDefNodeLeft->Value.Attr == TokenType::EXTENSION);
+  REQUIRE(sigDefNodeLeft->Value.Val == "EXE");
+  auto sigDefNodeRight = std::static_pointer_cast<SigDefNode>(section.Tree->Right);
   REQUIRE(section.Tree->Right->Type == NodeType::SIG);
-  REQUIRE(std::get<SignatureDef>(section.Tree->Right->Value).Attr == TokenType::ID);
-  REQUIRE(std::get<SignatureDef>(section.Tree->Right->Value).Val == "123456789");
+  REQUIRE(sigDefNodeRight->Value.Attr == TokenType::ID);
+  REQUIRE(sigDefNodeRight->Value.Val == "123456789");
 }
 
 TEST_CASE("parseGrepSection") {
@@ -381,8 +387,9 @@ TEST_CASE("parseRuleDecl") {
   Rule rule;
   REQUIRE_NOTHROW(rule = parser.parseRuleDecl());
   REQUIRE(rule.Hash.Hashes.size() == 1);
-  REQUIRE(std::get<SignatureDef>(rule.Signature.Tree->Value).Attr == TokenType::EXTENSION);
-  REQUIRE(std::get<SignatureDef>(rule.Signature.Tree->Value).Val == "exe");
+  auto root = std::static_pointer_cast<SigDefNode>(rule.Signature.Tree);
+  REQUIRE(root->Value.Attr == TokenType::EXTENSION);
+  REQUIRE(root->Value.Val == "exe");
 }
 
 TEST_CASE("parseRuleDeclThrowsIfSectionsAreOutOfOrder") {
@@ -523,9 +530,10 @@ TEST_CASE("parseFuncCallWithOperator") {
 TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
   std::string input = "any(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
-  auto node = std::make_shared<Node>();
+  auto node = std::make_shared<AbstractNode>();
   REQUIRE_NOTHROW(node = parser.parseFactor());
   REQUIRE(node->Type == NodeType::FUNC);
-  REQUIRE(std::get<ConditionFunction>(node->Value).Name == TokenType::ANY);
-  REQUIRE(std::get<ConditionFunction>(node->Value).Args.size() == 3);
+  auto root = std::static_pointer_cast<FuncNode>(node);
+  REQUIRE(root->Value.Name == TokenType::ANY);
+  REQUIRE(root->Value.Args.size() == 3);
 }
