@@ -18,12 +18,12 @@ HashSection LlamaParser::parseHashSection() {
 FileHashRecord LlamaParser::parseFileHashRecord() {
   FileHashRecord record;
   SFHASH_HashAlgorithm alg = parseHash();
-  mustParse("Expected equal sign", TokenType::EQUAL);
+  mustParse("Expected equality operator", TokenType::EQUAL_EQUAL);
   mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
   record[alg] = Input.substr(previous().Start, previous().length());
   while(matchAny(TokenType::COMMA)) {
     alg = parseHash();
-    mustParse("Expected equal sign", TokenType::EQUAL);
+    mustParse("Expected equality operator", TokenType::EQUAL_EQUAL);
     mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
     if (record.find(alg) != record.end()) {
       throw ParserError("Duplicate hash type", previous().Pos);

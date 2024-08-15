@@ -106,6 +106,24 @@ TEST_CASE("parseHashDoesNotThrowIfHash") {
   REQUIRE(hash == SFHASH_MD5);
 }
 
+TEST_CASE("parseFileHashRecordThrowsIfNotEqualityOperator") {
+  std::string input = "md5 \"test\"";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseFileHashRecord(), ParserError);
+}
+
+TEST_CASE("parseFileHashRecordThrowsIfNotString") {
+  std::string input = "md5 == 1234";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE_THROWS_AS(parser.parseFileHashRecord(), ParserError);
+}
+
+TEST_CASE("parseFileHashRecordDoesNotThrowIfHashAndString") {
+  std::string input = "md5 == \"test\"";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE_NOTHROW(parser.parseFileHashRecord());
+}
+
 TEST_CASE("parseHashSectionThrowsIfNotHash") {
   std::string input = "notAHash";
   LlamaParser parser(input, getTokensFromString(input));
@@ -119,13 +137,13 @@ TEST_CASE("parseHashSectionThrowsIfNotColon") {
 }
 
 TEST_CASE("parseHashSectionDoesNotThrowIfHashAndColon") {
-  std::string input = "hash: md5 = \"test\"";
+  std::string input = "hash: md5 == \"test\"";
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseHashSection());
 }
 
 TEST_CASE("parseHashSectionMultipleAlg") {
-  std::string input = "hash: md5 = \"test\"\nsha1 = \"abcdef\"";
+  std::string input = "hash: md5 == \"test\"\nsha1 == \"abcdef\"";
   LlamaParser parser(input, getTokensFromString(input));
   HashSection hashSection;
   REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
@@ -134,7 +152,7 @@ TEST_CASE("parseHashSectionMultipleAlg") {
 }
 
 TEST_CASE("parseHashSectionMultipleRecords") {
-  std::string input = "hash: md5 = \"test\", sha1 = \"abcdef\"\nmd5 = \"test2\"";
+  std::string input = "hash: md5 == \"test\", sha1 == \"abcdef\"\nmd5 == \"test2\"";
   LlamaParser parser(input, getTokensFromString(input));
   HashSection hashSection;
   REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
@@ -352,7 +370,7 @@ TEST_CASE("parseRuleDecl") {
     meta:
       description = "test"
     hash:
-      md5 = "abcdef"
+      md5 == "abcdef"
     signature:
       "EXE"
     file_metadata:
@@ -377,7 +395,7 @@ TEST_CASE("parseRuleDeclThrowsIfSectionsAreOutOfOrder") {
         b = "test2" encodings=UTF-8 nocase fixed
       condition:
         any(a, b) and offset(a, 5) == 5
-    hash: md5 = "test"
+    hash: md5 == "test"
   }
   )";
   LlamaParser parser(input, getTokensFromString(input));
@@ -514,7 +532,7 @@ TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
 }
 
 TEST_CASE("parseFileHashRecord") {
-  std::string input = "md5 = \"test\", sha1 = \"test2\"";
+  std::string input = "md5 == \"test\", sha1 == \"test2\"";
   LlamaParser parser(input, getTokensFromString(input));
   FileHashRecord rec;
   REQUIRE_NOTHROW(rec = parser.parseFileHashRecord());
@@ -523,7 +541,7 @@ TEST_CASE("parseFileHashRecord") {
 }
 
 TEST_CASE("parseFileHashRecordThrowsIfDuplicateHashType") {
-  std::string input = "md5 = \"test\", md5 = \"test2\"";
+  std::string input = "md5 == \"test\", md5 == \"test2\"";
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseFileHashRecord(), ParserError);
 }
