@@ -285,10 +285,10 @@ TEST_CASE("parseExpr") {
 TEST_CASE("parseConditionSection") {
   std::string input = "condition:\n  (any(s1, s2, s3) and count(s1, 5) == 5) or all(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
-  ConditionSection section;
-  REQUIRE_NOTHROW(section = parser.parseConditionSection());
+  std::shared_ptr<Node> node;
+  REQUIRE_NOTHROW(node = parser.parseConditionSection());
   REQUIRE(parser.CurIdx == parser.Tokens.size() - 1);
-  REQUIRE(section.Tree->Type == NodeType::OR);
+  REQUIRE(node->Type == NodeType::OR);
 }
 
 TEST_CASE("parseSignatureSection") {
@@ -322,9 +322,9 @@ TEST_CASE("parseGrepSection") {
   REQUIRE(section.Patterns.Patterns.size() == 2);
   REQUIRE(section.Patterns.Patterns.find("a")->second.at(0).Pattern == "test");
   REQUIRE(section.Patterns.Patterns.find("a")->second.at(0).Encoding == lg_get_encoding_id("UTF-8"));
-  REQUIRE(section.Condition.Tree->Type == NodeType::AND);
-  REQUIRE(section.Condition.Tree->Left->Type == NodeType::FUNC);
-  REQUIRE(section.Condition.Tree->Right->Type == NodeType::FUNC);
+  REQUIRE(section.Condition->Type == NodeType::AND);
+  REQUIRE(section.Condition->Left->Type == NodeType::FUNC);
+  REQUIRE(section.Condition->Right->Type == NodeType::FUNC);
 }
 
 TEST_CASE("parseFileMetadataDefFileSize") {

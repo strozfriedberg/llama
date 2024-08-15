@@ -77,13 +77,9 @@ struct FuncNode : public Node {
   ConditionFunction Value;
 };
 
-struct ConditionSection {
-  std::shared_ptr<Node> Tree;
-};
-
 struct GrepSection {
   PatternSection Patterns;
-  ConditionSection Condition;
+  std::shared_ptr<Node> Condition;
 };
 
 struct Rule {
@@ -128,7 +124,7 @@ public:
   std::shared_ptr<Node> parseFactor();
   std::shared_ptr<Node> parseTerm();
   std::shared_ptr<Node> parseExpr();
-  ConditionSection parseConditionSection();
+  std::shared_ptr<Node> parseConditionSection();
   std::shared_ptr<Node> parseSignatureSection();
   SignatureDef parseSignatureDef();
   GrepSection parseGrepSection();

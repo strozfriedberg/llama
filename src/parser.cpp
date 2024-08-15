@@ -257,12 +257,10 @@ std::shared_ptr<Node> LlamaParser::parseExpr() {
   return left;
 }
 
-ConditionSection LlamaParser::parseConditionSection() {
+std::shared_ptr<Node> LlamaParser::parseConditionSection() {
   mustParse("Expected condition keyword", TokenType::CONDITION);
   mustParse("Expected colon after condition keyword", TokenType::COLON);
-  ConditionSection conditionSection;
-  conditionSection.Tree = parseExpr();
-  return conditionSection;
+  return parseExpr();
 }
 
 std::shared_ptr<Node> LlamaParser::parseSignatureSection() {
