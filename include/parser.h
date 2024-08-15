@@ -66,6 +66,8 @@ enum class NodeType {
 };
 
 struct AbstractNode {
+  virtual ~AbstractNode() = default;
+
   NodeType Type;
   std::shared_ptr<AbstractNode> Left;
   std::shared_ptr<AbstractNode> Right;
