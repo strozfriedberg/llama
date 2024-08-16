@@ -57,6 +57,8 @@ Llama rule sections are designated by their name followed by a colon. The follow
 * `patterns` (subsection of `grep`)
 * `condition` (subsection of `grep`)
 
+Though no sections are required for your rule to be valid, they must be in the order above.
+
 ### Meta section
 
 A Llama rule's `meta` section is a place for you to put metadata about the rule, such as the author, created date, or source URL. The fields in the meta section can be anything you want, as long as the values are double-quoted strings. Strings can contain newlines.
