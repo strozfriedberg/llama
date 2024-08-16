@@ -545,3 +545,45 @@ TEST_CASE("parseFileHashRecordThrowsIfDuplicateHashType") {
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseFileHashRecord(), ParserError);
 }
+
+TEST_CASE("validateConditionFuncAnyInvalidNumArgs") {
+  std::string input = "any()";
+  LlamaParser parser(input, getTokensFromString(input));
+  ConditionFunction func = parser.parseFuncCall();
+  REQUIRE_THROWS_AS(parser.validateConditionFunc(func), ParserError);
+}
+
+TEST_CASE("validateConditionFunctionAnyInvalidOpAndVal") {
+  std::string input = "any(s1, s2) == 5";
+  LlamaParser parser(input, getTokensFromString(input));
+  ConditionFunction func = parser.parseFuncCall();
+  REQUIRE_THROWS_AS(parser.validateConditionFunc(func), ParserError);
+}
+
+TEST_CASE("validateConditionFunctionAnyValid") {
+  std::string input = "any(s1, s2)";
+  LlamaParser parser(input, getTokensFromString(input));
+  ConditionFunction func = parser.parseFuncCall();
+  REQUIRE_NOTHROW(parser.validateConditionFunc(func));
+}
+
+TEST_CASE("validateConditionFunctionAllInvalidArgs") {
+  std::string input = "all(s1, s2)";
+  LlamaParser parser(input, getTokensFromString(input));
+  ConditionFunction func = parser.parseFuncCall();
+  REQUIRE_THROWS_AS(parser.validateConditionFunc(func), ParserError);
+}
+
+TEST_CASE("validateConditionFunctionAllValid") {
+  std::string input = "all()";
+  LlamaParser parser(input, getTokensFromString(input));
+  ConditionFunction func = parser.parseFuncCall();
+  REQUIRE_NOTHROW(parser.validateConditionFunc(func));
+}
+
+TEST_CASE("validateConditionFunctionAllInvalidOpAndVal") {
+  std::string input = "all() == 5";
+  LlamaParser parser(input, getTokensFromString(input));
+  ConditionFunction func = parser.parseFuncCall();
+  REQUIRE_THROWS_AS(parser.validateConditionFunc(func), ParserError);
+}
