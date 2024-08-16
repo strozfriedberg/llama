@@ -2,11 +2,13 @@
 
 
 void append_val(duckdb_appender& appender, const char* s) {
-  duckdb_append_varchar(appender, s);
+  duckdb_state state = duckdb_append_varchar(appender, s);
+  THROW_IF(state == DuckDBError, "Failed to append string value");
 }
 
 void append_val(duckdb_appender& appender, uint64_t val) {
-  duckdb_append_uint64(appender, val);
+  duckdb_state state = duckdb_append_uint64(appender, val);
+  THROW_IF(state == DuckDBError, "Failed to append uint64 value");
 }
 
 template<typename T>
@@ -38,27 +40,6 @@ void DirentBatch::copyToDB(duckdb_appender& appender) {
            nums.MetaSeq,
            nums.ParentSeq
     );
-/*      state = duckdb_append_varchar(appender, Buf.data() + offsets.PathOffset);
-      THROW_IF(state == DuckDBError, "Failed to append path");
-      state = duckdb_append_varchar(appender, Buf.data() + offsets.NameOffset);
-      THROW_IF(state == DuckDBError, "Failed to append name");
-      state = duckdb_append_varchar(appender, Buf.data() + offsets.ShortOffset);
-      THROW_IF(state == DuckDBError, "Failed to append shrt_name");
-      state = duckdb_append_varchar(appender, Buf.data() + offsets.TypeOffset);
-      THROW_IF(state == DuckDBError, "Failed to append type");
-      state = duckdb_append_varchar(appender, Buf.data() + offsets.FlagsOffset);
-      THROW_IF(state == DuckDBError, "Failed to append flags");
-
-      auto& nums(Nums[i]);
-      state = duckdb_append_uint64(appender, nums.MetaAddr);
-      THROW_IF(state == DuckDBError, "Failed to append meta_addr");
-      state = duckdb_append_uint64(appender, nums.ParentAddr);
-      THROW_IF(state == DuckDBError, "Failed to append parent_addr");
-      state = duckdb_append_uint64(appender, nums.MetaSeq);
-      THROW_IF(state == DuckDBError, "Failed to append meta_seq");
-      state = duckdb_append_uint64(appender, nums.ParentSeq);
-      THROW_IF(state == DuckDBError, "Failed to append parent_seq");
-*/
     state = duckdb_appender_end_row(appender);
     THROW_IF(state == DuckDBError, "Failed call to end_row");
   }
