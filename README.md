@@ -92,3 +92,21 @@ rule MyRule {
 ```
 
 In this rule, the "cafebabe" and "fab1e" hashes will be implicitly `AND`'d. In other words, both the file's MD5 and SHA1 hash must match those hashes in order to match on that line. On the other hand, each record in the hash section is implicitly `OR`'d, meaning if that first line doesn't match, but the second one does, the section returns a match. So, if a file's MD5 hash is not `cafebabe`, but it does match `babecafe`, then the hash section will be evaluated as true.
+
+### Signature section
+
+The `signature` section allows you to filter files based on filetype. If you specify a file signature that you'd like to filter on, Llama will use Lightgrep to search for the magic bytes associated with that file type across the file system. The following fields are allowed in the `signature` section:
+
+* `name`
+* `id`
+
+File signature names and IDs can be found in the `magics.json` file in the root of this repo. This section supports the boolean operators `AND` and `OR`. This section only supports the `==` comparison operator. Expressions may be grouped with parentheses.
+
+#### Example
+
+```
+rule MyRule {
+  signature:
+    name == "Executable" or name == "ZIP Archive"
+}
+```
