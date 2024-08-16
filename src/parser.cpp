@@ -216,6 +216,11 @@ std::shared_ptr<Node> LlamaParser::parseFactor() {
     sigDefNode->Value = parseSignatureDef();
     node = sigDefNode;
   }
+  else if (checkAny(TokenType::CREATED, TokenType::MODIFIED, TokenType::FILESIZE, TokenType::FILEPATH, TokenType::FILENAME)) {
+    auto fileMetadataNode = std::make_shared<FileMetadataNode>();
+    fileMetadataNode->Value = parseFileMetadataDef();
+    node = fileMetadataNode;
+  }
   else {
     throw ParserError("Expected function call or signature definition", peek().Pos);
   }
@@ -307,16 +312,10 @@ FileMetadataDef LlamaParser::parseFileMetadataDef() {
   return def;
 }
 
-FileMetadataSection LlamaParser::parseFileMetadataSection() {
+std::shared_ptr<Node> LlamaParser::parseFileMetadataSection() {
   mustParse("Expected file_metadata section", TokenType::FILE_METADATA);
   mustParse("Expected colon", TokenType::COLON);
-
-  FileMetadataSection fileMetadataSection;
-  while (checkAny(TokenType::CREATED, TokenType::MODIFIED, TokenType::FILESIZE)) {
-    fileMetadataSection.Fields.push_back(parseFileMetadataDef());
-  }
-
-  return fileMetadataSection;
+  return parseExpr();
 }
 
 MetaSection LlamaParser::parseMetaSection() {
