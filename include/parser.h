@@ -63,9 +63,9 @@ struct ConditionFunction {
   std::string Value;
 
   // validators
-  size_t MinArgs = 0;
-  size_t MaxArgs = 0;
-  bool IsCompFunc = false;
+  size_t MinArgs;
+  size_t MaxArgs;
+  bool IsCompFunc;
 };
 
 enum class NodeType {
