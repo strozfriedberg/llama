@@ -44,3 +44,33 @@ Below are the reserved keywords for Llama rules:
 * `sha1`
 * `sha256`
 * `signature`
+
+## Rule sections
+
+Llama rule sections are designated by their name followed by a colon. The following are reserved as Llama rule section names:
+
+* `meta`
+* `hash`
+* `signature`
+* `file_metadata`
+* `grep`
+* `patterns` (subsection of `grep`)
+* `condition` (subsection of `grep`)
+
+### Meta section
+
+A Llama rule's `meta` section is a place for you to put metadata about the rule, such as the author, created date, and a source URL. The fields in the meta section can be anything you want, as long as the values are double-quoted strings. Strings can contain newlines.
+
+#### Example
+
+```
+rule MyRule {
+  meta:
+    author = "Me"
+    description = "
+      This is my rule
+      and it's a great rule
+    "
+    source = "www.my-source.com"
+}
+```
