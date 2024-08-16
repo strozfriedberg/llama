@@ -49,10 +49,23 @@ struct PatternSection {
 };
 
 struct ConditionFunction {
+  ConditionFunction() = default;
+  ConditionFunction(LineCol pos) : Pos(pos) {}
+  ~ConditionFunction() = default;
+
+  void assignValidators();
+  void validate();
+
+  LineCol Pos;
   TokenType Name;
   std::vector<std::string> Args;
   TokenType Operator = TokenType::NONE;
   std::string Value;
+
+  // validators
+  size_t MinArgs = 0;
+  size_t MaxArgs = 0;
+  bool IsCompFunc = false;
 };
 
 enum class NodeType {
@@ -102,8 +115,6 @@ public:
 
   template <class... TokenTypes>
   void mustParse(const std::string& errMsg, TokenTypes... types);
-
-  void validateConditionFunc(const ConditionFunction& func);
 
   HashSection parseHashSection();
   SFHASH_HashAlgorithm parseHash();

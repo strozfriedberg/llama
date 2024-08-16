@@ -1,36 +1,32 @@
 #include "parser.h"
 
-void LlamaParser::validateConditionFunc(const ConditionFunction& func) {
-  bool compFunc = false;
-  size_t minArgs = 0;
-  size_t maxArgs = 0;
-
-  switch (func.Name) {
-    case TokenType::ALL: break;
-    case TokenType::ANY: minArgs = 1; maxArgs = SIZE_MAX; break;
-    case TokenType::OFFSET: compFunc = true; break;
-    case TokenType::COUNT: minArgs = 1; maxArgs = 1; break;
-    case TokenType::COUNT_HAS_HITS: compFunc = true; break;
-    case TokenType::LENGTH: compFunc = true; break;
+void ConditionFunction::assignValidators() {
+  switch(Name) {
+    case TokenType::ALL:            MinArgs = 0; MaxArgs = 0; IsCompFunc = false;        break;
+    case TokenType::ANY:            MinArgs = 1; MaxArgs = SIZE_MAX; IsCompFunc = false; break;
+    case TokenType::OFFSET:         MinArgs = 1; MaxArgs = 2; IsCompFunc = true;         break;
+    case TokenType::COUNT:          MinArgs = 1; MaxArgs = 1; IsCompFunc = true;         break;
+    case TokenType::COUNT_HAS_HITS: MinArgs = 1; MaxArgs = 2; IsCompFunc = true;         break;
+    case TokenType::LENGTH:         MinArgs = 1; MaxArgs = 2; IsCompFunc = true;         break;
     default:
-      throw ParserError("Invalid function name", peek().Pos);
+      throw ParserError("Invalid function name", Pos);
   }
+}
 
-  if (compFunc) {
-    minArgs = 1;
-    maxArgs = 2;
-    if (func.Operator == TokenType::NONE || func.Value.empty()) {
-      throw ParserError("Expected operator and value for comparison", peek().Pos);
+void ConditionFunction::validate() {
+  if (IsCompFunc) {
+    if (Operator == TokenType::NONE || Value.empty()) {
+      throw ParserError("Expected operator and value for comparison", Pos);
     }
   }
   else {
-    if (func.Operator != TokenType::NONE || !func.Value.empty()) {
-      throw ParserError("Unexpected operator or value for function", peek().Pos);
+    if (Operator != TokenType::NONE || !Value.empty()) {
+      throw ParserError("Unexpected operator or value for function", Pos);
     }
   }
 
-  if (func.Args.size() < minArgs || func.Args.size() > maxArgs) {
-    throw ParserError("Invalid number of arguments", peek().Pos);
+  if (Args.size() < MinArgs || Args.size() > MaxArgs) {
+    throw ParserError("Invalid number of arguments", Pos);
   }
 }
 
@@ -248,7 +244,7 @@ std::shared_ptr<Node> LlamaParser::parseFactor() {
 }
 
 ConditionFunction LlamaParser::parseFuncCall() {
-  ConditionFunction func;
+  ConditionFunction func(peek().Pos);
   mustParse("Expected function name", TokenType::ALL, TokenType::ANY, TokenType::OFFSET, TokenType::COUNT, TokenType::COUNT_HAS_HITS, TokenType::LENGTH);
   func.Name = previous().Type;
   mustParse("Expected open parenthesis", TokenType::OPEN_PAREN);
@@ -264,6 +260,8 @@ ConditionFunction LlamaParser::parseFuncCall() {
     func.Operator = previous().Type;
     func.Value = parseNumber();
   }
+  func.assignValidators();
+  func.validate();
   return func;
 }
 
