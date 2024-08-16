@@ -14,6 +14,7 @@ void ConditionFunction::assignValidators() {
 }
 
 void ConditionFunction::validate() {
+  assignValidators();
   if (IsCompFunc) {
     if (Operator == TokenType::NONE || Value.empty()) {
       throw ParserError("Expected operator and value for comparison", Pos);
@@ -260,7 +261,6 @@ ConditionFunction LlamaParser::parseFuncCall() {
     func.Operator = previous().Type;
     func.Value = parseNumber();
   }
-  func.assignValidators();
   func.validate();
   return func;
 }
