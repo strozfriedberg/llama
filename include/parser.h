@@ -120,6 +120,7 @@ public:
   TokenType parseOperator();
   std::vector<PatternDef> parsePatternMod();
   std::vector<int> parseEncodings();
+  int parseEncoding();
   std::vector<PatternDef> parsePatternDef();
   PatternSection parsePatternsSection();
   std::string parseNumber();

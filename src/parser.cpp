@@ -104,19 +104,17 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
 std::vector<int> LlamaParser::parseEncodings() {
   std::vector<int> encodings;
   mustParse("Expected equal sign after encodings keyword", TokenType::EQUAL);
-  mustParse("Expected encoding", TokenType::IDENTIFIER);
-
-  std::string encoding_lexeme = getPreviousLexeme();
-  int encoding = lg_get_encoding_id(encoding_lexeme.c_str());
-
-  encodings.push_back(encoding);
+  encodings.push_back(parseEncoding());
   while (matchAny(TokenType::COMMA)) {
-    mustParse("Expected encoding", TokenType::IDENTIFIER);
-    encoding_lexeme = getPreviousLexeme();
-    encoding = lg_get_encoding_id(encoding_lexeme.c_str());
-    encodings.push_back(encoding);
+    encodings.push_back(parseEncoding());
   }
   return encodings;
+}
+
+int LlamaParser::parseEncoding () {
+  mustParse("Expected encoding", TokenType::IDENTIFIER);
+  std::string encoding_lexeme = getPreviousLexeme();
+  return lg_get_encoding_id(encoding_lexeme.c_str());
 }
 
 std::vector<PatternDef> LlamaParser::parsePatternDef() {
