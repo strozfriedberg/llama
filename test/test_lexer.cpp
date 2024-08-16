@@ -189,11 +189,11 @@ TEST_CASE("parseIdId") {
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::ID);
 }
 
-TEST_CASE("parseExtensionId") {
-  std::string input = "extension";
+TEST_CASE("parseNameId") {
+  std::string input = "name";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::EXTENSION);
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::NAME);
 }
 
 TEST_CASE("parsePatternsId") {

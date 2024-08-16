@@ -292,15 +292,15 @@ TEST_CASE("parseConditionSection") {
 }
 
 TEST_CASE("parseSignatureSection") {
-  std::string input = "signature:\n extension == \"EXE\" or id == \"123456789\"";
+  std::string input = "signature:\n name == \"Executable\" or id == \"123456789\"";
   LlamaParser parser(input, getTokensFromString(input));
   std::shared_ptr<Node> node;
   REQUIRE_NOTHROW(node = parser.parseSignatureSection());
   REQUIRE(node->Type == NodeType::OR);
   auto sigDefNodeLeft = std::static_pointer_cast<SigDefNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::SIG);
-  REQUIRE(sigDefNodeLeft->Value.Attr == TokenType::EXTENSION);
-  REQUIRE(sigDefNodeLeft->Value.Val == "EXE");
+  REQUIRE(sigDefNodeLeft->Value.Attr == TokenType::NAME);
+  REQUIRE(sigDefNodeLeft->Value.Val == "Executable");
   auto sigDefNodeRight = std::static_pointer_cast<SigDefNode>(node->Right);
   REQUIRE(node->Right->Type == NodeType::SIG);
   REQUIRE(sigDefNodeRight->Value.Attr == TokenType::ID);
@@ -382,7 +382,7 @@ TEST_CASE("parseRuleDecl") {
     hash:
       md5 == "abcdef"
     signature:
-      extension == "exe"
+      name == "Executable"
     file_metadata:
       created > "2023-05-04"
       modified < "2023-05-06"
@@ -394,8 +394,8 @@ TEST_CASE("parseRuleDecl") {
   REQUIRE_NOTHROW(rule = parser.parseRuleDecl());
   REQUIRE(rule.Hash.FileHashRecords.size() == 1);
   auto root = std::static_pointer_cast<SigDefNode>(rule.Signature);
-  REQUIRE(root->Value.Attr == TokenType::EXTENSION);
-  REQUIRE(root->Value.Val == "exe");
+  REQUIRE(root->Value.Attr == TokenType::NAME);
+  REQUIRE(root->Value.Val == "Executable");
 }
 
 TEST_CASE("parseRuleDeclThrowsIfSectionsAreOutOfOrder") {
@@ -420,7 +420,7 @@ TEST_CASE("startRule") {
     meta:
       description = "test"
     signature:
-      extension == "exe"
+      name == "Executable"
   }
   rule AnotherRule {
     meta:

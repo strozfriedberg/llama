@@ -208,7 +208,7 @@ std::shared_ptr<Node> LlamaParser::parseFactor() {
     funcNode->Value = parseFuncCall();
     node = funcNode;
   }
-  else if (checkAny(TokenType::EXTENSION, TokenType::ID)) {
+  else if (checkAny(TokenType::NAME, TokenType::ID)) {
     auto sigDefNode = std::make_shared<SigDefNode>();
     sigDefNode->Value = parseSignatureDef();
     node = sigDefNode;
@@ -266,7 +266,7 @@ std::shared_ptr<Node> LlamaParser::parseSignatureSection() {
 
 SignatureDef LlamaParser::parseSignatureDef() {
   SignatureDef def;
-  mustParse("Expected extension or id keyword", TokenType::EXTENSION, TokenType::ID);
+  mustParse("Expected name or id keyword", TokenType::NAME, TokenType::ID);
   def.Attr = previous().Type;
   mustParse("Expected equality operator sign", TokenType::EQUAL_EQUAL);
   mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
