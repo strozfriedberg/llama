@@ -59,7 +59,7 @@ Llama rule sections are designated by their name followed by a colon. The follow
 
 ### Meta section
 
-A Llama rule's `meta` section is a place for you to put metadata about the rule, such as the author, created date, and a source URL. The fields in the meta section can be anything you want, as long as the values are double-quoted strings. Strings can contain newlines.
+A Llama rule's `meta` section is a place for you to put metadata about the rule, such as the author, created date, or source URL. The fields in the meta section can be anything you want, as long as the values are double-quoted strings. Strings can contain newlines.
 
 #### Example
 
