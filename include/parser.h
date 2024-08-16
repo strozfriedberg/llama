@@ -117,6 +117,7 @@ public:
   HashSection parseHashSection();
   SFHASH_HashAlgorithm parseHash();
   FileHashRecord parseFileHashRecord();
+  std::string parseHashValue();
   TokenType parseOperator();
   std::vector<PatternDef> parsePatternMod();
   std::vector<int> parseEncodings();

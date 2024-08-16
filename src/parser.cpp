@@ -18,19 +18,21 @@ HashSection LlamaParser::parseHashSection() {
 FileHashRecord LlamaParser::parseFileHashRecord() {
   FileHashRecord record;
   SFHASH_HashAlgorithm alg = parseHash();
-  mustParse("Expected equality operator", TokenType::EQUAL_EQUAL);
-  mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-  record[alg] = getPreviousLexeme();
+  record[alg] = parseHashValue();
   while(matchAny(TokenType::COMMA)) {
     alg = parseHash();
     if (record.find(alg) != record.end()) {
       throw ParserError("Duplicate hash type", previous().Pos);
     }
-    mustParse("Expected equality operator", TokenType::EQUAL_EQUAL);
-    mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-    record[alg] = getPreviousLexeme();
+    record[alg] = parseHashValue();
   }
   return record;
+}
+
+std::string LlamaParser::parseHashValue() {
+  mustParse("Expected equality operator", TokenType::EQUAL_EQUAL);
+  mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
+  return getPreviousLexeme();
 }
 
 SFHASH_HashAlgorithm LlamaParser::parseHash() {
