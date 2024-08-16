@@ -112,6 +112,8 @@ public:
   template <class... TokenTypes>
   void mustParse(const std::string& errMsg, TokenTypes... types);
 
+  std::string getPreviousLexeme() const { return Input.substr(previous().Start, previous().length()); }
+
   HashSection parseHashSection();
   SFHASH_HashAlgorithm parseHash();
   FileHashRecord parseFileHashRecord();

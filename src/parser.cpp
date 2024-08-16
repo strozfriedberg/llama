@@ -20,7 +20,7 @@ FileHashRecord LlamaParser::parseFileHashRecord() {
   SFHASH_HashAlgorithm alg = parseHash();
   mustParse("Expected equality operator", TokenType::EQUAL_EQUAL);
   mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-  record[alg] = Input.substr(previous().Start, previous().length());
+  record[alg] = getPreviousLexeme();
   while(matchAny(TokenType::COMMA)) {
     alg = parseHash();
     if (record.find(alg) != record.end()) {
@@ -28,7 +28,7 @@ FileHashRecord LlamaParser::parseFileHashRecord() {
     }
     mustParse("Expected equality operator", TokenType::EQUAL_EQUAL);
     mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-    record[alg] = Input.substr(previous().Start, previous().length());
+    record[alg] = getPreviousLexeme();
   }
   return record;
 }
@@ -68,7 +68,7 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
   const int ASCII = lg_get_encoding_id("ASCII");
   std::vector<PatternDef> defs;
   PatternDef patternDef;
-  patternDef.Pattern = Input.substr(previous().Start, previous().length());
+  patternDef.Pattern = getPreviousLexeme();
   std::vector<int> encodings;
 
   while (checkAny(TokenType::NOCASE, TokenType::FIXED, TokenType::ENCODINGS)) {
@@ -104,13 +104,16 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
 std::vector<int> LlamaParser::parseEncodings() {
   std::vector<int> encodings;
   mustParse("Expected equal sign after encodings keyword", TokenType::EQUAL);
-  int encoding;
   mustParse("Expected encoding", TokenType::IDENTIFIER);
-  encoding = lg_get_encoding_id(Input.substr(previous().Start, previous().length()).c_str());
+
+  std::string encoding_lexeme = getPreviousLexeme();
+  int encoding = lg_get_encoding_id(encoding_lexeme.c_str());
+
   encodings.push_back(encoding);
   while (matchAny(TokenType::COMMA)) {
     mustParse("Expected encoding", TokenType::IDENTIFIER);
-    encoding = lg_get_encoding_id(Input.substr(previous().Start, previous().length()).c_str());
+    encoding_lexeme = getPreviousLexeme();
+    encoding = lg_get_encoding_id(encoding_lexeme.c_str());
     encodings.push_back(encoding);
   }
   return encodings;
@@ -137,7 +140,7 @@ PatternSection LlamaParser::parsePatternsSection() {
   mustParse("Expected colon after patterns keyword", TokenType::COLON);
   PatternSection patternSection;
   while (matchAny(TokenType::IDENTIFIER)) {
-    std::string key = Input.substr(previous().Start, previous().length());
+    std::string key = getPreviousLexeme();
     patternSection.Patterns.insert(std::make_pair(key, parsePatternDef()));
   }
   return patternSection;
@@ -145,7 +148,7 @@ PatternSection LlamaParser::parsePatternsSection() {
 
 std::string LlamaParser::parseNumber() {
   mustParse("Expected number", TokenType::NUMBER);
-  return Input.substr(previous().Start, previous().length());
+  return getPreviousLexeme();
 }
 
 std::vector<PatternDef> LlamaParser::parseHexString() {
@@ -157,7 +160,7 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
       if (!(hexString.size() & 1)) {
         hexString += "\\z";
       }
-      hexDigit = Input.substr(previous().Start, previous().length());
+      hexDigit = getPreviousLexeme();
       for (char c : hexDigit) {
         if (!isxdigit(c)) {
           throw ParserError("Invalid hex digit", previous().Pos);
@@ -225,11 +228,11 @@ ConditionFunction LlamaParser::parseFuncCall() {
   func.Name = previous().Type;
   mustParse("Expected open parenthesis", TokenType::OPEN_PAREN);
   if (matchAny(TokenType::IDENTIFIER)) {
-    func.Args.push_back(Input.substr(previous().Start, previous().length()));
+    func.Args.push_back(getPreviousLexeme());
   }
   while (matchAny(TokenType::COMMA)) {
     mustParse("Expected identifier or number", TokenType::IDENTIFIER, TokenType::NUMBER);
-    func.Args.push_back(Input.substr(previous().Start, previous().length()));
+    func.Args.push_back(getPreviousLexeme());
   }
   mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
   if (matchAny(TokenType::EQUAL, TokenType::EQUAL_EQUAL, TokenType::NOT_EQUAL, TokenType::GREATER_THAN, TokenType::GREATER_THAN_EQUAL, TokenType::LESS_THAN, TokenType::LESS_THAN_EQUAL)) {
@@ -270,7 +273,7 @@ SignatureDef LlamaParser::parseSignatureDef() {
   def.Attr = previous().Type;
   mustParse("Expected equality operator sign", TokenType::EQUAL_EQUAL);
   mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-  def.Val = Input.substr(previous().Start, previous().length());
+  def.Val = getPreviousLexeme();
   return def;
 }
 
@@ -291,7 +294,7 @@ FileMetadataDef LlamaParser::parseFileMetadataDef() {
     def.Property = previous().Type;
     def.Operator = parseOperator();
     mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-    def.Value = Input.substr(previous().Start, previous().length());
+    def.Value = getPreviousLexeme();
   }
   else if (matchAny(TokenType::FILESIZE)) {
     def.Property = previous().Type;
@@ -321,10 +324,10 @@ MetaSection LlamaParser::parseMetaSection() {
   mustParse("Expected meta keyword", TokenType::META);
   mustParse("Expected colon", TokenType::COLON);
   while (matchAny(TokenType::IDENTIFIER)) {
-    std::string key = Input.substr(previous().Start, previous().length());
+    std::string key = getPreviousLexeme();
     mustParse("Expected equal sign", TokenType::EQUAL);
     mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-    std::string value = Input.substr(previous().Start, previous().length());
+    std::string value = getPreviousLexeme();
     meta.Fields.insert(std::make_pair(key, value));
   }
   return meta;
@@ -334,7 +337,7 @@ Rule LlamaParser::parseRuleDecl() {
   Rule rule;
   mustParse("Expected rule keyword", TokenType::RULE);
   mustParse("Expected identifier", TokenType::IDENTIFIER);
-  rule.Name = Input.substr(previous().Start, previous().length());
+  rule.Name = getPreviousLexeme();
   mustParse("Expected open curly brace", TokenType::OPEN_BRACE);
 
   if (checkAny(TokenType::META)) {
