@@ -546,3 +546,35 @@ TEST_CASE("parseFileHashRecordThrowsIfDuplicateHashType") {
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseFileHashRecord(), ParserError);
 }
+
+TEST_CASE("parseConditionFunctionInvalid"){
+  SECTION("Invalid function name") {
+    std::string input = "invalid()";
+    LlamaParser parser(input, getTokensFromString(input));
+    REQUIRE_THROWS_AS(parser.parseFuncCall(), ParserError);
+  }
+
+  SECTION("Invalid function argument") {
+    std::string input = "count(arg1, arg2)";
+    LlamaParser parser(input, getTokensFromString(input));
+    REQUIRE_THROWS_AS(parser.parseFuncCall(), ParserError);
+  }
+
+  SECTION("Invalid function operator") {
+    std::string input = "any(arg1) == 5";
+    LlamaParser parser(input, getTokensFromString(input));
+    REQUIRE_THROWS_AS(parser.parseFuncCall(), ParserError);
+  }
+
+  SECTION("Missing operator and/or value") {
+    std::string input = "count(arg1)";
+    LlamaParser parser(input, getTokensFromString(input));
+    REQUIRE_THROWS_AS(parser.parseFuncCall(), ParserError);
+  }
+
+  SECTION("Missing arguments") {
+    std::string input = "offset()";
+    LlamaParser parser(input, getTokensFromString(input));
+    REQUIRE_THROWS_AS(parser.parseFuncCall(), ParserError);
+  }
+}
