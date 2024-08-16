@@ -1,24 +1,24 @@
 #include "direntbatch.h"
 
 
-void append_val(duckdb_appender& appender, const char* s) {
+void appendVal(duckdb_appender& appender, const char* s) {
   duckdb_state state = duckdb_append_varchar(appender, s);
   THROW_IF(state == DuckDBError, "Failed to append string value");
 }
 
-void append_val(duckdb_appender& appender, uint64_t val) {
+void appendVal(duckdb_appender& appender, uint64_t val) {
   duckdb_state state = duckdb_append_uint64(appender, val);
   THROW_IF(state == DuckDBError, "Failed to append uint64 value");
 }
 
 template<typename T>
 void append(duckdb_appender& appender, T t) {
-  append_val(appender, t);
+  appendVal(appender, t);
 }
 
 template<typename T, typename... Args>
 void append(duckdb_appender& appender, T t, Args... args) {
-  append_val(appender, t);
+  appendVal(appender, t);
   append(appender, args...);
 }
 
