@@ -76,3 +76,19 @@ rule MyRule {
     source = "www.my-source.com"
 }
 ```
+
+### Hash section
+
+The `hash` section is a place for you to filter by a file's hash value. Each comma-separated hash value is evaluated as belonging to the same file. Every value that is not comma-separated from the hash that came before it is evaluated as belonging to another file.
+
+#### Example
+
+```
+rule MyRule {
+  hash:
+    md5 == "cafebabecafebabecafebabecafebabe", sha1 == "fab1efab1efab1efab1efab1efab1efab1efab1e"
+    md5 == "babecafebabecafebabecafebabecafe" 
+}
+```
+
+In this rule, the "cafebabe" and "fab1e" hashes will be implicitly `AND`'d. In other words, both the file's MD5 and SHA1 hash must match those hashes in order to match on that line. On the other hand, each record in the hash section is implicitly `OR`'d, meaning if that first line doesn't match, but the second one does, the section returns a match. So, if a file's MD5 hash is not `cafebabe`, but it does match `babecafe`, then the hash section will be evaluated as true.
