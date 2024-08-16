@@ -57,7 +57,7 @@ Llama rule sections are designated by their name followed by a colon. The follow
 * `patterns` (subsection of `grep`)
 * `condition` (subsection of `grep`)
 
-Though no sections are required for your rule to be valid, they must be in the order above.
+Though no sections are required for your rule to be valid, they must be in the order above. Sections in each rule are implicitly `AND`'d.
 
 ### Meta section
 
