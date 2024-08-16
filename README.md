@@ -110,3 +110,82 @@ rule MyRule {
     name == "Executable" or name == "ZIP Archive"
 }
 ```
+
+### File metadata section
+
+The `file_metadata` section allows you to filter on the following file attributes:
+
+* `created` - created time of the file, must be a ISO-8601-compliant datetime surrounded by double-quotes
+* `modified` - modified time of the file, must be a ISO-8601-compliant datetime surrounded by double-quotes
+* `filesize` - size of the file in bytes, must be an integer not surrounded by double-quotes
+* `filepath` - path to the directory containing the file
+* `filename` - the name of the file
+
+Fields in this section may be combined with `AND` and `OR` boolean operators and expressions may be grouped with parentheses. This section supports the comparison operators `==`, `>=`, `<=`, `>`, and `<`.
+
+#### Example:
+
+```
+rule MyRule {
+  file_metadata:
+    (created >= "2024-05-06" and filesize > 300000) or filename == "bad.exe"
+}
+```
+
+### Grep Section
+
+The `grep` section contains two subsections: `patterns` and `condition`.
+
+#### Patterns section
+
+The `patterns` section is the place to define patterns (or if you're used to YARA, strings) that you want to look for with your rule. These patterns must be assigned to an identifier, like so:
+
+```
+rule MyRule {
+  grep:
+    patterns:
+      s1 = "foobar"
+      s2 = "barfoo"
+}
+```
+
+The next three sections describe pattern modifiers that you may use to specify attributes for your patterns. These modifiers may be combined for each pattern in any order.
+
+##### Fixed strings
+
+By default, patterns defined in Llama rules are evaluated as regex. This means that in a pattern such as "bad-domain.com", the period will be evaluated as a wildcard character. If you'd like for the period to be evaluated as a fixed string (so you don't have to escape the period), so you can put the keyword `fixed` after the pattern assignment.
+
+```
+rule myRule {
+  grep:
+    patterns:
+      s1 = "bad-domain.com" fixed
+}
+```
+
+##### Case-insensitive strings
+
+By default, patterns defined in Llama rules are evaluated as case-sensitive. To disable this, add the `nocase` keyword after the pattern assignment.
+
+```
+rule myRule {
+  grep:
+    patterns:
+      s1 = "foo.bar" fixed nocase
+}
+```
+
+##### Pattern encodings
+
+As a result of using Lightgrep for pattern search, Llama can support over 100 encodings. To search for a pattern with a specific encoding(s), use the `encodings` keyword followed by a comma-separated list of your encodings.
+
+```
+rule myRule {
+  grep:
+    patterns:
+      s1 = "foobar" encodings=UTF-8,UTF-16LE
+}
+```
+
+For a list of all supported encodings, run `lightgrep --list-encodings`.
+
