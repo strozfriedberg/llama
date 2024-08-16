@@ -24,9 +24,11 @@ struct HashSection {
   uint64_t HashAlgs = 0;
 };
 
-struct SignatureSection {
-  std::vector<std::string> Signatures;
+struct SignatureDef {
+  TokenType Attr;
+  std::string Val;
 };
+
 
 struct FileMetadataDef {
   TokenType Property;
@@ -56,30 +58,37 @@ struct ConditionFunction {
 };
 
 enum class NodeType {
-  AND, OR, FUNC, VAL
+  AND, OR, FUNC, SIG
 };
 
 struct Node {
-  ConditionFunction Value;
+  virtual ~Node() = default;
+
   NodeType Type;
   std::shared_ptr<Node> Left;
   std::shared_ptr<Node> Right;
 };
 
-struct ConditionSection {
-  std::shared_ptr<Node> Tree;
+struct SigDefNode : public Node {
+  SigDefNode() { Type = NodeType::SIG; }
+  SignatureDef Value;
+};
+
+struct FuncNode : public Node {
+  FuncNode() { Type = NodeType::FUNC; }
+  ConditionFunction Value;
 };
 
 struct GrepSection {
   PatternSection Patterns;
-  ConditionSection Condition;
+  std::shared_ptr<Node> Condition;
 };
 
 struct Rule {
   std::string Name;
   MetaSection Meta;
   HashSection Hash;
-  SignatureSection Signature;
+  std::shared_ptr<Node> Signature;
   FileMetadataSection FileMetadata;
   GrepSection Grep;
 };
@@ -103,12 +112,16 @@ public:
   template <class... TokenTypes>
   void mustParse(const std::string& errMsg, TokenTypes... types);
 
+  std::string getPreviousLexeme() const { return Input.substr(previous().Start, previous().length()); }
+
   HashSection parseHashSection();
   SFHASH_HashAlgorithm parseHash();
   FileHashRecord parseFileHashRecord();
+  std::string parseHashValue();
   TokenType parseOperator();
   std::vector<PatternDef> parsePatternMod();
   std::vector<int> parseEncodings();
+  int parseEncoding();
   std::vector<PatternDef> parsePatternDef();
   PatternSection parsePatternsSection();
   std::string parseNumber();
@@ -117,8 +130,9 @@ public:
   std::shared_ptr<Node> parseFactor();
   std::shared_ptr<Node> parseTerm();
   std::shared_ptr<Node> parseExpr();
-  ConditionSection parseConditionSection();
-  SignatureSection parseSignatureSection();
+  std::shared_ptr<Node> parseConditionSection();
+  std::shared_ptr<Node> parseSignatureSection();
+  SignatureDef parseSignatureDef();
   GrepSection parseGrepSection();
   FileMetadataDef parseFileMetadataDef();
   FileMetadataSection parseFileMetadataSection();

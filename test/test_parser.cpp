@@ -253,13 +253,15 @@ TEST_CASE("parsePatternsSectionDoesNotThrowIfPatterns") {
 TEST_CASE("parseTermWithAnd") {
   std::string input = "any(s1, s2, s3) and count(s1, 5) == 5";
   LlamaParser parser(input, getTokensFromString(input));
-  std::shared_ptr<Node> node;
+  auto node = std::make_shared<Node>();
   REQUIRE_NOTHROW(node = parser.parseTerm());
   REQUIRE(node->Type == NodeType::AND);
+  auto left = std::static_pointer_cast<FuncNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::FUNC);
-  REQUIRE(node->Left->Value.Name == TokenType::ANY);
+  REQUIRE(left->Value.Name == TokenType::ANY);
+  auto right = std::static_pointer_cast<FuncNode>(node->Right);
   REQUIRE(node->Right->Type == NodeType::FUNC);
-  REQUIRE(node->Right->Value.Name == TokenType::COUNT);
+  REQUIRE(right->Value.Name == TokenType::COUNT);
 }
 
 TEST_CASE("parseTermWithoutAnd") {
@@ -274,27 +276,35 @@ TEST_CASE("parseExpr") {
   auto node = std::make_shared<Node>();
   REQUIRE_NOTHROW(node = parser.parseExpr());
   REQUIRE(node->Type == NodeType::OR);
+  REQUIRE(node->Left);
   REQUIRE(node->Left->Type == NodeType::AND);
+  REQUIRE(node->Right);
   REQUIRE(node->Right->Type == NodeType::FUNC);
 }
 
 TEST_CASE("parseConditionSection") {
   std::string input = "condition:\n  (any(s1, s2, s3) and count(s1, 5) == 5) or all(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
-  ConditionSection section;
-  REQUIRE_NOTHROW(section = parser.parseConditionSection());
+  std::shared_ptr<Node> node;
+  REQUIRE_NOTHROW(node = parser.parseConditionSection());
   REQUIRE(parser.CurIdx == parser.Tokens.size() - 1);
-  REQUIRE(section.Tree->Type == NodeType::OR);
+  REQUIRE(node->Type == NodeType::OR);
 }
 
 TEST_CASE("parseSignatureSection") {
-  std::string input = "signature:\n \"EXE\"\n\"MUI\"";
+  std::string input = "signature:\n name == \"Executable\" or id == \"123456789\"";
   LlamaParser parser(input, getTokensFromString(input));
-  SignatureSection section;
-  REQUIRE_NOTHROW(section = parser.parseSignatureSection());
-  REQUIRE(section.Signatures.size() == 2);
-  REQUIRE(section.Signatures.at(0) == "EXE");
-  REQUIRE(section.Signatures.at(1) == "MUI");
+  std::shared_ptr<Node> node;
+  REQUIRE_NOTHROW(node = parser.parseSignatureSection());
+  REQUIRE(node->Type == NodeType::OR);
+  auto sigDefNodeLeft = std::static_pointer_cast<SigDefNode>(node->Left);
+  REQUIRE(node->Left->Type == NodeType::SIG);
+  REQUIRE(sigDefNodeLeft->Value.Attr == TokenType::NAME);
+  REQUIRE(sigDefNodeLeft->Value.Val == "Executable");
+  auto sigDefNodeRight = std::static_pointer_cast<SigDefNode>(node->Right);
+  REQUIRE(node->Right->Type == NodeType::SIG);
+  REQUIRE(sigDefNodeRight->Value.Attr == TokenType::ID);
+  REQUIRE(sigDefNodeRight->Value.Val == "123456789");
 }
 
 TEST_CASE("parseGrepSection") {
@@ -312,9 +322,9 @@ TEST_CASE("parseGrepSection") {
   REQUIRE(section.Patterns.Patterns.size() == 2);
   REQUIRE(section.Patterns.Patterns.find("a")->second.at(0).Pattern == "test");
   REQUIRE(section.Patterns.Patterns.find("a")->second.at(0).Encoding == lg_get_encoding_id("UTF-8"));
-  REQUIRE(section.Condition.Tree->Type == NodeType::AND);
-  REQUIRE(section.Condition.Tree->Left->Type == NodeType::FUNC);
-  REQUIRE(section.Condition.Tree->Right->Type == NodeType::FUNC);
+  REQUIRE(section.Condition->Type == NodeType::AND);
+  REQUIRE(section.Condition->Left->Type == NodeType::FUNC);
+  REQUIRE(section.Condition->Right->Type == NodeType::FUNC);
 }
 
 TEST_CASE("parseFileMetadataDefFileSize") {
@@ -372,7 +382,7 @@ TEST_CASE("parseRuleDecl") {
     hash:
       md5 == "abcdef"
     signature:
-      "EXE"
+      name == "Executable"
     file_metadata:
       created > "2023-05-04"
       modified < "2023-05-06"
@@ -383,7 +393,9 @@ TEST_CASE("parseRuleDecl") {
   Rule rule;
   REQUIRE_NOTHROW(rule = parser.parseRuleDecl());
   REQUIRE(rule.Hash.FileHashRecords.size() == 1);
-  REQUIRE(rule.Signature.Signatures.size() == 1);
+  auto root = std::static_pointer_cast<SigDefNode>(rule.Signature);
+  REQUIRE(root->Value.Attr == TokenType::NAME);
+  REQUIRE(root->Value.Val == "Executable");
 }
 
 TEST_CASE("parseRuleDeclThrowsIfSectionsAreOutOfOrder") {
@@ -408,7 +420,7 @@ TEST_CASE("startRule") {
     meta:
       description = "test"
     signature:
-      "EXE"
+      name == "Executable"
   }
   rule AnotherRule {
     meta:
@@ -524,11 +536,12 @@ TEST_CASE("parseFuncCallWithOperator") {
 TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
   std::string input = "any(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
-  std::shared_ptr<Node> node;
+  auto node = std::make_shared<Node>();
   REQUIRE_NOTHROW(node = parser.parseFactor());
   REQUIRE(node->Type == NodeType::FUNC);
-  REQUIRE(node->Value.Name == TokenType::ANY);
-  REQUIRE(node->Value.Args.size() == 3);
+  auto root = std::static_pointer_cast<FuncNode>(node);
+  REQUIRE(root->Value.Name == TokenType::ANY);
+  REQUIRE(root->Value.Args.size() == 3);
 }
 
 TEST_CASE("parseFileHashRecord") {
