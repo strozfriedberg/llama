@@ -305,7 +305,6 @@ std::shared_ptr<Node> LlamaParser::parseBooleanSection() {
 
 MetaSection LlamaParser::parseMetaSection() {
   MetaSection meta;
-  mustParse("Expected meta keyword", TokenType::META);
   mustParse("Expected colon", TokenType::COLON);
   while (matchAny(TokenType::IDENTIFIER)) {
     std::string key = getPreviousLexeme();
@@ -324,7 +323,7 @@ Rule LlamaParser::parseRuleDecl() {
   rule.Name = getPreviousLexeme();
   mustParse("Expected open curly brace", TokenType::OPEN_BRACE);
 
-  if (checkAny(TokenType::META)) {
+  if (matchAny(TokenType::META)) {
     rule.Meta = parseMetaSection();
   }
   if (matchAny(TokenType::HASH)) {

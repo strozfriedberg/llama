@@ -354,7 +354,7 @@ TEST_CASE("parseFileMetadataSection") {
 
 TEST_CASE("parseMetaSection") {
   std::string input = R"(
-  meta:
+  :
     arbitrary = "something"
     another = "something else"
   )";
