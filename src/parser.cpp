@@ -1,7 +1,6 @@
 #include "parser.h"
 
 HashSection LlamaParser::parseHashSection() {
-  mustParse("Expected colon after hash keyword", TokenType::COLON);
   HashSection hashSection;
   FileHashRecord rec;
   while (checkAny(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3)) {
@@ -10,6 +9,9 @@ HashSection LlamaParser::parseHashSection() {
       hashSection.HashAlgs |= key.first;
     }
     hashSection.FileHashRecords.push_back(rec);
+  }
+  if (!hashSection.HashAlgs) {
+    throw ParserError("No hash algorithms specified", peek().Pos);
   }
   return hashSection;
 }
@@ -135,11 +137,13 @@ std::vector<PatternDef> LlamaParser::parsePatternDef() {
 }
 
 PatternSection LlamaParser::parsePatternsSection() {
-  mustParse("Expected colon after patterns keyword", TokenType::COLON);
   PatternSection patternSection;
   while (matchAny(TokenType::IDENTIFIER)) {
     std::string key = getPreviousLexeme();
     patternSection.Patterns.insert(std::make_pair(key, parsePatternDef()));
+  }
+  if (patternSection.Patterns.empty()) {
+    throw ParserError("No patterns specified", peek().Pos);
   }
   return patternSection;
 }
@@ -269,11 +273,12 @@ SignatureDef LlamaParser::parseSignatureDef() {
 }
 
 GrepSection LlamaParser::parseGrepSection() {
-  mustParse("Expected colon after grep keyword", TokenType::COLON);
   GrepSection grepSection;
   mustParse("Expected patterns section", TokenType::PATTERNS);
+  mustParse("Expected colon", TokenType::COLON);
   grepSection.Patterns = parsePatternsSection();
   mustParse("Expected condition section", TokenType::CONDITION);
+  mustParse("Expected colon", TokenType::COLON);
   grepSection.Condition = parseBooleanSection();
   return grepSection;
 }
@@ -298,13 +303,11 @@ FileMetadataDef LlamaParser::parseFileMetadataDef() {
 }
 
 std::shared_ptr<Node> LlamaParser::parseBooleanSection() {
-  mustParse("Expected colon", TokenType::COLON);
   return parseExpr();
 }
 
 MetaSection LlamaParser::parseMetaSection() {
   MetaSection meta;
-  mustParse("Expected colon", TokenType::COLON);
   while (matchAny(TokenType::IDENTIFIER)) {
     std::string key = getPreviousLexeme();
     mustParse("Expected equal sign", TokenType::EQUAL);
@@ -323,18 +326,23 @@ Rule LlamaParser::parseRuleDecl() {
   mustParse("Expected open curly brace", TokenType::OPEN_BRACE);
 
   if (matchAny(TokenType::META)) {
+    mustParse("Expected colon", TokenType::COLON);
     rule.Meta = parseMetaSection();
   }
   if (matchAny(TokenType::HASH)) {
+    mustParse("Expected colon", TokenType::COLON);
     rule.Hash = parseHashSection();
   }
   if (matchAny(TokenType::SIGNATURE)) {
+    mustParse("Expected colon", TokenType::COLON);
     rule.Signature = parseBooleanSection();
   }
   if (matchAny(TokenType::FILE_METADATA)) {
+    mustParse("Expected colon", TokenType::COLON);
     rule.FileMetadata = parseBooleanSection();
   }
   if (matchAny(TokenType::GREP)) {
+    mustParse("Expected colon", TokenType::COLON);
     rule.Grep = parseGrepSection();
   }
   mustParse("Expected close curly brace", TokenType::CLOSE_BRACE);

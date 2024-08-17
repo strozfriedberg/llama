@@ -124,20 +124,20 @@ TEST_CASE("parseFileHashRecordDoesNotThrowIfHashAndString") {
   REQUIRE_NOTHROW(parser.parseFileHashRecord());
 }
 
-TEST_CASE("parseHashSectionThrowsIfNotColon") {
+TEST_CASE("parseHashSectionThrowsIfNotAHash") {
   std::string input = "notAHash";
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseHashSection(), ParserError);
 }
 
-TEST_CASE("parseHashSectionDoesNotThrowIfColon") {
-  std::string input = ": md5 == \"test\"";
+TEST_CASE("parseHashSectionDoesNotThrowIfHash") {
+  std::string input = "md5 == \"test\"";
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseHashSection());
 }
 
 TEST_CASE("parseHashSectionMultipleAlg") {
-  std::string input = ": md5 == \"test\"\nsha1 == \"abcdef\"";
+  std::string input = "md5 == \"test\"\nsha1 == \"abcdef\"";
   LlamaParser parser(input, getTokensFromString(input));
   HashSection hashSection;
   REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
@@ -146,7 +146,7 @@ TEST_CASE("parseHashSectionMultipleAlg") {
 }
 
 TEST_CASE("parseHashSectionMultipleRecords") {
-  std::string input = ": md5 == \"test\", sha1 == \"abcdef\"\nmd5 == \"test2\"";
+  std::string input = "md5 == \"test\", sha1 == \"abcdef\"\nmd5 == \"test2\"";
   LlamaParser parser(input, getTokensFromString(input));
   HashSection hashSection;
   REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
@@ -223,14 +223,14 @@ TEST_CASE("parseStringDefDoesNotThrowIfStringDef") {
   REQUIRE_NOTHROW(parser.parsePatternDef());
 }
 
-TEST_CASE("parsePatternsSectionThrowsIfNotColon") {
+TEST_CASE("parsePatternsSectionThrowsIfNotIdentifier") {
   std::string input = "rule";
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parsePatternsSection(), ParserError);
 }
 
 TEST_CASE("parsePatternsSectionDoesNotThrowIfPatterns") {
-  std::string input = R"(:
+  std::string input = R"(
   a = "test" encodings=UTF-8 nocase fixed
   b = "test2" encodings=UTF-8 nocase fixed
   c = { 12 34 56 78 9a bc de f0 }
@@ -277,7 +277,7 @@ TEST_CASE("parseExpr") {
 }
 
 TEST_CASE("parseConditionSection") {
-  std::string input = ":\n  (any(s1, s2, s3) and count(s1, 5) == 5) or all(s1, s2, s3)";
+  std::string input = "(any(s1, s2, s3) and count(s1, 5) == 5) or all(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
   std::shared_ptr<Node> node;
   REQUIRE_NOTHROW(node = parser.parseBooleanSection());
@@ -286,7 +286,7 @@ TEST_CASE("parseConditionSection") {
 }
 
 TEST_CASE("parseSignatureSection") {
-  std::string input = ":\n name == \"Executable\" or id == \"123456789\"";
+  std::string input = "name == \"Executable\" or id == \"123456789\"";
   LlamaParser parser(input, getTokensFromString(input));
   std::shared_ptr<Node> node;
   REQUIRE_NOTHROW(node = parser.parseBooleanSection());
@@ -303,7 +303,6 @@ TEST_CASE("parseSignatureSection") {
 
 TEST_CASE("parseGrepSection") {
   std::string input = R"(
-  :
     patterns:
       a = "test" encodings=UTF-8 nocase fixed
       b = "test2" encodings=UTF-8 nocase fixed
@@ -344,17 +343,13 @@ TEST_CASE("parseFileMetadataDefModified") {
 }
 
 TEST_CASE("parseFileMetadataSection") {
-  std::string input = R"(
-  :
-    created > "2023-05-04" or (modified < "2023-05-06" and filesize >= 100)
-  )";
+  std::string input = R"(created > "2023-05-04" or (modified < "2023-05-06" and filesize >= 100))";
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseBooleanSection());
 }
 
 TEST_CASE("parseMetaSection") {
   std::string input = R"(
-  :
     arbitrary = "something"
     another = "something else"
   )";
