@@ -134,7 +134,6 @@ public:
   SignatureDef parseSignatureDef();
   GrepSection parseGrepSection();
   FileMetadataDef parseFileMetadataDef();
-  std::shared_ptr<Node> parseBooleanSection();
   MetaSection parseMetaSection();
   Rule parseRuleDecl();
   std::vector<Rule> parseRules();

@@ -280,7 +280,7 @@ TEST_CASE("parseConditionSection") {
   std::string input = "(any(s1, s2, s3) and count(s1, 5) == 5) or all(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
   std::shared_ptr<Node> node;
-  REQUIRE_NOTHROW(node = parser.parseBooleanSection());
+  REQUIRE_NOTHROW(node = parser.parseExpr());
   REQUIRE(parser.CurIdx == parser.Tokens.size() - 1);
   REQUIRE(node->Type == NodeType::OR);
 }
@@ -289,7 +289,7 @@ TEST_CASE("parseSignatureSection") {
   std::string input = "name == \"Executable\" or id == \"123456789\"";
   LlamaParser parser(input, getTokensFromString(input));
   std::shared_ptr<Node> node;
-  REQUIRE_NOTHROW(node = parser.parseBooleanSection());
+  REQUIRE_NOTHROW(node = parser.parseExpr());
   REQUIRE(node->Type == NodeType::OR);
   auto sigDefNodeLeft = std::static_pointer_cast<SigDefNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::SIG);
@@ -345,7 +345,7 @@ TEST_CASE("parseFileMetadataDefModified") {
 TEST_CASE("parseFileMetadataSection") {
   std::string input = R"(created > "2023-05-04" or (modified < "2023-05-06" and filesize >= 100))";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseBooleanSection());
+  REQUIRE_NOTHROW(parser.parseExpr());
 }
 
 TEST_CASE("parseMetaSection") {

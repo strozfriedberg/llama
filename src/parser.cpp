@@ -279,7 +279,7 @@ GrepSection LlamaParser::parseGrepSection() {
   grepSection.Patterns = parsePatternsSection();
   mustParse("Expected condition section", TokenType::CONDITION);
   mustParse("Expected colon", TokenType::COLON);
-  grepSection.Condition = parseBooleanSection();
+  grepSection.Condition = parseExpr();
   return grepSection;
 }
 
@@ -300,10 +300,6 @@ FileMetadataDef LlamaParser::parseFileMetadataDef() {
     throw ParserError("Expected created, modified, or filesize", peek().Pos);
   }
   return def;
-}
-
-std::shared_ptr<Node> LlamaParser::parseBooleanSection() {
-  return parseExpr();
 }
 
 MetaSection LlamaParser::parseMetaSection() {
@@ -335,11 +331,11 @@ Rule LlamaParser::parseRuleDecl() {
   }
   if (matchAny(TokenType::SIGNATURE)) {
     mustParse("Expected colon", TokenType::COLON);
-    rule.Signature = parseBooleanSection();
+    rule.Signature = parseExpr();
   }
   if (matchAny(TokenType::FILE_METADATA)) {
     mustParse("Expected colon", TokenType::COLON);
-    rule.FileMetadata = parseBooleanSection();
+    rule.FileMetadata = parseExpr();
   }
   if (matchAny(TokenType::GREP)) {
     mustParse("Expected colon", TokenType::COLON);
