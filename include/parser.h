@@ -131,12 +131,10 @@ public:
   std::shared_ptr<Node> parseFactor();
   std::shared_ptr<Node> parseTerm();
   std::shared_ptr<Node> parseExpr();
-  std::shared_ptr<Node> parseConditionSection();
-  std::shared_ptr<Node> parseSignatureSection();
   SignatureDef parseSignatureDef();
   GrepSection parseGrepSection();
   FileMetadataDef parseFileMetadataDef();
-  std::shared_ptr<Node> parseFileMetadataSection();
+  std::shared_ptr<Node> parseBooleanSection();
   MetaSection parseMetaSection();
   Rule parseRuleDecl();
   std::vector<Rule> parseRules();

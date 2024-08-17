@@ -229,14 +229,14 @@ TEST_CASE("parseStringDefDoesNotThrowIfStringDef") {
   REQUIRE_NOTHROW(parser.parsePatternDef());
 }
 
-TEST_CASE("parsePatternsSectionThrowsIfNotPatterns") {
+TEST_CASE("parsePatternsSectionThrowsIfNotColon") {
   std::string input = "rule";
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parsePatternsSection(), ParserError);
 }
 
 TEST_CASE("parsePatternsSectionDoesNotThrowIfPatterns") {
-  std::string input = R"(patterns:
+  std::string input = R"(:
   a = "test" encodings=UTF-8 nocase fixed
   b = "test2" encodings=UTF-8 nocase fixed
   c = { 12 34 56 78 9a bc de f0 }
@@ -283,19 +283,19 @@ TEST_CASE("parseExpr") {
 }
 
 TEST_CASE("parseConditionSection") {
-  std::string input = "condition:\n  (any(s1, s2, s3) and count(s1, 5) == 5) or all(s1, s2, s3)";
+  std::string input = ":\n  (any(s1, s2, s3) and count(s1, 5) == 5) or all(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
   std::shared_ptr<Node> node;
-  REQUIRE_NOTHROW(node = parser.parseConditionSection());
+  REQUIRE_NOTHROW(node = parser.parseBooleanSection());
   REQUIRE(parser.CurIdx == parser.Tokens.size() - 1);
   REQUIRE(node->Type == NodeType::OR);
 }
 
 TEST_CASE("parseSignatureSection") {
-  std::string input = "signature:\n name == \"Executable\" or id == \"123456789\"";
+  std::string input = ":\n name == \"Executable\" or id == \"123456789\"";
   LlamaParser parser(input, getTokensFromString(input));
   std::shared_ptr<Node> node;
-  REQUIRE_NOTHROW(node = parser.parseSignatureSection());
+  REQUIRE_NOTHROW(node = parser.parseBooleanSection());
   REQUIRE(node->Type == NodeType::OR);
   auto sigDefNodeLeft = std::static_pointer_cast<SigDefNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::SIG);
@@ -351,11 +351,11 @@ TEST_CASE("parseFileMetadataDefModified") {
 
 TEST_CASE("parseFileMetadataSection") {
   std::string input = R"(
-  file_metadata:
+  :
     created > "2023-05-04" or (modified < "2023-05-06" and filesize >= 100)
   )";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseFileMetadataSection());
+  REQUIRE_NOTHROW(parser.parseBooleanSection());
 }
 
 TEST_CASE("parseMetaSection") {

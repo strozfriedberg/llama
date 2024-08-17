@@ -136,7 +136,6 @@ std::vector<PatternDef> LlamaParser::parsePatternDef() {
 }
 
 PatternSection LlamaParser::parsePatternsSection() {
-  mustParse("Expected patterns keyword", TokenType::PATTERNS);
   mustParse("Expected colon after patterns keyword", TokenType::COLON);
   PatternSection patternSection;
   while (matchAny(TokenType::IDENTIFIER)) {
@@ -260,18 +259,6 @@ std::shared_ptr<Node> LlamaParser::parseExpr() {
   return left;
 }
 
-std::shared_ptr<Node> LlamaParser::parseConditionSection() {
-  mustParse("Expected condition keyword", TokenType::CONDITION);
-  mustParse("Expected colon after condition keyword", TokenType::COLON);
-  return parseExpr();
-}
-
-std::shared_ptr<Node> LlamaParser::parseSignatureSection() {
-  mustParse("Expected signature keyword", TokenType::SIGNATURE);
-  mustParse("Expected colon after signature keyword", TokenType::COLON);
-  return parseExpr();
-}
-
 SignatureDef LlamaParser::parseSignatureDef() {
   SignatureDef def;
   mustParse("Expected name or id keyword", TokenType::NAME, TokenType::ID);
@@ -286,10 +273,10 @@ GrepSection LlamaParser::parseGrepSection() {
   mustParse("Expected grep keyword", TokenType::GREP);
   mustParse("Expected colon after grep keyword", TokenType::COLON);
   GrepSection grepSection;
-  if (checkAny(TokenType::PATTERNS)) {
-    grepSection.Patterns = parsePatternsSection();
-  }
-  grepSection.Condition = parseConditionSection();
+  mustParse("Expected patterns section", TokenType::PATTERNS);
+  grepSection.Patterns = parsePatternsSection();
+  mustParse("Expected condition section", TokenType::CONDITION);
+  grepSection.Condition = parseBooleanSection();
   return grepSection;
 }
 
@@ -312,8 +299,7 @@ FileMetadataDef LlamaParser::parseFileMetadataDef() {
   return def;
 }
 
-std::shared_ptr<Node> LlamaParser::parseFileMetadataSection() {
-  mustParse("Expected file_metadata section", TokenType::FILE_METADATA);
+std::shared_ptr<Node> LlamaParser::parseBooleanSection() {
   mustParse("Expected colon", TokenType::COLON);
   return parseExpr();
 }
@@ -345,11 +331,11 @@ Rule LlamaParser::parseRuleDecl() {
   if (checkAny(TokenType::HASH)) {
     rule.Hash = parseHashSection();
   }
-  if (checkAny(TokenType::SIGNATURE)) {
-    rule.Signature = parseSignatureSection();
+  if (matchAny(TokenType::SIGNATURE)) {
+    rule.Signature = parseBooleanSection();
   }
-  if (checkAny(TokenType::FILE_METADATA)) {
-    rule.FileMetadata = parseFileMetadataSection();
+  if (matchAny(TokenType::FILE_METADATA)) {
+    rule.FileMetadata = parseBooleanSection();
   }
   if (checkAny(TokenType::GREP)) {
     rule.Grep = parseGrepSection();
