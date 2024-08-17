@@ -269,7 +269,6 @@ SignatureDef LlamaParser::parseSignatureDef() {
 }
 
 GrepSection LlamaParser::parseGrepSection() {
-  mustParse("Expected grep keyword", TokenType::GREP);
   mustParse("Expected colon after grep keyword", TokenType::COLON);
   GrepSection grepSection;
   mustParse("Expected patterns section", TokenType::PATTERNS);
@@ -335,7 +334,7 @@ Rule LlamaParser::parseRuleDecl() {
   if (matchAny(TokenType::FILE_METADATA)) {
     rule.FileMetadata = parseBooleanSection();
   }
-  if (checkAny(TokenType::GREP)) {
+  if (matchAny(TokenType::GREP)) {
     rule.Grep = parseGrepSection();
   }
   mustParse("Expected close curly brace", TokenType::CLOSE_BRACE);

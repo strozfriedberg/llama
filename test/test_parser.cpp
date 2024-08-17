@@ -303,7 +303,7 @@ TEST_CASE("parseSignatureSection") {
 
 TEST_CASE("parseGrepSection") {
   std::string input = R"(
-  grep:
+  :
     patterns:
       a = "test" encodings=UTF-8 nocase fixed
       b = "test2" encodings=UTF-8 nocase fixed
