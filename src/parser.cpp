@@ -1,7 +1,6 @@
 #include "parser.h"
 
 HashSection LlamaParser::parseHashSection() {
-  mustParse("Expected hash keyword", TokenType::HASH);
   mustParse("Expected colon after hash keyword", TokenType::COLON);
   HashSection hashSection;
   FileHashRecord rec;
@@ -328,7 +327,7 @@ Rule LlamaParser::parseRuleDecl() {
   if (checkAny(TokenType::META)) {
     rule.Meta = parseMetaSection();
   }
-  if (checkAny(TokenType::HASH)) {
+  if (matchAny(TokenType::HASH)) {
     rule.Hash = parseHashSection();
   }
   if (matchAny(TokenType::SIGNATURE)) {

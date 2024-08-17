@@ -124,26 +124,20 @@ TEST_CASE("parseFileHashRecordDoesNotThrowIfHashAndString") {
   REQUIRE_NOTHROW(parser.parseFileHashRecord());
 }
 
-TEST_CASE("parseHashSectionThrowsIfNotHash") {
+TEST_CASE("parseHashSectionThrowsIfNotColon") {
   std::string input = "notAHash";
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseHashSection(), ParserError);
 }
 
-TEST_CASE("parseHashSectionThrowsIfNotColon") {
-  std::string input = "hash notColon";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_THROWS_AS(parser.parseHashSection(), ParserError);
-}
-
-TEST_CASE("parseHashSectionDoesNotThrowIfHashAndColon") {
-  std::string input = "hash: md5 == \"test\"";
+TEST_CASE("parseHashSectionDoesNotThrowIfColon") {
+  std::string input = ": md5 == \"test\"";
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseHashSection());
 }
 
 TEST_CASE("parseHashSectionMultipleAlg") {
-  std::string input = "hash: md5 == \"test\"\nsha1 == \"abcdef\"";
+  std::string input = ": md5 == \"test\"\nsha1 == \"abcdef\"";
   LlamaParser parser(input, getTokensFromString(input));
   HashSection hashSection;
   REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
@@ -152,7 +146,7 @@ TEST_CASE("parseHashSectionMultipleAlg") {
 }
 
 TEST_CASE("parseHashSectionMultipleRecords") {
-  std::string input = "hash: md5 == \"test\", sha1 == \"abcdef\"\nmd5 == \"test2\"";
+  std::string input = ": md5 == \"test\", sha1 == \"abcdef\"\nmd5 == \"test2\"";
   LlamaParser parser(input, getTokensFromString(input));
   HashSection hashSection;
   REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
