@@ -141,6 +141,7 @@ public:
   std::string Input;
   std::vector<Token> Tokens;
   std::unordered_map<std::string, std::string> Patterns;
+  std::vector<std::shared_ptr<Node>> Atoms;
   uint64_t CurIdx = 0;
 };
 

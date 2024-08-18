@@ -381,6 +381,7 @@ TEST_CASE("parseRuleDecl") {
   auto root = std::static_pointer_cast<SigDefNode>(rule.Signature);
   REQUIRE(root->Value.Attr == TokenType::NAME);
   REQUIRE(root->Value.Val == "Executable");
+  REQUIRE(parser.Atoms.size() == 3);
 }
 
 TEST_CASE("parseRuleDeclThrowsIfSectionsAreOutOfOrder") {

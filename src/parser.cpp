@@ -212,16 +212,19 @@ std::shared_ptr<Node> LlamaParser::parseFactor() {
     auto funcNode = std::make_shared<FuncNode>();
     funcNode->Value = parseFuncCall();
     node = funcNode;
+    Atoms.push_back(node);
   }
   else if (checkAny(TokenType::NAME, TokenType::ID)) {
     auto sigDefNode = std::make_shared<SigDefNode>();
     sigDefNode->Value = parseSignatureDef();
     node = sigDefNode;
+    Atoms.push_back(node);
   }
   else if (checkAny(TokenType::CREATED, TokenType::MODIFIED, TokenType::FILESIZE, TokenType::FILEPATH, TokenType::FILENAME)) {
     auto fileMetadataNode = std::make_shared<FileMetadataNode>();
     fileMetadataNode->Value = parseFileMetadataDef();
     node = fileMetadataNode;
+    Atoms.push_back(node);
   }
   else {
     throw ParserError("Expected function call or signature definition", peek().Pos);
