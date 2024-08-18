@@ -93,6 +93,9 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
 void LlamaLexer::parseString(LineCol pos) {
   uint64_t start = CurIdx;
   while(getCurChar() != '"' && !isAtEnd()) {
+    if (getCurChar() == '\\') {
+      advance();
+    }
     advance();
   }
   if (isAtEnd()) {
