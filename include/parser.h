@@ -63,7 +63,6 @@ struct Node {
   virtual ~Node() = default;
 
   NodeType Type;
-  int Value;
   std::shared_ptr<Node> Left;
   std::shared_ptr<Node> Right;
 };
