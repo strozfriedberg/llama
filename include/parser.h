@@ -24,13 +24,15 @@ struct HashSection {
   uint64_t HashAlgs = 0;
 };
 
-struct SignatureDef {
+struct Atom {};
+
+struct SignatureDef : public Atom {
   TokenType Attr;
   std::string Val;
 };
 
 
-struct FileMetadataDef {
+struct FileMetadataDef : public Atom {
   TokenType Property;
   TokenType Operator;
   std::string Value;
@@ -46,7 +48,7 @@ struct PatternSection {
   std::unordered_map<std::string, std::vector<PatternDef>> Patterns;
 };
 
-struct ConditionFunction {
+struct ConditionFunction : public Atom {
   TokenType Name;
   std::vector<std::string> Args;
   TokenType Operator = TokenType::NONE;
@@ -61,6 +63,7 @@ struct Node {
   virtual ~Node() = default;
 
   NodeType Type;
+  int Value;
   std::shared_ptr<Node> Left;
   std::shared_ptr<Node> Right;
 };
@@ -70,14 +73,54 @@ struct SigDefNode : public Node {
   SignatureDef Value;
 };
 
+template<>
+struct std::hash<SignatureDef>
+{
+    std::size_t operator()(const SignatureDef& sig) const noexcept
+    {
+        const std::size_t h1 = std::hash<TokenType>{}(sig.Attr);
+        const std::size_t h2 = std::hash<std::string>{}(sig.Val);
+        return h1 ^ ((h2 << 1) >> 1);
+    }
+};
+
 struct FuncNode : public Node {
   FuncNode() { Type = NodeType::FUNC; }
   ConditionFunction Value;
 };
 
+template<>
+struct std::hash<ConditionFunction>
+{
+    std::size_t operator()(const ConditionFunction& func) const noexcept
+    {
+        const std::size_t h1 = std::hash<TokenType>{}(func.Name);
+        std::size_t h2 = 0;
+        for (const auto& arg : func.Args) {
+          const std::size_t h = std::hash<std::string>{}(arg);
+          h2 ^= ((h << 1) >> 1);
+        }
+        const std::size_t h3 = std::hash<TokenType>{}(func.Operator);
+        const std::size_t h4 = std::hash<std::string>{}(func.Value);
+        return h1 ^ ((h2 << 1) >> 1) ^ ((h3 << 1) >> 1) ^ ((h4 << 1) >> 1);
+    }
+};
+
 struct FileMetadataNode : public Node {
   FileMetadataNode() { Type = NodeType::META; }
   FileMetadataDef Value;
+};
+
+template<>
+struct std::hash<FileMetadataDef>
+{
+    std::size_t operator()(const FileMetadataDef& meta) const noexcept
+    {
+        const std::size_t h1 = std::hash<TokenType>{}(meta.Property);
+        const std::size_t h2 = std::hash<TokenType>{}(meta.Operator);
+        const std::size_t h3 = std::hash<std::string>{}(meta.Value);
+        return h1 ^ ((h2 << 1) >> 1) ^ ((h3 << 1) >> 1);
+    }
 };
 
 struct GrepSection {
@@ -141,7 +184,7 @@ public:
   std::string Input;
   std::vector<Token> Tokens;
   std::unordered_map<std::string, std::string> Patterns;
-  std::vector<std::shared_ptr<Node>> Atoms;
+  std::unordered_map<std::size_t, Atom> Atoms;
   uint64_t CurIdx = 0;
 };
 
