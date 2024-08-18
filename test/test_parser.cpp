@@ -368,10 +368,10 @@ TEST_CASE("parseRuleDecl") {
       description = "test"
     hash:
       md5 == "abcdef"
-    signature:
-      name == "Executable"
     file_metadata:
       created > "2023-05-04" and modified < "2023-05-06"
+    signature:
+      name == "Executable"
   }
   )";
   LlamaParser parser(input, getTokensFromString(input));

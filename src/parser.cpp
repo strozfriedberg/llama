@@ -329,13 +329,13 @@ Rule LlamaParser::parseRuleDecl() {
     mustParse("Expected colon", TokenType::COLON);
     rule.Hash = parseHashSection();
   }
-  if (matchAny(TokenType::SIGNATURE)) {
-    mustParse("Expected colon", TokenType::COLON);
-    rule.Signature = parseExpr();
-  }
   if (matchAny(TokenType::FILE_METADATA)) {
     mustParse("Expected colon", TokenType::COLON);
     rule.FileMetadata = parseExpr();
+  }
+  if (matchAny(TokenType::SIGNATURE)) {
+    mustParse("Expected colon", TokenType::COLON);
+    rule.Signature = parseExpr();
   }
   if (matchAny(TokenType::GREP)) {
     mustParse("Expected colon", TokenType::COLON);
