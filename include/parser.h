@@ -36,10 +36,6 @@ struct FileMetadataDef {
   std::string Value;
 };
 
-struct FileMetadataSection {
-  std::vector<FileMetadataDef> Fields;
-};
-
 struct PatternDef {
   std::string Pattern;
   LG_KeyOptions Options = {0,0,0};
@@ -58,7 +54,7 @@ struct ConditionFunction {
 };
 
 enum class NodeType {
-  AND, OR, FUNC, SIG
+  AND, OR, FUNC, SIG, META
 };
 
 struct Node {
@@ -79,6 +75,11 @@ struct FuncNode : public Node {
   ConditionFunction Value;
 };
 
+struct FileMetadataNode : public Node {
+  FileMetadataNode() { Type = NodeType::META; }
+  FileMetadataDef Value;
+};
+
 struct GrepSection {
   PatternSection Patterns;
   std::shared_ptr<Node> Condition;
@@ -89,7 +90,7 @@ struct Rule {
   MetaSection Meta;
   HashSection Hash;
   std::shared_ptr<Node> Signature;
-  FileMetadataSection FileMetadata;
+  std::shared_ptr<Node> FileMetadata;
   GrepSection Grep;
 };
 
@@ -130,12 +131,9 @@ public:
   std::shared_ptr<Node> parseFactor();
   std::shared_ptr<Node> parseTerm();
   std::shared_ptr<Node> parseExpr();
-  std::shared_ptr<Node> parseConditionSection();
-  std::shared_ptr<Node> parseSignatureSection();
   SignatureDef parseSignatureDef();
   GrepSection parseGrepSection();
   FileMetadataDef parseFileMetadataDef();
-  FileMetadataSection parseFileMetadataSection();
   MetaSection parseMetaSection();
   Rule parseRuleDecl();
   std::vector<Rule> parseRules();
