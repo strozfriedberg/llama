@@ -47,10 +47,23 @@ struct PatternSection {
 };
 
 struct ConditionFunction {
+  ConditionFunction() = default;
+  ConditionFunction(LineCol pos) : Pos(pos) {}
+  ~ConditionFunction() = default;
+
+  void assignValidators();
+  void validate();
+
+  LineCol Pos;
   TokenType Name;
   std::vector<std::string> Args;
   TokenType Operator = TokenType::NONE;
   std::string Value;
+
+  // validators
+  size_t MinArgs;
+  size_t MaxArgs;
+  bool IsCompFunc;
 };
 
 enum class NodeType {

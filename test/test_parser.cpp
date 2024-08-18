@@ -245,7 +245,7 @@ TEST_CASE("parsePatternsSectionDoesNotThrowIfPatterns") {
 }
 
 TEST_CASE("parseTermWithAnd") {
-  std::string input = "any(s1, s2, s3) and count(s1, 5) == 5";
+  std::string input = "any(s1, s2, s3) and count(s1) == 5";
   LlamaParser parser(input, getTokensFromString(input));
   auto node = std::make_shared<Node>();
   REQUIRE_NOTHROW(node = parser.parseTerm());
@@ -265,7 +265,7 @@ TEST_CASE("parseTermWithoutAnd") {
 }
 
 TEST_CASE("parseExpr") {
-  std::string input = "(any(s1, s2, s3) and count(s1, 5) == 5) or all(s1, s2, s3)";
+  std::string input = "(any(s1, s2, s3) and length(s1, 5) == 5) or all()";
   LlamaParser parser(input, getTokensFromString(input));
   auto node = std::make_shared<Node>();
   REQUIRE_NOTHROW(node = parser.parseExpr());
@@ -277,7 +277,7 @@ TEST_CASE("parseExpr") {
 }
 
 TEST_CASE("parseConditionSection") {
-  std::string input = "(any(s1, s2, s3) and count(s1, 5) == 5) or all(s1, s2, s3)";
+  std::string input = "(any(s1, s2, s3) and count(s1) == 5) or all()";
   LlamaParser parser(input, getTokensFromString(input));
   std::shared_ptr<Node> node;
   REQUIRE_NOTHROW(node = parser.parseExpr());
@@ -496,14 +496,15 @@ TEST_CASE("parseFuncCallAll") {
 }
 
 TEST_CASE("parseFuncCallWithNumber") {
-  std::string input = "count(s1, 5)";
+  std::string input = "count(s1) == 5";
   LlamaParser parser(input, getTokensFromString(input));
   ConditionFunction func;
   REQUIRE_NOTHROW(func = parser.parseFuncCall());
   REQUIRE(func.Name == TokenType::COUNT);
-  REQUIRE(func.Args.size() == 2);
+  REQUIRE(func.Args.size() == 1);
   REQUIRE(func.Args.at(0) == "s1");
-  REQUIRE(func.Args.at(1) == "5");
+  REQUIRE(func.Operator == TokenType::EQUAL_EQUAL);
+  REQUIRE(func.Value == "5");
 }
 
 TEST_CASE("parseFuncCallWithOperator") {
@@ -542,4 +543,36 @@ TEST_CASE("parseFileHashRecordThrowsIfDuplicateHashType") {
   std::string input = "md5 == \"test\", md5 == \"test2\"";
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_THROWS_AS(parser.parseFileHashRecord(), ParserError);
+}
+
+TEST_CASE("parseConditionFunctionInvalid"){
+  SECTION("Invalid function name") {
+    std::string input = "invalid()";
+    LlamaParser parser(input, getTokensFromString(input));
+    REQUIRE_THROWS_AS(parser.parseFuncCall(), ParserError);
+  }
+
+  SECTION("Invalid function argument") {
+    std::string input = "count(arg1, arg2)";
+    LlamaParser parser(input, getTokensFromString(input));
+    REQUIRE_THROWS_AS(parser.parseFuncCall(), ParserError);
+  }
+
+  SECTION("Invalid function operator") {
+    std::string input = "any(arg1) == 5";
+    LlamaParser parser(input, getTokensFromString(input));
+    REQUIRE_THROWS_AS(parser.parseFuncCall(), ParserError);
+  }
+
+  SECTION("Missing operator and/or value") {
+    std::string input = "count(arg1)";
+    LlamaParser parser(input, getTokensFromString(input));
+    REQUIRE_THROWS_AS(parser.parseFuncCall(), ParserError);
+  }
+
+  SECTION("Missing arguments") {
+    std::string input = "offset()";
+    LlamaParser parser(input, getTokensFromString(input));
+    REQUIRE_THROWS_AS(parser.parseFuncCall(), ParserError);
+  }
 }
