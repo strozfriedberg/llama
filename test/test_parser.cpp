@@ -596,15 +596,18 @@ public:
       Rules.insert(Rules.end(), rules.begin(), rules.end());
     }
     catch (UnexpectedInputError& e) {
+      LastError = e.messageWithPos();
       return -1;
     }
 
     return Rules.size();
   }
 
+  const std::string& getLastError() const { return LastError; }
   const std::vector<Rule>& getRules() const { return Rules; }
 
 private:
+  std::string LastError;
   std::vector<Rule> Rules;
 };
 
@@ -626,6 +629,7 @@ TEST_CASE("RuleReader") {
   REQUIRE(result == 2);
   result = reader.read(input2);
   REQUIRE(result == -1);
+  REQUIRE(reader.getLastError() == "Expected rule name at line 1 column 6");
   result = reader.read(input3);
   REQUIRE(result == 3);
 }
