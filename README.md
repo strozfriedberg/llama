@@ -195,7 +195,7 @@ The `condition` section is the other subsection under the `grep` section. This s
 
 ##### any
 
-The `any` condition function takes any number of patterns as arguments and will return true if any of the patterns return a hit in the file.
+The `any` condition function takes any number of patterns as arguments and will return true if any of those patterns return a hit in the file.
 
 ```
 rule Phishing {
@@ -208,4 +208,4 @@ rule Phishing {
 }
 ```
 
-This is the equivalent of `any of (s*)` in a YARA rule.
+This is the equivalent of `any of (s*)` in a YARA rule. If no arguments are provided to `any`, it will return true if any of the patterns defined in the `patterns` section return a hit in the file.
