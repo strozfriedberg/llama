@@ -189,3 +189,23 @@ rule myRule {
 
 For a list of all supported encodings, run `lightgrep --list-encodings`.
 
+#### Condition section
+
+The `condition` section is the other subsection under the `grep` section. This section is where you can define the nature of the occurrences of your assigned patterns in a file for it to be considered a positive hit for your rule. The following functions are supported in the `condition` section.
+
+##### any
+
+The `any` condition function takes any number of patterns as arguments and will return true if any of the patterns return a hit in the file.
+
+```
+rule Phishing {
+  grep:
+    patterns:
+      s1 = "X-Mailer: SMF" fixed
+      s2 = "X-Mailer: Drupal" fixed
+    condition:
+      any(s1, s2)
+}
+```
+
+This is the equivalent of `any of (s*)` in a YARA rule.
