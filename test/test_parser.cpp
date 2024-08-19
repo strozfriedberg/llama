@@ -598,8 +598,6 @@ TEST_CASE("RuleReader") {
       filesize > 30000
   })");
   RuleReader reader;
-  // read needs to catch UnexpectedInput errors
-  // call messageWithPos
   int result = reader.read(input);
   REQUIRE(result == 2);
   result = reader.read(input2);
