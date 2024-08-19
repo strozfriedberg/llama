@@ -45,7 +45,7 @@ struct FileMetadataDef : public Atom {
 struct PatternDef {
   std::string Pattern;
   LG_KeyOptions Options = {0,0,0};
-  int Encoding;
+  std::string Encoding;
 };
 
 struct PatternSection {
@@ -180,8 +180,8 @@ public:
   std::string parseHashValue();
   TokenType parseOperator();
   std::vector<PatternDef> parsePatternMod();
-  std::vector<int> parseEncodings();
-  int parseEncoding();
+  std::vector<std::string> parseEncodings();
+  std::string parseEncoding();
   std::vector<PatternDef> parsePatternDef();
   PatternSection parsePatternsSection();
   std::string parseNumber();

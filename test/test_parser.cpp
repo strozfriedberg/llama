@@ -179,7 +179,7 @@ TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
   REQUIRE_NOTHROW(defs = parser.parsePatternDef());
   REQUIRE(defs.size() == 1);
   REQUIRE(defs.at(0).Pattern == "test");
-  REQUIRE(defs.at(0).Encoding == lg_get_encoding_id("ASCII"));
+  REQUIRE(defs.at(0).Encoding == "ASCII");
   REQUIRE(defs.at(0).Options.CaseInsensitive);
   REQUIRE(!defs.at(0).Options.FixedString);
 }
@@ -205,11 +205,11 @@ TEST_CASE("parseEncodingsIfDanglingComma") {
 TEST_CASE("parseEncodingsDoesNotThrowIfEncodings") {
   std::string input = "=UTF-8,UTF-16LE";
   LlamaParser parser(input, getTokensFromString(input));
-  std::vector<int> encodings;
+  std::vector<std::string> encodings;
   REQUIRE_NOTHROW(encodings = parser.parseEncodings());
   REQUIRE(encodings.size() == 2);
-  REQUIRE(encodings.at(0) == 0);
-  REQUIRE(encodings.at(1) == 2);
+  REQUIRE(encodings.at(0) == "UTF-8");
+  REQUIRE(encodings.at(1) == "UTF-16LE");
 }
 
 TEST_CASE("parseStringDefThrowsIfNotStringDef") {
@@ -315,7 +315,7 @@ TEST_CASE("parseGrepSection") {
   REQUIRE_NOTHROW(section = parser.parseGrepSection());
   REQUIRE(section.Patterns.Patterns.size() == 2);
   REQUIRE(section.Patterns.Patterns.find("a")->second.at(0).Pattern == "test");
-  REQUIRE(section.Patterns.Patterns.find("a")->second.at(0).Encoding == lg_get_encoding_id("UTF-8"));
+  REQUIRE(section.Patterns.Patterns.find("a")->second.at(0).Encoding == "UTF-8");
   REQUIRE(section.Condition->Type == NodeType::AND);
   REQUIRE(section.Condition->Left->Type == NodeType::FUNC);
   REQUIRE(section.Condition->Right->Type == NodeType::FUNC);
