@@ -1,5 +1,5 @@
 #include "lexer.h"
-#include "rule_reader.h"
+#include "rulereader.h"
 
 int RuleReader::read(const std::string& input) {
   LlamaLexer lexer(input);
