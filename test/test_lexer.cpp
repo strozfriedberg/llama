@@ -572,3 +572,12 @@ TEST_CASE("parseMultiLineCommentIncreasesLineNumAndResetsColumnNum") {
   REQUIRE(lexer.Pos.LineNum == 4);
   REQUIRE(lexer.Pos.ColNum == 3);
 }
+
+TEST_CASE("parseStringWithEscapedDoubleQuote") {
+  std::string input = R"(this is a \"string\" that is escaped")";
+  LlamaLexer lexer(input);
+  lexer.parseString({0,0});
+  REQUIRE(lexer.getTokens().size() == 1);
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.getTokens().at(0).length() == input.size() - 1);
+}
