@@ -577,3 +577,9 @@ TEST_CASE("parseConditionFunctionInvalid"){
     REQUIRE_THROWS_AS(parser.parseFuncCall(), ParserError);
   }
 }
+
+TEST_CASE("EmptyStringNoRules") {
+  std::string input = "";
+  LlamaParser parser(input, getTokensFromString(input));
+  REQUIRE(parser.parseRules().size() == 0);
+}
