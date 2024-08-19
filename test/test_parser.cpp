@@ -603,12 +603,12 @@ public:
     return Rules.size();
   }
 
-  const std::string& getLastError() const { return LastError; }
   const std::vector<Rule>& getRules() const { return Rules; }
+  const std::string& getLastError() const { return LastError; }
 
 private:
-  std::string LastError;
   std::vector<Rule> Rules;
+  std::string LastError;
 };
 
 TEST_CASE("RuleReader") {
