@@ -586,7 +586,7 @@ TEST_CASE("EmptyStringNoRules") {
 
 class RuleReader {
 public:
-  int read(std::string input) {
+  int read(const std::string& input) {
     LlamaLexer lexer(input);
     try {
       lexer.scanTokens();
@@ -601,6 +601,10 @@ public:
 
     return Rules.size();
   }
+
+  const std::vector<Rule>& getRules() const { return Rules; }
+
+private:
   std::vector<Rule> Rules;
 };
 
