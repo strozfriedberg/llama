@@ -4,6 +4,8 @@
 #include <lightgrep/api.h>
 #include <lightgrep/util.h>
 
+#include <boost/functional/hash.hpp>
+
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -24,13 +26,15 @@ struct HashSection {
   uint64_t HashAlgs = 0;
 };
 
-struct SignatureDef {
+struct Atom {};
+
+struct SignatureDef : public Atom {
   TokenType Attr;
   std::string Val;
 };
 
 
-struct FileMetadataDef {
+struct FileMetadataDef : public Atom {
   TokenType Property;
   TokenType Operator;
   std::string Value;
@@ -46,7 +50,7 @@ struct PatternSection {
   std::unordered_map<std::string, std::vector<PatternDef>> Patterns;
 };
 
-struct ConditionFunction {
+struct ConditionFunction : public Atom {
   ConditionFunction() = default;
   ConditionFunction(LineCol pos) : Pos(pos) {}
   ~ConditionFunction() = default;
@@ -83,14 +87,54 @@ struct SigDefNode : public Node {
   SignatureDef Value;
 };
 
+template<>
+struct std::hash<SignatureDef>
+{
+    std::size_t operator()(const SignatureDef& sig) const noexcept {
+      std::size_t hash = 0;
+      boost::hash_combine(hash, std::hash<TokenType>{}(sig.Attr));
+      boost::hash_combine(hash, std::hash<std::string>{}(sig.Val));
+      return hash;
+    }
+};
+
 struct FuncNode : public Node {
   FuncNode() { Type = NodeType::FUNC; }
   ConditionFunction Value;
 };
 
+template<>
+struct std::hash<ConditionFunction>
+{
+    std::size_t operator()(const ConditionFunction& func) const noexcept {
+      std::size_t hash = 0, h2 = 0;
+      for (const auto& arg : func.Args) {
+        const std::size_t h = std::hash<std::string>{}(arg);
+        boost::hash_combine(h2, h);
+      }
+      boost::hash_combine(hash, std::hash<TokenType>{}(func.Name));
+      boost::hash_combine(hash, h2);
+      boost::hash_combine(hash, std::hash<TokenType>{}(func.Operator));
+      boost::hash_combine(hash, std::hash<std::string>{}(func.Value));
+      return hash;
+    }
+};
+
 struct FileMetadataNode : public Node {
   FileMetadataNode() { Type = NodeType::META; }
   FileMetadataDef Value;
+};
+
+template<>
+struct std::hash<FileMetadataDef>
+{
+    std::size_t operator()(const FileMetadataDef& meta) const noexcept {
+      std::size_t hash = 0;
+      boost::hash_combine(hash, std::hash<TokenType>{}(meta.Property));
+      boost::hash_combine(hash, std::hash<TokenType>{}(meta.Operator));
+      boost::hash_combine(hash, std::hash<std::string>{}(meta.Value));
+      return hash;
+    }
 };
 
 struct GrepSection {
@@ -154,6 +198,7 @@ public:
   std::string Input;
   std::vector<Token> Tokens;
   std::unordered_map<std::string, std::string> Patterns;
+  std::unordered_map<std::size_t, Atom> Atoms;
   uint64_t CurIdx = 0;
 };
 
