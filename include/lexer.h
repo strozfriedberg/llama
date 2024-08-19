@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cctype>
 #include <cstdint>
 #include <iostream>

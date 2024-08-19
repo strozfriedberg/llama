@@ -29,6 +29,7 @@ src_llama_common = \
 	src/readseek_impl.cpp \
 	src/recordbuffer.cpp \
 	src/recordhasher.cpp \
+	src/rule_reader.cpp \
 	src/schema.cpp \
 	src/timestamps.cpp \
 	src/treehasher.cpp \
