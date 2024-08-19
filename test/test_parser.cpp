@@ -583,3 +583,45 @@ TEST_CASE("EmptyStringNoRules") {
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE(parser.parseRules().size() == 0);
 }
+
+class RuleReader {
+public:
+  int read(std::string input) {
+    LlamaLexer lexer(input);
+    try {
+      lexer.scanTokens();
+      LlamaParser parser(input, lexer.getTokens());
+      std::vector<Rule> rules = parser.parseRules();
+      Rules.reserve(Rules.size() + rules.size());
+      Rules.insert(Rules.end(), rules.begin(), rules.end());
+    }
+    catch (UnexpectedInputError& e) {
+      return -1;
+    }
+
+    return Rules.size();
+  }
+  std::vector<Rule> Rules;
+};
+
+TEST_CASE("RuleReader") {
+  std::string input(R"(
+  rule MyRule {}
+  rule MyOtherRule {}
+  )");
+  std::string input2("rule {}");
+  std::string input3(R"(
+  rule MyThirdRule {
+    file_metadata:
+      filesize > 30000
+  })");
+  RuleReader reader;
+  // read needs to catch UnexpectedInput errors
+  // call messageWithPos
+  int result = reader.read(input);
+  REQUIRE(result == 2);
+  result = reader.read(input2);
+  REQUIRE(result == -1);
+  result = reader.read(input3);
+  REQUIRE(result == 3);
+}
