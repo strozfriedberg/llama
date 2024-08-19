@@ -149,7 +149,7 @@ rule MyRule {
 }
 ```
 
-The next three sections describe pattern modifiers that you may use to specify attributes for your patterns. These modifiers may be combined for each pattern in any order.
+In the rule above, `s1` and `s2` are _pattern identifiers_ for `"foobar"` and `"baroo"`. The next three sections describe pattern modifiers that you may use to specify attributes for your patterns. These modifiers may be combined for each pattern in any order.
 
 ##### Fixed strings
 
@@ -195,7 +195,7 @@ The `condition` section is the other subsection under the `grep` section. This s
 
 ##### any
 
-The `any` condition function takes any number of patterns as arguments and will return true if any of those patterns return a hit in the file.
+The `any` condition function takes any number of pattern identifiers as arguments and will return true if any of those patterns return a hit in the file.
 
 ```
 rule Phishing {
@@ -227,3 +227,19 @@ rule Phishing {
 
 This is the equivalent of `all of them` in a YARA rule.
 
+##### count
+
+The `count` function takes one pattern identifier as an argument and is used to verify the number of hits for a given pattern. A call to `count` must be followed by an integer comparison.
+
+```
+rule Phishing {
+  grep:
+    patterns:
+      s1 = "X-Mailer: SMF" fixed
+      s2 = "X-Mailer: Drupal" fixed
+    condition:
+      count(s1) > 1
+}
+```
+
+In the rule above, the `condition` will return true for a file if the file contains at least two hits for the `s2` pattern.
