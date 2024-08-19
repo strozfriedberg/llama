@@ -208,4 +208,22 @@ rule Phishing {
 }
 ```
 
-This is the equivalent of `any of (s*)` in a YARA rule. If no arguments are provided to `any`, it will return true if any of the patterns defined in the `patterns` section return a hit in the file.
+This is the equivalent of `any of (s*)` in a YARA rule. If no arguments are provided to `any`, it will return true if any of the patterns defined in the `patterns` section return a hit in the file. In that case, the YARA equivalent to Llama's `any()` would be `any of them`. In the rule above, `any(s1, s2)` and `any()` are equivalent.
+
+##### all
+
+The `all` condition function takes zero arguments and will return true if there is at least one hit for each of the patterns defined in the `patterns` section.
+
+```
+rule Phishing {
+  grep:
+    patterns:
+      s1 = "X-Mailer: SMF" fixed
+      s2 = "X-Mailer: Drupal" fixed
+    condition:
+      all()
+}
+```
+
+This is the equivalent of `all of them` in a YARA rule.
+
