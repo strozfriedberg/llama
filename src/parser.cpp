@@ -352,7 +352,7 @@ MetaSection LlamaParser::parseMetaSection() {
 Rule LlamaParser::parseRuleDecl() {
   Rule rule;
   mustParse("Expected rule keyword", TokenType::RULE);
-  mustParse("Expected identifier", TokenType::IDENTIFIER);
+  mustParse("Expected rule name", TokenType::IDENTIFIER);
   rule.Name = getPreviousLexeme();
   mustParse("Expected open curly brace", TokenType::OPEN_BRACE);
 
