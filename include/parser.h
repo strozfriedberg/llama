@@ -8,6 +8,7 @@
 
 #include <boost/functional/hash.hpp>
 
+#include <map>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -49,7 +50,7 @@ struct PatternDef {
 };
 
 struct PatternSection {
-  std::unordered_map<std::string, std::vector<PatternDef>> Patterns;
+  std::map<std::string, std::vector<PatternDef>> Patterns;
 };
 
 struct ConditionFunction : public Atom {
