@@ -586,7 +586,17 @@ TEST_CASE("EmptyStringNoRules") {
 
 class RuleReader {
 public:
-  int read(const std::string& input) {
+  int read(const std::string& input);
+
+  const std::vector<Rule>& getRules() const { return Rules; }
+  const std::string& getLastError() const { return LastError; }
+
+private:
+  std::vector<Rule> Rules;
+  std::string LastError;
+};
+
+int RuleReader::read(const std::string& input) {
     LlamaLexer lexer(input);
     try {
       lexer.scanTokens();
@@ -602,14 +612,6 @@ public:
 
     return Rules.size();
   }
-
-  const std::vector<Rule>& getRules() const { return Rules; }
-  const std::string& getLastError() const { return LastError; }
-
-private:
-  std::vector<Rule> Rules;
-  std::string LastError;
-};
 
 TEST_CASE("RuleReader") {
   std::string input(R"(
