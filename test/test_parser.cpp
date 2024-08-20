@@ -259,7 +259,7 @@ TEST_CASE("parseTermWithAnd") {
 }
 
 TEST_CASE("parseTermWithoutAnd") {
-  std::string input = "any(s1, s2, s3)";
+  std::string input = "any()";
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE_NOTHROW(parser.parseTerm());
 }
