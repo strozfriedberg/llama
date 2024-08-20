@@ -104,3 +104,4 @@ struct DirentBatch {
 
   void copyToDB(duckdb_appender& appender);
 };
+

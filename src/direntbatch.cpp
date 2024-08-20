@@ -22,7 +22,6 @@ void append(duckdb_appender& appender, T t, Args... args) {
   append(appender, args...);
 }
 
-
 void DirentBatch::copyToDB(duckdb_appender& appender) {
   duckdb_state state;
   for (uint32_t i = 0; i < Offsets.size(); ++i) {
