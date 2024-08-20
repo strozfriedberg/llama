@@ -579,6 +579,85 @@ TEST_CASE("parseConditionFunctionInvalid"){
   }
 }
 
+TEST_CASE("parseConditionFunctionValid") {
+  SECTION("all with zero args") {
+    std::string input = "all()";
+    LlamaParser parser(input, getTokensFromString(input));
+    ConditionFunction func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
+  }
+
+  SECTION("all with many args") {
+    std::string input = "all(arg1, arg2, arg3)";
+    LlamaParser parser(input, getTokensFromString(input));
+    ConditionFunction func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
+  }
+
+  SECTION("any with zero args") {
+    std::string input = "any()";
+    LlamaParser parser(input, getTokensFromString(input));
+    ConditionFunction func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
+  }
+
+  SECTION("any with many args") {
+    std::string input = "any(arg1, arg2, arg3)";
+    LlamaParser parser(input, getTokensFromString(input));
+    ConditionFunction func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
+  }
+
+  SECTION("count with one arg and comparison") {
+    std::string input = "count(arg1) == 5";
+    LlamaParser parser(input, getTokensFromString(input));
+    ConditionFunction func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
+  }
+
+  SECTION("length with one arg and comparison") {
+    std::string input = "length(arg1) == 5";
+    LlamaParser parser(input, getTokensFromString(input));
+    ConditionFunction func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
+  }
+
+  SECTION("length with two args and comparison") {
+    std::string input = "length(arg1, 4) == 5";
+    LlamaParser parser(input, getTokensFromString(input));
+    ConditionFunction func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
+  }
+
+  SECTION("offset with one arg and comparison") {
+    std::string input = "offset(arg1) == 5";
+    LlamaParser parser(input, getTokensFromString(input));
+    ConditionFunction func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
+  }
+
+  SECTION("offset with two args and comparison") {
+    std::string input = "offset(arg1, 4) == 5";
+    LlamaParser parser(input, getTokensFromString(input));
+    ConditionFunction func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
+  }
+
+  SECTION("count_has_hits with zero args and comparison") {
+    std::string input = "count_has_hits() > 6";
+    LlamaParser parser(input, getTokensFromString(input));
+    ConditionFunction func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
+  }
+
+  SECTION("count_has_hits with many args and comparison") {
+    std::string input = "count_has_hits(arg1, arg2, arg3) == 3";
+    LlamaParser parser(input, getTokensFromString(input));
+    ConditionFunction func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
+  }
+}
+
 TEST_CASE("EmptyStringNoRules") {
   std::string input = "";
   LlamaParser parser(input, getTokensFromString(input));
