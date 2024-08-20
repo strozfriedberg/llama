@@ -2,7 +2,7 @@
 
 void ConditionFunction::assignValidators() {
   switch(Name) {
-    case TokenType::ALL:            MinArgs = 0; MaxArgs = 0; IsCompFunc = false;        break;
+    case TokenType::ALL:            MinArgs = 0; MaxArgs = SIZE_MAX; IsCompFunc = false; break;
     case TokenType::ANY:            MinArgs = 0; MaxArgs = SIZE_MAX; IsCompFunc = false; break;
     case TokenType::OFFSET:         MinArgs = 1; MaxArgs = 2; IsCompFunc = true;         break;
     case TokenType::COUNT:          MinArgs = 1; MaxArgs = 1; IsCompFunc = true;         break;
