@@ -4,7 +4,7 @@ Llama is Lightgrep's Amazing Media Analyzer.
 
 If you're used to [writing YARA rules](https://yara.readthedocs.io/en/stable/writingrules.html), you'll have no problem learning how to write Llama rules.
 
-Like YARA rules, Llama rules start with the `rule` keyword, followed by the rule name. The rest of the rule is surrounded with curly braces.
+Like YARA rules, Llama rules start with the `rule` keyword, followed by the rule name. The rest of the rule is enclosed in curly braces.
 
 ```
 rule MyLlamaRule {
@@ -57,7 +57,7 @@ Llama rule sections are designated by their name followed by a colon. The follow
 * `patterns` (subsection of `grep`)
 * `condition` (subsection of `grep`)
 
-Though no sections are required for your rule to be valid, they must be in the order above. Sections in each rule are implicitly `AND`'d.
+Though no sections are required for your rule to be valid, they must be in the order above. Sections in each rule are implicitly `AND`'d together.
 
 ### Meta section
 
@@ -79,7 +79,7 @@ rule MyRule {
 
 ### Hash section
 
-The `hash` section is a place for you to filter by a file's hash value. Each comma-separated hash value is evaluated as belonging to the same file. Every value that is not comma-separated from the hash that came before it is evaluated as belonging to another file.
+The `hash` section is a place for you to filter by a file's hash value. Each comma-separated hash value is evaluated as belonging to the same file. Every value that is not comma-separated from the hash that came before it is evaluated as belonging to another file. This section only supports the `==` comparison operator.
 
 #### Example
 
@@ -118,8 +118,8 @@ The `file_metadata` section allows you to filter on the following file attribute
 * `created` - created time of the file, must be a ISO-8601-compliant datetime surrounded by double-quotes
 * `modified` - modified time of the file, must be a ISO-8601-compliant datetime surrounded by double-quotes
 * `filesize` - size of the file in bytes, must be an integer not surrounded by double-quotes
-* `filepath` - path to the directory containing the file
-* `filename` - the name of the file
+* `filepath` - path to the directory containing the file, must be a double-quoted string
+* `filename` - the name of the file, must be a double-quoted string
 
 Fields in this section may be combined with `AND` and `OR` boolean operators and expressions may be grouped with parentheses. This section supports the comparison operators `==`, `>=`, `<=`, `>`, and `<`.
 
@@ -138,7 +138,7 @@ The `grep` section contains two subsections: `patterns` and `condition`.
 
 #### Patterns section
 
-The `patterns` section is the place to define patterns (or if you're used to YARA, strings) that you want to look for with your rule. These patterns must be assigned to an identifier, like so:
+The `patterns` section is the place to define patterns (or if you're used to YARA, strings) that you want to look for with your rule. Each pattern must be assigned to an identifier, like so:
 
 ```
 rule MyRule {
@@ -153,7 +153,7 @@ In the rule above, `s1` and `s2` are _pattern identifiers_ for `"foobar"` and `"
 
 ##### Fixed strings
 
-By default, patterns defined in Llama rules are evaluated as regex. This means that in a pattern such as "bad-domain.com", the period will be evaluated as a wildcard character. If you'd like for the period to be evaluated as a fixed string (so you don't have to escape the period), so you can put the keyword `fixed` after the pattern assignment.
+By default, patterns defined in Llama rules are evaluated as regex. This means that in a pattern such as "bad-domain.com", the period will be evaluated as a wildcard character. If you'd like for the pattern to be evaluated as a fixed string (so you don't have to escape the period), you can put the keyword `fixed` after the pattern assignment.
 
 ```
 rule myRule {
@@ -175,6 +175,8 @@ rule myRule {
 }
 ```
 
+As you can see in the rule above, you can combine pattern modifiers for a single pattern.
+
 ##### Pattern encodings
 
 As a result of using Lightgrep for pattern search, Llama can support over 100 encodings. To search for a pattern with a specific encoding(s), use the `encodings` keyword followed by a comma-separated list of your encodings.
@@ -195,7 +197,7 @@ The `condition` section is the other subsection under the `grep` section. This s
 
 ##### any
 
-The `any` condition function takes any number of pattern identifiers as arguments and will evaluate to true if any of those patterns return a hit in the file.
+The `any` condition function takes zero or more pattern identifiers as arguments and will evaluate to true if any of those patterns return a hit in the file.
 
 ```
 rule Phishing {
@@ -208,11 +210,11 @@ rule Phishing {
 }
 ```
 
-This is the equivalent of `any of (s*)` in a YARA rule. If no arguments are provided to `any`, it will evaluate to true if any of the patterns defined in the `patterns` section return a hit in the file. In that case, the YARA equivalent to Llama's `any()` would be `any of them`. In the rule above, `any(s1, s2)` and `any()` are equivalent.
+The condition above is the equivalent of `any of (s*)` in a YARA rule. If no arguments are provided to `any`, it will evaluate to true if any of the patterns defined in the `patterns` section return a hit in the file. In that case, the YARA equivalent to Llama's `any()` would be `any of them`.
 
 ##### all
 
-The `all` condition function takes zero arguments and will evaluate to true if there is at least one hit for each of the patterns defined in the `patterns` section.
+The `all` condition function takes zero or more pattern identifiers arguments. If you provide zero arguments, it will evaluate to true if there is at least one hit for each of the patterns defined in the `patterns` section. If you provide one or more arguments, it will evaluate to true if there is at least one hit for each of the patterns that you've specified as arguments.
 
 ```
 rule Phishing {
@@ -242,7 +244,7 @@ rule Phishing {
 }
 ```
 
-In the rule above, the `condition` will evaluate to true for a file if the file contains at least two hits for the `s2` pattern.
+In the rule above, the `condition` will evaluate to true for a file if the file contains at least two hits for the `s1` pattern.
 
 ##### length
 
@@ -262,7 +264,7 @@ For example, the call to `length(s1) > 14` will evaluate to true if any hits for
 
 ##### offset
 
-The `offset` is used to verify the offset of a particular hit. Like `length`, `offset` can take one or two arguments. If one argument is provided, that argument must be a pattern identifier. If two arguments are provided, the first argument must be a pattern identifier, and the second argument must be an integer representing the occurrence. A call to `offset` must be followed by an integer comparison.
+The `offset` function is used to verify the offset of a particular hit. Like `length`, `offset` can take one or two arguments. If one argument is provided, that argument must be a pattern identifier. If two arguments are provided, the first argument must be a pattern identifier, and the second argument must be an integer representing the `n`th occurrence. A call to `offset` must be followed by an integer comparison.
 
 ```
 rule Phishing {
@@ -274,11 +276,11 @@ rule Phishing {
 }
 ```
 
-For example, the call to `offset(s1) < 200` will evaluate to true if any of the hits for the `s1` pattern start before the 25th byte offset in the file. The call to `offset(s1, 3) > 50` will evaluate to true if the 3rd hit of the `s1` pattern starts after the 50th byte offset in the file.
+In this example, the call to `offset(s1) < 25` will evaluate to true if any of the hits for the `s1` pattern start before the 25th byte offset in the file. The call to `offset(s1, 3) > 50` will evaluate to true if the 3rd hit of the `s1` pattern starts after the 50th byte offset in the file.
 
 ##### count_has_hits
 
-The `count_has_hits` function gives you the ability to verify that a given number of the patterns you've defined in the `patterns` section have more than one hit. This function takes zero or more arguments and must be followed by an integer comparison. If you provide this function with zero arguments, it will count the number of patterns from your `patterns` section that have a hit and compare it with the given integer. If you provide one or more arguments, it will count the number of patterns from the args that you've provided that have hits and compare it with the provided integer. In other words, `count_has_hits() > 4` is equivalent to YARA's `4 of them`, and `count_has_hits(s1, s2, s3) > 4` is equivalent to YARA's `4 of s*`.
+The `count_has_hits` function gives you the ability to verify that a given number of the patterns you've defined in the `patterns` section have more than one hit. This function takes zero or more arguments and must be followed by an integer comparison. If you provide  zero arguments, it will count the number of patterns from your `patterns` section that have a hit and compare it with the given integer. If you provide one or more arguments, it will count the number of patterns from the args that you've provided that have hits and compare it with the provided integer. In other words, `count_has_hits() == 4` is equivalent to YARA's `4 of them`, and `count_has_hits(s1, s2, s3) == 4` is equivalent to YARA's `4 of s*`.
 
 ```
 rule Phishing {
@@ -286,9 +288,10 @@ rule Phishing {
     patterns:
       s1 = "X-Mailer: SMF" fixed
       s2 = "X-Mailer: Drupal" fixed
+      s3 = "billing.php" fixed
     condition:
       count_has_hits() > 1
 }
 ```
 
-The call to `count_has_hits` in the rule above will evaluate to true if at least one of the patterns in the `patterns` section has a hit.
+The call to `count_has_hits` in the rule above will evaluate to true if at least two of the patterns in the `patterns` section has a hit.
