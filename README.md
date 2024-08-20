@@ -274,4 +274,21 @@ rule Phishing {
 }
 ```
 
-For example, the call to `offset(s1) < 200` will return true if any of the hits for the `s1` pattern start before the 25th byte offset in the file. The call to `offset(s1, 3) > 50` will evaluate to true if the 3rd hit of the `s1` pattern starts after the 50th byte offset in the file.
+For example, the call to `offset(s1) < 200` will evaluate to true if any of the hits for the `s1` pattern start before the 25th byte offset in the file. The call to `offset(s1, 3) > 50` will evaluate to true if the 3rd hit of the `s1` pattern starts after the 50th byte offset in the file.
+
+##### count_has_hits
+
+The `count_has_hits` function gives you the ability to verify that a given number of the patterns you've defined in the `patterns` section have more than one hit. This function takes zero or more arguments and must be followed by an integer comparison. If you provide this function with zero arguments, it will count the number of patterns from your `patterns` section that have a hit and compare it with the given integer. If you provide one or more arguments, it will count the number of patterns from the args that you've provided that have hits and compare it with the provided integer. In other words, `count_has_hits() > 4` is equivalent to YARA's `4 of them`, and `count_has_hits(s1, s2, s3) > 4` is equivalent to YARA's `4 of s*`.
+
+```
+rule Phishing {
+  grep:
+    patterns:
+      s1 = "X-Mailer: SMF" fixed
+      s2 = "X-Mailer: Drupal" fixed
+    condition:
+      count_has_hits() > 1
+}
+```
+
+The call to `count_has_hits` in the rule above will evaluate to true if at least one of the patterns in the `patterns` section has a hit.
