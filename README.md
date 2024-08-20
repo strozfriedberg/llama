@@ -195,7 +195,7 @@ The `condition` section is the other subsection under the `grep` section. This s
 
 ##### any
 
-The `any` condition function takes any number of pattern identifiers as arguments and will return true if any of those patterns return a hit in the file.
+The `any` condition function takes any number of pattern identifiers as arguments and will evaluate to true if any of those patterns return a hit in the file.
 
 ```
 rule Phishing {
@@ -208,11 +208,11 @@ rule Phishing {
 }
 ```
 
-This is the equivalent of `any of (s*)` in a YARA rule. If no arguments are provided to `any`, it will return true if any of the patterns defined in the `patterns` section return a hit in the file. In that case, the YARA equivalent to Llama's `any()` would be `any of them`. In the rule above, `any(s1, s2)` and `any()` are equivalent.
+This is the equivalent of `any of (s*)` in a YARA rule. If no arguments are provided to `any`, it will evaluate to true if any of the patterns defined in the `patterns` section return a hit in the file. In that case, the YARA equivalent to Llama's `any()` would be `any of them`. In the rule above, `any(s1, s2)` and `any()` are equivalent.
 
 ##### all
 
-The `all` condition function takes zero arguments and will return true if there is at least one hit for each of the patterns defined in the `patterns` section.
+The `all` condition function takes zero arguments and will evaluate to true if there is at least one hit for each of the patterns defined in the `patterns` section.
 
 ```
 rule Phishing {
@@ -242,7 +242,7 @@ rule Phishing {
 }
 ```
 
-In the rule above, the `condition` will return true for a file if the file contains at least two hits for the `s2` pattern.
+In the rule above, the `condition` will evaluate to true for a file if the file contains at least two hits for the `s2` pattern.
 
 ##### length
 
@@ -258,7 +258,7 @@ rule Phishing {
 }
 ```
 
-For example, the call to `length(s1) > 14` will return true if any hits for the `s1` pattern are longer than 14 bytes. The call to `length(s1, 2) > 17`, on the other hand, will return true if the 2nd hit of the `s1` pattern is longer than 17 bytes.
+For example, the call to `length(s1) > 14` will evaluate to true if any hits for the `s1` pattern are longer than 14 bytes. The call to `length(s1, 2) > 17`, on the other hand, will evaluate to true if the 2nd hit of the `s1` pattern is longer than 17 bytes.
 
 ##### offset
 
