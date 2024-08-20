@@ -48,7 +48,7 @@ struct Magic {
   String2StringMap Extensions;
   String Pattern;
   bool FixedString;
-  bool CaseInsensetive;
+  bool CaseInsensitive;
   Strings Encodings;
   Strings Tags;
 

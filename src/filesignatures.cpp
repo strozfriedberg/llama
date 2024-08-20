@@ -47,7 +47,7 @@ expected<size_t> LightGrep::setup(MagicsType const &m) {
         continue;
       }
 
-      LG_KeyOptions opt = {p->FixedString, p->CaseInsensetive, false};
+      LG_KeyOptions opt = {p->FixedString, p->CaseInsensitive, false};
 
       auto pattern = lg_create_pattern();
       destroy_guard pattern_guard(
@@ -290,7 +290,7 @@ void readPatterns(jsoncons::json const &magic_json, Magic &m) {
   m.FixedString = magic_json.contains("fixed_string")
                       ? magic_json["fixed_string"].as_bool()
                       : false;
-  m.CaseInsensetive = magic_json.contains("case_insensitive")
+  m.CaseInsensitive = magic_json.contains("case_insensitive")
                           ? magic_json["case_insensitive"].as_bool()
                           : false;
   if (magic_json.contains("encoding")) {
