@@ -243,3 +243,22 @@ rule Phishing {
 ```
 
 In the rule above, the `condition` will return true for a file if the file contains at least two hits for the `s2` pattern.
+
+##### length
+
+The `length` function is used to verify the length of a hit. It takes either one or two arguments. If one argument is provided, that argument must be a pattern identifier. If two arguments are provided, the first argument must be a pattern identifier, and the second argument must be an integer representing the occurrence. A call to `length` must be followed by an integer comparison.
+
+```
+rule Phishing {
+  grep:
+    patterns:
+      s1 = "X-Mailer: \w+"
+    condition:
+      length(s1) > 14 or length(s1, 2) > 17
+}
+```
+
+For example, the call to `length(s1) > 14` will return true if any hits for the `s1` pattern are longer than 14 bytes. The call to `length(s1, 2) > 17`, on the other hand, will return true if the 2nd hit of the `s1` pattern is longer than 17 bytes.
+
+
+
