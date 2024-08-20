@@ -1,3 +1,5 @@
+#pragma once
+
 #include "token.h"
 
 #include <hasher/common.h>
@@ -6,6 +8,7 @@
 
 #include <boost/functional/hash.hpp>
 
+#include <map>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -43,11 +46,11 @@ struct FileMetadataDef : public Atom {
 struct PatternDef {
   std::string Pattern;
   LG_KeyOptions Options = {0,0,0};
-  int Encoding;
+  std::string Encoding;
 };
 
 struct PatternSection {
-  std::unordered_map<std::string, std::vector<PatternDef>> Patterns;
+  std::map<std::string, std::vector<PatternDef>> Patterns;
 };
 
 struct ConditionFunction : public Atom {
@@ -178,8 +181,8 @@ public:
   std::string parseHashValue();
   TokenType parseOperator();
   std::vector<PatternDef> parsePatternMod();
-  std::vector<int> parseEncodings();
-  int parseEncoding();
+  std::vector<std::string> parseEncodings();
+  std::string parseEncoding();
   std::vector<PatternDef> parsePatternDef();
   PatternSection parsePatternsSection();
   std::string parseNumber();

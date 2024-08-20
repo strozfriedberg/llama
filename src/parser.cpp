@@ -99,11 +99,10 @@ TokenType LlamaParser::parseOperator() {
 }
 
 std::vector<PatternDef> LlamaParser::parsePatternMod() {
-  const int ASCII = lg_get_encoding_id("ASCII");
   std::vector<PatternDef> defs;
   PatternDef patternDef;
   patternDef.Pattern = getPreviousLexeme();
-  std::vector<int> encodings;
+  std::vector<std::string> encodings;
 
   while (checkAny(TokenType::NOCASE, TokenType::FIXED, TokenType::ENCODINGS)) {
     if (matchAny(TokenType::NOCASE)) {
@@ -120,12 +119,12 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
   }
 
   if (encodings.empty()) {
-    encodings.push_back(ASCII);
+    encodings.push_back("ASCII");
   }
 
-  for (const int encoding : encodings) {
+  for (const std::string& encoding : encodings) {
     PatternDef curDef = patternDef;
-    if (encoding != ASCII) {
+    if (encoding != "ASCII") {
       curDef.Options.UnicodeMode = true;
     }
     curDef.Encoding = encoding;
@@ -135,8 +134,8 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
   return defs;
 }
 
-std::vector<int> LlamaParser::parseEncodings() {
-  std::vector<int> encodings;
+std::vector<std::string> LlamaParser::parseEncodings() {
+  std::vector<std::string> encodings;
   mustParse("Expected equal sign after encodings keyword", TokenType::EQUAL);
   encodings.push_back(parseEncoding());
   while (matchAny(TokenType::COMMA)) {
@@ -145,10 +144,9 @@ std::vector<int> LlamaParser::parseEncodings() {
   return encodings;
 }
 
-int LlamaParser::parseEncoding () {
+std::string LlamaParser::parseEncoding () {
   mustParse("Expected encoding", TokenType::IDENTIFIER);
-  std::string encoding_lexeme = getPreviousLexeme();
-  return lg_get_encoding_id(encoding_lexeme.c_str());
+  return getPreviousLexeme();
 }
 
 std::vector<PatternDef> LlamaParser::parsePatternDef() {
@@ -352,7 +350,7 @@ MetaSection LlamaParser::parseMetaSection() {
 Rule LlamaParser::parseRuleDecl() {
   Rule rule;
   mustParse("Expected rule keyword", TokenType::RULE);
-  mustParse("Expected identifier", TokenType::IDENTIFIER);
+  mustParse("Expected rule name", TokenType::IDENTIFIER);
   rule.Name = getPreviousLexeme();
   mustParse("Expected open curly brace", TokenType::OPEN_BRACE);
 
