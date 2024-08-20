@@ -260,5 +260,18 @@ rule Phishing {
 
 For example, the call to `length(s1) > 14` will return true if any hits for the `s1` pattern are longer than 14 bytes. The call to `length(s1, 2) > 17`, on the other hand, will return true if the 2nd hit of the `s1` pattern is longer than 17 bytes.
 
+##### offset
 
+The `offset` is used to verify the offset of a particular hit. Like `length`, `offset` can take one or two arguments. If one argument is provided, that argument must be a pattern identifier. If two arguments are provided, the first argument must be a pattern identifier, and the second argument must be an integer representing the occurrence. A call to `offset` must be followed by an integer comparison.
 
+```
+rule Phishing {
+  grep:
+    patterns:
+      s1 = "X-Mailer: \w+"
+    condition:
+      offset(s1) < 25 and offset(s1, 3) > 50
+}
+```
+
+For example, the call to `offset(s1) < 200` will return true if any of the hits for the `s1` pattern start before the 25th byte offset in the file. The call to `offset(s1, 3) > 50` will evaluate to true if the 3rd hit of the `s1` pattern starts after the 50th byte offset in the file.
