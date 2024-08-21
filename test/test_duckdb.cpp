@@ -52,14 +52,15 @@ TEST_CASE("TestMakeDuckDB") {
 
 template<typename T>
 constexpr const char* duckdbType() {
-  if (std::is_integral_v<T>) {
+  if constexpr (std::is_integral_v<T>) {
     return "UBIGINT";
   }
-  else if (std::is_convertible_v<T, std::string>) {
+  else if constexpr (std::is_convertible_v<T, std::string>) {
     return "VARCHAR";
   }
   else {
     return "UNKNOWN";
+    //static_assert(false, "Could not convert type successfully");
   }
 }
 
@@ -142,7 +143,7 @@ public:
 //  static constexpr auto ColNames = {"path", "meta_addr", "parent_addr"};
 
 
-  static const std::string createQuery(const char* table) {
+  static std::string createQuery(const char* table) {
     std::string query = "CREATE TABLE ";
     query += table;
     query += " (";
@@ -170,6 +171,7 @@ TEST_CASE("testTypesFiguring") {
   static_assert(DuckRec::colIndex("meta_addr") == 1);
 
   REQUIRE(std::string("VARCHAR") == duckdbType<std::string>());
+  static_assert(std::char_traits<char>::compare(duckdbType<std::string>(), "VARCHAR", 7) == 0);
 
   REQUIRE(DuckRec::createQuery("DuckRec") == "CREATE TABLE DuckRec (path VARCHAR, meta_addr UBIGINT, parent_addr UBIGINT);");
 
