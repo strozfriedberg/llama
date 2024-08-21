@@ -97,7 +97,6 @@ std::string readfile(const std::string& path) {
 }
 
 bool Llama::readpatterns(const std::vector<std::string>& keyFiles) {
-  // std::cerr << "begin readpatterns" << std::endl;
   std::shared_ptr<FSMHandle> fsm(lg_create_fsm(1000, 100000), lg_destroy_fsm);
 
   const char* defaultEncodings[] = {"utf-8", "utf-16le"};
@@ -117,12 +116,9 @@ bool Llama::readpatterns(const std::vector<std::string>& keyFiles) {
     }
   }
 
-  // std::cerr << "compiling program" << std::endl;
   LG_ProgramOptions progOpts{1};
   LgProg = std::shared_ptr<ProgramHandle>(lg_create_program(fsm.get(), &progOpts), lg_destroy_program);
   if (LgProg) {
-    // std::cerr << "Number of patterns: " << lg_pattern_count(LgProg.get()) <<
-    // std::endl; std::cerr << "Done with readpatterns" << std::endl;
     return true;
   }
   else {
