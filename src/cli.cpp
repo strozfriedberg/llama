@@ -34,7 +34,11 @@ Cli::Cli() : All(), Opts(new Options) {
       ("rule_file,r",
         po::value<std::string>(&Opts->RuleFile)
         ->value_name("RULE_FILE"),
-        "File containing Llama rule(s) to evaluate");
+        "File containing Llama rule(s) to evaluate")
+      ("rule_dir,R",
+        po::value<std::string>(&Opts->RuleDir)
+        ->value_name("RULE_DIR"),
+        "Path to directory containing rule files");
 
   All.add(commands).add(ioOpts).add(configOpts);
 
