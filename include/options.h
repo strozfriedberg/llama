@@ -9,6 +9,7 @@ struct Options {
   std::string Command;
   std::string Input;
   std::string Output;
+  std::string RuleFile;
   std::string MatchSet;
   std::vector<std::string> KeyFiles;
   unsigned int NumThreads;
