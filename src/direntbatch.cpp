@@ -1,5 +1,5 @@
 #include "direntbatch.h"
-
+#include "llamaduck.h"
 
 void appendVal(duckdb_appender& appender, const char* s) {
   duckdb_state state = duckdb_append_varchar(appender, s);
@@ -22,6 +22,11 @@ void append(duckdb_appender& appender, T t, Args... args) {
   append(appender, args...);
 }
 
+bool DirentBatch::createTable(duckdb_connection& dbconn, const std::string& table) {
+  duckdb_state state = duckdb_query(dbconn, createQuery<Dirent>(table.c_str()).c_str(), nullptr);
+  return state != DuckDBError;
+}
+
 void DirentBatch::copyToDB(duckdb_appender& appender) {
   duckdb_state state;
   for (uint32_t i = 0; i < Offsets.size(); ++i) {
@@ -29,6 +34,7 @@ void DirentBatch::copyToDB(duckdb_appender& appender) {
     auto& nums(Nums[i]);
 
     append(appender,
+           Buf.data() + offsets.IdOffset,
            Buf.data() + offsets.PathOffset,
            Buf.data() + offsets.NameOffset,
            Buf.data() + offsets.ShortOffset,

@@ -60,3 +60,44 @@ public:
 private:
   duckdb_appender Appender;
 };
+
+template<typename T>
+constexpr const char* duckdbType() {
+  if constexpr (std::is_integral_v<T>) {
+    return "UBIGINT";
+  }
+  else if constexpr (std::is_convertible_v<T, std::string>) {
+    return "VARCHAR";
+  }
+  else {
+    return "UNKNOWN";
+    //static_assert(false, "Could not convert type successfully");
+  }
+}
+
+template<size_t CurIndex, size_t N, typename TupleType>
+static constexpr void duckTypes(std::string& out, const std::initializer_list<const char*>& colNames) {
+  out += std::data(colNames)[CurIndex];
+  out += " ";
+  out += duckdbType<std::tuple_element_t<CurIndex, TupleType>>();
+  if constexpr (CurIndex + 1 < N) {
+    out += ", ";
+    duckTypes<CurIndex + 1, N, TupleType>(out, colNames);
+  }
+}
+
+template<typename SchemaType>
+static std::string createQuery(const char* table) {
+  std::string query = "CREATE TABLE ";
+  query += table;
+  query += " (";
+  duckTypes<0, std::tuple_size_v<typename SchemaType::TupleType>, typename SchemaType::TupleType>(query, SchemaType::ColNames);
+  query += ");";
+  return query;
+}
+
+template<typename... Args>
+struct SchemaType {
+  using TupleType = std::tuple<Args...>;
+};
+

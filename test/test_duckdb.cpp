@@ -5,6 +5,7 @@
 #include "direntbatch.h"
 #include "llamaduck.h"
 
+#include <duckdb.h>
 #include <tuple>
 
 
@@ -26,7 +27,7 @@ TEST_CASE("TestMakeDuckDB") {
     batch.add(dirent);
   }
   REQUIRE(batch.size() == dirents.size());
-  REQUIRE(batch.Buf.size() == 86);
+  REQUIRE(batch.Buf.size() == 89);
 
   LlamaDBAppender appender(conn.get(), "dirent"); // need an appender object, too, which also doesn't jibe with smart pointers, and destroy must be called even if create returns an error
   // REQUIRE(state != DuckDBError);
@@ -34,45 +35,22 @@ TEST_CASE("TestMakeDuckDB") {
   REQUIRE(appender.flush());
 
   duckdb_result result;
-  auto state = duckdb_query(conn.get(), "SELECT * FROM dirent WHERE dirent.path = '/tmp/' and ((dirent.name = 'bar' and dirent.meta_addr = 4) or (dirent.short_name = 'f~1' and dirent.parent_addr = 2));", &result);
+  auto state = duckdb_query(conn.get(), "SELECT * FROM dirent WHERE dirent.path = '/tmp/' and ((dirent.name = 'bar' and dirent.metaaddr = 4) or (dirent.shortname = 'f~1' and dirent.parentaddr = 2));", &result);
+  //REQUIRE(std::string("") == duckdb_result_error(&result));
   REQUIRE(state != DuckDBError);
   REQUIRE(duckdb_row_count(&result) == 2);
-  REQUIRE(duckdb_column_count(&result) == 9);
-  REQUIRE(std::string("path") == duckdb_column_name(&result, 0));
-  REQUIRE(std::string("name") == duckdb_column_name(&result, 1));
-  REQUIRE(std::string("short_name") == duckdb_column_name(&result, 2));
-  REQUIRE(std::string("type") == duckdb_column_name(&result, 3));
-  REQUIRE(std::string("flags") == duckdb_column_name(&result, 4));
-  REQUIRE(std::string("meta_addr") == duckdb_column_name(&result, 5));
-  REQUIRE(std::string("parent_addr") == duckdb_column_name(&result, 6));
-  REQUIRE(std::string("meta_seq") == duckdb_column_name(&result, 7));
-  REQUIRE(std::string("parent_seq") == duckdb_column_name(&result, 8));
-}
-
-
-template<typename T>
-constexpr const char* duckdbType() {
-  if constexpr (std::is_integral_v<T>) {
-    return "UBIGINT";
-  }
-  else if constexpr (std::is_convertible_v<T, std::string>) {
-    return "VARCHAR";
-  }
-  else {
-    return "UNKNOWN";
-    //static_assert(false, "Could not convert type successfully");
-  }
-}
-
-template<size_t CurIndex, size_t N, typename TupleType>
-static constexpr void duckTypes(std::string& out, const std::initializer_list<const char*>& colNames) {
-  out += std::data(colNames)[CurIndex];
-  out += " ";
-  out += duckdbType<std::tuple_element_t<CurIndex, TupleType>>();
-  if constexpr (CurIndex + 1 < N) {
-    out += ", ";
-    duckTypes<CurIndex + 1, N, TupleType>(out, colNames);
-  }
+  REQUIRE(duckdb_column_count(&result) == 10);
+  unsigned int i = 0;
+  REQUIRE(std::string("Id") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("Path") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("Name") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("ShortName") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("Type") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("Flags") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("MetaAddr") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("ParentAddr") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("MetaSeq") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("ParentSeq") == duckdb_column_name(&result, i));
 }
 
 template<size_t CurIndex, size_t N>
@@ -127,8 +105,7 @@ public:
 };
 
 
-class DuckRec : public DuckDBRecord<
-                        DuckRecColumns,
+class DuckRec : public SchemaType<
                         std::string,
                         uint64_t,
                         uint64_t> {
@@ -140,17 +117,7 @@ public:
     ParentAddr = 2
   };
 
-//  static constexpr auto ColNames = {"path", "meta_addr", "parent_addr"};
-
-
-  static std::string createQuery(const char* table) {
-    std::string query = "CREATE TABLE ";
-    query += table;
-    query += " (";
-    duckTypes<0, std::tuple_size_v<ValuesType>, ValuesType>(query, DuckRecColumns::ColNames);
-    query += ");";
-    return query;
-  }
+  static constexpr auto ColNames = {"path", "meta_addr", "parent_addr"};
 
   static void createTable(duckdb_connection& dbconn) {  
     std::string query = "CREATE TABLE DuckRec (path VARCHAR, meta_addr UBIGINT, parent_addr UBIGINT);";
@@ -161,19 +128,19 @@ public:
 TEST_CASE("testTypesFiguring") {
   DuckRec rec;
 
-  std::get<DuckRec::Path>(rec.Values) = "howdy";
-  REQUIRE("howdy" == std::get<DuckRec::Path>(rec.Values));
+//  std::get<DuckRec::Path>(rec.Values) = "howdy";
+//  REQUIRE("howdy" == std::get<DuckRec::Path>(rec.Values));
 
   REQUIRE(3 == DuckRecColumns::ColNames.size());
 
-  REQUIRE(DuckRec::colIndex("meta_addr") == 1);
-  static_assert(findIndex<0, 3>("meta_addr", DuckRecColumns::ColNames) == 1);
-  static_assert(DuckRec::colIndex("meta_addr") == 1);
+//  REQUIRE(DuckRec::colIndex("meta_addr") == 1);
+//  static_assert(findIndex<0, 3>("meta_addr", DuckRecColumns::ColNames) == 1);
+//  static_assert(DuckRec::colIndex("meta_addr") == 1);
 
   REQUIRE(std::string("VARCHAR") == duckdbType<std::string>());
   static_assert(std::char_traits<char>::compare(duckdbType<std::string>(), "VARCHAR", 7) == 0);
 
-  REQUIRE(DuckRec::createQuery("DuckRec") == "CREATE TABLE DuckRec (path VARCHAR, meta_addr UBIGINT, parent_addr UBIGINT);");
+  REQUIRE(createQuery<DuckRec>("DuckRec") == "CREATE TABLE DuckRec (path VARCHAR, meta_addr UBIGINT, parent_addr UBIGINT);");
 
 //  REQUIRE(rec["path"] == "howdy");
 //  rec["path"] = "hello";
