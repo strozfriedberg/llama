@@ -126,7 +126,7 @@ public:
 };
 
 TEST_CASE("testTypesFiguring") {
-  DuckRec rec;
+//  DuckRec rec;
 
 //  std::get<DuckRec::Path>(rec.Values) = "howdy";
 //  REQUIRE("howdy" == std::get<DuckRec::Path>(rec.Values));
