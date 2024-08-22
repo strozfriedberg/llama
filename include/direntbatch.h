@@ -79,7 +79,8 @@ struct DirentBatch : public DuckBatch {
     size_t typeSize = dent.Type.size() + 1;
     size_t flagsSize = dent.Flags.size() + 1;
     size_t startOffset = Buf.size();
-    size_t totalSize = idSize + pathSize + nameSize + shrtSize + typeSize + flagsSize;
+//    size_t totalSize = idSize + pathSize + nameSize + shrtSize + typeSize + flagsSize;
+    size_t totalSize = totalStringSize(dent.Id, dent.Path, dent.Name, dent.ShortName, dent.Type, dent.Flags);
     Buf.resize(startOffset + totalSize);
 
     OffsetVals.push_back(startOffset);

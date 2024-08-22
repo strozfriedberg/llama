@@ -146,6 +146,26 @@ void appendBatchImpl(duckdb_appender& appender, DuckBatch& batch, size_t i) {
   appendBatchImpl<Args...>(appender, batch, i + 1);
 }
 
+template<typename T>
+size_t totalStringSize(T cur) {
+  if constexpr (std::is_convertible_v<T, std::string>) {
+    return cur.size() + 1;
+  }
+  else {
+    return 0;
+  }
+}
+
+template<typename T, typename... Args>
+size_t totalStringSize(T cur, Args... others) {
+  size_t totalSize = 0;
+  if constexpr (std::is_convertible_v<T, std::string>) {
+    totalSize += cur.size() + 1;
+  }
+  totalSize += totalStringSize(others...);
+  return totalSize;
+}
+
 template<typename... Args>
 struct SchemaType {
   using TupleType = std::tuple<Args...>;
