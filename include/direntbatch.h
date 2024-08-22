@@ -11,7 +11,8 @@
 #include "throw.h"
 
 
-struct Dirent : public SchemaType<const char*, const char*, const char*, const char*, const char*, const char*, uint64_t, uint64_t, uint64_t, uint64_t>
+//struct Dirent : public SchemaType<const char*, const char*, const char*, const char*, const char*, const char*, uint64_t, uint64_t, uint64_t, uint64_t>
+struct Dirent
 {
   static constexpr auto ColNames = {"Id",
                                     "Path",
@@ -64,12 +65,18 @@ struct Dirent : public SchemaType<const char*, const char*, const char*, const c
   }
 };
 
+struct DuckDirent : public SchemaType<Dirent, const char*, const char*, const char*, const char*, const char*, const char*, uint64_t, uint64_t, uint64_t, uint64_t>
+{
+  DuckDirent(): SchemaType() {}
+  DuckDirent(const Dirent& base): SchemaType(base) {}
+};
+
 struct DirentBatch : public DuckBatch {
 
-  static bool createTable(duckdb_connection& dbconn, const std::string& table) {
+/*  static bool createTable(duckdb_connection& dbconn, const std::string& table) {
     duckdb_state state = duckdb_query(dbconn, createQuery<Dirent>(table.c_str()).c_str(), nullptr);
     return state != DuckDBError;
-  }
+  }*/
 
   void add(const Dirent& dent) {
     size_t startOffset = Buf.size();
@@ -87,7 +94,7 @@ struct DirentBatch : public DuckBatch {
 
   void copyToDB(duckdb_appender& appender) {
     duckdb_state state;
-    for (unsigned int i = 0; i + (Dirent::NumCols - 1) < OffsetVals.size(); i += Dirent::NumCols) {
+    for (unsigned int i = 0; i + (DuckDirent::NumCols - 1) < OffsetVals.size(); i += DuckDirent::NumCols) {
 
       append(appender,
              Buf.data() + OffsetVals[i],

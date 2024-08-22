@@ -140,7 +140,7 @@ bool Llama::openInput(const std::string& input) {
 }
 
 bool Llama::dbInit() {
-  DirentBatch::createTable(DbConn.get(), "dirent");
+  DuckDirent::createTable(DbConn.get(), "dirent");
   return true;
 }
 

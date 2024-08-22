@@ -182,10 +182,18 @@ size_t totalStringSize(T cur, Args... others) {
   return totalSize;
 }
 
-template<typename... Args>
-struct SchemaType {
+template<typename BaseStruct, typename... Args>
+struct SchemaType : public BaseStruct {
   using TupleType = std::tuple<Args...>;
 
   static constexpr auto NumCols = std::tuple_size_v<TupleType>;
+
+  static bool createTable(duckdb_connection& dbconn, const std::string& table) {
+    duckdb_state state = duckdb_query(dbconn, createQuery<SchemaType>(table.c_str()).c_str(), nullptr);
+    return state != DuckDBError;
+  }
+
+  SchemaType(): BaseStruct() {}
+  SchemaType(const BaseStruct& base): BaseStruct(base) {}
 };
 

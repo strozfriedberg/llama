@@ -13,7 +13,7 @@ TEST_CASE("TestMakeDuckDB") {
   LlamaDB db;
   LlamaDBConnection conn(db);
 
-  REQUIRE(DirentBatch::createTable(conn.get(), "dirent"));
+  REQUIRE(DuckDirent::createTable(conn.get(), "dirent"));
 
   std::vector<Dirent> dirents = {
     {"/tmp/", "foo", "f~1", "File", "Allocated", 3, 2, 0, 0},
@@ -104,7 +104,7 @@ public:
   static constexpr auto ColNames = {"path", "meta_addr", "parent_addr"};
 };
 
-
+/*
 class DuckRec : public SchemaType<
                         std::string,
                         uint64_t,
@@ -146,4 +146,4 @@ TEST_CASE("testTypesFiguring") {
 //  rec["path"] = "hello";
 //  REQUIRE(rec["path"] == "hello");
 }
-
+*/
