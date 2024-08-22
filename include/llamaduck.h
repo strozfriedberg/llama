@@ -99,5 +99,7 @@ static std::string createQuery(const char* table) {
 template<typename... Args>
 struct SchemaType {
   using TupleType = std::tuple<Args...>;
+
+  static constexpr auto NumCols = std::tuple_size_v<TupleType>;
 };
 

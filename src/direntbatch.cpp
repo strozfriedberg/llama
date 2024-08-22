@@ -29,27 +29,24 @@ bool DirentBatch::createTable(duckdb_connection& dbconn, const std::string& tabl
 
 void DirentBatch::copyToDB(duckdb_appender& appender) {
   duckdb_state state;
-  for (uint32_t i = 0; i < Offsets.size(); ++i) {
-    auto& offsets(Offsets[i]);
-    auto& nums(Nums[i]);
-
+  for (unsigned int i = 0; i + 9 < OffsetVals.size(); i += 10) {
     append(appender,
-           Buf.data() + offsets.IdOffset,
-           Buf.data() + offsets.PathOffset,
-           Buf.data() + offsets.NameOffset,
-           Buf.data() + offsets.ShortOffset,
-           Buf.data() + offsets.TypeOffset,
-           Buf.data() + offsets.FlagsOffset,
-           nums.MetaAddr,
-           nums.ParentAddr,
-           nums.MetaSeq,
-           nums.ParentSeq
+           Buf.data() + OffsetVals[i],
+           Buf.data() + OffsetVals[i + 1],
+           Buf.data() + OffsetVals[i + 2],
+           Buf.data() + OffsetVals[i + 3],
+           Buf.data() + OffsetVals[i + 4],
+           Buf.data() + OffsetVals[i + 5],
+           OffsetVals[i + 6],
+           OffsetVals[i + 7],
+           OffsetVals[i + 8],
+           OffsetVals[i + 9]
     );
     state = duckdb_appender_end_row(appender);
     THROW_IF(state == DuckDBError, "Failed call to end_row");
   }
   Buf.clear();
-  Offsets.clear();
-  Nums.clear();
+  OffsetVals.clear();
+  NumRows = 0;
 }
 

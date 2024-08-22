@@ -64,27 +64,13 @@ struct Dirent : public SchemaType<std::string, std::string, std::string, std::st
 };
 
 struct DirentBatch {
-  struct StrOffsets {
-    size_t IdOffset,
-           PathOffset,
-           NameOffset,
-           ShortOffset,
-           TypeOffset,
-           FlagsOffset;
-  };
 
-  struct Uint64Vals {
-    uint64_t MetaAddr,
-             ParentAddr,
-             MetaSeq,
-             ParentSeq;
-  };
+  size_t size() const { return NumRows; }
 
-  size_t size() const { return Offsets.size(); }
+  std::vector<char>    Buf; // strings stored in sequence here
+  std::vector<uint64_t> OffsetVals; // offsets to strings OR uint64_t values
 
-  std::vector<char> Buf;
-  std::vector<StrOffsets> Offsets;
-  std::vector<Uint64Vals> Nums;
+  uint64_t NumRows = 0;
 
   static bool createTable(duckdb_connection& dbconn, const std::string& table);
 
@@ -98,22 +84,24 @@ struct DirentBatch {
     size_t startOffset = Buf.size();
     size_t totalSize = idSize + pathSize + nameSize + shrtSize + typeSize + flagsSize;
     Buf.resize(startOffset + totalSize);
-    StrOffsets offsets{startOffset,
-                       startOffset + idSize,
-                       startOffset + idSize + pathSize,
-                       startOffset + idSize + pathSize + nameSize,
-                       startOffset + idSize + pathSize + nameSize + shrtSize,
-                       startOffset + idSize + pathSize + nameSize + shrtSize + typeSize};
 
-    std::copy_n(dent.Id.begin(), idSize, Buf.begin() + offsets.IdOffset);
-    std::copy_n(dent.Path.begin(), pathSize, Buf.begin() + offsets.PathOffset);
-    std::copy_n(dent.Name.begin(), nameSize, Buf.begin() + offsets.NameOffset);
-    std::copy_n(dent.ShortName.begin(), shrtSize, Buf.begin() + offsets.ShortOffset);
-    std::copy_n(dent.Type.begin(), typeSize, Buf.begin() + offsets.TypeOffset);
-    std::copy_n(dent.Flags.begin(), flagsSize, Buf.begin() + offsets.FlagsOffset);
-
-    Offsets.push_back(offsets);
-    Nums.push_back(Uint64Vals{dent.MetaAddr, dent.ParentAddr, dent.MetaSeq, dent.ParentSeq});
+    OffsetVals.push_back(startOffset);
+    std::copy_n(dent.Id.begin(), idSize, Buf.begin() + OffsetVals.back());
+    OffsetVals.push_back(startOffset + idSize);
+    std::copy_n(dent.Path.begin(), pathSize, Buf.begin() + OffsetVals.back());
+    OffsetVals.push_back(startOffset + idSize + pathSize);
+    std::copy_n(dent.Name.begin(), nameSize, Buf.begin() + OffsetVals.back());
+    OffsetVals.push_back(startOffset + idSize + pathSize + nameSize);
+    std::copy_n(dent.ShortName.begin(), shrtSize, Buf.begin() + OffsetVals.back());
+    OffsetVals.push_back(startOffset + idSize + pathSize + nameSize + shrtSize);
+    std::copy_n(dent.Type.begin(), typeSize, Buf.begin() + OffsetVals.back());
+    OffsetVals.push_back(startOffset + idSize + pathSize + nameSize + shrtSize + typeSize);
+    std::copy_n(dent.Flags.begin(), flagsSize, Buf.begin() + OffsetVals.back());
+    OffsetVals.push_back(dent.MetaAddr);
+    OffsetVals.push_back(dent.ParentAddr);
+    OffsetVals.push_back(dent.MetaSeq);
+    OffsetVals.push_back(dent.ParentSeq);
+    ++NumRows;
   }
 
   void copyToDB(duckdb_appender& appender);
