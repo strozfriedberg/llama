@@ -77,15 +77,6 @@ struct Dirent : public SchemaType<std::string, std::string, std::string, std::st
   }
 };
 
-struct DuckBatch {
-  size_t size() const { return NumRows; }
-
-  std::vector<char>    Buf; // strings stored in sequence here  
-  std::vector<uint64_t> OffsetVals; // offsets to strings OR uint64_t values
-
-  uint64_t NumRows = 0;
-};
-
 struct DirentBatch : public DuckBatch {
 
   static bool createTable(duckdb_connection& dbconn, const std::string& table) {

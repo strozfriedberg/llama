@@ -96,6 +96,15 @@ static std::string createQuery(const char* table) {
   return query;
 }
 
+struct DuckBatch {
+  size_t size() const { return NumRows; }
+
+  std::vector<char>    Buf; // strings stored in sequence here  
+  std::vector<uint64_t> OffsetVals; // offsets to strings OR uint64_t values
+
+  uint64_t NumRows = 0;
+};
+
 template<typename... Args>
 struct SchemaType {
   using TupleType = std::tuple<Args...>;
