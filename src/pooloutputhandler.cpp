@@ -68,7 +68,6 @@ void PoolOutputHandler::close() {
     InodesRecBuf.flush();
   }
   if (DirentsBatch.size()) {
-    auto num = DirentsBatch.size();
     DirentsBatch.copyToDB(Appender.get());
     Appender.flush();
   //  std::cerr << "wrote " << num << " dirents\n";
