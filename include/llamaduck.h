@@ -131,6 +131,17 @@ struct DuckBatch {
 };
 
 template<typename T>
+void addStrings(DuckBatch& batch, size_t offset, const T& s) {
+  batch.addString(offset, s);
+}
+
+template<typename T, typename... Args>
+void addStrings(DuckBatch& batch, size_t offset, const T& s, Args... args) {
+  batch.addString(offset, s);
+  addStrings(batch, offset + s.size() + 1, args...);
+}
+
+template<typename T>
 void AppendBatchImpl(duckdb_appender& appender, DuckBatch& batch, size_t i) {
   if constexpr (std::is_integral_v<T>) {
     appendVal(appender, batch.OffsetVals[i]);

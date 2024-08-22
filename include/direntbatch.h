@@ -71,28 +71,13 @@ struct DirentBatch : public DuckBatch {
     return state != DuckDBError;
   }
 
-  void addString(uint64_t offset, const std::string& s) {
-    OffsetVals.push_back(offset);
-    std::copy_n(s.begin(), s.size() + 1, Buf.begin() + OffsetVals.back());
-  }
-
   void add(const Dirent& dent) {
-    size_t idSize = dent.Id.size() + 1;
-    size_t pathSize = dent.Path.size() + 1;
-    size_t nameSize = dent.Name.size() + 1;
-    size_t shrtSize = dent.ShortName.size() + 1;
-    size_t typeSize = dent.Type.size() + 1;
     size_t startOffset = Buf.size();
     size_t totalSize = totalStringSize(dent.Id, dent.Path, dent.Name, dent.ShortName, dent.Type, dent.Flags);
     Buf.resize(startOffset + totalSize);
 
-    addString(startOffset, dent.Id);
-    addString(startOffset + idSize, dent.Path);
-    addString(startOffset + idSize + pathSize, dent.Name);
-    addString(startOffset + idSize + pathSize + nameSize, dent.ShortName);
-    addString(startOffset + idSize + pathSize + nameSize + shrtSize, dent.Type);
-    addString(startOffset + idSize + pathSize + nameSize + shrtSize + typeSize, dent.Flags);
-
+    addStrings(*this, startOffset, dent.Id, dent.Path, dent.Name, dent.ShortName, dent.Type, dent.Flags);
+ 
     OffsetVals.push_back(dent.MetaAddr);
     OffsetVals.push_back(dent.ParentAddr);
     OffsetVals.push_back(dent.MetaSeq);
