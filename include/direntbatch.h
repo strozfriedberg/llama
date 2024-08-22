@@ -10,21 +10,8 @@
 #include "llamaduck.h"
 #include "throw.h"
 
-void appendVal(duckdb_appender& appender, const char* s);
-void appendVal(duckdb_appender& appender, uint64_t val);
 
-template<typename T>
-void append(duckdb_appender& appender, T t) {
-  appendVal(appender, t);
-}
-
-template<typename T, typename... Args>
-void append(duckdb_appender& appender, T t, Args... args) {
-  appendVal(appender, t);
-  append(appender, args...);
-}
-
-struct Dirent : public SchemaType<std::string, std::string, std::string, std::string, std::string, std::string, uint64_t, uint64_t, uint64_t, uint64_t>
+struct Dirent : public SchemaType<const char*, const char*, const char*, const char*, const char*, const char*, uint64_t, uint64_t, uint64_t, uint64_t>
 {
   static constexpr auto ColNames = {"Id",
                                     "Path",
@@ -116,7 +103,8 @@ struct DirentBatch : public DuckBatch {
 
   void copyToDB(duckdb_appender& appender) {
     duckdb_state state;
-    for (unsigned int i = 0; i + 9 < OffsetVals.size(); i += 10) {
+    for (unsigned int i = 0; i + (Dirent::NumCols - 1) < OffsetVals.size(); i += Dirent::NumCols) {
+
       append(appender,
              Buf.data() + OffsetVals[i],
              Buf.data() + OffsetVals[i + 1],
@@ -129,12 +117,22 @@ struct DirentBatch : public DuckBatch {
              OffsetVals[i + 8],
              OffsetVals[i + 9]
       );
+
+/*      auto values = std::make_tuple(Buf.data() + OffsetVals[i],
+                       Buf.data() + OffsetVals[i + 1],
+                       Buf.data() + OffsetVals[i + 2],
+                       Buf.data() + OffsetVals[i + 3],
+                       Buf.data() + OffsetVals[i + 4],
+                       Buf.data() + OffsetVals[i + 5],
+                       OffsetVals[i + 6],
+                       OffsetVals[i + 7],
+                       OffsetVals[i + 8],
+                       OffsetVals[i + 9]);
+      std::apply([&](auto... args) { append(appender, args...); }, values);*/
       state = duckdb_appender_end_row(appender);
       THROW_IF(state == DuckDBError, "Failed call to end_row");
     }
-    Buf.clear();
-    OffsetVals.clear();
-    NumRows = 0;
+    DuckBatch::clear();
   }
 };
 

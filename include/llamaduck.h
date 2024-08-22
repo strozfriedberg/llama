@@ -96,6 +96,20 @@ static std::string createQuery(const char* table) {
   return query;
 }
 
+void appendVal(duckdb_appender& appender, const char* s);
+void appendVal(duckdb_appender& appender, uint64_t val);
+
+template<typename T>
+void append(duckdb_appender& appender, T t) {
+  appendVal(appender, t);
+}
+
+template<typename T, typename... Args>
+void append(duckdb_appender& appender, T t, Args... args) {
+  appendVal(appender, t);
+  append(appender, args...);
+}
+
 struct DuckBatch {
   size_t size() const { return NumRows; }
 
@@ -103,7 +117,34 @@ struct DuckBatch {
   std::vector<uint64_t> OffsetVals; // offsets to strings OR uint64_t values
 
   uint64_t NumRows = 0;
+
+  void clear() {
+    Buf.clear();
+    OffsetVals.clear();
+    NumRows = 0;
+  }
 };
+
+template<typename T>
+void AppendBatchImpl(duckdb_appender& appender, DuckBatch& batch, size_t i) {
+  if constexpr (std::is_integral_v<T>) {
+    appendVal(appender, batch.OffsetVals[i]);
+  }
+  else if constexpr (std::is_convertible_v<T, std::string>){
+    appendVal(appender, batch.Buf.data() + batch.OffsetVals[i]);
+  }
+}
+
+template<typename T, typename... Args>
+void appendBatchImpl(duckdb_appender& appender, DuckBatch& batch, size_t i) {
+  if constexpr (std::is_integral_v<T>) {
+    appendVal(appender, batch.OffsetVals[i]);
+  }
+  else if constexpr (std::is_convertible_v<T, std::string>){
+    appendVal(appender, batch.Buf.data() + batch.OffsetVals[i]);
+  }
+  appendBatchImpl<Args...>(appender, batch, i + 1);
+}
 
 template<typename... Args>
 struct SchemaType {
