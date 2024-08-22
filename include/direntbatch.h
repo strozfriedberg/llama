@@ -71,30 +71,28 @@ struct DirentBatch : public DuckBatch {
     return state != DuckDBError;
   }
 
+  void addString(uint64_t offset, const std::string& s) {
+    OffsetVals.push_back(offset);
+    std::copy_n(s.begin(), s.size() + 1, Buf.begin() + OffsetVals.back());
+  }
+
   void add(const Dirent& dent) {
     size_t idSize = dent.Id.size() + 1;
     size_t pathSize = dent.Path.size() + 1;
     size_t nameSize = dent.Name.size() + 1;
     size_t shrtSize = dent.ShortName.size() + 1;
     size_t typeSize = dent.Type.size() + 1;
-    size_t flagsSize = dent.Flags.size() + 1;
     size_t startOffset = Buf.size();
-//    size_t totalSize = idSize + pathSize + nameSize + shrtSize + typeSize + flagsSize;
     size_t totalSize = totalStringSize(dent.Id, dent.Path, dent.Name, dent.ShortName, dent.Type, dent.Flags);
     Buf.resize(startOffset + totalSize);
 
-    OffsetVals.push_back(startOffset);
-    std::copy_n(dent.Id.begin(), idSize, Buf.begin() + OffsetVals.back());
-    OffsetVals.push_back(startOffset + idSize);
-    std::copy_n(dent.Path.begin(), pathSize, Buf.begin() + OffsetVals.back());
-    OffsetVals.push_back(startOffset + idSize + pathSize);
-    std::copy_n(dent.Name.begin(), nameSize, Buf.begin() + OffsetVals.back());
-    OffsetVals.push_back(startOffset + idSize + pathSize + nameSize);
-    std::copy_n(dent.ShortName.begin(), shrtSize, Buf.begin() + OffsetVals.back());
-    OffsetVals.push_back(startOffset + idSize + pathSize + nameSize + shrtSize);
-    std::copy_n(dent.Type.begin(), typeSize, Buf.begin() + OffsetVals.back());
-    OffsetVals.push_back(startOffset + idSize + pathSize + nameSize + shrtSize + typeSize);
-    std::copy_n(dent.Flags.begin(), flagsSize, Buf.begin() + OffsetVals.back());
+    addString(startOffset, dent.Id);
+    addString(startOffset + idSize, dent.Path);
+    addString(startOffset + idSize + pathSize, dent.Name);
+    addString(startOffset + idSize + pathSize + nameSize, dent.ShortName);
+    addString(startOffset + idSize + pathSize + nameSize + shrtSize, dent.Type);
+    addString(startOffset + idSize + pathSize + nameSize + shrtSize + typeSize, dent.Flags);
+
     OffsetVals.push_back(dent.MetaAddr);
     OffsetVals.push_back(dent.ParentAddr);
     OffsetVals.push_back(dent.MetaSeq);
