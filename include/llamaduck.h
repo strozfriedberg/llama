@@ -118,6 +118,11 @@ struct DuckBatch {
 
   uint64_t NumRows = 0;
 
+  void addString(uint64_t offset, const std::string& s) {
+    OffsetVals.push_back(offset);
+    std::copy_n(s.begin(), s.size() + 1, Buf.begin() + OffsetVals.back());
+  }
+
   void clear() {
     Buf.clear();
     OffsetVals.clear();
