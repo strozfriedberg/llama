@@ -101,18 +101,6 @@ struct DirentBatch : public DuckBatch {
              OffsetVals[i + 8],
              OffsetVals[i + 9]
       );
-
-/*      auto values = std::make_tuple(Buf.data() + OffsetVals[i],
-                       Buf.data() + OffsetVals[i + 1],
-                       Buf.data() + OffsetVals[i + 2],
-                       Buf.data() + OffsetVals[i + 3],
-                       Buf.data() + OffsetVals[i + 4],
-                       Buf.data() + OffsetVals[i + 5],
-                       OffsetVals[i + 6],
-                       OffsetVals[i + 7],
-                       OffsetVals[i + 8],
-                       OffsetVals[i + 9]);
-      std::apply([&](auto... args) { append(appender, args...); }, values);*/
       state = duckdb_appender_end_row(appender);
       THROW_IF(state == DuckDBError, "Failed call to end_row");
     }
