@@ -21,20 +21,20 @@ Cli::Cli() : All(), Opts(new Options) {
 
   po::options_description configOpts("Configuration Options");
   configOpts.add_options()
-      ("rule_file,f",
+      ("rule-file,f",
         po::value<std::string>(&Opts->RuleFile)
         ->value_name("RULE_FILE"),
         "File containing Llama rule(s) to evaluate")
-      ("rule_directory,F",
+      ("rule-directory,F",
         po::value<std::string>(&Opts->RuleDir)
         ->value_name("RULE_DIR"),
         "Path to directory containing rule files")
-      ("num_threads,j",
+      ("num-threads,j",
         po::value<unsigned int>(&Opts->NumThreads)
         ->default_value(std::thread::hardware_concurrency())
         ->value_name("THREADS"),
         "Number of worker threads to use")
-      ("keyword_file,k",
+      ("keyword-file,k",
         po::value<std::vector<std::string>>(&Opts->KeyFiles)
         ->composing()
         ->value_name("KEY_FILE"),
