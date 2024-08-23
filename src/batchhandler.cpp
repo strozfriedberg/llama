@@ -35,7 +35,7 @@ void BatchHandler::maybeFlush() {
 }
 
 void BatchHandler::flush() {
-  Sink->scheduleFileBatch(*CurDents, *CurInodes, std::move(CurStreams));
+  Sink->scheduleFileBatch(*CurDents, *CurInodes, CurStreams);
   CurDents->clear();
   CurInodes->clear();
   CurStreams.reset(new std::vector<std::unique_ptr<ReadSeek>>());

@@ -27,12 +27,14 @@ public:
 
   void scheduleFileBatch(const DirentBatch& dirents,
                          const InodeBatch& inodes,
-                         std::unique_ptr<std::vector<std::unique_ptr<ReadSeek>>> streams);
+                         const std::shared_ptr<std::vector<std::unique_ptr<ReadSeek>>>& streams);
 
   double getProcessorTime();
 
 private:
-  void performScheduling(DirentBatch& dirents, InodeBatch& inodes, std::unique_ptr<std::vector<std::unique_ptr<ReadSeek>>> streams);
+  void performScheduling(DirentBatch& dirents,
+                         InodeBatch& inodes,
+                         const std::shared_ptr<std::vector<std::unique_ptr<ReadSeek>>>& streams);
 
   std::shared_ptr<Processor> popProc();
   void pushProc(const std::shared_ptr<Processor>& proc);

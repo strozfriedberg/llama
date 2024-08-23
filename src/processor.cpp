@@ -8,25 +8,27 @@
 #include "filerecord.h"
 #include "hex.h"
 #include "outputhandler.h"
+#include "readseek.h"
 #include "timer.h"
 
-#include <iostream>
+//#include <iostream>
 
 namespace {
   const LG_ContextOptions ctxOpts{0, 0};
 
-  bool hashFile(SFHASH_Hasher* hasher, BlockSequence& content, SFHASH_HashValues& hashes) {
-    auto i = content.begin();
-    const auto end = content.end();
-    if (i != end) {
-      sfhash_reset_hasher(hasher);
-      for ( ; i != end; ++i) {
-        sfhash_update_hasher(hasher, i->first, i->second);
+  bool hashFile(SFHASH_Hasher* hasher, ReadSeek& stream, std::vector<unsigned char>& buf, SFHASH_HashValues& hashes) {
+    buf.reserve(1 << 20);
+    stream.seek(0);
+    sfhash_reset_hasher(hasher);
+    size_t bytesRead = 0;
+    do {
+      bytesRead = stream.read(1 << 20, buf);
+      if (bytesRead > 0) {
+        sfhash_update_hasher(hasher, buf.data(), buf.data() + bytesRead);
       }
-      sfhash_get_hashes(hasher, &hashes);
-      return true;
-    }
-    return false;
+    } while (bytesRead > 0);
+    sfhash_get_hashes(hasher, &hashes);
+    return true;
   }
 }
 
@@ -42,13 +44,14 @@ std::shared_ptr<Processor> Processor::clone() const {
   return std::make_shared<Processor>(LgProg);
 }
 
-void Processor::process(FileRecord& rec, OutputHandler& out) {
+void Processor::process(ReadSeek& stream) {
   // std::cerr << "hashing..." << std::endl;
   // hash 'em if ya got 'em
   bool hashSuccess = false;
   {
     Timer procTime;
-    hashSuccess = hashFile(Hasher.get(), *rec.Blocks, rec.Hashes);
+    SFHASH_HashValues hashes;
+    hashSuccess = hashFile(Hasher.get(), stream, Buf, hashes);
     ProcTimeTotal += procTime.elapsed();
   }
 /*  if (hashSuccess) {

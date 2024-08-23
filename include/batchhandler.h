@@ -30,6 +30,6 @@ private:
 
   std::unique_ptr<DirentBatch> CurDents;
   std::unique_ptr<InodeBatch>  CurInodes;
-  std::unique_ptr<std::vector<std::unique_ptr<ReadSeek>>> CurStreams;
+  std::shared_ptr<std::vector<std::unique_ptr<ReadSeek>>> CurStreams;
 };
 
