@@ -182,6 +182,20 @@ TEST_CASE("parseFilepathId") {
   REQUIRE(lexer.getTokens().at(0).Type == TokenType::FILEPATH);
 }
 
+TEST_CASE("parseIdId") {
+  std::string input = "id";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier({0,0});
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::ID);
+}
+
+TEST_CASE("parseNameId") {
+  std::string input = "name";
+  LlamaLexer lexer(input);
+  lexer.parseIdentifier({0,0});
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::NAME);
+}
+
 TEST_CASE("parsePatternsId") {
   std::string input = "patterns";
   LlamaLexer lexer(input);
@@ -557,4 +571,13 @@ TEST_CASE("parseMultiLineCommentIncreasesLineNumAndResetsColumnNum") {
   REQUIRE(lexer.getTokens().size() == 1);
   REQUIRE(lexer.Pos.LineNum == 4);
   REQUIRE(lexer.Pos.ColNum == 3);
+}
+
+TEST_CASE("parseStringWithEscapedDoubleQuote") {
+  std::string input = R"(this is a \"string\" that is escaped")";
+  LlamaLexer lexer(input);
+  lexer.parseString({0,0});
+  REQUIRE(lexer.getTokens().size() == 1);
+  REQUIRE(lexer.getTokens().at(0).Type == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.getTokens().at(0).length() == input.size() - 1);
 }

@@ -48,7 +48,7 @@ struct Magic {
   String2StringMap Extensions;
   String Pattern;
   bool FixedString;
-  bool CaseInsensetive;
+  bool CaseInsensitive;
   Strings Encodings;
   Strings Tags;
 
@@ -67,9 +67,9 @@ class LightGrep {
 public:
   LightGrep();
   ~LightGrep();
+
   expected<size_t> setup(MagicsType const &m);
-  expected<bool> search(const uint8_t *start, const uint8_t *end,
-                        void *user_data, LG_HITCALLBACK_FN callback_fn) const;
+  expected<bool> search(const uint8_t *start, const uint8_t *end, void *user_data, LG_HITCALLBACK_FN callback_fn) const;
   LG_HPROGRAM get_lg_prog() const { return Prog; }
 };
 
@@ -77,24 +77,20 @@ class FileSigAnalyzer {
   MagicsType Magics;
   String2MagicMap SignatureDict;
   MagicsType SignatureList;
-
   LightGrep Lg;
   // size of the buffer - max value of getPatternLength(false)
   Binary ReadBuf;
 
-  expected<Binary> getBuf(std::ifstream &ifs, Binary &check_buf,
-                          OffsetType const &offset, std::size_t size) const;
-  expected<bool> doCheck(MagicPtr magic, std::ifstream &ifs, Binary &check_buf,
-                         MagicPtr &result) const;
-  expected<bool> lgSearch(const uint8_t *start, const uint8_t *end,
-                          MagicPtr &result) const;
+  expected<Binary> getBuf(std::ifstream &ifs, Binary &check_buf,OffsetType const &offset, std::size_t size) const;
+  expected<bool> doCheck(MagicPtr magic, std::ifstream &ifs, Binary &check_buf, MagicPtr &result) const;
+  expected<bool> lgSearch(const uint8_t *start, const uint8_t *end, MagicPtr &result) const;
   static void lgCallbackfn(void *userData, const LG_SearchHit *const hit);
 
 public:
   FileSigAnalyzer();
+
   static expected<MagicsType> readMagics(std::string_view path);
-  expected<bool> getSignature(const std::filesystem::directory_entry &de,
-                              MagicPtr &result) const;
+  expected<bool> getSignature(const std::filesystem::directory_entry &de, MagicPtr &result) const;
 };
 
 inline bool startsWith(const std::string &s, const std::string &prefix) {

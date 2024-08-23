@@ -47,7 +47,7 @@ expected<size_t> LightGrep::setup(MagicsType const &m) {
         continue;
       }
 
-      LG_KeyOptions opt = {p->FixedString, p->CaseInsensetive, false};
+      LG_KeyOptions opt = {p->FixedString, p->CaseInsensitive, false};
 
       auto pattern = lg_create_pattern();
       destroy_guard pattern_guard(
@@ -80,7 +80,8 @@ expected<size_t> LightGrep::setup(MagicsType const &m) {
     if (!(Prog = lg_create_program(fsm, &opts))) {
       return makeUnexpected("lg_create_program() failed");
     }
-  } catch (std::exception const &ex) {
+  }
+  catch (std::exception const &ex) {
     return makeUnexpected(ex.what());
   }
 
@@ -97,7 +98,8 @@ expected<bool> LightGrep::search(const uint8_t *start, const uint8_t *end,
     lg_starts_with(searcher, (const char *)start, (const char *)end, 0,
                    user_data, callback_fn);
     lg_destroy_context(searcher);
-  } catch (std::exception const &ex) {
+  }
+  catch (std::exception const &ex) {
     return makeUnexpected(ex.what());
   }
   return true;
@@ -153,8 +155,9 @@ bool Magic::Check::compare(Binary const &data) const {
        [](uint8_t const &a, uint8_t const &b) -> bool { return !(a | b); }},
   };
 
-  if (data.size() < Value.size())
+  if (data.size() < Value.size()) {
     return false;
+  }
 
   std::function<bool(uint8_t const &, uint8_t const &)> fn =
       COMPARATORS[CompareOp];
@@ -183,28 +186,32 @@ size_t getPatternLength(String const &pattern, bool only_significant) {
       if (pattern[i + 1] == 'x') {
         count += 1;
         i += 4;
-      } else { // \\u0000
+      }
+      else { // \\u0000
         count += 1;
         i += 6;
       }
-    } else if (c == '{') {
+    }
+    else if (c == '{') {
       auto j = pattern.find('}', i + 1);
       auto i2 = pattern.find(',', i + 1);
 
-      if (i2 < j)
-        i = i2;
+      if (i2 < j) { i = i2; }
 
       auto x = std::stoi(pattern.substr(i + 1, j));
       i = j + 1;
       count += only_significant && prev_c == '.' ? 0 : x;
-    } else if (c == '[') {
+    }
+    else if (c == '[') {
       auto j = pattern.find(']', i + 1);
       i = j + 1;
       count += 1;
-    } else if (c == '.') {
+    }
+    else if (c == '.') {
       i += 1;
       count += only_significant ? 0 : 1;
-    } else {
+    }
+    else {
       count += 1;
       i += 1;
     }
@@ -229,25 +236,30 @@ OffsetType parseOffset(String s) {
   if (startsWith(s, "0x") || startsWith(s, "0X")) {
     s = s.substr(2);
     ss << std::hex << s;
-  } else {
+  }
+  else {
     ss << std::dec << s;
   }
   long v;
   ss >> v;
 
-  if (!from_start)
+  if (!from_start) {
     v *= -1;
+  }
 
   return OffsetType{v, from_start};
 }
 
 uint8_t char2uint8(char input) {
-  if (input >= '0' && input <= '9')
+  if (input >= '0' && input <= '9') {
     return input - '0';
-  if (input >= 'A' && input <= 'F')
+  }
+  if (input >= 'A' && input <= 'F') {
     return input - 'A' + 10;
-  if (input >= 'a' && input <= 'f')
+  }
+  if (input >= 'a' && input <= 'f') {
     return input - 'a' + 10;
+  }
   return 0;
 }
 
@@ -266,16 +278,16 @@ namespace {
 expected<void> readChecks(jsoncons::json const &magic_json, Magic &m) {
   if (magic_json.contains("checks")) {
     for (const auto &check : magic_json["checks"].array_range()) {
-      if (auto compare_type =
-              parse_compare_type(check["compare_type"].as_string())) {
+      if (auto compare_type = parse_compare_type(check["compare_type"].as_string())) {
         auto preprocess = check.contains("pre_process")
-                              ? str2bin(check["pre_process"].as_string())
-                              : Binary();
+                        ? str2bin(check["pre_process"].as_string())
+                        : Binary();
 
         m.Checks.push_back(Magic::Check{
             compare_type.value(), parseOffset(check["offset"].as_string()),
             str2bin(check["value"].as_string()), preprocess});
-      } else {
+      }
+      else {
         return makeUnexpected(compare_type.error());
       }
     }
@@ -288,15 +300,15 @@ void readPatterns(jsoncons::json const &magic_json, Magic &m) {
     m.Pattern = magic_json["pattern"].as_string();
   }
   m.FixedString = magic_json.contains("fixed_string")
-                      ? magic_json["fixed_string"].as_bool()
-                      : false;
-  m.CaseInsensetive = magic_json.contains("case_insensitive")
-                          ? magic_json["case_insensitive"].as_bool()
-                          : false;
+                ? magic_json["fixed_string"].as_bool()
+                : false;
+  m.CaseInsensitive = magic_json.contains("case_insensitive")
+                    ? magic_json["case_insensitive"].as_bool()
+                    : false;
   if (magic_json.contains("encoding")) {
-    boost::split(m.Encodings, magic_json["encoding"].as_string(),
-                 boost::is_any_of(","));
-  } else {
+    boost::split(m.Encodings, magic_json["encoding"].as_string(), boost::is_any_of(","));
+  }
+  else {
     m.Encodings.push_back("ISO-8859-1");
   }
 }
@@ -324,8 +336,9 @@ void readSpecs(jsoncons::json const &magic_json, Magic &m) {
 expected<MagicsType> FileSigAnalyzer::readMagics(std::string_view path) {
   try {
     std::ifstream is(path.data());
-    if (is.fail())
+    if (is.fail()) {
       return makeUnexpected(String("Error: bad path ") + String(path));
+    }
 
     auto json(jsoncons::json::parse(is));
 
@@ -333,8 +346,9 @@ expected<MagicsType> FileSigAnalyzer::readMagics(std::string_view path) {
     for (const auto &magic_json : json.array_range()) {
       Magic m;
 
-      if (auto result = readChecks(magic_json, m); !result)
+      if (auto result = readChecks(magic_json, m); !result) {
         return makeUnexpected(result.error());
+      }
 
       readPatterns(magic_json, m);
       readSpecs(magic_json, m);
@@ -343,7 +357,8 @@ expected<MagicsType> FileSigAnalyzer::readMagics(std::string_view path) {
     }
 
     return magics;
-  } catch (std::exception &e) {
+  }
+  catch (std::exception &e) {
     return makeUnexpected(e.what());
   }
 }
@@ -356,26 +371,26 @@ struct lg_callback_context {
 void FileSigAnalyzer::lgCallbackfn(void *userData,
                                    const LG_SearchHit *const hit) {
   auto ctx = (lg_callback_context *)userData;
-  auto hit_info =
-      lg_prog_pattern_info(ctx->self->Lg.get_lg_prog(), hit->KeywordIndex);
+  auto hit_info = lg_prog_pattern_info(ctx->self->Lg.get_lg_prog(), hit->KeywordIndex);
   if (hit_info && hit_info->UserIndex < ctx->min_hit_index) {
     ctx->min_hit_index = hit_info->UserIndex;
   }
 }
 
-expected<Binary> FileSigAnalyzer::getBuf(std::ifstream &ifs, Binary &check_buf,
+expected<Binary> FileSigAnalyzer::getBuf(std::ifstream &ifs,
+                                         Binary &check_buf,
                                          OffsetType const &offset,
-                                         std::size_t size) const {
+                                         std::size_t size ) const {
   if (size + offset.count > ReadBuf.size() || offset.from_start == false) {
     check_buf.resize(size);
     ifs.clear();
-    ifs.seekg(offset.count,
-              offset.from_start ? std::ios_base::beg : std::ios_base::end);
-    auto readed = ifs.read((char *)check_buf.data(), check_buf.size()).gcount();
-    if (readed != (std::streamsize)size)
+    ifs.seekg(offset.count, offset.from_start ? std::ios_base::beg : std::ios_base::end);
+    auto streamData = ifs.read((char *)check_buf.data(), check_buf.size()).gcount();
+    if (streamData != (std::streamsize)size) {
       return makeUnexpected(("read(" + std::to_string(size) + ") at " +
-                                 std::to_string(offset.count) + ", ",
+                             std::to_string(offset.count) + ", ",
                              std::to_string(offset.from_start) + " failed."));
+    }
 
     return check_buf;
   }
@@ -407,11 +422,11 @@ expected<bool> FileSigAnalyzer::doCheck(MagicPtr magic, std::ifstream &ifs,
                                         MagicPtr &result) const {
   bool all_checks_passed = magic->Checks.size() > 0;
   BOOST_FOREACH (auto check_it, magic->Checks) {
-    if (auto data =
-            getBuf(ifs, check_buf, check_it.Offset, check_it.Value.size())) {
+    if (auto data = getBuf(ifs, check_buf, check_it.Offset, check_it.Value.size())) {
       if (!(all_checks_passed = (check_it.compare(data.value()) == true)))
         break;
-    } else {
+    }
+    else {
       return makeUnexpected(data.error());
     }
   }
@@ -437,23 +452,22 @@ expected<bool> FileSigAnalyzer::getSignature(const fs::directory_entry &de,
     if (!ext.empty()) {
       boost::algorithm::to_upper(ext);
       if (ext.length() > 1) {
-        // clean dot
+        // remove period
         ext = ext.substr(1);
       }
     }
 
-    auto readed = ifs.read((char *)ReadBuf.data(), ReadBuf.size()).gcount();
-    if (readed == 0) {
+    auto streamData = ifs.read((char *)ReadBuf.data(), ReadBuf.size()).gcount();
+    if (streamData == 0) {
       return makeUnexpected("read zero bytes from " + de.path().string());
     }
 
-    if (auto lg_result =
-            lgSearch(ReadBuf.data(), ReadBuf.data() + readed, result);
-        !lg_result) {
-      return makeUnexpected(lg_result.error() +
-                            "on file: " + de.path().string());
-    } else if (lg_result.value())
+    if (auto lg_result = lgSearch(ReadBuf.data(), ReadBuf.data() + streamData, result); !lg_result) {
+      return makeUnexpected(lg_result.error() + "on file: " + de.path().string());
+    }
+    else if (lg_result.value()) {
       return true;
+    }
 
     // no hits? search manually
     Binary check_buf(ReadBuf);
@@ -465,7 +479,8 @@ expected<bool> FileSigAnalyzer::getSignature(const fs::directory_entry &de,
         if (ok.value()) {
           return true;
         }
-      } else {
+      }
+      else {
         return makeUnexpected(ok.error());
       }
     }
@@ -476,7 +491,8 @@ expected<bool> FileSigAnalyzer::getSignature(const fs::directory_entry &de,
         if (ok.value()) {
           return true;
         }
-      } else {
+      }
+      else {
         return makeUnexpected(ok.error());
       }
     }

@@ -1,7 +1,11 @@
 #pragma once
 
+#include <cstdint>
 #include <unordered_map>
+#include <stdexcept>
+#include <string>
 #include <tuple>
+
 
 enum class TokenType {
   NONE,
@@ -20,6 +24,8 @@ enum class TokenType {
   FILESIZE,
   FILENAME,
   FILEPATH,
+  ID,
+  NAME,
   ALL,
   ANY,
   OFFSET,
@@ -76,6 +82,8 @@ namespace Llama {
     {"filesize", TokenType::FILESIZE},
     {"filename", TokenType::FILENAME},
     {"filepath", TokenType::FILEPATH},
+    {"id", TokenType::ID},
+    {"name", TokenType::NAME},
     {"all", TokenType::ALL},
     {"any", TokenType::ANY},
     {"offset", TokenType::OFFSET},
@@ -118,4 +126,19 @@ public:
   TokenType Type;
   uint64_t Start, End;
   LineCol Pos;
+};
+
+class UnexpectedInputError : public std::runtime_error {
+public:
+  UnexpectedInputError(const std::string& message, LineCol pos)
+  : std::runtime_error(message), Position(pos) {}
+
+  std::string messageWithPos() const {
+    std::string msg(what());
+    msg += " at ";
+    msg += Position.toString();
+    return msg;
+  }
+
+  LineCol Position;
 };

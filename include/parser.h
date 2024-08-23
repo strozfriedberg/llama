@@ -1,13 +1,157 @@
+#pragma once
+
 #include "token.h"
+
+#include <hasher/common.h>
+#include <lightgrep/api.h>
+#include <lightgrep/util.h>
+
+#include <boost/functional/hash.hpp>
+
+#include <map>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
 class ParserError : public UnexpectedInputError {
 public:
   ParserError(const std::string& message, LineCol pos) : UnexpectedInputError(message, pos) {}
 };
 
-class Rule {
-public:
+struct MetaSection {
+  std::unordered_map<std::string, std::string> Fields;
+};
+
+using FileHashRecord = std::unordered_map<SFHASH_HashAlgorithm, std::string>;
+
+struct HashSection {
+  std::vector<FileHashRecord> FileHashRecords;
+  uint64_t HashAlgs = 0;
+};
+
+struct Atom {};
+
+struct SignatureDef : public Atom {
+  TokenType Attr;
+  std::string Val;
+};
+
+
+struct FileMetadataDef : public Atom {
+  TokenType Property;
+  TokenType Operator;
+  std::string Value;
+};
+
+struct PatternDef {
+  std::string Pattern;
+  LG_KeyOptions Options = {0,0,0};
+  std::string Encoding;
+};
+
+struct PatternSection {
+  std::map<std::string, std::vector<PatternDef>> Patterns;
+};
+
+struct ConditionFunction : public Atom {
+  ConditionFunction() = default;
+  ConditionFunction(LineCol pos) : Pos(pos) {}
+  ~ConditionFunction() = default;
+
+  void assignValidators();
+  void validate();
+
+  LineCol Pos;
+  TokenType Name;
+  std::vector<std::string> Args;
+  TokenType Operator = TokenType::NONE;
+  std::string Value;
+
+  // validators
+  size_t MinArgs;
+  size_t MaxArgs;
+  bool IsCompFunc;
+};
+
+enum class NodeType {
+  AND, OR, FUNC, SIG, META
+};
+
+struct Node {
+  virtual ~Node() = default;
+
+  NodeType Type;
+  std::shared_ptr<Node> Left;
+  std::shared_ptr<Node> Right;
+};
+
+struct SigDefNode : public Node {
+  SigDefNode() { Type = NodeType::SIG; }
+  SignatureDef Value;
+};
+
+template<>
+struct std::hash<SignatureDef>
+{
+    std::size_t operator()(const SignatureDef& sig) const noexcept {
+      std::size_t hash = 0;
+      boost::hash_combine(hash, std::hash<TokenType>{}(sig.Attr));
+      boost::hash_combine(hash, std::hash<std::string>{}(sig.Val));
+      return hash;
+    }
+};
+
+struct FuncNode : public Node {
+  FuncNode() { Type = NodeType::FUNC; }
+  ConditionFunction Value;
+};
+
+template<>
+struct std::hash<ConditionFunction>
+{
+    std::size_t operator()(const ConditionFunction& func) const noexcept {
+      std::size_t hash = 0, h2 = 0;
+      for (const auto& arg : func.Args) {
+        const std::size_t h = std::hash<std::string>{}(arg);
+        boost::hash_combine(h2, h);
+      }
+      boost::hash_combine(hash, std::hash<TokenType>{}(func.Name));
+      boost::hash_combine(hash, h2);
+      boost::hash_combine(hash, std::hash<TokenType>{}(func.Operator));
+      boost::hash_combine(hash, std::hash<std::string>{}(func.Value));
+      return hash;
+    }
+};
+
+struct FileMetadataNode : public Node {
+  FileMetadataNode() { Type = NodeType::META; }
+  FileMetadataDef Value;
+};
+
+template<>
+struct std::hash<FileMetadataDef>
+{
+    std::size_t operator()(const FileMetadataDef& meta) const noexcept {
+      std::size_t hash = 0;
+      boost::hash_combine(hash, std::hash<TokenType>{}(meta.Property));
+      boost::hash_combine(hash, std::hash<TokenType>{}(meta.Operator));
+      boost::hash_combine(hash, std::hash<std::string>{}(meta.Value));
+      return hash;
+    }
+};
+
+struct GrepSection {
+  PatternSection Patterns;
+  std::shared_ptr<Node> Condition;
+};
+
+struct Rule {
   std::string Name;
+  MetaSection Meta;
+  HashSection Hash;
+  std::shared_ptr<Node> Signature;
+  std::shared_ptr<Node> FileMetadata;
+  GrepSection Grep;
 };
 
 class LlamaParser {
@@ -29,36 +173,35 @@ public:
   template <class... TokenTypes>
   void mustParse(const std::string& errMsg, TokenTypes... types);
 
-  void parseHashSection();
-  void parseHashExpr();
-  void parseHash();
-  void parseOperator();
-  void parsePatternMod();
-  void parseEncodings();
-  void parsePatternDef();
-  void parsePatternsSection();
-  void parseNumber();
-  std::string parseHexString();
-  void parseDualFuncCall();
-  void parseAnyFuncCall();
-  void parseAllFuncCall();
-  void parseFactor();
-  void parseTerm();
-  void parseExpr();
-  void parseConditionSection();
-  void parseSignatureSection();
-  void parseGrepSection();
-  void parseFileMetadataDef();
-  void parseFileMetadataSection();
-  void parseMetaSection();
-  void parseNonGrepSection();
-  void parseRuleContent();
-  void parseRule();
+  std::string getPreviousLexeme() const { return Input.substr(previous().Start, previous().length()); }
+
+  HashSection parseHashSection();
+  SFHASH_HashAlgorithm parseHash();
+  FileHashRecord parseFileHashRecord();
+  std::string parseHashValue();
+  TokenType parseOperator();
+  std::vector<PatternDef> parsePatternMod();
+  std::vector<std::string> parseEncodings();
+  std::string parseEncoding();
+  std::vector<PatternDef> parsePatternDef();
+  PatternSection parsePatternsSection();
+  std::string parseNumber();
+  std::vector<PatternDef> parseHexString();
+  ConditionFunction parseFuncCall();
+  std::shared_ptr<Node> parseFactor();
+  std::shared_ptr<Node> parseTerm();
+  std::shared_ptr<Node> parseExpr();
+  SignatureDef parseSignatureDef();
+  GrepSection parseGrepSection();
+  FileMetadataDef parseFileMetadataDef();
+  MetaSection parseMetaSection();
   Rule parseRuleDecl();
   std::vector<Rule> parseRules();
 
   std::string Input;
   std::vector<Token> Tokens;
+  std::unordered_map<std::string, std::string> Patterns;
+  std::unordered_map<std::size_t, Atom> Atoms;
   uint64_t CurIdx = 0;
 };
 
@@ -77,287 +220,3 @@ void LlamaParser::mustParse(const std::string& errMsg, TokenTypes... types) {
     throw ParserError(errMsg, peek().Pos);
   }
 }
-
-void LlamaParser::parseHashSection() {
-  mustParse("Expected hash keyword", TokenType::HASH);
-  mustParse("Expected colon after hash keyword", TokenType::COLON);
-  while (checkAny(TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3)) {
-    parseHashExpr();
-  }
-}
-
-void LlamaParser::parseHashExpr() {
-  parseHash();
-  mustParse("Expected equal sign", TokenType::EQUAL);
-  mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-}
-
-void LlamaParser::parseHash() {
-  mustParse(
-    "Expected hash type", TokenType::MD5, TokenType::SHA1, TokenType::SHA256, TokenType::BLAKE3
-  );
-}
-
-void LlamaParser::parseOperator() {
-  mustParse(
-    "Expected operator",
-    TokenType::EQUAL_EQUAL,
-    TokenType::NOT_EQUAL,
-    TokenType::GREATER_THAN,
-    TokenType::GREATER_THAN_EQUAL,
-    TokenType::LESS_THAN,
-    TokenType::LESS_THAN_EQUAL
-  );
-}
-
-void LlamaParser::parsePatternMod() {
-  while (checkAny(TokenType::NOCASE, TokenType::FIXED, TokenType::ENCODINGS)) {
-    if (matchAny(TokenType::NOCASE)) {
-      continue;
-    }
-    else if (matchAny(TokenType::FIXED)) {
-      continue;
-    }
-    else if (matchAny(TokenType::ENCODINGS)) {
-      parseEncodings();
-    }
-  }
-}
-
-void LlamaParser::parseEncodings() {
-  mustParse("Expected equal sign after encodings keyword", TokenType::EQUAL);
-  mustParse("Expected encoding", TokenType::IDENTIFIER);
-  while (matchAny(TokenType::COMMA)) {
-    mustParse("Expected encoding", TokenType::IDENTIFIER);
-  }
-}
-
-void LlamaParser::parsePatternDef() {
-  mustParse("Expected identifier", TokenType::IDENTIFIER);
-  mustParse("Expected equal sign", TokenType::EQUAL);
-
-  if (matchAny(TokenType::DOUBLE_QUOTED_STRING)) {
-    parsePatternMod();
-  }
-  else if (matchAny(TokenType::OPEN_BRACE)) {
-    parseHexString();
-  }
-  else {
-    throw ParserError("Expected double quoted string or hex string", peek().Pos);
-  }
-}
-
-void LlamaParser::parsePatternsSection() {
-  mustParse("Expected patterns keyword", TokenType::PATTERNS);
-  mustParse("Expected colon after patterns keyword", TokenType::COLON);
-  while (checkAny(TokenType::IDENTIFIER)) {
-    parsePatternDef();
-  }
-}
-
-void LlamaParser::parseNumber() {
-  mustParse("Expected number", TokenType::NUMBER);
-}
-
-std::string LlamaParser::parseHexString() {
-  std::string hexDigit, hexString;
-  while (!checkAny(TokenType::CLOSE_BRACE) && !isAtEnd()) {
-    if (matchAny(TokenType::IDENTIFIER, TokenType::NUMBER)) {
-      hexDigit = Input.substr(previous().Start, previous().length());
-      for (char c : hexDigit) {
-        if (!isxdigit(c)) {
-          throw ParserError("Invalid hex digit", previous().Pos);
-        }
-      }
-      hexString += hexDigit;
-    }
-    else {
-      throw ParserError("Expected hex digit", peek().Pos);
-    }
-  }
-  if (isAtEnd()) {
-    throw ParserError("Unterminated hex string", peek().Pos);
-  }
-  if (hexString.size() & 1) {
-    throw ParserError("Odd number of hex digits", peek().Pos);
-  }
-  if (hexString.size() == 0) {
-    throw ParserError("Empty hex string", peek().Pos);
-  }
-  mustParse("Expected close brace", TokenType::CLOSE_BRACE);
-  return hexString;
-}
-
-void LlamaParser::parseDualFuncCall() {
-  mustParse(
-    "Expected function name",
-    TokenType::OFFSET,
-    TokenType::COUNT,
-    TokenType::COUNT_HAS_HITS,
-    TokenType::LENGTH
-  );
-  mustParse("Expected open parenthesis", TokenType::OPEN_PAREN);
-  mustParse("Expected identifier", TokenType::IDENTIFIER);
-  if (matchAny(TokenType::COMMA)) {
-    parseNumber();
-  }
-  mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
-  parseOperator();
-  parseNumber();
-}
-
-void LlamaParser::parseAnyFuncCall() {
-  mustParse("Expected function name", TokenType::ANY);
-  mustParse("Expected open parenthesis", TokenType::OPEN_PAREN);
-  mustParse("Expected identifier", TokenType::IDENTIFIER);
-  while (matchAny(TokenType::COMMA)) {
-    mustParse("Expected identifier", TokenType::IDENTIFIER);
-  }
-  mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
-}
-
-void LlamaParser::parseAllFuncCall() {
-  mustParse("Expected function name", TokenType::ALL);
-  mustParse("Expected open parenthesis", TokenType::OPEN_PAREN);
-  mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
-}
-
-void LlamaParser::parseTerm() {
-  parseFactor();
-  while (matchAny(TokenType::AND)) {
-    parseFactor();
-  }
-}
-
-void LlamaParser::parseFactor() {
-  if (matchAny(TokenType::OPEN_PAREN)) {
-    parseExpr();
-  }
-  else if (checkAny(TokenType::ALL)) {
-    parseAllFuncCall();
-  }
-  else if (checkAny(TokenType::ANY)) {
-    parseAnyFuncCall();
-  }
-  else if (checkAny(
-    TokenType::OFFSET,
-    TokenType::COUNT,
-    TokenType::COUNT_HAS_HITS,
-    TokenType::LENGTH
-  )) {
-    parseDualFuncCall();
-  }
-}
-
-void LlamaParser::parseExpr() {
-  parseTerm();
-  while (matchAny(TokenType::OR)) {
-    parseTerm();
-  }
-}
-
-void LlamaParser::parseConditionSection() {
-  mustParse("Expected condition keyword", TokenType::CONDITION);
-  mustParse("Expected colon after condition keyword", TokenType::COLON);
-  parseExpr();
-}
-
-void LlamaParser::parseSignatureSection() {
-  mustParse("Expected signature keyword", TokenType::SIGNATURE);
-  mustParse("Expected colon after signature keyword", TokenType::COLON);
-  mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-  while (matchAny(TokenType::DOUBLE_QUOTED_STRING)) {}
-}
-
-void LlamaParser::parseGrepSection() {
-  mustParse("Expected grep keyword", TokenType::GREP);
-  mustParse("Expected colon after grep keyword", TokenType::COLON);
-  if (checkAny(TokenType::PATTERNS)) {
-    parsePatternsSection();
-  }
-  parseConditionSection();
-}
-
-void LlamaParser::parseFileMetadataDef() {
-  if (matchAny(TokenType::CREATED, TokenType::MODIFIED)) {
-    parseOperator();
-    mustParse("Expected double quoted string containing date", TokenType::DOUBLE_QUOTED_STRING);
-  }
-  else if (matchAny(TokenType::FILESIZE)) {
-    parseOperator();
-    mustParse("Expected number", TokenType::NUMBER);
-  }
-  else {
-    throw ParserError("Expected created, modified, or filesize", peek().Pos);
-  }
-}
-
-void LlamaParser::parseFileMetadataSection() {
-  mustParse("Expected file_metadata section", TokenType::FILE_METADATA);
-  mustParse("Expected colon", TokenType::COLON);
-  while (checkAny(TokenType::CREATED, TokenType::MODIFIED, TokenType::FILESIZE)) {
-    parseFileMetadataDef();
-  }
-}
-
-void LlamaParser::parseMetaSection() {
-  mustParse("Expected meta keyword", TokenType::META);
-  mustParse("Expected colon", TokenType::COLON);
-  while (matchAny(TokenType::IDENTIFIER)) {
-    mustParse("Expected equal sign", TokenType::EQUAL);
-    mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-  }
-}
-
-void LlamaParser::parseNonGrepSection() {
-  if (checkAny(TokenType::HASH)) {
-    parseHashSection();
-  }
-  else if (checkAny(TokenType::SIGNATURE)) {
-    parseSignatureSection();
-  }
-  else if (checkAny(TokenType::FILE_METADATA)) {
-    parseFileMetadataSection();
-  }
-  else {
-    throw ParserError("Expected hash, signature, or file_metadata", peek().Pos);
-  }
-}
-
-void LlamaParser::parseRuleContent() {
-  if (checkAny(TokenType::GREP)) {
-    parseGrepSection();
-  }
-  else {
-    while (checkAny(TokenType::HASH, TokenType::SIGNATURE, TokenType::FILE_METADATA)) {
-      parseNonGrepSection();
-    }
-  }
-}
-
-void LlamaParser::parseRule() {
-  if (checkAny(TokenType::META)) {
-    parseMetaSection();
-  }
-  parseRuleContent();
-}
-
-Rule LlamaParser::parseRuleDecl() {
-  Rule rule;
-  mustParse("Expected rule keyword", TokenType::RULE);
-  mustParse("Expected identifier", TokenType::IDENTIFIER);
-  rule.Name = Input.substr(previous().Start, previous().length());
-  mustParse("Expected open curly brace", TokenType::OPEN_BRACE);
-  parseRule();
-  mustParse("Expected close curly brace", TokenType::CLOSE_BRACE);
-  return rule;
-}
-
-std::vector<Rule> LlamaParser::parseRules() {
-  std::vector<Rule> rules;
-  while (!isAtEnd()) {
-    rules.push_back(parseRuleDecl());
-  }
-  return rules;
-}
-
