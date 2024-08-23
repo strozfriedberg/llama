@@ -314,6 +314,9 @@ void readPatterns(jsoncons::json const &magic_json, Magic &m) {
 }
 
 void readSpecs(jsoncons::json const &magic_json, Magic &m) {
+  if (magic_json.contains("name")) {
+    m.Name = magic_json["name"].as_string();
+  }
   if (magic_json.contains("description")) {
     m.Description = magic_json["description"].as_string();
   }

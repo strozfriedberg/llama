@@ -43,6 +43,7 @@ struct Magic {
   using ChecksType = std::vector<Check>;
 
   ChecksType Checks;
+  String Name;
   String Description;
   String Id;
   String2StringMap Extensions;
