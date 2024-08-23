@@ -35,6 +35,7 @@ namespace {
 Processor::Processor(LlamaDB* db, const std::shared_ptr<ProgramHandle>& prog):
   Db(db),
   DbConn(*db),
+  Appender(DbConn.get(), "hash"),
   LgProg(prog),
   Ctx(prog.get() ? lg_create_context(prog.get(), &ctxOpts) : nullptr, lg_destroy_context),
   Hasher(sfhash_create_hasher(SFHASH_MD5 | SFHASH_SHA_1 | SFHASH_SHA_2_256 | SFHASH_BLAKE3 | SFHASH_FUZZY), sfhash_destroy_hasher),
@@ -51,11 +52,22 @@ void Processor::process(ReadSeek& stream) {
   // std::cerr << "hashing..." << std::endl;
   // hash 'em if ya got 'em
   bool hashSuccess = false;
+  SFHASH_HashValues h;
   {
     Timer procTime;
-    SFHASH_HashValues hashes;
-    hashSuccess = hashFile(Hasher.get(), stream, Buf, hashes);
+    hashSuccess = hashFile(Hasher.get(), stream, Buf, h);
     ProcTimeTotal += procTime.elapsed();
+  }
+  if (hashSuccess) {
+    HashRec hashes;
+    hashes.MetaAddr = stream.getID();
+    hashes.MD5 = hexEncode(h.Md5, h.Md5 + sizeof(h.Md5));
+    hashes.SHA1 = hexEncode(h.Sha1, h.Sha1 + sizeof(h.Sha1));
+    hashes.SHA256 = hexEncode(h.Sha2_256, h.Sha2_256 + sizeof(h.Sha2_256));
+    hashes.Blake3 = hexEncode(h.Blake3, h.Blake3 + sizeof(h.Blake3));
+    hashes.Ssdeep = hexEncode(h.Fuzzy, h.Fuzzy + sizeof(h.Fuzzy));
+
+    Hashes->add(hashes);
   }
 /*  if (hashSuccess) {
     rec.Doc["md5"] = hexEncode(rec.Hashes.Md5, rec.Hashes.Md5 + sizeof(rec.Hashes.Md5));
@@ -66,5 +78,12 @@ void Processor::process(ReadSeek& stream) {
     rec.Doc["entropy"] = rec.Hashes.Entropy;
   }*/
 //  out.outputInode(rec);
+}
+
+void Processor::flush(void) {
+  if (Hashes->size()) {
+    Hashes->copyToDB(Appender.get());
+    Appender.flush();
+  }
 }
 

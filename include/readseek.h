@@ -11,6 +11,8 @@ public:
   virtual bool open(void) = 0;
   virtual void close(void) = 0;
 
+  virtual uint64_t getID() const = 0;
+
   virtual int64_t read(size_t len, std::vector<uint8_t>& buf) = 0;
 
   virtual size_t tellg() const = 0;

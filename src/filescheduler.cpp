@@ -92,6 +92,7 @@ void FileScheduler::performScheduling(DirentBatch& dirents,
         stream->close();
       }
     }
+    proc->flush();
     this->pushProc(proc);
   });
 }

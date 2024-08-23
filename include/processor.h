@@ -23,6 +23,8 @@ public:
 
   void process(ReadSeek& stream);
 
+  void flush(void);
+
   Processor(const Processor&) = delete;
 
   double getProcessorTime() const { return ProcTimeTotal; }
@@ -32,6 +34,7 @@ private:
 
   LlamaDB* const Db; // weak pointer, allows for clone()
   LlamaDBConnection DbConn;
+  LlamaDBAppender   Appender;
 
   std::shared_ptr<ProgramHandle> LgProg; // shared
   std::shared_ptr<ContextHandle> Ctx; // not shared, could be unique_ptr

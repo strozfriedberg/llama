@@ -13,6 +13,8 @@ public:
   virtual bool open(void) override { return true; }
   virtual void close(void) override {}
 
+  virtual uint64_t getID() const override { return 0; }
+
   virtual int64_t read(size_t len, std::vector<uint8_t>& buf) override;
 
   virtual size_t tellg() const override { return Pos; }
@@ -35,6 +37,8 @@ public:
 
   virtual bool open(void) override { return true; }
   virtual void close(void) override {}
+
+  virtual uint64_t getID() const override { return 0; }
 
   virtual int64_t read(size_t len, std::vector<uint8_t>& buf) override;
 
@@ -60,6 +64,8 @@ public:
 
   virtual bool open(void) override;
   virtual void close(void) override;
+
+  virtual uint64_t getID() const override { return Inum; }
 
   virtual int64_t read(size_t len, std::vector<uint8_t>& buf) override;
 
