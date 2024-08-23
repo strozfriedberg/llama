@@ -131,13 +131,11 @@ std::shared_ptr<BlockSequence> TskReader::makeBlockSequence(TSK_FS_FILE* fs_file
   TSK_FS_INFO* their_fs = fs_file->fs_info;
 
   // open our own copy of the fs, since TskAuto closes the ones it opens
-  auto [i, absent] = Fs.try_emplace(their_fs->offset, nullptr, nullptr);
+  auto [itr, absent] = Fs.try_emplace(their_fs->offset, nullptr);
   if (absent) {
-    i->second = Tsk->openFS(
-      Img.get(), their_fs->offset, their_fs->ftype
-    );
+    itr->second.reset(Tsk->openFS(Img.get(), their_fs->offset, their_fs->ftype).release(), tsk_fs_close);
   }
-  TSK_FS_INFO* our_fs = i->second.get();
+  TSK_FS_INFO* our_fs = itr->second.get();
 
   // open our own copy of the file, since TskAuto closes the ones it opens
   return std::static_pointer_cast<BlockSequence>(

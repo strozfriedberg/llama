@@ -52,7 +52,7 @@ private:
 
   std::string ImgPath;
   std::unique_ptr<TSK_IMG_INFO, void(*)(TSK_IMG_INFO*)> Img;
-  std::unordered_map<TSK_OFF_T, std::unique_ptr<TSK_FS_INFO, void(*)(TSK_FS_INFO*)>> Fs;
+  std::unordered_map<TSK_OFF_T, std::shared_ptr<TSK_FS_INFO>> Fs;
 
   std::shared_ptr<InputHandler> Input;
 
