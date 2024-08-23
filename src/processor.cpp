@@ -59,6 +59,6 @@ void Processor::process(FileRecord& rec, OutputHandler& out) {
     rec.Doc["fuzzy"] = hexEncode(rec.Hashes.Fuzzy, rec.Hashes.Fuzzy + sizeof(rec.Hashes.Fuzzy));
     rec.Doc["entropy"] = rec.Hashes.Entropy;
   }*/
-  out.outputInode(rec);
+//  out.outputInode(rec);
 }
 
