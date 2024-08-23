@@ -201,7 +201,7 @@ TEST_CASE("inodeWriting") {
   CHECK(duckdb_row_count(&result) == 1);
   duckdb_destroy_result(&result);
 
-  state = duckdb_query(conn.get(), "SELECT * FROM inode WHERE inode.type ilike '%File%' and inode.flags = 'Allocated';", &result);
+  state = duckdb_query(conn.get(), "SELECT * FROM inode WHERE inode.type = 'File' and inode.flags = 'Deleted';", &result);
   CHECK(state != DuckDBError);
   CHECK(duckdb_result_error(&result) == nullptr);
   CHECK(duckdb_row_count(&result) == 1);

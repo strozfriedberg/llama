@@ -40,7 +40,7 @@ public:
   unsigned int copyToDB(duckdb_appender& appender) {
     unsigned int numRows = 0;
     duckdb_state state;
-    for (unsigned int i = 0; i + (DuckDirent::NumCols - 1) < OffsetVals.size(); i += DuckDirent::NumCols) {
+    for (unsigned int i = 0; i + (DuckInode::NumCols - 1) < OffsetVals.size(); i += DuckInode::NumCols) {
       append(appender,
               Buf.data() + OffsetVals[i],
               Buf.data() + OffsetVals[i + 1],
