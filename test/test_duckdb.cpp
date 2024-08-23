@@ -111,7 +111,7 @@ class DuckRec : public SchemaType<
                         std::string,
                         uint64_t,
                         uint64_t> {
-
+ 
 public:
   enum {
     Path = 0,
@@ -183,6 +183,33 @@ public:
     addStrings(*this, offset, inode.Created, inode.Accessed, inode.Modified, inode.Metadata);
     ++NumRows;
   }
+
+  unsigned int copyToDB(duckdb_appender& appender) {
+    unsigned int numRows = 0;
+    duckdb_state state;
+    for (unsigned int i = 0; i + (DuckDirent::NumCols - 1) < OffsetVals.size(); i += DuckDirent::NumCols) {
+      append(appender,
+              Buf.data() + OffsetVals[i],
+              Buf.data() + OffsetVals[i + 1],
+              Buf.data() + OffsetVals[i + 2],
+              OffsetVals[i + 3],
+              OffsetVals[i + 4],
+              OffsetVals[i + 5],
+              Buf.data() + OffsetVals[i + 6],
+              OffsetVals[i + 7],
+              OffsetVals[i + 8],
+              Buf.data() + OffsetVals[i + 9],
+              Buf.data() + OffsetVals[i + 10],
+              Buf.data() + OffsetVals[i + 11],
+              Buf.data() + OffsetVals[i + 12]
+      );
+      state = duckdb_appender_end_row(appender);
+      THROW_IF(state == DuckDBError, "Failed call to end_row");
+      ++numRows;
+    }
+    DuckBatch::clear();
+    return numRows;
+  }
 };
 
 TEST_CASE("inodeWriting") {
@@ -197,7 +224,47 @@ TEST_CASE("inodeWriting") {
 
   InodeBatch batch;
   batch.add(i1);
+  REQUIRE(batch.Buf.size() == 101);
   batch.add(i2);
+  REQUIRE(batch.Buf.size() == 200);
   REQUIRE(batch.size() == 2);
+
+  LlamaDBAppender appender(conn.get(), "inode");
+  REQUIRE(2 == batch.copyToDB(appender.get()));
+  REQUIRE(appender.flush());
+
+  duckdb_result result;
+  auto state = duckdb_query(conn.get(), "SELECT * FROM inode;", &result);// WHERE inode.type = 'File' and inode.flags = 'Deleted';", &result);
+  CHECK(state != DuckDBError);
+  CHECK(duckdb_result_error(&result) == nullptr);
+  CHECK(duckdb_row_count(&result) == 2);
+  REQUIRE(duckdb_column_count(&result) == 13);
+  unsigned int i = 0;
+  REQUIRE(std::string("Id") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("Type") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("Flags") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("Addr") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("Uid") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("Gid") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("LinkTarget") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("NumLinks") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("SeqNum") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("Created") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("Accessed") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("Modified") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("Metadata") == duckdb_column_name(&result, i));
+  duckdb_destroy_result(&result);
+
+  state = duckdb_query(conn.get(), "SELECT * FROM inode WHERE inode.id = 'id 1';", &result);//inode.type = 'File' and inode.flags = 'Deleted';", &result);
+  CHECK(state != DuckDBError);
+  CHECK(duckdb_result_error(&result) == nullptr);
+  CHECK(duckdb_row_count(&result) == 1);
+  duckdb_destroy_result(&result);
+
+  state = duckdb_query(conn.get(), "SELECT * FROM inode WHERE inode.type ilike '%File%' and inode.flags = 'Allocated';", &result);
+  CHECK(state != DuckDBError);
+  CHECK(duckdb_result_error(&result) == nullptr);
+  CHECK(duckdb_row_count(&result) == 1);
+  duckdb_destroy_result(&result);
 }
 
