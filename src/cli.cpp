@@ -34,7 +34,7 @@ Cli::Cli() : All(), Opts(new Options) {
         ->default_value(std::thread::hardware_concurrency())
         ->value_name("THREADS"),
         "Number of worker threads to use")
-      ("keyword-file,k",
+      ("keywords-file,k",
         po::value<std::vector<std::string>>(&Opts->KeyFiles)
         ->composing()
         ->value_name("KEY_FILE"),
