@@ -80,9 +80,9 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
   }
 
   uint64_t end = CurIdx;
-  auto found = Llama::keywords.find(Input.substr(start, end - start));
+  auto found = LlamaKeywords::keywords.find(Input.substr(start, end - start));
 
-  if (found != Llama::keywords.end()) {
+  if (found != LlamaKeywords::keywords.end()) {
     addToken(found->second, start, end, pos);
   }
   else {

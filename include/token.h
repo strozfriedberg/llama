@@ -67,7 +67,7 @@ enum class TokenType {
   END_OF_FILE
 };
 
-namespace Llama {
+namespace LlamaKeywords {
   const std::unordered_map<std::string, TokenType> keywords = {
     {"rule", TokenType::RULE},
     {"meta", TokenType::META},
