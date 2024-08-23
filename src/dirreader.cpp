@@ -19,17 +19,20 @@ DirReader::DirReader(const std::string& path):
 {
 }
 
-void DirReader::setInputHandler(std::shared_ptr<InputHandler> in) {
+void DirReader::setInputHandler(const std::shared_ptr<InputHandler>& in) {
   Input = in;
 }
 
-void DirReader::setOutputHandler(std::shared_ptr<OutputHandler> out) {
+void DirReader::setOutputHandler(const std::shared_ptr<OutputHandler>& out) {
   Output = out;
 }
 
-bool push_it(std::stack<fs::directory_iterator> dirStack, const std::string& path) {
+bool push_it(std::stack<fs::directory_iterator>* dirStack, const std::string& path) {
   std::error_code err;
-  dirStack.emplace(path, err);
+  if (!dirStack) {
+    return false;
+  }
+  dirStack->emplace(path, err);
   if (err) {
     // TODO: Logger?
     std::cerr << "Error: " << path << ": " << err.message() << std::endl;
@@ -43,7 +46,7 @@ bool DirReader::startReading() {
   std::error_code err;
 
   // push the initial directory onto the stack
-  if (!push_it(dirStack, Root)) {
+  if (!push_it(&dirStack, Root)) {
     return false;
   }
 
@@ -61,12 +64,13 @@ bool DirReader::startReading() {
 
     if (entry.is_directory()) {
       // recurse, depth first
-      hadError |= !push_it(dirStack, entry.path().string());
+      hadError |= !push_it(&dirStack, entry.path().string());
     }
   } while (!dirStack.empty());
 
   while (!Dirents.empty()) {
-    Output->outputDirent(Dirents.pop());
+    Dirents.pop();
+    //    Output->outputDirent(Dirents.pop());
   }
 
   Input->flush();
@@ -80,16 +84,20 @@ void DirReader::handleFile(const fs::directory_entry& de) {
   const std::string path = p.generic_string();
   const std::string parent_path = p.parent_path().generic_string();
 
-  while (!Dirents.empty() && parent_path != Dirents.top()["path"]) {
-    Output->outputDirent(Dirents.pop());
+  if (!Dirents.empty() && parent_path != Dirents.top().Path) {
+    do {
+      Input->push(Dirents.pop());
+    }
+    while (!Dirents.empty() && parent_path != Dirents.top().Path);
+    Input->maybeFlush();
   }
 
-  Dirents.push(filename, Conv.convertName(de));
-
+  Input->push(Conv.convertStdFsDEtoDirent(de));
+/*
   Input->push({
     Conv.convertMeta(de),
     de.is_directory() ?
       std::static_pointer_cast<BlockSequence>(std::make_shared<EmptyBlockSequence>()) :
       std::static_pointer_cast<BlockSequence>(std::make_shared<FileBlockSequence>(p.string()))
-  });
+  });*/
 }

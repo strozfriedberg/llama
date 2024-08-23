@@ -9,8 +9,14 @@
 // TODO: add direct tests of this
 // TODO: use std::to_chars, get rid of std::ostringstream?
 
+namespace {
+  static const auto UNIX_BIRTHDAY = boost::gregorian::date(1970, 1, 1);
+  static const boost::posix_time::ptime START_TIME(UNIX_BIRTHDAY);
+}
+
 std::string formatTimestamp(int64_t unix_time, uint32_t ns, std::ostringstream& buf) {
   std::string ret;
+  ret.reserve(30);
 
   if (0 == unix_time) {
     if (0 == ns) {
@@ -23,7 +29,6 @@ std::string formatTimestamp(int64_t unix_time, uint32_t ns, std::ostringstream& 
     // Boost, you tried.
     //const boost::posix_time::ptime pt = boost::posix_time::from_time_t(unix_time);
     try {
-      const boost::posix_time::ptime start(boost::gregorian::date(1970, 1, 1));
       const int64_t min = unix_time / 60;
       // Boost Date-Time has a maximum year of around 10000,
       // Which means the number of _hours_ since 1970 will fit in a int32_t
@@ -34,7 +39,7 @@ std::string formatTimestamp(int64_t unix_time, uint32_t ns, std::ostringstream& 
         static_cast<boost::posix_time::time_res_traits::min_type>(min % 60),
         static_cast<boost::posix_time::time_res_traits::sec_type>(unix_time % 60)
       );
-      const boost::posix_time::ptime pt = start + duration;
+      const boost::posix_time::ptime pt = START_TIME + duration;
       const tm pt_tm = boost::posix_time::to_tm(pt);
       char tbuf[100];
       const size_t len = strftime(tbuf, 100, "%Y-%m-%d %H:%M:%S", &pt_tm);
@@ -49,7 +54,7 @@ std::string formatTimestamp(int64_t unix_time, uint32_t ns, std::ostringstream& 
   }
 
   // fractional seconds
-  if (ns - 1 < 999999999) {
+  if (0 < ns && ns < 1000000000) {
     buf << double(ns) / 1000000000;
     auto frac = buf.str();
     ret.append(frac.substr(1, frac.find_last_not_of('0'))); // no leading or trailing zeroes
@@ -57,3 +62,4 @@ std::string formatTimestamp(int64_t unix_time, uint32_t ns, std::ostringstream& 
   }
   return ret;
 }
+

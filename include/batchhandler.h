@@ -3,26 +3,33 @@
 #include <memory>
 #include <vector>
 
+#include "readseek.h"
+
 class FileScheduler;
+
+class DirentBatch;
+class InodeBatch;
 
 class BatchHandler: public InputHandler {
 public:
   BatchHandler(std::shared_ptr<FileScheduler> sink);
 
-// FIXME: should the dtor flush?
-  virtual ~BatchHandler() {}
+  virtual ~BatchHandler() {
+    flush();
+  }
 
-// FIXME: would like a varargs emplace version too
-  virtual void push(FileRecord&& f) override;
+  virtual void push(const Dirent& dirent) override;
+  virtual void push(const Inode& inode) override;
+  virtual void push(std::unique_ptr<ReadSeek> stream) override;
 
-  virtual void flush() override;
+  virtual void maybeFlush() override; // flushes only if the batch is full
+  virtual void flush() override; // always flushes
 
 private:
-  void resetCurBatch();
-
   std::shared_ptr<FileScheduler> Sink;
-// FIXME: why is CurBatch shared? could it just be moved?
-  std::shared_ptr<std::vector<FileRecord>> CurBatch;
 
-  const size_t MaxCap = 200;
+  std::unique_ptr<DirentBatch> CurDents;
+  std::unique_ptr<InodeBatch>  CurInodes;
+  std::shared_ptr<std::vector<std::unique_ptr<ReadSeek>>> CurStreams;
 };
+

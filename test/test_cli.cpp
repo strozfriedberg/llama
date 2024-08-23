@@ -53,12 +53,30 @@ TEST_CASE("testNoInput") {
 }
 
 TEST_CASE("testCLIKeywordsFiles") {
-  const char* args[] = {"llama", "-f", "mypatterns.txt", "--file",
+  const char* args[] = {"llama", "-k", "mypatterns.txt", "--keywords-file",
                         "morepatterns.txt", "output", "nosnits_workstation.E01"};
   std::vector<std::string> expected{"mypatterns.txt", "morepatterns.txt"};
   Cli cli;
   auto opts = cli.parse(7, args);
   REQUIRE(expected == opts->KeyFiles);
+}
+
+TEST_CASE("testCLIRuleFiles") {
+  const char* args[] = {"llama", "--rule-file",
+                        "rules.txt", "output", "nosnits_workstation.E01"};
+  std::string expected("rules.txt");
+  Cli cli;
+  auto opts = cli.parse(5, args);
+  REQUIRE(expected == opts->RuleFile);
+}
+
+TEST_CASE("testCLIRuleDir") {
+  const char* args[] = {"llama", "--rule-dir",
+                        "rules/", "output", "nosnits_workstation.E01"};
+  std::string expected("rules/");
+  Cli cli;
+  auto opts = cli.parse(5, args);
+  REQUIRE(expected == opts->RuleDir);
 }
 
 TEST_CASE("testCLIReal") {

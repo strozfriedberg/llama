@@ -2,64 +2,57 @@ start_rule          = rule_decl+ EOF;
 
 rule_decl           = RULE IDENTIFIER OPEN_BRACE rule CLOSE_BRACE;
 
-rule                = meta_section? rule_content;
+rule                = meta_section? hash_section? signature_section? file_metadata_section? grep_section?;
 
-(* Rules can either have a grep section or one of the non-grep sections, but not both. *)
-rule_content        = grep_section
-                    | non_grep_section+;
-
-non_grep_section   = file_metadata_section
-                   | hash_section
-                   | signature_section;
-
-expr                = expr operator expr 
-                    | func_call
-                    | literal;
-
-meta_section        = META COLON string_def+;
+meta_section        = META COLON pattern_def+;
 
 file_metadata_section = FILE_METADATA COLON file_metadata_def+;
 
-grep_section        = GREP COLON string_section? condition_section;
+grep_section        = GREP COLON patterns_section? condition_section;
 
 signature_section   = SIGNATURE COLON DOUBLE_QUOTED_STRING+;
 
 hash_section        = HASH COLON hash_expr+;
 
-hash_expr           = hash EQUAL DOUBLE_QUOTED_STRING;
+file_hash_record    = hash EQUAL_EQUAL DOUBLE_QUOTED_STRING (COMMA hash EQUAL_EQUAL DOUBLE_QUOTED_STRING)*;
 
-strings_section     = STRINGS COLON string_def+;
+patterns_section    = PATTERNS COLON pattern_def+;
 
-condition_section   = CONDITION COLON expr;
+condition_section   = CONDITION COLON expr+;
 
 file_metadata_def   = file_metadata EQUAL DOUBLE_QUOTED_STRING
                     | FILESIZE EQUAL NUMBER;
 
-string_def          = IDENTIFIER EQUAL DOUBLE_QUOTED_STRING string_mod+;
+pattern_def          = IDENTIFIER EQUAL DOUBLE_QUOTED_STRING pattern_mod+
+                    | IDENTIFIER EQUAL hex_string;
 
-string_mod          = encodings | FIXED | NOCASE;
+pattern_mod          = encodings | FIXED | NOCASE;
 
 encodings           = ENCODINGS EQUAL ENCODINGS_LIST;
 
-func_call           = condition_func OPEN_PAREN arg_list CLOSE_PAREN;
+expr                = term (OR term)*;
 
-arg_list            = IDENTIFIER ( COMMA IDENTIFIER )*;
+term                = factor (AND factor)*;
+
+factor              = OPEN_PAREN expr CLOSE_PAREN
+                    | func_call;
+
+func_call           = func OPEN_PAREN (IDENTIFIER (COMMA IDENTIFIER)*)? CLOSE_PAREN;
+
+func                = OFFSET
+                    | COUNT_HAS_HITS
+                    | COUNT
+                    | LENGTH;
 
 file_metadata       = CREATED
                     | MODIFIED
+                    | FILEPATH
+                    | FILENAME
                     ;
 
 literal             = IDENTIFIER 
                     | DOUBLE_QUOTED_STRING 
                     | NUMBER
-                    ;
-
-condition_func      = ANY 
-                    | ALL 
-                    | OFFSET 
-                    | COUNT_HAS_HITS 
-                    | COUNT 
-                    | LENGTH
                     ;
 
 operator            = EQUAL_EQUAL
@@ -68,8 +61,6 @@ operator            = EQUAL_EQUAL
                     | LESS_THAN_EQUAL
                     | GREATER_THAN
                     | GREATER_THAN_EQUAL
-                    | AND
-                    | OR
                     ;
 
 hash                = MD5
@@ -77,6 +68,12 @@ hash                = MD5
                     | SHA256
                     | BLAKE3
                     ;
+
+
+hex_string          = OPEN_BRACE (NUMBER|IDENTIFIER)+ CLOSE_BRACE;
+
+single_line_comment = "//" [^\n]*;
+multi_line_comment  = "/*" ([^*] | "*" [^/])* "*/";
 
 OPEN_BRACE          = "{";
 CLOSE_BRACE         = "}";
@@ -108,7 +105,7 @@ FILE_METADATA       = "file_metadata";
 SIGNATURE           = "signature";
 GREP                = "grep";
 HASH                = "hash";
-STRINGS             = "strings";
+PATTERNS            = "patterns";
 CONDITION           = "condition";
 RULE                = "rule";
 CREATED             = "created";

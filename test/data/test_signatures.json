@@ -1,0 +1,447 @@
+[
+  {
+    "data": "0x6d756c74694269742e696e666f",
+    "expected_ext": "INFO",
+    "signature": {
+      "checks": [
+        {
+          "compare_type": "=",
+          "offset": "0x0",
+          "value": "0x6D756C74694269742E696E666F"
+        }
+      ],
+      "description": "MultiBit Bitcoin Wallet Information",
+      "encoding": "ISO-8859-1",
+      "extensions": {
+        "INFO": "MultiBit Bitcoin Wallet Information"
+      },
+      "id": "93c2a8b9-9096-4416-b22b-5c99c943e32e",
+      "pattern": "multiBit\\x2Einfo",
+      "source": "http://www.garykessler.net/library/file_sigs.html"
+    }
+  },
+  {
+    "data": "0x000000186674797033677035",
+    "expected_ext": "MP4",
+    "signature": {
+      "checks": [
+        {
+          "compare_type": "=",
+          "offset": "0x4",
+          "value": "0x667479703367"
+        }
+      ],
+      "description": "3GPP Media",
+      "extensions": {
+        "3G2": "",
+        "3GG": "",
+        "3GP": "",
+        "MP4": "MPEG-4 Video"
+      },
+      "id": "7017e81b-b3f6-45af-b9c0-430d46f0e3f2",
+      "notes": "ftyp3g",
+      "source": "http://www.garykessler.net/library/file_sigs.html",
+      "tags": [
+        "video"
+      ]
+    }
+  },
+  {
+    "data": "0x46726f6d203f3f3f",
+    "expected_ext": "EML",
+    "signature": {
+      "checks": [
+        {
+          "compare_type": "=",
+          "offset": "0x0",
+          "value": "0x46726f6d"
+        }
+      ],
+      "description": "Generic Email Message",
+      "encoding": "ISO-8859-1",
+      "extensions": {
+        "EML": "Microsoft Email Message",
+        "MBOX": "MBox Mailbox Format",
+        "NWS": "Microsoft Outlook News"
+      },
+      "id": "a18288e2-6753-4ec8-b4f6-61ef04e48377",
+      "pattern": "From ",
+      "source": "Encase7",
+      "tags": [
+        "email"
+      ]
+    }
+  },
+  {
+    "data": "0xff",
+    "expected_ext": "SYS",
+    "signature": null
+  },
+  {
+    "data": "0x1a000004000011",
+    "expected_ext": "nsf",
+    "signature": {
+      "checks": [
+        {
+          "compare_type": "=",
+          "offset": "0x0",
+          "value": "0x1A0000"
+        }
+      ],
+      "description": "Lotus Notes Database",
+      "encoding": "ISO-8859-1",
+      "extensions": {
+        "NSF": "",
+        "NTF": ""
+      },
+      "id": "e17fa28f-b954-4989-9758-0d36ab50805e",
+      "notes": "A more specific possible pattern is \\z1a\\z00\\z00[\\z04\\z03]\\z00\\z00[\\z2B\\z29\\z11]",
+      "pattern": "\\x1A\\x00\\x00",
+      "source": "http://www.garykessler.net/library/file_sigs.html",
+      "tags": [
+        "email"
+      ]
+    }
+  },
+  {
+    "data": "0x3f5f03004f890200ffffffffb7b00200",
+    "expected_ext": "hlp",
+    "signature": {
+      "checks": [
+        {
+          "compare_type": "=",
+          "offset": "0",
+          "value": "0x3f5f0300"
+        }
+      ],
+      "description": "Microsoft Windows Help",
+      "encoding": "ISO-8859-1",
+      "extensions": {
+        "GID": "Microsoft Windows Help Index",
+        "HLP": "Microsoft Windows Help"
+      },
+      "fid": "000001001-60-0000HLP",
+      "id": "81493b09-41f8-4e26-aa6d-1a6c8c2627e2",
+      "mime": "",
+      "pattern": "\\x3f\\x5f\\x03\\x00",
+      "source": "http://www.magicdb.org/magic.db"
+    }
+  },
+  {
+    "data": "0x00200040",
+    "expected_ext": "cgm",
+    "signature": {
+      "checks": [
+        {
+          "compare_type": "=",
+          "offset": "0",
+          "pre_process": "0xFF20",
+          "value": "0x0020"
+        },
+        {
+          "compare_type": "=",
+          "offset": "Z0x02",
+          "pre_process": "0xFF40",
+          "value": "0x0040"
+        }
+      ],
+      "description": "Computer Graphics Metafile, Binary-encoded",
+      "extensions": {
+        "CGM": "Computer Graphics Metafile, Binary-encoded"
+      },
+      "fid": "000000001-33-0008632",
+      "id": "0ffdb6fb-1dc1-49d0-ad65-ea96a59d7318",
+      "mime": "image/cgm",
+      "source": "http://www.magicdb.org/magic.db"
+    }
+  },
+  {
+    "data": "0x5a4d58585858585858585858585858585858585858585858400058585858585858585858585858585858585858585858585858585858585858585858700000005858585858585858585858585858585858585858585858585858585858585858585858585858585858585858585858584e455858585858585858585858585858585858585858585858585858585858585858585858585858585858585858585858585858585802",
+    "expected_ext": "exe",
+    "signature": {
+      "checks": [],
+      "description": "Executable",
+      "encoding": "ISO-8859-1",
+      "extensions": {
+        "386": "Microsoft Virtual Device Driver",
+        "8BA": "Adobe Photoshop Filter",
+        "8BC": "Adobe Photoshop Filter",
+        "8BE": "Adobe Photoshop Filter",
+        "8BF": "Adobe Photoshop Filter",
+        "8BI": "Adobe Photoshop Filter",
+        "8BP": "Adobe Photoshop Filter",
+        "8BS": "Adobe Photoshop Filter",
+        "8BX": "Adobe Photoshop Filter",
+        "8BY": "Adobe Photoshop Filter",
+        "8LI": "Adobe Photoshop Filter",
+        "ACM": "Microsoft Audio Compression Manager Driver",
+        "AOL": "Executable",
+        "API": "Adobe Acrobat Plug-in",
+        "AX": "Microsoft Library Cache",
+        "COM": "Microsoft DOS Executable",
+        "CPL": "Microsoft Control Panel Application",
+        "DIC": "Executable",
+        "DLL": "Microsoft Dynamic Link Library",
+        "DLL_*": "Microsoft Dynamic Link Library",
+        "DRV": "Microsoft Windows Driver",
+        "EFI": "Executable",
+        "EXE": "Executable",
+        "EXE_*": "Microsoft Windows Executable",
+        "FLT": "Graphics Filter",
+        "FON": "Microsoft Windows Font",
+        "H1S": "Executable",
+        "MUI": "Executable",
+        "MUI_*": "Executable",
+        "OCX": "Microsoft ActiveX or OLE Custom Control Extension",
+        "OLB": "Microsoft OLE Object Library",
+        "PIF": "Executable",
+        "QTS": "Executable",
+        "QTX": "Executable",
+        "SCR": "Microsoft Windows Screensaver",
+        "SYS": "Microsoft System Driver",
+        "SYS_*": "Microsoft System Executable",
+        "TLB": "Microsoft OLE Type Library",
+        "TSK": "Executable",
+        "VBX": "Microsoft VisualBASIC Application",
+        "VXD": "Microsoft Virtual Device Driver"
+      },
+      "id": "82fdaf2a-ec68-4503-ace4-72e365f68946",
+      "mime": "",
+      "pattern": "(\\x4D\\x5A)|(\\x5A\\x4D)"
+    }
+  },
+  {
+    "data": "0x4d5a585858585858585858585858585858585858585858580001",
+    "expected_ext": "QTS",
+    "signature": {
+      "checks": [],
+      "description": "Executable",
+      "encoding": "ISO-8859-1",
+      "extensions": {
+        "386": "Microsoft Virtual Device Driver",
+        "8BA": "Adobe Photoshop Filter",
+        "8BC": "Adobe Photoshop Filter",
+        "8BE": "Adobe Photoshop Filter",
+        "8BF": "Adobe Photoshop Filter",
+        "8BI": "Adobe Photoshop Filter",
+        "8BP": "Adobe Photoshop Filter",
+        "8BS": "Adobe Photoshop Filter",
+        "8BX": "Adobe Photoshop Filter",
+        "8BY": "Adobe Photoshop Filter",
+        "8LI": "Adobe Photoshop Filter",
+        "ACM": "Microsoft Audio Compression Manager Driver",
+        "AOL": "Executable",
+        "API": "Adobe Acrobat Plug-in",
+        "AX": "Microsoft Library Cache",
+        "COM": "Microsoft DOS Executable",
+        "CPL": "Microsoft Control Panel Application",
+        "DIC": "Executable",
+        "DLL": "Microsoft Dynamic Link Library",
+        "DLL_*": "Microsoft Dynamic Link Library",
+        "DRV": "Microsoft Windows Driver",
+        "EFI": "Executable",
+        "EXE": "Executable",
+        "EXE_*": "Microsoft Windows Executable",
+        "FLT": "Graphics Filter",
+        "FON": "Microsoft Windows Font",
+        "H1S": "Executable",
+        "MUI": "Executable",
+        "MUI_*": "Executable",
+        "OCX": "Microsoft ActiveX or OLE Custom Control Extension",
+        "OLB": "Microsoft OLE Object Library",
+        "PIF": "Executable",
+        "QTS": "Executable",
+        "QTX": "Executable",
+        "SCR": "Microsoft Windows Screensaver",
+        "SYS": "Microsoft System Driver",
+        "SYS_*": "Microsoft System Executable",
+        "TLB": "Microsoft OLE Type Library",
+        "TSK": "Executable",
+        "VBX": "Microsoft VisualBASIC Application",
+        "VXD": "Microsoft Virtual Device Driver"
+      },
+      "id": "82fdaf2a-ec68-4503-ace4-72e365f68946",
+      "mime": "",
+      "pattern": "(\\x4D\\x5A)|(\\x5A\\x4D)"
+    }
+  },
+  {
+    "data": "0xfffe3c00210044004f0043005400590050004500",
+    "expected_ext": "HTML",
+    "signature": {
+      "case_insensitive": true,
+      "checks": [],
+      "description": "HTML Document",
+      "encoding": "UTF-8,UTF-16LE,UTF-16BE",
+      "extensions": {
+        "ASP": "",
+        "ASPX": "",
+        "HTM": "",
+        "HTML": "",
+        "SGM": "SGML Document",
+        "SGML": "SGML Document"
+      },
+      "id": "855d9bc5-8197-4646-8a2f-2ce9fa847394",
+      "mime": "text/html",
+      "pattern": "((\\zFF\\zFE)|(\\zFE\\zFF)|(\\zEF\\zBB\\zBF))?\\x3C((\\x21DOC)|(HTM))"
+    }
+  },
+  {
+    "data": "0x00ef000000cf",
+    "expected_ext": "CGM",
+    "signature": {
+      "checks": [
+        {
+          "compare_type": "=",
+          "offset": "0",
+          "pre_process": "0xFF20",
+          "value": "0x0020"
+        },
+        {
+          "compare_type": "=",
+          "offset": "Z0x02",
+          "pre_process": "0xFF40",
+          "value": "0x0040"
+        }
+      ],
+      "description": "Computer Graphics Metafile, Binary-encoded",
+      "extensions": {
+        "CGM": "Computer Graphics Metafile, Binary-encoded"
+      },
+      "fid": "000000001-33-0008632",
+      "id": "0ffdb6fb-1dc1-49d0-ad65-ea96a59d7318",
+      "mime": "image/cgm",
+      "source": "http://www.magicdb.org/magic.db"
+    }
+  },
+  {
+    "data": "0x4d5a90000300000004000000ffff",
+    "expected_ext": "DLL",
+    "signature": {
+      "checks": [],
+      "description": "Executable",
+      "encoding": "ISO-8859-1",
+      "extensions": {
+        "386": "Microsoft Virtual Device Driver",
+        "8BA": "Adobe Photoshop Filter",
+        "8BC": "Adobe Photoshop Filter",
+        "8BE": "Adobe Photoshop Filter",
+        "8BF": "Adobe Photoshop Filter",
+        "8BI": "Adobe Photoshop Filter",
+        "8BP": "Adobe Photoshop Filter",
+        "8BS": "Adobe Photoshop Filter",
+        "8BX": "Adobe Photoshop Filter",
+        "8BY": "Adobe Photoshop Filter",
+        "8LI": "Adobe Photoshop Filter",
+        "ACM": "Microsoft Audio Compression Manager Driver",
+        "AOL": "Executable",
+        "API": "Adobe Acrobat Plug-in",
+        "AX": "Microsoft Library Cache",
+        "COM": "Microsoft DOS Executable",
+        "CPL": "Microsoft Control Panel Application",
+        "DIC": "Executable",
+        "DLL": "Microsoft Dynamic Link Library",
+        "DLL_*": "Microsoft Dynamic Link Library",
+        "DRV": "Microsoft Windows Driver",
+        "EFI": "Executable",
+        "EXE": "Executable",
+        "EXE_*": "Microsoft Windows Executable",
+        "FLT": "Graphics Filter",
+        "FON": "Microsoft Windows Font",
+        "H1S": "Executable",
+        "MUI": "Executable",
+        "MUI_*": "Executable",
+        "OCX": "Microsoft ActiveX or OLE Custom Control Extension",
+        "OLB": "Microsoft OLE Object Library",
+        "PIF": "Executable",
+        "QTS": "Executable",
+        "QTX": "Executable",
+        "SCR": "Microsoft Windows Screensaver",
+        "SYS": "Microsoft System Driver",
+        "SYS_*": "Microsoft System Executable",
+        "TLB": "Microsoft OLE Type Library",
+        "TSK": "Executable",
+        "VBX": "Microsoft VisualBASIC Application",
+        "VXD": "Microsoft Virtual Device Driver"
+      },
+      "id": "82fdaf2a-ec68-4503-ace4-72e365f68946",
+      "mime": "",
+      "pattern": "(\\x4D\\x5A)|(\\x5A\\x4D)"
+    }
+  },
+  {
+    "data": "0x4d5a90000300000004000000ffff",
+    "expected_ext": "ZAP",
+    "signature": {
+      "checks": [],
+      "description": "Executable",
+      "encoding": "ISO-8859-1",
+      "extensions": {
+        "386": "Microsoft Virtual Device Driver",
+        "8BA": "Adobe Photoshop Filter",
+        "8BC": "Adobe Photoshop Filter",
+        "8BE": "Adobe Photoshop Filter",
+        "8BF": "Adobe Photoshop Filter",
+        "8BI": "Adobe Photoshop Filter",
+        "8BP": "Adobe Photoshop Filter",
+        "8BS": "Adobe Photoshop Filter",
+        "8BX": "Adobe Photoshop Filter",
+        "8BY": "Adobe Photoshop Filter",
+        "8LI": "Adobe Photoshop Filter",
+        "ACM": "Microsoft Audio Compression Manager Driver",
+        "AOL": "Executable",
+        "API": "Adobe Acrobat Plug-in",
+        "AX": "Microsoft Library Cache",
+        "COM": "Microsoft DOS Executable",
+        "CPL": "Microsoft Control Panel Application",
+        "DIC": "Executable",
+        "DLL": "Microsoft Dynamic Link Library",
+        "DLL_*": "Microsoft Dynamic Link Library",
+        "DRV": "Microsoft Windows Driver",
+        "EFI": "Executable",
+        "EXE": "Executable",
+        "EXE_*": "Microsoft Windows Executable",
+        "FLT": "Graphics Filter",
+        "FON": "Microsoft Windows Font",
+        "H1S": "Executable",
+        "MUI": "Executable",
+        "MUI_*": "Executable",
+        "OCX": "Microsoft ActiveX or OLE Custom Control Extension",
+        "OLB": "Microsoft OLE Object Library",
+        "PIF": "Executable",
+        "QTS": "Executable",
+        "QTX": "Executable",
+        "SCR": "Microsoft Windows Screensaver",
+        "SYS": "Microsoft System Driver",
+        "SYS_*": "Microsoft System Executable",
+        "TLB": "Microsoft OLE Type Library",
+        "TSK": "Executable",
+        "VBX": "Microsoft VisualBASIC Application",
+        "VXD": "Microsoft Virtual Device Driver"
+      },
+      "id": "82fdaf2a-ec68-4503-ace4-72e365f68946",
+      "mime": "",
+      "pattern": "(\\x4D\\x5A)|(\\x5A\\x4D)"
+    }
+  },
+  {
+    "data": "0x1234567890",
+    "expected_ext": "",
+    "signature": null
+  },
+  {
+    "data": "0x3C3F786D6C2076657273696F6E3D22312E302220656E636F64696E673D225554462D38223F3E0A3C21444F435459504520706C697374205055424C494320222D2F2F4170706C652F2F44544420504C49535420312E302F2F454E222022687474703A2F2F7777772E6170706C652E636F6D2F445444732F50726F70657274794C6973742D312E302E647464223E0A3C706C6973742076657273696F6E3D22312E30223E0A",
+    "expected_ext": "PLIST",
+    "signature": {
+      "description": "XML Plist",
+      "encoding": "ISO-8859-1",
+      "extensions": {
+        "plist": ""
+      },
+      "id": "b3f68480-a4c1-4c1e-bba5-ca007c7581ea",
+      "pattern": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\">\n",
+      "source": "zweger",
+      "fixed_string": true
+    }
+  }
+]

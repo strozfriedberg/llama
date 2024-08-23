@@ -3,7 +3,7 @@
 #include <stack>
 #include <string>
 
-#include "jsoncons_wrapper.h"
+#include "direntbatch.h"
 
 class RecordHasher;
 
@@ -13,27 +13,24 @@ public:
 
   bool empty() const;
 
-  const jsoncons::json& top() const;
+  const Dirent& top() const;
 
   // Hashes the current dirent, adds that hash to the parent, then pops it
-  jsoncons::json pop();
+  Dirent pop();
 
   // Makes this dirent current
-  void push(const std::string& filename, jsoncons::json&& rec);
-
-  // Makes this dirent current
-  void push(const char* filename, jsoncons::json&& rec);
+  void push(Dirent&& dirent);
 
 private:
   struct Element {
+    // The dirent record
+    Dirent Rec;
+
     // The index of the last path separator
     size_t LastPathSepIndex;
-
-    // The dirent record
-    jsoncons::json Record;
   };
 
-  std::string Path;
   std::stack<Element> Stack;
-  RecordHasher& RecHasher;
+  std::string         Path;
+  RecordHasher&       RecHasher;
 };

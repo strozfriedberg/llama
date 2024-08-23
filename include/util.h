@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <type_traits>
+#include <functional>
 
 template <class T, class D>
 std::unique_ptr<T, D> make_unique_del(T* p, D&& deleter) {
@@ -24,3 +25,40 @@ template <class D>
 std::unique_ptr<ArgOf<D>, D> make_unique_del(std::nullptr_t, D&& deleter) {
   return make_unique_del<ArgOf<D>, D>(nullptr, std::forward<D>(deleter));
 }
+
+class destroy_guard {
+public:
+  destroy_guard() {}
+
+  destroy_guard(std::function<void()> f)
+    : _f(f) {
+  }
+
+  virtual ~destroy_guard() {
+    if (_f) {
+      _f();
+    }
+  }
+
+  destroy_guard(destroy_guard&& that) {
+    std::swap(_f, that._f);
+    that._f = nullptr;
+  }
+
+  destroy_guard& operator =(destroy_guard&& that) {
+    if (this != &that) {
+      std::swap(_f, that._f);
+    }
+    return *this;
+  }
+
+  void reset() {
+    _f = nullptr;
+  }
+
+private:
+  destroy_guard(destroy_guard const&) = delete;
+  destroy_guard& operator=(destroy_guard const&) = delete;
+
+  std::function<void()> _f;
+};

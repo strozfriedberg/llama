@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include "direntbatch.h"
 #include "hex.h"
 #include "recordhasher.h"
 
@@ -221,3 +222,32 @@ TEST_CASE("testHashDirent") {
 
   REQUIRE(exp == hasher.hashDirent(r));
 }
+
+TEST_CASE("testHashDirentClass") {
+  Dirent d1(
+    "/foo/bar",
+    "baz",
+    "b",
+    "File",
+    "",
+    0x12345678,
+    0x87654321,
+    0x87654321,
+    0x12345678
+  );
+  Dirent d2(
+    "/foo/bar",
+    "baz",
+    "b",
+    "File",
+    "Deleted",
+    0x12345678,
+    0x87654321,
+    0x87654321,
+    0x12345678
+  );
+
+  RecordHasher hasher;
+  REQUIRE(hasher.hashDirent(d1) != hasher.hashDirent(d2));
+}
+

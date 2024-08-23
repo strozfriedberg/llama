@@ -3,6 +3,14 @@
 #include "direntstack.h"
 #include "recordhasher.h"
 
+std::ostream& operator<<(std::ostream& os, const Dirent& dirent) {
+  os << "{\"Id\":\"" << dirent.Id << "\", \"Path\": \"" << dirent.Path << "\", \"Name\": \"" << dirent.Name << 
+    "\", \"ShortName\": \"" << dirent.ShortName << "\", \"Type\": \"" << dirent.Type << "\", \"Flags\": \"" << dirent.Flags << 
+    "\", \"MetaAddr\": " << dirent.MetaAddr << ", \"ParentAddr\": " << dirent.ParentAddr << ", \"MetaSeq\": " << dirent.MetaSeq << 
+    ", \"ParentSeq\": " << dirent.ParentSeq << "}";
+  return os;
+}
+
 TEST_CASE("testDirentStackStartsEmpty") {
   RecordHasher rh;
   DirentStack dirents(rh);
@@ -13,32 +21,17 @@ TEST_CASE("testDirentStackPushPop") {
   RecordHasher rh;
   DirentStack dirents(rh);
 
-  jsoncons::json in(
-    jsoncons::json_object_arg,
-    {
-      { "foo", "bar" },
-      { "type", "whatever" }
-    }
-  );
-  
-  dirents.push("filename", std::move(in));
+  Dirent in("", "the name");
+
+  dirents.push(std::move(in));
   
   REQUIRE(!dirents.empty());
-  REQUIRE("filename" == dirents.top()["path"]);
-  
-  const jsoncons::json exp_out(
-    jsoncons::json_object_arg,
-    {
-      { "foo", "bar" },
-      { "children", jsoncons::json_array_arg },
-      { "streams", jsoncons::json_array_arg },
-      { "hash", "2cf245061b41742690f0ebe9eceba6d8763d24d948f8969cae2071412bbc610e" },
-      { "path", "filename" },
-      { "type", "whatever" },
-    }
-  );
+  REQUIRE("the name" == dirents.top().Path);
 
-  REQUIRE(exp_out == dirents.pop());
+  Dirent out("the name", "the name");
+  out.Id = "9725ac83ec80648192377bba20be829f7532953f50bfd735808ecc92a63ad011";
+
+  REQUIRE(out == dirents.pop());
 }
 
 TEST_CASE("testDirentStackPushPushPopPop") {
@@ -47,67 +40,32 @@ TEST_CASE("testDirentStackPushPushPopPop") {
 
   REQUIRE(dirents.empty());
 
-  jsoncons::json a(
-    jsoncons::json_object_arg,
-    {
-      { "foo", "bar" },
-      { "type", "whatever" }
-    }
-  );
-  
-  dirents.push("a", std::move(a));
+  Dirent a("", "a");
+
+  dirents.push(std::move(a));
   
   REQUIRE(!dirents.empty());
-  REQUIRE("a" == dirents.top()["path"]);
+  REQUIRE("a" == dirents.top().Path);
 
-  jsoncons::json b(
-    jsoncons::json_object_arg,
-    {
-      { "foo", "baz" },
-      { "type", "whatever" }
-    }
-  );
- 
-  dirents.push("b", std::move(b));
+  Dirent b("", "b");
+
+  dirents.push(std::move(b));
 
   REQUIRE(!dirents.empty());
-  REQUIRE("a/b" == dirents.top()["path"]);
+  REQUIRE("a/b" == dirents.top().Path);
 
-  const jsoncons::json exp_out_b(
-    jsoncons::json_object_arg,
-    {
-      { "foo", "baz" },
-      { "children", jsoncons::json_array_arg },
-      { "streams", jsoncons::json_array_arg },
-      { "hash", "d41f36222eabcc685f01bbd288b60b66ff41dc4b52c69ba4a5126a74b4489ac7" },
-      { "path", "a/b" },
-      { "type", "whatever" },
-    }
-  );
+  Dirent outB("a/b", "b");
+  outB.Id = "43255526405934bbcf8c6b90f4f02d82e3e74e028b02942701be6354bf27677d";
 
-  REQUIRE(exp_out_b == dirents.pop());
+  REQUIRE(outB == dirents.pop());
 
   REQUIRE(!dirents.empty());
-  REQUIRE("a" == dirents.top()["path"]);
+  REQUIRE("a" == dirents.top().Path);
 
-  const jsoncons::json exp_out_a(
-    jsoncons::json_object_arg,
-    {
-      { "foo", "bar" },
-      {
-        "children",
-        jsoncons::json(
-          jsoncons::json_array_arg,
-          { "d41f36222eabcc685f01bbd288b60b66ff41dc4b52c69ba4a5126a74b4489ac7" }
-        )
-      },
-      { "streams", jsoncons::json_array_arg },
-      { "hash", "0907b14d225552a966673312558b413135edd21d0460164141a1f74274f3281a" },
-      { "path", "a" },
-      { "type", "whatever" },
-    }
-  );
+  Dirent outA("a", "a");
+  outA.Id = "fd88d31d3ec3b285f33ba011fe96290bd05d5272a9ef50ddae020c13ebe5319a";
 
-  REQUIRE(exp_out_a == dirents.pop());
+  REQUIRE(outA == dirents.pop());
   REQUIRE(dirents.empty());
 }
+

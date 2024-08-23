@@ -2,10 +2,14 @@
 
 #include "batchhandler.h"
 #include "cli.h"
+#include "direntbatch.h"
+#include "duckinode.h"
+#include "duckhash.h"
 #include "easyfut.h"
 #include "filescheduler.h"
 #include "inputhandler.h"
 #include "inputreader.h"
+#include "llamaduck.h"
 #include "outputhandler.h"
 #include "outputtar.h"
 #include "pooloutputhandler.h"
@@ -28,7 +32,8 @@ namespace fs = std::filesystem;
 
 Llama::Llama()
     : CliParser(std::make_shared<Cli>()), Pool(),
-      LgProg(nullptr, lg_destroy_program) {}
+      LgProg(nullptr, lg_destroy_program),
+      Reader(), Db(), DbConn(Db) {}
 
 int Llama::run(int argc, const char* const argv[]) {
   try {
@@ -56,20 +61,25 @@ void Llama::search() {
     Timer searchTime(&std::cerr, "Search time: ");
     // std::cout << "Number of patterns: " << lg_pattern_count(LgProg.get())
     //           << std::endl;
-    auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, Output));
+    std::filesystem::path outdir(Opts->Output);
+    std::filesystem::create_directories(outdir);
+//    auto out = std::shared_ptr<OutputWriter>(new OutputTar((outdir / "llama").string(), Opts->OutputCodec));
+//    auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, DbConn, out));
 
-    auto protoProc = std::make_shared<Processor>(LgProg);
-    auto scheduler = std::make_shared<FileScheduler>(Pool, protoProc, outh, Opts);
+    auto protoProc = std::make_shared<Processor>(&Db, LgProg);
+    auto scheduler = std::make_shared<FileScheduler>(Db, Pool, protoProc, Opts);
     auto inh = std::shared_ptr<InputHandler>(new BatchHandler(scheduler));
 
     Input->setInputHandler(inh);
-    Input->setOutputHandler(outh);
+    //Input->setOutputHandler(outh);
 
     if (!Input->startReading()) {
       std::cerr << "startReading returned an error" << std::endl;
     }
     Pool.join();
     std::cerr << "Hashing Time: " << scheduler->getProcessorTime() << "s\n";
+
+    writeDB(outdir.string());
     // std::cout << "All done" << std::endl;
   }
   else {
@@ -89,7 +99,6 @@ std::string readfile(const std::string& path) {
 }
 
 bool Llama::readpatterns(const std::vector<std::string>& keyFiles) {
-  // std::cerr << "begin readpatterns" << std::endl;
   std::shared_ptr<FSMHandle> fsm(lg_create_fsm(1000, 100000), lg_destroy_fsm);
 
   const char* defaultEncodings[] = {"utf-8", "utf-16le"};
@@ -109,12 +118,9 @@ bool Llama::readpatterns(const std::vector<std::string>& keyFiles) {
     }
   }
 
-  // std::cerr << "compiling program" << std::endl;
   LG_ProgramOptions progOpts{1};
   LgProg = std::shared_ptr<ProgramHandle>(lg_create_program(fsm.get(), &progOpts), lg_destroy_program);
   if (LgProg) {
-    // std::cerr << "Number of patterns: " << lg_pattern_count(LgProg.get()) <<
-    // std::endl; std::cerr << "Done with readpatterns" << std::endl;
     return true;
   }
   else {
@@ -131,9 +137,11 @@ bool Llama::openInput(const std::string& input) {
   return bool(Input);
 }
 
-bool Llama::openOutput(const std::string& outputFile, Codec codec) {
-  Output.reset(new OutputTar(outputFile, codec));
-  return bool(Output);
+bool Llama::dbInit() {
+  DuckDirent::createTable(DbConn.get(), "dirent");
+  DuckInode::createTable(DbConn.get(), "inode");
+  DuckHashRec::createTable(DbConn.get(), "hash");
+  return true;
 }
 
 bool Llama::init() {
@@ -146,12 +154,24 @@ bool Llama::init() {
   auto open = make_future(Pool, [this]() {
     return openInput(this->Opts->Input);
   });
-
-  auto output = make_future(Pool, [this]() {
-    return openOutput(this->Opts->Output, this->Opts->OutputCodec);
+  
+  auto db = make_future(Pool, [this]() {
+    return dbInit();
   });
 
-  bool ret = readPats.get() && open.get() && output.get();
-  return ret;
+  if (!this->Opts->RuleFile.empty()) {
+    std::string ruleStr = readfile(this->Opts->RuleFile);
+    Reader.read(ruleStr);
+  }
+
+  return readPats.get() && open.get() && db.get();
+}
+
+void Llama::writeDB(const std::string& outdir) {
+  Timer dbTime(&std::cerr, "DB write time: ");
+  std::string query = "EXPORT DATABASE '";
+  query += outdir;
+  query += "' (FORMAT PARQUET);";
+  duckdb_query(DbConn.get(), query.c_str(), nullptr);
 }
 

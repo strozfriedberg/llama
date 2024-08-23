@@ -11,22 +11,27 @@ src_llama_common = \
 	src/blocksequence_impl.cpp \
 	src/cli.cpp \
 	src/dirconversion.cpp \
+	src/direntbatch.cpp \
 	src/direntstack.cpp \
 	src/dirreader.cpp \
+	src/duckinode.cpp \
 	src/fieldhasher.cpp \
 	src/filerecord.cpp \
 	src/filescheduler.cpp \
+	src/filesignatures.cpp \
 	src/hex.cpp \
 	src/inodeandblocktrackerimpl.cpp \
 	src/inputreader.cpp \
 	src/lexer.cpp \
 	src/llama.cpp \
 	src/outputtar.cpp \
+	src/parser.cpp \
 	src/pooloutputhandler.cpp \
 	src/processor.cpp \
 	src/readseek_impl.cpp \
 	src/recordbuffer.cpp \
 	src/recordhasher.cpp \
+	src/rulereader.cpp \
 	src/schema.cpp \
 	src/timestamps.cpp \
 	src/treehasher.cpp \
@@ -41,7 +46,7 @@ src_llama_common = \
 src_llama_SOURCES = $(src_llama_common) src/main.cpp
 
 src_llama_CPPFLAGS = $(AM_CPPFLAGS) $(LG_CPPFLAGS) $(TSK_CPPFLAGS) $(LIBARCHIVE_CPPFLAGS) $(YARA_CPPFLAGS)
-src_llama_LDADD = $(LLAMA_LIBS) $(LG_LIBS) $(TSK_LIBS) $(LIBARCHIVE_LIBS) $(YARA_LIBS) $(HASHER_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_ASIO_LIB) $(STDCXX_LIB)
+src_llama_LDADD = $(LLAMA_LIBS) $(LG_LIBS) $(TSK_LIBS) $(LIBARCHIVE_LIBS) $(YARA_LIBS) $(HASHER_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_ASIO_LIB) $(DUCKDB_LIBS) $(STDCXX_LIB)
 
 @VALGRIND_CHECK_RULES@
 
@@ -66,27 +71,31 @@ test_test_SOURCES = \
 	test/test_dirconversion.cpp \
 	test/test_direntstack.cpp \
 	test/test_dirreader.cpp \
+	test/test_duckdb.cpp \
 	test/test_fieldhasher.cpp \
 	test/test_fileproxy.cpp \
 	test/test_filerecord.cpp \
 	test/test_hex.cpp \
 	test/test_inodeandblocktrackerimpl.cpp \
-	test/test_llamaparser.cpp \
+	test/test_lexer.cpp \
+	test/test_parser.cpp \
 	test/test_processor.cpp \
 	test/test_readseek.cpp \
 	test/test_recordbuffer.cpp \
 	test/test_recordhasher.cpp \
+	test/test_rulereader.cpp \
 	test/test_tskconversion.cpp \
 	test/test_tskimgassembler.cpp \
 	test/test_tskreader.cpp \
 	test/test_tskreaderhelper.cpp \
-	test/test_tsktimestamps.cpp
+	test/test_tsktimestamps.cpp \
+	test/test_filesignatures.cpp
 
 test_test_CPPFLAGS = -I$(srcdir)/src $(AM_CPPFLAGS) $(CATCH2_CPPFLAGS)
-test_test_LDADD = $(CATCH2_LIBS) $(LLAMA_LIBS) $(LG_LIBS) $(TSK_LIBS) $(LIBARCHIVE_LIBS) $(YARA_LIBS) $(HASHER_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_ASIO_LIB) $(STDCXX_LIB)
+test_test_LDADD = $(CATCH2_LIBS) $(LLAMA_LIBS) $(LG_LIBS) $(TSK_LIBS) $(LIBARCHIVE_LIBS) $(YARA_LIBS) $(HASHER_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_ASIO_LIB) $(DUCKDB_LIBS) $(STDCXX_LIB)
 
 test_benchmarks_benchmarks_SOURCES = \
 	test/benchmarks/test_yara.cpp
 
 test_benchmarks_benchmarks_CPPFLAGS = -I$(srcdir)/src $(AM_CPPFLAGS) $(CATCH2_CPPFLAGS)
-test_benchmarks_benchmarks_LDADD = $(CATCH2_LIBS) $(LLAMA_LIBS) $(LG_LIBS) $(TSK_LIBS) $(LIBARCHIVE_LIBS) $(YARA_LIBS) $(HASHER_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_ASIO_LIB) $(STDCXX_LIB)
+test_benchmarks_benchmarks_LDADD = $(CATCH2_LIBS) $(LLAMA_LIBS) $(LG_LIBS) $(TSK_LIBS) $(LIBARCHIVE_LIBS) $(YARA_LIBS) $(HASHER_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_ASIO_LIB) $(DUCKDB_LIBS) $(STDCXX_LIB)

@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cinttypes>
 #include <sstream>
+#include <string>
 
 #include "tsk.h"
 
@@ -9,6 +11,8 @@
 class TimestampGetter {
 public:
   virtual ~TimestampGetter() {}
+
+  virtual std::string get(uint32_t unix, uint32_t fracSecs) = 0;
 
   virtual jsoncons::json accessed(const TSK_FS_META& meta) = 0;
 
@@ -36,6 +40,8 @@ public:
   CommonTimestampGetter();
 
   virtual ~CommonTimestampGetter() {}
+
+  virtual std::string get(uint32_t unix, uint32_t fracSecs) override;
 
   virtual jsoncons::json accessed(const TSK_FS_META& meta) override;
 
@@ -87,3 +93,4 @@ public:
 
   virtual jsoncons::json backup(const TSK_FS_META& meta) override;
 };
+

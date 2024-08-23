@@ -14,23 +14,31 @@ Cli::Cli() : All(), Opts(new Options) {
 
   po::options_description ioOpts("Input/Output Options");
   ioOpts.add_options()
-    ("output", po::value<std::string>(&Opts->Output), "Tar file to create for output, extension will be added")
+    ("output", po::value<std::string>(&Opts->Output), "Directory to create for output")
     ("codec", po::value<std::string>(&CodecSelect)->default_value("lz4"), "Output tar compression method (none|gzip|lz4|lzma|bzip2|lzo|xz)")
     ("input", po::value<std::string>(&Opts->Input), "Evidence file or directory to process")
   ;
 
   po::options_description configOpts("Configuration Options");
-  configOpts.add_options()(
-      "file,f",
-      po::value<std::vector<std::string>>(&Opts->KeyFiles)
-          ->composing()
-          ->value_name("FILE"),
-      "Read one or more newline separated patterns from file")(
-      "num_threads,j",
-      po::value<unsigned int>(&Opts->NumThreads)
-          ->default_value(std::thread::hardware_concurrency())
-          ->value_name("THREADS"),
-      "Number of worker threads to use");
+  configOpts.add_options()
+      ("rule-file,f",
+        po::value<std::string>(&Opts->RuleFile)
+        ->value_name("RULE_FILE"),
+        "File containing Llama rule(s) to evaluate")
+      ("rule-directory,F",
+        po::value<std::string>(&Opts->RuleDir)
+        ->value_name("RULE_DIR"),
+        "Path to directory containing rule files")
+      ("num-threads,j",
+        po::value<unsigned int>(&Opts->NumThreads)
+        ->default_value(std::thread::hardware_concurrency())
+        ->value_name("THREADS"),
+        "Number of worker threads to use")
+      ("keywords-file,k",
+        po::value<std::vector<std::string>>(&Opts->KeyFiles)
+        ->composing()
+        ->value_name("KEY_FILE"),
+        "File containing newline-separated patterns to search");
 
   All.add(commands).add(ioOpts).add(configOpts);
 
@@ -59,7 +67,7 @@ void Cli::printVersion(std::ostream& out) const {
 
 void Cli::printHelp(std::ostream& out) const {
   printVersion(out);
-  out << "\nUsage: llama [OPTIONS] OUTPUT_FILE INPUT_FILE\n"
+  out << "\nUsage: llama [OPTIONS] OUTPUT_DIRECTORY INPUT_FILE\n"
       << All << std::endl;
 }
 

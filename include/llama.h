@@ -1,7 +1,9 @@
 #pragma once
 
 #include "boost_asio.h"
+#include "llamaduck.h"
 #include "options.h"
+#include "rulereader.h"
 
 struct ProgramHandle;
 
@@ -22,7 +24,9 @@ public:
 private:
   bool readpatterns(const std::vector<std::string>& keyFiles);
   bool openInput(const std::string& input);
-  bool openOutput(const std::string& outputFile, Codec codec);
+  bool dbInit();
+
+  void writeDB(const std::string& outdir);
 
   std::shared_ptr<Cli> CliParser;
 
@@ -31,6 +35,9 @@ private:
   std::shared_ptr<Options> Opts;
   std::shared_ptr<ProgramHandle> LgProg;
   std::shared_ptr<InputReader> Input;
-  std::shared_ptr<OutputWriter> Output;
+
+  RuleReader Reader;
+  LlamaDB Db;
+  LlamaDBConnection DbConn;
 };
 

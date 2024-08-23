@@ -2,6 +2,9 @@
 
 #include "tskconversion.h"
 
+#include "direntbatch.h"
+#include "inode.h"
+
 TEST_CASE("textExtractString") {
   using namespace TskUtils;
   REQUIRE("" == extractString("", 0));
@@ -441,20 +444,26 @@ TEST_CASE("testTskMetaConvert") {
   REQUIRE("" == js["link"]);
 }
 
+namespace {
+  void initTskFsName(TSK_FS_NAME& name) {
+    std::memset(&name, 0, sizeof(name));
+
+    name.name = const_cast<char*>("woowoowoo\0bad bad bad");
+    name.name_size = 9;
+    name.shrt_name = const_cast<char*>("WOOWOO~1");
+    name.shrt_name_size = 8;
+    name.meta_addr = 7;
+    name.meta_seq = 6;
+    name.par_addr = 231;
+    name.par_seq = 72;
+    name.type = TSK_FS_NAME_TYPE_SOCK;
+    name.flags = TSK_FS_NAME_FLAG_ALLOC;
+  }
+}
+
 TEST_CASE("testTskNameConvert") {
   TSK_FS_NAME name;
-  std::memset(&name, 0, sizeof(name));
-
-  name.name = const_cast<char*>("woowoowoo\0bad bad bad");
-  name.name_size = 9;
-  name.shrt_name = const_cast<char*>("WOOWOO~1");
-  name.shrt_name_size = 8;
-  name.meta_addr = 7;
-  name.meta_seq = 6;
-  name.par_addr = 231;
-  name.par_seq = 72;
-  name.type = TSK_FS_NAME_TYPE_SOCK;
-  name.flags = TSK_FS_NAME_FLAG_ALLOC;
+  initTskFsName(name);
 
   const jsoncons::json js = TskUtils::convertName(name);
 
@@ -467,3 +476,74 @@ TEST_CASE("testTskNameConvert") {
   REQUIRE("Domain Socket" == js["type"]);
   REQUIRE("Allocated" == js["flags"]);
 }
+
+TEST_CASE("testConvertTskFsNameToDirent") {
+  TSK_FS_NAME name;
+  initTskFsName(name);
+
+  Dirent d;
+  TskUtils::convertNameToDirent("/usr/tmp/", name, d);
+
+  REQUIRE("/usr/tmp/" == d.Path);
+  REQUIRE("woowoowoo" == d.Name);
+  REQUIRE("WOOWOO~1" == d.ShortName);
+  REQUIRE("Domain Socket" == d.Type);
+  REQUIRE("Allocated" == d.Flags);
+
+  REQUIRE(7 == d.MetaAddr);
+  REQUIRE(231 == d.ParentAddr);
+
+  REQUIRE(6 == d.MetaSeq);
+  REQUIRE(72 == d.ParentSeq);
+}
+
+void initTskFsMeta(TSK_FS_META& meta) {
+  std::memset(&meta, 0, sizeof(meta));
+
+  meta.addr = 7;
+  meta.flags = TSK_FS_META_FLAG_UNALLOC;
+  meta.type = TSK_FS_META_TYPE_REG;
+
+  meta.uid = 21;
+  meta.gid = 1026;
+
+  meta.link = const_cast<char*>("I_am_the_target"); // terrible that there's no link_size
+  meta.nlink = 2;
+  meta.seq = 8;
+
+  meta.atime = 1578364822; // 2020-01-07 02:40:22
+  meta.atime_nano = 123456700;
+  meta.crtime = 31337;     // 1970-01-01 08:42:17
+  meta.crtime_nano = 123456400;
+  meta.ctime = 234123870;  // 1977-06-02 18:24:30
+  meta.ctime_nano = 315227845;
+  meta.mtime = 314159265;  // 1979-12-16 02:27:45
+  meta.mtime_nano = 999999999;
+}
+
+TEST_CASE("testConvertTskMetaToInode") {
+  auto tsg(TskUtils::makeTimestampGetter(TSK_FS_TYPE_NTFS));
+
+  TSK_FS_META meta;
+  initTskFsMeta(meta);
+
+  Inode n;
+  TskUtils::convertMetaToInode(meta, *tsg, n);
+
+  REQUIRE(7 == n.Addr);
+  REQUIRE("Deleted" == n.Flags);
+  REQUIRE("File" == n.Type);
+
+  REQUIRE(21 == n.Uid);
+  REQUIRE(1026 == n.Gid);
+
+  REQUIRE("I_am_the_target" == n.LinkTarget);
+  REQUIRE(2 == n.NumLinks);
+  REQUIRE(8 == n.SeqNum);
+
+  REQUIRE("2020-01-07 02:40:22.1234567" == n.Accessed);
+  REQUIRE("1970-01-01 08:42:17.1234564" == n.Created);
+  REQUIRE("1977-06-02 18:24:30.315227845" == n.Metadata);
+  REQUIRE("1979-12-16 02:27:45.999999999" == n.Modified);
+}
+

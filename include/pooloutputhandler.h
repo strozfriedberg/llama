@@ -1,6 +1,9 @@
 #pragma once
 
 #include "boost_asio.h"
+//#include "direntbatch.h"
+//#include "duckinode.h"
+//#include "llamaduck.h"
 #include "outputhandler.h"
 #include "recordbuffer.h"
 
@@ -15,9 +18,10 @@ public:
 
   virtual void outputImage(const FileRecord& rec) override;
 
-  virtual void outputDirent(const FileRecord& rec) override;
+  virtual void outputDirent(const Dirent& rec) override {}
 
-  virtual void outputInode(const FileRecord& rec) override;
+  virtual void outputInode(const FileRecord&) override {}
+  virtual void outputInode(const Inode&) override {}
 
   virtual void outputInodes(const std::shared_ptr<std::vector<FileRecord>>& batch) override;
 
@@ -31,11 +35,16 @@ private:
   boost::asio::strand<boost::asio::thread_pool::executor_type> MainStrand,
                                                                RecStrand;
 
-  std::shared_ptr<OutputWriter> Out;
+//  LlamaDBAppender DirentAppender;
+//  LlamaDBAppender InodeAppender;
 
   RecordBuffer ImageRecBuf;
   RecordBuffer InodesRecBuf;
-  RecordBuffer DirentsRecBuf;
+  
+//  DirentBatch DirentsBatch;
+//  InodeBatch  InodesBatch;
+
+  std::shared_ptr<OutputWriter> Out;
 
   bool Closed;
 };
