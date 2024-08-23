@@ -35,7 +35,8 @@ private:
   boost::asio::strand<boost::asio::thread_pool::executor_type> MainStrand,
                                                                RecStrand;
 
-  LlamaDBAppender Appender;
+  LlamaDBAppender DirentAppender;
+  LlamaDBAppender InodeAppender;
 
   RecordBuffer ImageRecBuf;
   RecordBuffer InodesRecBuf;
