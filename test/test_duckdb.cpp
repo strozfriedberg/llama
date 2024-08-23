@@ -3,8 +3,10 @@
 #include "throw.h"
 
 #include "direntbatch.h"
+#include "inode.h"
 #include "llamaduck.h"
 
+#include <cmath>
 #include <duckdb.h>
 #include <tuple>
 
@@ -147,3 +149,28 @@ TEST_CASE("testTypesFiguring") {
 //  REQUIRE(rec["path"] == "hello");
 }
 */
+
+struct DuckInode : public SchemaType<Inode,
+                                      const char*,
+                                      const char*,
+                                      const char*,
+                                      uint64_t,
+                                      uint64_t,
+                                      uint64_t,
+                                      const char*,
+                                      uint64_t,
+                                      uint64_t,
+                                      const char*,
+                                      const char*,
+                                      const char*,
+                                      const char*>
+{};
+
+TEST_CASE("inodeWriting") {
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+
+  static_assert(DuckInode::ColNames.size() == 13);
+  REQUIRE(DuckInode::createTable(conn.get(), "inode"));
+}
+
