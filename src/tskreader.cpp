@@ -1,6 +1,7 @@
 #include "tskreader.h"
 
 #include "blocksequence_impl.h"
+#include "inode.h"
 #include "inodeandblocktracker.h"
 #include "inodeandblocktrackerimpl.h"
 #include "inputhandler.h"
@@ -105,26 +106,32 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
     const TSK_INUM_T parentAddr =  fs_file->name->par_addr;
     Dirent dirent;
 
-    while (!Dirents.empty() && parentAddr != Dirents.top().MetaAddr) {
-      Output->outputDirent(Dirents.pop());
+    if (!Dirents.empty() && parentAddr != Dirents.top().MetaAddr) {
+      do {
+        Input->push(Dirents.pop());
+      } while (!Dirents.empty() && parentAddr != Dirents.top().MetaAddr);
+      Input->maybeFlush();
     }
     // std::cerr << par_addr << " -> " << fs_file->meta->addr << '\n';
     TskUtils::convertNameToDirent("", *fs_file->name, dirent);
     Dirents.push(std::move(dirent));
   }
 
+  Inode inode;
+  TskUtils::convertMetaToInode(meta, *Tsg, inode);
   // handle the meta
-  jsoncons::json jmeta = Tsk->convertMeta(meta, *Tsg);
+  // jsoncons::json jmeta = Tsk->convertMeta(meta, *Tsg);
 
   // handle the attrs
   Tsk->populateAttrs(fs_file);
 
-  TskReaderHelper::handleAttrs(
+  /*TskReaderHelper::handleAttrs(
     meta, CurFsOffset, CurFsBlockSize, inum, *Tsk, *Tracker, jmeta["attrs"]
-  );
+  );*/
   // why on earth are we making this separate block sequence thing? it's goofy -- jls
-  Input->push({std::move(jmeta), makeBlockSequence(fs_file)});
+  //Input->push({std::move(jmeta), makeBlockSequence(fs_file)});
 
+  Input->push(inode);
   return true;
 }
 

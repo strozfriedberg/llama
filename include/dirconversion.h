@@ -4,6 +4,7 @@
 #include <filesystem>
 
 #include "direntbatch.h"
+#include "inode.h"
 #include "jsoncons_wrapper.h"
 
 namespace fs = std::filesystem;
@@ -25,6 +26,5 @@ public:
   jsoncons::json convertAttr(const fs::directory_entry& de) const;
 
   Dirent convertStdFsDEtoDirent(const fs::directory_entry& de) const;
-private:
-
+  Inode convertStdFsDEtoInode(const fs::directory_entry& de) const;
 };

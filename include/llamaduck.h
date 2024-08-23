@@ -46,8 +46,8 @@ private:
 
 class LlamaDBAppender {
 public:
-  LlamaDBAppender(duckdb_connection& conn, const char* table) {
-    auto state = duckdb_appender_create(conn, nullptr, table, &Appender);
+  LlamaDBAppender(duckdb_connection& conn, const std::string& table) {
+    auto state = duckdb_appender_create(conn, nullptr, table.c_str(), &Appender);
     THROW_IF(state == DuckDBError, "Failed to create appender");
   }
 

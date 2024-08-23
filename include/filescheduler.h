@@ -8,27 +8,34 @@
 
 #include "boost_asio.h"
 
+#include "llamaduck.h"
+
 struct FileRecord;
 struct Options;
 class OutputHandler;
 class Processor;
 
+class DirentBatch;
+class InodeBatch;
+
 class FileScheduler {
 public:
-  FileScheduler(boost::asio::thread_pool& pool,
+  FileScheduler(LlamaDB& db, boost::asio::thread_pool& pool,
                 const std::shared_ptr<Processor>& protoProc,
                 const std::shared_ptr<OutputHandler>& output,
                 const std::shared_ptr<Options>& opts);
 
-  void scheduleFileBatch(std::shared_ptr<std::vector<FileRecord>> batch);
+  void scheduleFileBatch(const DirentBatch& dirents, const InodeBatch& inodes);
 
   double getProcessorTime();
 
 private:
-  void performScheduling(std::shared_ptr<std::vector<FileRecord>> batch);
+  void performScheduling(DirentBatch& dirents, InodeBatch& inodes);
 
   std::shared_ptr<Processor> popProc();
   void pushProc(const std::shared_ptr<Processor>& proc);
+
+  LlamaDBConnection DBConn;
 
   boost::asio::thread_pool& Pool;
   boost::asio::strand<boost::asio::thread_pool::executor_type> Strand;

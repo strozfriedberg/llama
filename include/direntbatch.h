@@ -71,12 +71,8 @@ struct DuckDirent : public SchemaType<Dirent, const char*, const char*, const ch
   DuckDirent(const Dirent& base): SchemaType(base) {}
 };
 
-struct DirentBatch : public DuckBatch {
-
-/*  static bool createTable(duckdb_connection& dbconn, const std::string& table) {
-    duckdb_state state = duckdb_query(dbconn, createQuery<Dirent>(table.c_str()).c_str(), nullptr);
-    return state != DuckDBError;
-  }*/
+class DirentBatch : public DuckBatch {
+public:
 
   void add(const Dirent& dent) {
     size_t startOffset = Buf.size();

@@ -66,7 +66,7 @@ void Llama::search() {
     auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, DbConn, out));
 
     auto protoProc = std::make_shared<Processor>(LgProg);
-    auto scheduler = std::make_shared<FileScheduler>(Pool, protoProc, outh, Opts);
+    auto scheduler = std::make_shared<FileScheduler>(Db, Pool, protoProc, outh, Opts);
     auto inh = std::shared_ptr<InputHandler>(new BatchHandler(scheduler));
 
     Input->setInputHandler(inh);
