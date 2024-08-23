@@ -32,7 +32,7 @@ namespace fs = std::filesystem;
 Llama::Llama()
     : CliParser(std::make_shared<Cli>()), Pool(),
       LgProg(nullptr, lg_destroy_program),
-      Db(), DbConn(Db) {}
+      Reader(), Db(), DbConn(Db) {}
 
 int Llama::run(int argc, const char* const argv[]) {
   try {
@@ -98,7 +98,6 @@ std::string readfile(const std::string& path) {
 }
 
 bool Llama::readpatterns(const std::vector<std::string>& keyFiles) {
-  // std::cerr << "begin readpatterns" << std::endl;
   std::shared_ptr<FSMHandle> fsm(lg_create_fsm(1000, 100000), lg_destroy_fsm);
 
   const char* defaultEncodings[] = {"utf-8", "utf-16le"};
@@ -118,12 +117,9 @@ bool Llama::readpatterns(const std::vector<std::string>& keyFiles) {
     }
   }
 
-  // std::cerr << "compiling program" << std::endl;
   LG_ProgramOptions progOpts{1};
   LgProg = std::shared_ptr<ProgramHandle>(lg_create_program(fsm.get(), &progOpts), lg_destroy_program);
   if (LgProg) {
-    // std::cerr << "Number of patterns: " << lg_pattern_count(LgProg.get()) <<
-    // std::endl; std::cerr << "Done with readpatterns" << std::endl;
     return true;
   }
   else {
@@ -160,6 +156,12 @@ bool Llama::init() {
   auto db = make_future(Pool, [this]() {
     return dbInit();
   });
+
+  if (!this->Opts->RuleFile.empty()) {
+    std::string ruleStr = readfile(this->Opts->RuleFile);
+    Reader.read(ruleStr);
+  }
+
   return readPats.get() && open.get() && db.get();
 }
 
