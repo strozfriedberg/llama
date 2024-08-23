@@ -4,6 +4,10 @@
 
 #include <duckdb.h>
 
+#include <string>
+#include <tuple>
+#include <vector>
+
 class LlamaDB {
 public:
   LlamaDB(const char* path = nullptr) {

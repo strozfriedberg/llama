@@ -14,6 +14,7 @@ src_llama_common = \
 	src/direntbatch.cpp \
 	src/direntstack.cpp \
 	src/dirreader.cpp \
+	src/duckinode.cpp \
 	src/fieldhasher.cpp \
 	src/filerecord.cpp \
 	src/filescheduler.cpp \
