@@ -9,6 +9,7 @@
 #include "boost_asio.h"
 
 #include "llamaduck.h"
+#include "readseek.h"
 
 struct FileRecord;
 struct Options;
@@ -24,7 +25,9 @@ public:
                 const std::shared_ptr<Processor>& protoProc,
                 const std::shared_ptr<Options>& opts);
 
-  void scheduleFileBatch(const DirentBatch& dirents, const InodeBatch& inodes);
+  void scheduleFileBatch(const DirentBatch& dirents,
+                         const InodeBatch& inodes,
+                         std::unique_ptr<std::vector<std::unique_ptr<ReadSeek>>> streams);
 
   double getProcessorTime();
 

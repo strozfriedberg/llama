@@ -3,7 +3,6 @@
 #include "direntbatch.h"
 #include "filescheduler.h"
 #include "duckinode.h"
-#include "readseek.h"
 
 namespace {
   const unsigned int BATCH_SIZE = 5000;
@@ -12,7 +11,8 @@ namespace {
 BatchHandler::BatchHandler(std::shared_ptr<FileScheduler> sink):
   Sink(sink),
   CurDents(new DirentBatch()),
-  CurInodes(new InodeBatch())
+  CurInodes(new InodeBatch()),
+  CurStreams(new std::vector<std::unique_ptr<ReadSeek>>())
 {
 }
 
@@ -35,8 +35,9 @@ void BatchHandler::maybeFlush() {
 }
 
 void BatchHandler::flush() {
-  Sink->scheduleFileBatch(*CurDents, *CurInodes);
+  Sink->scheduleFileBatch(*CurDents, *CurInodes, std::move(CurStreams));
   CurDents->clear();
   CurInodes->clear();
+  CurStreams.reset(new std::vector<std::unique_ptr<ReadSeek>>());
 }
 

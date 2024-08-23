@@ -7,6 +7,17 @@
 #include "outputhandler.h"
 #include "processor.h"
 
+#include <random>
+
+namespace {
+  std::string randomNumString() {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, 999999999);
+    return std::to_string(dis(gen));
+  }
+}
+
 FileScheduler::FileScheduler(LlamaDB& db,
                              boost::asio::thread_pool& pool,
                              const std::shared_ptr<Processor>& protoProc,
@@ -18,7 +29,10 @@ FileScheduler::FileScheduler(LlamaDB& db,
   }
 }
 
-void FileScheduler::scheduleFileBatch(const DirentBatch& dirents, const InodeBatch& inodes) {
+void FileScheduler::scheduleFileBatch(const DirentBatch& dirents,
+                                      const InodeBatch& inodes,
+                                      std::unique_ptr<std::vector<std::unique_ptr<ReadSeek>>> streams)
+{
   // here we copy the batches in the lambda capture, so that the passed-in batches
   // can be reused by the caller while the scheduler does its work on a separate thread
   auto dPtr = std::make_shared<DirentBatch>(dirents);
@@ -39,9 +53,13 @@ double FileScheduler::getProcessorTime() {
   return ret;
 }
 
-void FileScheduler::performScheduling(DirentBatch& dirents, InodeBatch& inodes) {
+void FileScheduler::performScheduling(DirentBatch& dirents,
+                                      InodeBatch& inodes)
+//                                      std::unique_ptr<std::vector<std::unique_ptr<ReadSeek>>> streams)
+{
   std::string tmpDents = "_temp_dirent";
   std::string tmpInodes = "_temp_inode";
+  std::string batchTbl = "_temp_batch_" + randomNumString();
 
   DuckDirent::createTable(DBConn.get(), tmpDents);
   DuckInode::createTable(DBConn.get(), tmpInodes);
