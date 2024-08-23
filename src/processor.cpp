@@ -38,6 +38,7 @@ Processor::Processor(LlamaDB* db, const std::shared_ptr<ProgramHandle>& prog):
   LgProg(prog),
   Ctx(prog.get() ? lg_create_context(prog.get(), &ctxOpts) : nullptr, lg_destroy_context),
   Hasher(sfhash_create_hasher(SFHASH_MD5 | SFHASH_SHA_1 | SFHASH_SHA_2_256 | SFHASH_BLAKE3 | SFHASH_FUZZY), sfhash_destroy_hasher),
+  Hashes(std::make_unique<HashBatch>()),
   ProcTimeTotal(0)
 {
 }

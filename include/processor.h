@@ -1,6 +1,7 @@
 #pragma once
 
 #include "llamaduck.h"
+#include "duckhash.h"
 
 #include <memory>
 #include <vector>
@@ -35,6 +36,7 @@ private:
   std::shared_ptr<ProgramHandle> LgProg; // shared
   std::shared_ptr<ContextHandle> Ctx; // not shared, could be unique_ptr
   std::shared_ptr<SFHASH_Hasher> Hasher; // not shared, could be unique_ptr
+  std::unique_ptr<HashBatch> Hashes;
 
   double ProcTimeTotal;
 };
