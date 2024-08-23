@@ -22,7 +22,6 @@ class FileScheduler {
 public:
   FileScheduler(LlamaDB& db, boost::asio::thread_pool& pool,
                 const std::shared_ptr<Processor>& protoProc,
-                const std::shared_ptr<OutputHandler>& output,
                 const std::shared_ptr<Options>& opts);
 
   void scheduleFileBatch(const DirentBatch& dirents, const InodeBatch& inodes);
@@ -39,7 +38,6 @@ private:
 
   boost::asio::thread_pool& Pool;
   boost::asio::strand<boost::asio::thread_pool::executor_type> Strand;
-  std::shared_ptr<OutputHandler> Output;
 
   std::vector<std::shared_ptr<Processor>> Processors;
 

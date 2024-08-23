@@ -10,9 +10,8 @@
 FileScheduler::FileScheduler(LlamaDB& db,
                              boost::asio::thread_pool& pool,
                              const std::shared_ptr<Processor>& protoProc,
-                             const std::shared_ptr<OutputHandler>& output,
                              const std::shared_ptr<Options>& opts)
-    : DBConn(db), Pool(pool), Strand(Pool.get_executor()), Output(output),
+    : DBConn(db), Pool(pool), Strand(Pool.get_executor()),
       ProcMutex(), ProcCV() {
   for (unsigned int i = 0; i < opts->NumThreads; ++i) {
     Processors.push_back(protoProc->clone());
@@ -95,3 +94,4 @@ void FileScheduler::pushProc(const std::shared_ptr<Processor>& proc) {
   Processors.push_back(proc);
   ProcCV.notify_one();
 }
+

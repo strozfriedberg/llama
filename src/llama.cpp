@@ -62,15 +62,15 @@ void Llama::search() {
     //           << std::endl;
     std::filesystem::path outdir(Opts->Output);
     std::filesystem::create_directories(outdir);
-    auto out = std::shared_ptr<OutputWriter>(new OutputTar((outdir / "llama").string(), Opts->OutputCodec));
-    auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, DbConn, out));
+//    auto out = std::shared_ptr<OutputWriter>(new OutputTar((outdir / "llama").string(), Opts->OutputCodec));
+//    auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, DbConn, out));
 
     auto protoProc = std::make_shared<Processor>(LgProg);
-    auto scheduler = std::make_shared<FileScheduler>(Db, Pool, protoProc, outh, Opts);
+    auto scheduler = std::make_shared<FileScheduler>(Db, Pool, protoProc, Opts);
     auto inh = std::shared_ptr<InputHandler>(new BatchHandler(scheduler));
 
     Input->setInputHandler(inh);
-    Input->setOutputHandler(outh);
+    //Input->setOutputHandler(outh);
 
     if (!Input->startReading()) {
       std::cerr << "startReading returned an error" << std::endl;

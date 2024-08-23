@@ -34,8 +34,7 @@ public:
     Input = in;
   }
 
-  virtual void setOutputHandler(const std::shared_ptr<OutputHandler>& out) override {
-    Output = out;
+  virtual void setOutputHandler(const std::shared_ptr<OutputHandler>&) override {
   }
 
   virtual bool startReading() override;
@@ -56,7 +55,6 @@ private:
   std::unordered_map<TSK_OFF_T, std::unique_ptr<TSK_FS_INFO, void(*)(TSK_FS_INFO*)>> Fs;
 
   std::shared_ptr<InputHandler> Input;
-  std::shared_ptr<OutputHandler> Output;
 
   std::unique_ptr<TskFacade> Tsk;
   TskImgAssembler Asm;

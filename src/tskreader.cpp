@@ -15,7 +15,6 @@ TskReader::TskReader(const std::string& imgPath):
   ImgPath(imgPath),
   Img(nullptr, nullptr),
   Input(),
-  Output(),
   Tsk(new TskFacade),
   Asm(),
   Tsg(nullptr),
@@ -46,9 +45,9 @@ bool TskReader::startReading() {
   if (ret) {
     // wrap up the walk
     while (!Dirents.empty()) {
-      Output->outputDirent(Dirents.pop());
+      Input->push(Dirents.pop());
     }
-    Output->outputImage(Asm.dump());
+//    Output->outputImage(Asm.dump());
 
     // teardown
     Input->flush();
