@@ -107,6 +107,7 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
     //Input->push({std::move(jmeta), makeBlockSequence(fs_file)});
 
     Input->push(inode);
+    Input->push(makeReadSeek(fs_file));
     InodeTracker[meta.addr - fs_file->fs_info->first_inum] = true;
   }
   // handle the name
