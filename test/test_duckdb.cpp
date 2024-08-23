@@ -209,3 +209,44 @@ TEST_CASE("inodeWriting") {
   duckdb_destroy_result(&result);
 }
 
+struct HashRec {
+
+  static constexpr auto ColNames = {"MetaAddr",
+                                    "MD5",
+                                    "SHA1",
+                                    "SHA256",
+                                    "Blake3",
+                                    "Ssdeep"};
+
+  uint64_t MetaAddr;
+
+  std::string MD5;
+  std::string SHA1;
+  std::string SHA256;
+  std::string Blake3;
+  std::string Ssdeep;
+};
+
+struct DuckHashRec : public SchemaType<HashRec,
+                                      uint64_t,
+                                      const char*,
+                                      const char*,
+                                      const char*,
+                                      const char*,
+                                      const char*>
+{};
+
+class HashBatch : public DuckBatch {
+public:
+  void add(const HashRec& hashes);
+
+  unsigned int copyToDB(duckdb_appender& appender);
+};
+
+
+TEST_CASE("testDuckHash") {
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+
+  static_assert(DuckHashRec::ColNames.size() == 6);
+}
