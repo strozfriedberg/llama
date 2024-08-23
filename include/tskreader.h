@@ -62,9 +62,12 @@ private:
   TskImgAssembler Asm;
   std::unique_ptr<TimestampGetter> Tsg;
 
+  std::vector<bool> InodeTracker;
+
   RecordHasher RecHasher;
   DirentStack Dirents;
 
   uint64_t CurFsOffset;
   uint64_t CurFsBlockSize;
 };
+

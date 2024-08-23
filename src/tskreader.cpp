@@ -73,6 +73,8 @@ TSK_FILTER_ENUM TskReader::filterFs(TSK_FS_INFO* fs_info) {
 //  Tracker->setBlockRange(fs_info->first_block * fs_info->block_size, (fs_info->last_block + 1) * fs_info->block_size);
   CurFsOffset = fs_info->offset;
   CurFsBlockSize = fs_info->block_size;
+  InodeTracker.clear();
+  InodeTracker.resize(fs_info->last_inum - fs_info->first_inum, false);
   return TSK_FILTER_CONT;
 }
 
@@ -91,7 +93,22 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
     return false;
   }
   const TSK_FS_META& meta = *fs_file->meta;
+  if (!InodeTracker[meta.addr - fs_file->fs_info->first_inum]) {
+    Inode inode;
+    TskUtils::convertMetaToInode(meta, *Tsg, inode);
 
+    // handle the attrs
+    Tsk->populateAttrs(fs_file);
+
+    /*TskReaderHelper::handleAttrs(
+      meta, CurFsOffset, CurFsBlockSize, inum, *Tsk, *Tracker, jmeta["attrs"]
+    );*/
+    // why on earth are we making this separate block sequence thing? it's goofy -- jls
+    //Input->push({std::move(jmeta), makeBlockSequence(fs_file)});
+
+    Input->push(inode);
+    InodeTracker[meta.addr - fs_file->fs_info->first_inum] = true;
+  }
   // handle the name
   if (fs_file->name) {
     const TSK_INUM_T parentAddr =  fs_file->name->par_addr;
@@ -108,21 +125,6 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
     Dirents.push(std::move(dirent));
   }
 
-  Inode inode;
-  TskUtils::convertMetaToInode(meta, *Tsg, inode);
-  // handle the meta
-  // jsoncons::json jmeta = Tsk->convertMeta(meta, *Tsg);
-
-  // handle the attrs
-  Tsk->populateAttrs(fs_file);
-
-  /*TskReaderHelper::handleAttrs(
-    meta, CurFsOffset, CurFsBlockSize, inum, *Tsk, *Tracker, jmeta["attrs"]
-  );*/
-  // why on earth are we making this separate block sequence thing? it's goofy -- jls
-  //Input->push({std::move(jmeta), makeBlockSequence(fs_file)});
-
-  Input->push(inode);
   return true;
 }
 
