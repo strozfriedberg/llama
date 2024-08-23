@@ -13,6 +13,7 @@
 #include "hex.h"
 #include "inputreader.h"
 #include "recordhasher.h"
+#include "readseek.h"
 #include "tskimgassembler.h"
 #include "tskreaderhelper.h"
 #include "util.h"
@@ -49,6 +50,7 @@ private:
   bool addToBatch(TSK_FS_FILE* fs_file);
 
   std::shared_ptr<BlockSequence> makeBlockSequence(TSK_FS_FILE* fs_file);
+  std::unique_ptr<ReadSeek> makeReadSeek(TSK_FS_FILE* fs_file);
 
   std::string ImgPath;
   std::unique_ptr<TSK_IMG_INFO, void(*)(TSK_IMG_INFO*)> Img;

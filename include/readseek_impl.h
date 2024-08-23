@@ -1,6 +1,7 @@
 #pragma once
 
 #include "readseek.h"
+#include "tsk.h"
 
 #include <memory>
 
@@ -48,7 +49,7 @@ class TSK_FS_ATTR;
 
 class ReadSeekTSK: public ReadSeek {
 public:
-  ReadSeekTSK(TSK_FS_ATTR* attr); // does not take ownership
+  ReadSeekTSK(const std::shared_ptr<TSK_FS_INFO>& fs, uint64_t inum);
   virtual ~ReadSeekTSK() {}
 
   virtual int64_t read(size_t len, std::vector<uint8_t>& buf) override;
@@ -59,4 +60,8 @@ public:
   virtual size_t size(void) const override;
 
 private:
+  std::shared_ptr<TSK_FS_INFO> Fs;
+  uint64_t Inum;
+  std::unique_ptr<TSK_FS_FILE> FilePtr;
 };
+

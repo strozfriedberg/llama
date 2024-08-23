@@ -6,6 +6,7 @@
 #include "inodeandblocktrackerimpl.h"
 #include "inputhandler.h"
 #include "outputhandler.h"
+#include "readseek_impl.h"
 
 #include "tskconversion.h"
 #include "tskfacade.h"
@@ -142,6 +143,20 @@ std::shared_ptr<BlockSequence> TskReader::makeBlockSequence(TSK_FS_FILE* fs_file
     std::make_shared<TskBlockSequence>(
       Tsk->openFile(our_fs, fs_file->meta->addr)
     )
+  );
+}
+
+std::unique_ptr<ReadSeek> TskReader::makeReadSeek(TSK_FS_FILE* fs_file) {
+  TSK_FS_INFO* their_fs = fs_file->fs_info;
+
+  // open our own copy of the fs, since TskAuto closes the ones it opens
+  auto [itr, absent] = Fs.try_emplace(their_fs->offset, nullptr);
+  if (absent) {
+    itr->second.reset(Tsk->openFS(Img.get(), their_fs->offset, their_fs->ftype).release(), tsk_fs_close);
+  }
+  return std::make_unique<ReadSeekTSK>(
+    // each file has a shared_ptr to its fs, so it can be opened on demand
+    itr->second, fs_file->meta->addr
   );
 }
 

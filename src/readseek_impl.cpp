@@ -55,7 +55,10 @@ size_t ReadSeekFile::size(void) const {
 
 //*******************************************************************
 
-ReadSeekTSK::ReadSeekTSK(TSK_FS_ATTR*) {}
+ReadSeekTSK::ReadSeekTSK(const std::shared_ptr<TSK_FS_INFO>& fs, uint64_t inum):
+  Fs(fs),
+  Inum(inum)
+{}
 
 int64_t ReadSeekTSK::read(size_t, std::vector<uint8_t>&) {
   return 0;
@@ -68,3 +71,4 @@ size_t ReadSeekTSK::seek(size_t) {
 size_t ReadSeekTSK::size(void) const {
   return 0;
 }
+
