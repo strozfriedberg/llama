@@ -238,9 +238,35 @@ struct DuckHashRec : public SchemaType<HashRec,
 
 class HashBatch : public DuckBatch {
 public:
-  void add(const HashRec& hashes);
+  void add(const HashRec& hashes) { 
+    size_t offset = Buf.size();
+    size_t totalSize = totalStringSize(hashes.MD5, hashes.SHA1, hashes.SHA256, hashes.Blake3, hashes.Ssdeep);
+    Buf.resize(offset + totalSize);
 
-  unsigned int copyToDB(duckdb_appender& appender);
+    OffsetVals.push_back(hashes.MetaAddr);
+    addStrings(*this, offset, hashes.MD5, hashes.SHA1, hashes.SHA256, hashes.Blake3, hashes.Ssdeep);
+    ++NumRows;
+  }
+
+  unsigned int copyToDB(duckdb_appender& appender) {
+    unsigned int numRows = 0;
+    duckdb_state state;
+    for (unsigned int i = 0; i + (DuckHashRec::NumCols - 1) < OffsetVals.size(); i += DuckHashRec::NumCols) {
+      append(appender,
+             OffsetVals[i],
+             Buf.data() + OffsetVals[i + 1],
+             Buf.data() + OffsetVals[i + 2],
+             Buf.data() + OffsetVals[i + 3],
+             Buf.data() + OffsetVals[i + 4],
+             Buf.data() + OffsetVals[i + 5]
+      );
+      state = duckdb_appender_end_row(appender);
+      THROW_IF(state == DuckDBError, "Failed call to end_row");
+      ++numRows;
+    }
+    DuckBatch::clear();
+    return numRows;
+  }
 };
 
 
@@ -250,5 +276,40 @@ TEST_CASE("testDuckHash") {
 
   static_assert(DuckHashRec::ColNames.size() == 6);
   REQUIRE(DuckHashRec::createTable(conn.get(), "hash"));
+
+  HashRec h1{1, "an md5", "a sha1", "a sha256", "a blake3", "an ssdeep"};
+  HashRec h2{2, "another md5", "another sha1", "another sha256", "another blake3", "another ssdeep"};
+
+  HashBatch batch;
+  batch.add(h1);
+  REQUIRE(batch.Buf.size() == 42);
+  batch.add(h2);
+  REQUIRE(batch.Buf.size() == 112);
+  REQUIRE(batch.size() == 2);
+
+  LlamaDBAppender appender(conn.get(), "hash");
+  REQUIRE(2 == batch.copyToDB(appender.get()));
+  REQUIRE(appender.flush());
+
+  duckdb_result result;
+  auto state = duckdb_query(conn.get(), "SELECT * FROM hash;", &result);
+  CHECK(state != DuckDBError);
+  CHECK(duckdb_result_error(&result) == nullptr);
+  CHECK(duckdb_row_count(&result) == 2);
+  REQUIRE(duckdb_column_count(&result) == 6);
+  unsigned int i = 0;
+  REQUIRE(std::string("MetaAddr") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("MD5") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("SHA1") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("SHA256") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("Blake3") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("Ssdeep") == duckdb_column_name(&result, i));
+  duckdb_destroy_result(&result);
+
+  state = duckdb_query(conn.get(), "SELECT * FROM hash WHERE hash.metaaddr = 1;", &result);
+  CHECK(state != DuckDBError);
+  CHECK(duckdb_result_error(&result) == nullptr);
+  CHECK(duckdb_row_count(&result) == 1);
+  duckdb_destroy_result(&result);
 }
 
