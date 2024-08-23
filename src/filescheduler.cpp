@@ -39,8 +39,8 @@ void FileScheduler::scheduleFileBatch(const DirentBatch& dirents,
   auto iPtr = std::make_shared<InodeBatch>(inodes);
   boost::asio::post(
     Strand,
-    [=]() {
-      performScheduling(*dPtr, *iPtr);
+    [=, streams = std::move(streams)]() {
+      performScheduling(*dPtr, *iPtr, std::move(streams));
     }
   );
 }
@@ -54,8 +54,8 @@ double FileScheduler::getProcessorTime() {
 }
 
 void FileScheduler::performScheduling(DirentBatch& dirents,
-                                      InodeBatch& inodes)
-//                                      std::unique_ptr<std::vector<std::unique_ptr<ReadSeek>>> streams)
+                                      InodeBatch& inodes,
+                                      std::unique_ptr<std::vector<std::unique_ptr<ReadSeek>>> streams)
 {
   std::string tmpDents = "_temp_dirent";
   std::string tmpInodes = "_temp_inode";

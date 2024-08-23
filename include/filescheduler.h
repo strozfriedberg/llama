@@ -32,7 +32,7 @@ public:
   double getProcessorTime();
 
 private:
-  void performScheduling(DirentBatch& dirents, InodeBatch& inodes);
+  void performScheduling(DirentBatch& dirents, InodeBatch& inodes, std::unique_ptr<std::vector<std::unique_ptr<ReadSeek>>> streams);
 
   std::shared_ptr<Processor> popProc();
   void pushProc(const std::shared_ptr<Processor>& proc);
