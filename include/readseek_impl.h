@@ -10,6 +10,9 @@ public:
   ReadSeekBuf(const std::vector<uint8_t>& buf): Buf(buf), Pos(0) {}
   virtual ~ReadSeekBuf() {}
 
+  virtual bool open(void) override { return true; }
+  virtual void close(void) override {}
+
   virtual int64_t read(size_t len, std::vector<uint8_t>& buf) override;
 
   virtual size_t tellg() const override { return Pos; }
@@ -29,6 +32,9 @@ class ReadSeekFile: public ReadSeek {
 public:
   ReadSeekFile(std::shared_ptr<FILE> fileptr);
   virtual ~ReadSeekFile() {}
+
+  virtual bool open(void) override { return true; }
+  virtual void close(void) override {}
 
   virtual int64_t read(size_t len, std::vector<uint8_t>& buf) override;
 
@@ -52,6 +58,9 @@ public:
   ReadSeekTSK(const std::shared_ptr<TSK_FS_INFO>& fs, uint64_t inum);
   virtual ~ReadSeekTSK() {}
 
+  virtual bool open(void) override;
+  virtual void close(void) override;
+
   virtual int64_t read(size_t len, std::vector<uint8_t>& buf) override;
 
   virtual size_t tellg() const override { return 0; }
@@ -62,6 +71,7 @@ public:
 private:
   std::shared_ptr<TSK_FS_INFO> Fs;
   uint64_t Inum;
-  std::unique_ptr<TSK_FS_FILE> FilePtr;
+  TSK_FS_FILE* FilePtr;
+  uint64_t Pos;
 };
 
