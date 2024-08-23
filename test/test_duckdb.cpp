@@ -249,4 +249,6 @@ TEST_CASE("testDuckHash") {
   LlamaDBConnection conn(db);
 
   static_assert(DuckHashRec::ColNames.size() == 6);
+  REQUIRE(DuckHashRec::createTable(conn.get(), "hash"));
 }
+
