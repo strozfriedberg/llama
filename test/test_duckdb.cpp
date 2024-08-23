@@ -166,11 +166,38 @@ struct DuckInode : public SchemaType<Inode,
                                       const char*>
 {};
 
+class InodeBatch : public DuckBatch {
+public:
+  void add(const Inode& inode) {
+    size_t offset = Buf.size();
+    size_t totalSize = totalStringSize(inode.Id, inode.Type, inode.Flags, inode.LinkTarget, inode.Created, inode.Accessed, inode.Modified, inode.Metadata);
+    Buf.resize(offset + totalSize);
+
+    offset = addStrings(*this, offset, inode.Id, inode.Type, inode.Flags);
+    OffsetVals.push_back(inode.Addr);
+    OffsetVals.push_back(inode.Uid);
+    OffsetVals.push_back(inode.Gid);
+    offset = addStrings(*this, offset, inode.LinkTarget);
+    OffsetVals.push_back(inode.NumLinks);
+    OffsetVals.push_back(inode.SeqNum);
+    addStrings(*this, offset, inode.Created, inode.Accessed, inode.Modified, inode.Metadata);
+    ++NumRows;
+  }
+};
+
 TEST_CASE("inodeWriting") {
   LlamaDB db;
   LlamaDBConnection conn(db);
 
   static_assert(DuckInode::ColNames.size() == 13);
   REQUIRE(DuckInode::createTable(conn.get(), "inode"));
+
+  Inode i1{"id 1", "File", "Allocated", 16, 500, 1000, "", 1, 37, "1978-04-01 12:32:25", "2024-08-22 14:45:00", "2024-08-22 22:42:23", "2024-07-13 02:12:59"};
+  Inode i2{"id 2", "File", "Deleted", 17, 501, 1001, "", 2, 38, "1978-04-01 12:32:25", "2024-08-22 14:45:00", "2024-08-22 22:42:23", "2024-07-13 02:12:59"};
+
+  InodeBatch batch;
+  batch.add(i1);
+  batch.add(i2);
+  REQUIRE(batch.size() == 2);
 }
 

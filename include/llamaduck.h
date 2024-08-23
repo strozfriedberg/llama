@@ -118,9 +118,10 @@ struct DuckBatch {
 
   uint64_t NumRows = 0;
 
-  void addString(uint64_t offset, const std::string& s) {
+  size_t addString(uint64_t offset, const std::string& s) {
     OffsetVals.push_back(offset);
     std::copy_n(s.begin(), s.size() + 1, Buf.begin() + OffsetVals.back());
+    return offset + s.size() + 1;
   }
 
   void clear() {
@@ -131,14 +132,14 @@ struct DuckBatch {
 };
 
 template<typename T>
-void addStrings(DuckBatch& batch, size_t offset, const T& s) {
-  batch.addString(offset, s);
+size_t addStrings(DuckBatch& batch, size_t offset, const T& s) {
+  return batch.addString(offset, s);
 }
 
 template<typename T, typename... Args>
-void addStrings(DuckBatch& batch, size_t offset, const T& s, Args... args) {
+size_t addStrings(DuckBatch& batch, size_t offset, const T& s, Args... args) {
   batch.addString(offset, s);
-  addStrings(batch, offset + s.size() + 1, args...);
+  return addStrings(batch, offset + s.size() + 1, args...);
 }
 
 template<typename T>
