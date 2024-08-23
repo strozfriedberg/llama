@@ -173,6 +173,7 @@ Inode DirConverter::convertStdFsDEtoInode(const fs::directory_entry& de) const {
     DirUtils::fileTypeString(DirUtils::fileType(de)),
     "Allocated",
     0,
+    32768,
     0,
     0,
     "",

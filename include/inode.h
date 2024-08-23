@@ -9,6 +9,7 @@ struct Inode {
                                     "Type",
                                     "Flags",
                                     "Addr",
+                                    "FsOffset",
                                     "Uid",
                                     "Gid",
                                     "LinkTarget",
@@ -25,6 +26,7 @@ struct Inode {
   std::string Flags;
 
   uint64_t Addr;
+  uint64_t FsOffset;
   uint64_t Uid;
   uint64_t Gid;
 
