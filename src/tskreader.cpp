@@ -19,7 +19,6 @@ TskReader::TskReader(const std::string& imgPath):
   Tsk(new TskFacade),
   Asm(),
   Tsg(nullptr),
-  Tracker(new InodeAndBlockTrackerImpl()),
   RecHasher(),
   Dirents(RecHasher)
 {
@@ -70,8 +69,8 @@ TSK_FILTER_ENUM TskReader::filterVol(const TSK_VS_PART_INFO* vs_part) {
 TSK_FILTER_ENUM TskReader::filterFs(TSK_FS_INFO* fs_info) {
   Asm.addFileSystem(Tsk->convertFS(*fs_info));
   Tsg = Tsk->makeTimestampGetter(fs_info->ftype);
-  Tracker->setInodeRange(fs_info->first_inum, fs_info->last_inum + 1);
-  Tracker->setBlockRange(fs_info->first_block * fs_info->block_size, (fs_info->last_block + 1) * fs_info->block_size);
+//  Tracker->setInodeRange(fs_info->first_inum, fs_info->last_inum + 1);
+//  Tracker->setBlockRange(fs_info->first_block * fs_info->block_size, (fs_info->last_block + 1) * fs_info->block_size);
   CurFsOffset = fs_info->offset;
   CurFsBlockSize = fs_info->block_size;
   return TSK_FILTER_CONT;
@@ -92,14 +91,6 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
     return false;
   }
   const TSK_FS_META& meta = *fs_file->meta;
-
-  // this is also a bug, that we can skip files based on dupe inum before writing dirent info
-  // skipping dupe inodes must come _after_ full consideration/writing of dirents. more tests. -- jls
-  const uint64_t inum = meta.addr;
-  if (Tracker->markInodeSeen(inum)) {
-    // been here, done that
-    return false;
-  }
 
   // handle the name
   if (fs_file->name) {

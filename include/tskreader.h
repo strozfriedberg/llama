@@ -3,6 +3,7 @@
 #include <map>
 #include <memory>
 #include <stack>
+#include <unordered_map>
 #include <vector>
 
 #include "tsk.h"
@@ -17,7 +18,6 @@
 #include "util.h"
 
 class BlockSequence;
-class InodeAndBlockTracker;
 class InputHandler;
 class OutputHandler;
 class TimestampGetter;
@@ -53,7 +53,7 @@ private:
 
   std::string ImgPath;
   std::unique_ptr<TSK_IMG_INFO, void(*)(TSK_IMG_INFO*)> Img;
-  std::map<TSK_OFF_T, std::unique_ptr<TSK_FS_INFO, void(*)(TSK_FS_INFO*)>> Fs;
+  std::unordered_map<TSK_OFF_T, std::unique_ptr<TSK_FS_INFO, void(*)(TSK_FS_INFO*)>> Fs;
 
   std::shared_ptr<InputHandler> Input;
   std::shared_ptr<OutputHandler> Output;
@@ -61,7 +61,6 @@ private:
   std::unique_ptr<TskFacade> Tsk;
   TskImgAssembler Asm;
   std::unique_ptr<TimestampGetter> Tsg;
-  std::unique_ptr<InodeAndBlockTracker> Tracker;
 
   RecordHasher RecHasher;
   DirentStack Dirents;
