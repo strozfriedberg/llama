@@ -3,6 +3,7 @@
 #include "batchhandler.h"
 #include "cli.h"
 #include "direntbatch.h"
+#include "duckinode.h"
 #include "easyfut.h"
 #include "filescheduler.h"
 #include "inputhandler.h"
@@ -141,6 +142,7 @@ bool Llama::openInput(const std::string& input) {
 
 bool Llama::dbInit() {
   DuckDirent::createTable(DbConn.get(), "dirent");
+  DuckInode::createTable(DbConn.get(), "inode");
   return true;
 }
 
