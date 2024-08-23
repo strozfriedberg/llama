@@ -65,7 +65,7 @@ void Llama::search() {
 //    auto out = std::shared_ptr<OutputWriter>(new OutputTar((outdir / "llama").string(), Opts->OutputCodec));
 //    auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, DbConn, out));
 
-    auto protoProc = std::make_shared<Processor>(LgProg);
+    auto protoProc = std::make_shared<Processor>(&Db, LgProg);
     auto scheduler = std::make_shared<FileScheduler>(Db, Pool, protoProc, Opts);
     auto inh = std::shared_ptr<InputHandler>(new BatchHandler(scheduler));
 

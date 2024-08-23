@@ -1,5 +1,7 @@
 #pragma once
 
+#include "llamaduck.h"
+
 #include <memory>
 #include <vector>
 
@@ -14,7 +16,7 @@ class ReadSeek;
 
 class Processor {
 public:
-  Processor(const std::shared_ptr<ProgramHandle>& prog);
+  Processor(LlamaDB* db, const std::shared_ptr<ProgramHandle>& prog);
 
   std::shared_ptr<Processor> clone() const;
 
@@ -26,6 +28,9 @@ public:
 
 private:
   std::vector<unsigned char> Buf; // to avoid reallocations
+
+  LlamaDB* const Db; // weak pointer, allows for clone()
+  LlamaDBConnection DbConn;
 
   std::shared_ptr<ProgramHandle> LgProg; // shared
   std::shared_ptr<ContextHandle> Ctx; // not shared, could be unique_ptr

@@ -32,7 +32,9 @@ namespace {
   }
 }
 
-Processor::Processor(const std::shared_ptr<ProgramHandle>& prog):
+Processor::Processor(LlamaDB* db, const std::shared_ptr<ProgramHandle>& prog):
+  Db(db),
+  DbConn(*db),
   LgProg(prog),
   Ctx(prog.get() ? lg_create_context(prog.get(), &ctxOpts) : nullptr, lg_destroy_context),
   Hasher(sfhash_create_hasher(SFHASH_MD5 | SFHASH_SHA_1 | SFHASH_SHA_2_256 | SFHASH_BLAKE3 | SFHASH_FUZZY), sfhash_destroy_hasher),
@@ -41,7 +43,7 @@ Processor::Processor(const std::shared_ptr<ProgramHandle>& prog):
 }
 
 std::shared_ptr<Processor> Processor::clone() const {
-  return std::make_shared<Processor>(LgProg);
+  return std::make_shared<Processor>(Db, LgProg);
 }
 
 void Processor::process(ReadSeek& stream) {
