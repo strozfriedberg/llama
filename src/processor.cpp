@@ -51,13 +51,14 @@ void Processor::process(FileRecord& rec, OutputHandler& out) {
     hashSuccess = hashFile(Hasher.get(), *rec.Blocks, rec.Hashes);
     ProcTimeTotal += procTime.elapsed();
   }
-  if (hashSuccess) {
+/*  if (hashSuccess) {
     rec.Doc["md5"] = hexEncode(rec.Hashes.Md5, rec.Hashes.Md5 + sizeof(rec.Hashes.Md5));
     rec.Doc["sha1"] = hexEncode(rec.Hashes.Sha1, rec.Hashes.Sha1 + sizeof(rec.Hashes.Sha1));
     rec.Doc["sha256"] = hexEncode(rec.Hashes.Sha2_256, rec.Hashes.Sha2_256 + sizeof(rec.Hashes.Sha2_256));
     rec.Doc["blake3"] = hexEncode(rec.Hashes.Blake3, rec.Hashes.Blake3 + sizeof(rec.Hashes.Blake3));
     rec.Doc["fuzzy"] = hexEncode(rec.Hashes.Fuzzy, rec.Hashes.Fuzzy + sizeof(rec.Hashes.Fuzzy));
     rec.Doc["entropy"] = rec.Hashes.Entropy;
-  }
+  }*/
   out.outputInode(rec);
 }
+
