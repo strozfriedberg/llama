@@ -3,6 +3,7 @@
 #include "direntbatch.h"
 #include "filescheduler.h"
 #include "duckinode.h"
+#include "readseek.h"
 
 namespace {
   const unsigned int BATCH_SIZE = 5000;
@@ -21,6 +22,10 @@ void BatchHandler::push(const Dirent& d) {
 
 void BatchHandler::push(const Inode& i) {
   CurInodes->add(i);
+}
+
+void BatchHandler::push(std::unique_ptr<ReadSeek> stream) {
+  CurStreams->push_back(std::move(stream));
 }
 
 void BatchHandler::maybeFlush() {
