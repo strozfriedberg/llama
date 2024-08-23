@@ -2,6 +2,7 @@
 
 #include "boost_asio.h"
 #include "direntbatch.h"
+#include "duckinode.h"
 #include "llamaduck.h"
 #include "outputhandler.h"
 #include "recordbuffer.h"
@@ -20,6 +21,7 @@ public:
   virtual void outputDirent(const Dirent& rec) override;
 
   virtual void outputInode(const FileRecord& rec) override;
+  virtual void outputInode(const Inode& rec) override;
 
   virtual void outputInodes(const std::shared_ptr<std::vector<FileRecord>>& batch) override;
 
@@ -39,6 +41,7 @@ private:
   RecordBuffer InodesRecBuf;
   
   DirentBatch DirentsBatch;
+  InodeBatch  InodesBatch;
 
   std::shared_ptr<OutputWriter> Out;
 

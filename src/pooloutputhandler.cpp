@@ -39,6 +39,16 @@ void PoolOutputHandler::outputInode(const FileRecord& rec) {
   });
 }
 
+void PoolOutputHandler::outputInode(const Inode& rec) {
+  boost::asio::post(RecStrand, [&, rec]() {
+    InodesBatch.add(rec);
+    if (InodesBatch.size() >= 1000) {
+      InodesBatch.copyToDB(Appender.get());
+      Appender.flush();
+    }
+  });
+}
+
 void PoolOutputHandler::outputInodes(const std::shared_ptr<std::vector<FileRecord>>& batch) {
   boost::asio::post(RecStrand, [=]() {
     for (const auto& rec: *batch) {
