@@ -176,6 +176,7 @@ Inode DirConverter::convertStdFsDEtoInode(const fs::directory_entry& de) const {
     32768,
     0,
     0,
+    0,
     "",
     0,
     0,

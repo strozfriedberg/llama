@@ -8,6 +8,7 @@ void InodeBatch::add(const Inode& inode) {
   offset = addStrings(*this, offset, inode.Id, inode.Type, inode.Flags);
   OffsetVals.push_back(inode.Addr);
   OffsetVals.push_back(inode.FsOffset);
+  OffsetVals.push_back(inode.Filesize);
   OffsetVals.push_back(inode.Uid);
   OffsetVals.push_back(inode.Gid);
   offset = addStrings(*this, offset, inode.LinkTarget);
@@ -20,22 +21,24 @@ void InodeBatch::add(const Inode& inode) {
 unsigned int InodeBatch::copyToDB(duckdb_appender& appender) {
   unsigned int numRows = 0;
   duckdb_state state;
-  for (unsigned int i = 0; i + (DuckInode::NumCols - 1) < OffsetVals.size(); i += DuckInode::NumCols) {
+  unsigned int i = 0;
+  while (i + (DuckInode::NumCols - 1) < OffsetVals.size()) {
     append(appender,
-            Buf.data() + OffsetVals[i],
-            Buf.data() + OffsetVals[i + 1],
-            Buf.data() + OffsetVals[i + 2],
-            OffsetVals[i + 3],
-            OffsetVals[i + 4],
-            OffsetVals[i + 5],
-            OffsetVals[i + 6],
-            Buf.data() + OffsetVals[i + 7],
-            OffsetVals[i + 8],
-            OffsetVals[i + 9],
-            Buf.data() + OffsetVals[i + 10],
-            Buf.data() + OffsetVals[i + 11],
-            Buf.data() + OffsetVals[i + 12],
-            Buf.data() + OffsetVals[i + 13]
+            Buf.data() + OffsetVals[i++],
+            Buf.data() + OffsetVals[i++],
+            Buf.data() + OffsetVals[i++],
+            OffsetVals[i++],
+            OffsetVals[i++],
+            OffsetVals[i++],
+            OffsetVals[i++],
+            OffsetVals[i++],
+            Buf.data() + OffsetVals[i++],
+            OffsetVals[i++],
+            OffsetVals[i++],
+            Buf.data() + OffsetVals[i++],
+            Buf.data() + OffsetVals[i++],
+            Buf.data() + OffsetVals[i++],
+            Buf.data() + OffsetVals[i++]
     );
     state = duckdb_appender_end_row(appender);
     THROW_IF(state == DuckDBError, "Failed call to end_row");

@@ -10,6 +10,7 @@ struct Inode {
                                     "Flags",
                                     "Addr",
                                     "FsOffset",
+                                    "Filesize",
                                     "Uid",
                                     "Gid",
                                     "LinkTarget",
@@ -27,6 +28,7 @@ struct Inode {
 
   uint64_t Addr;
   uint64_t FsOffset;
+  uint64_t Filesize;
   uint64_t Uid;
   uint64_t Gid;
 

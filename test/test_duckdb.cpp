@@ -157,11 +157,11 @@ TEST_CASE("inodeWriting") {
   LlamaDB db;
   LlamaDBConnection conn(db);
 
-  static_assert(DuckInode::ColNames.size() == 14);
+  static_assert(DuckInode::ColNames.size() == 15);
   REQUIRE(DuckInode::createTable(conn.get(), "inode"));
 
-  Inode i1{"id 1", "File", "Allocated", 16, 32768, 500, 1000, "", 1, 37, "1978-04-01 12:32:25", "2024-08-22 14:45:00", "2024-08-22 22:42:23", "2024-07-13 02:12:59"};
-  Inode i2{"id 2", "File", "Deleted", 17, 32768, 501, 1001, "", 2, 38, "1978-04-01 12:32:25", "2024-08-22 14:45:00", "2024-08-22 22:42:23", "2024-07-13 02:12:59"};
+  Inode i1{"id 1", "File", "Allocated", 16, 32768, 12345, 500, 1000, "", 1, 37, "1978-04-01 12:32:25", "2024-08-22 14:45:00", "2024-08-22 22:42:23", "2024-07-13 02:12:59"};
+  Inode i2{"id 2", "File", "Deleted", 17, 32768, 9876543210987654321, 501, 1001, "", 2, 38, "1978-04-01 12:32:25", "2024-08-22 14:45:00", "2024-08-22 22:42:23", "2024-07-13 02:12:59"};
 
   InodeBatch batch;
   batch.add(i1);
@@ -179,13 +179,14 @@ TEST_CASE("inodeWriting") {
   CHECK(state != DuckDBError);
   CHECK(duckdb_result_error(&result) == nullptr);
   CHECK(duckdb_row_count(&result) == 2);
-  REQUIRE(duckdb_column_count(&result) == 14);
+  REQUIRE(duckdb_column_count(&result) == DuckInode::ColNames.size());
   unsigned int i = 0;
   REQUIRE(std::string("Id") == duckdb_column_name(&result, i++));
   REQUIRE(std::string("Type") == duckdb_column_name(&result, i++));
   REQUIRE(std::string("Flags") == duckdb_column_name(&result, i++));
   REQUIRE(std::string("Addr") == duckdb_column_name(&result, i++));
   REQUIRE(std::string("FsOffset") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("Filesize") == duckdb_column_name(&result, i++));
   REQUIRE(std::string("Uid") == duckdb_column_name(&result, i++));
   REQUIRE(std::string("Gid") == duckdb_column_name(&result, i++));
   REQUIRE(std::string("LinkTarget") == duckdb_column_name(&result, i++));
