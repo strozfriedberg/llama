@@ -38,9 +38,11 @@ struct SignatureDef : public Atom {
 
 
 struct FileMetadataDef : public Atom {
-  TokenType Property;
-  TokenType Operator;
+  std::string Property;
+  std::string Operator;
   std::string Value;
+
+  std::string getSqlQuery() const { return Property + Operator + Value; };
 };
 
 struct PatternDef {
@@ -133,8 +135,8 @@ struct std::hash<FileMetadataDef>
 {
     std::size_t operator()(const FileMetadataDef& meta) const noexcept {
       std::size_t hash = 0;
-      boost::hash_combine(hash, std::hash<TokenType>{}(meta.Property));
-      boost::hash_combine(hash, std::hash<TokenType>{}(meta.Operator));
+      boost::hash_combine(hash, std::hash<std::string>{}(meta.Property));
+      boost::hash_combine(hash, std::hash<std::string>{}(meta.Operator));
       boost::hash_combine(hash, std::hash<std::string>{}(meta.Value));
       return hash;
     }
@@ -179,13 +181,14 @@ public:
   SFHASH_HashAlgorithm parseHash();
   FileHashRecord parseFileHashRecord();
   std::string parseHashValue();
-  TokenType parseOperator();
+  std::string parseOperator();
   std::vector<PatternDef> parsePatternMod();
   std::vector<std::string> parseEncodings();
   std::string parseEncoding();
   std::vector<PatternDef> parsePatternDef();
   PatternSection parsePatternsSection();
   std::string parseNumber();
+  std::string parseDoubleQuotedString();
   std::vector<PatternDef> parseHexString();
   ConditionFunction parseFuncCall();
   std::shared_ptr<Node> parseFactor();
