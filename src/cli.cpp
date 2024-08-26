@@ -20,17 +20,25 @@ Cli::Cli() : All(), Opts(new Options) {
   ;
 
   po::options_description configOpts("Configuration Options");
-  configOpts.add_options()(
-      "file,f",
-      po::value<std::vector<std::string>>(&Opts->KeyFiles)
-          ->composing()
-          ->value_name("FILE"),
-      "Read one or more newline separated patterns from file")(
-      "num_threads,j",
-      po::value<unsigned int>(&Opts->NumThreads)
-          ->default_value(std::thread::hardware_concurrency())
-          ->value_name("THREADS"),
-      "Number of worker threads to use");
+  configOpts.add_options()
+      ("rule-file,f",
+        po::value<std::string>(&Opts->RuleFile)
+        ->value_name("RULE_FILE"),
+        "File containing Llama rule(s) to evaluate")
+      ("rule-directory,F",
+        po::value<std::string>(&Opts->RuleDir)
+        ->value_name("RULE_DIR"),
+        "Path to directory containing rule files")
+      ("num-threads,j",
+        po::value<unsigned int>(&Opts->NumThreads)
+        ->default_value(std::thread::hardware_concurrency())
+        ->value_name("THREADS"),
+        "Number of worker threads to use")
+      ("keywords-file,k",
+        po::value<std::vector<std::string>>(&Opts->KeyFiles)
+        ->composing()
+        ->value_name("KEY_FILE"),
+        "File containing newline-separated patterns to search");
 
   All.add(commands).add(ioOpts).add(configOpts);
 
