@@ -85,7 +85,7 @@ SFHASH_HashAlgorithm LlamaParser::parseHash() {
   }
 }
 
-TokenType LlamaParser::parseOperator() {
+std::string LlamaParser::parseOperator() {
   mustParse(
     "Expected operator",
     TokenType::EQUAL_EQUAL,
@@ -95,7 +95,7 @@ TokenType LlamaParser::parseOperator() {
     TokenType::LESS_THAN,
     TokenType::LESS_THAN_EQUAL
   );
-  return previous().Type;
+  return getPreviousLexeme();
 }
 
 std::vector<PatternDef> LlamaParser::parsePatternMod() {
@@ -179,6 +179,11 @@ PatternSection LlamaParser::parsePatternsSection() {
 
 std::string LlamaParser::parseNumber() {
   mustParse("Expected number", TokenType::NUMBER);
+  return getPreviousLexeme();
+}
+
+std::string LlamaParser::parseDoubleQuotedString() {
+  mustParse("Expected double-quoted string", TokenType::DOUBLE_QUOTED_STRING);
   return getPreviousLexeme();
 }
 
@@ -318,20 +323,17 @@ GrepSection LlamaParser::parseGrepSection() {
 
 FileMetadataDef LlamaParser::parseFileMetadataDef() {
   FileMetadataDef def;
-  if (matchAny(TokenType::CREATED, TokenType::MODIFIED, TokenType::FILEPATH, TokenType::FILENAME)) {
-    def.Property = previous().Type;
-    def.Operator = parseOperator();
-    mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-    def.Value = getPreviousLexeme();
+  bool expectNum = false;
+
+  if (!matchAny(TokenType::CREATED, TokenType::MODIFIED, TokenType::FILESIZE, TokenType::FILEPATH, TokenType::FILENAME)) {
+    throw ParserError("Expected created, modified, filesize, filepath, or filename", peek().Pos);
   }
-  else if (matchAny(TokenType::FILESIZE)) {
-    def.Property = previous().Type;
-    def.Operator = parseOperator();
-    def.Value = parseNumber();
-  }
-  else {
-    throw ParserError("Expected created, modified, or filesize", peek().Pos);
-  }
+
+  expectNum = (previous().Type == TokenType::FILESIZE);
+
+  def.Property = getPreviousLexeme();
+  def.Operator = parseOperator();
+  def.Value = expectNum ? parseNumber() : parseDoubleQuotedString();
   return def;
 }
 
