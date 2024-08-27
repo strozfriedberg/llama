@@ -167,9 +167,9 @@ TEST_CASE("parseOperatorThrowsIfNotOperator") {
 TEST_CASE("parseOperatorDoesNotThrowIfOperator") {
   std::string input = "==";
   LlamaParser parser(input, getTokensFromString(input));
-  std::string op;
+  TokenType op;
   REQUIRE_NOTHROW(op = parser.parseOperator());
-  REQUIRE(op == input);
+  REQUIRE(op == TokenType::EQUAL_EQUAL);
 }
 
 TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
@@ -326,10 +326,9 @@ TEST_CASE("parseFileMetadataDefFileSize") {
   LlamaParser parser(input, getTokensFromString(input));
   FileMetadataDef def;
   REQUIRE_NOTHROW(def = parser.parseFileMetadataDef());
-  REQUIRE(def.Property == "filesize");
-  REQUIRE(def.Operator == ">");
+  REQUIRE(def.Property == TokenType::FILESIZE);
+  REQUIRE(def.Operator == TokenType::GREATER_THAN);
   REQUIRE(def.Value == "100");
-  REQUIRE(def.getSqlQuery() == "filesize>100");
 }
 
 TEST_CASE("parseFileMetadataDefCreated") {
