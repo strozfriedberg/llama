@@ -329,6 +329,7 @@ TEST_CASE("parseFileMetadataDefFileSize") {
   REQUIRE(def.Property == TokenType::FILESIZE);
   REQUIRE(def.Operator == TokenType::GREATER_THAN);
   REQUIRE(def.Value == "100");
+  REQUIRE(def.getSqlQuery() == "filesize > 100");
 }
 
 TEST_CASE("parseFileMetadataDefCreated") {

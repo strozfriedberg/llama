@@ -41,6 +41,8 @@ struct FileMetadataDef : public Atom {
   TokenType Property;
   TokenType Operator;
   std::string Value;
+
+  std::string getSqlQuery() const;
 };
 
 struct PatternDef {
