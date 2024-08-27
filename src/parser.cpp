@@ -331,7 +331,6 @@ FileMetadataDef LlamaParser::parseFileMetadataDef() {
 
   def.Property = previous().Type;
   expectNum = (def.Property == TokenType::FILESIZE);
-
   def.Operator = parseOperator();
   def.Value = expectNum ? parseNumber() : parseDoubleQuotedString();
   return def;
