@@ -29,7 +29,6 @@ src_llama_common = \
 	src/readseek_impl.cpp \
 	src/recordbuffer.cpp \
 	src/recordhasher.cpp \
-	src/rulereader.cpp \
 	src/schema.cpp \
 	src/timestamps.cpp \
 	src/treehasher.cpp \
@@ -81,7 +80,6 @@ test_test_SOURCES = \
 	test/test_readseek.cpp \
 	test/test_recordbuffer.cpp \
 	test/test_recordhasher.cpp \
-	test/test_rulereader.cpp \
 	test/test_tskconversion.cpp \
 	test/test_tskimgassembler.cpp \
 	test/test_tskreader.cpp \
