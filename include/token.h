@@ -67,40 +67,39 @@ enum class TokenType {
   END_OF_FILE
 };
 
-namespace LlamaKeywords {
-  const std::unordered_map<std::string, TokenType> keywords = {
-    {"rule", TokenType::RULE},
-    {"meta", TokenType::META},
-    {"file_metadata", TokenType::FILE_METADATA},
-    {"signature", TokenType::SIGNATURE},
-    {"grep", TokenType::GREP},
-    {"patterns", TokenType::PATTERNS},
-    {"hash", TokenType::HASH},
-    {"condition", TokenType::CONDITION},
-    {"created", TokenType::CREATED},
-    {"modified", TokenType::MODIFIED},
-    {"filesize", TokenType::FILESIZE},
-    {"filename", TokenType::FILENAME},
-    {"filepath", TokenType::FILEPATH},
-    {"id", TokenType::ID},
-    {"name", TokenType::NAME},
-    {"all", TokenType::ALL},
-    {"any", TokenType::ANY},
-    {"offset", TokenType::OFFSET},
-    {"count", TokenType::COUNT},
-    {"count_has_hits", TokenType::COUNT_HAS_HITS},
-    {"length", TokenType::LENGTH},
-    {"md5", TokenType::MD5},
-    {"sha1", TokenType::SHA1},
-    {"sha256", TokenType::SHA256},
-    {"blake3", TokenType::BLAKE3},
-    {"encodings", TokenType::ENCODINGS},
-    {"nocase", TokenType::NOCASE},
-    {"fixed", TokenType::FIXED},
-    {"and", TokenType::AND},
-    {"or", TokenType::OR}
-  };
-}
+const std::unordered_map<std::string, TokenType> LlamaKeywords = {
+  {"rule", TokenType::RULE},
+  {"meta", TokenType::META},
+  {"file_metadata", TokenType::FILE_METADATA},
+  {"signature", TokenType::SIGNATURE},
+  {"grep", TokenType::GREP},
+  {"patterns", TokenType::PATTERNS},
+  {"hash", TokenType::HASH},
+  {"condition", TokenType::CONDITION},
+  {"created", TokenType::CREATED},
+  {"modified", TokenType::MODIFIED},
+  {"filesize", TokenType::FILESIZE},
+  {"filename", TokenType::FILENAME},
+  {"filepath", TokenType::FILEPATH},
+  {"id", TokenType::ID},
+  {"name", TokenType::NAME},
+  {"all", TokenType::ALL},
+  {"any", TokenType::ANY},
+  {"offset", TokenType::OFFSET},
+  {"count", TokenType::COUNT},
+  {"count_has_hits", TokenType::COUNT_HAS_HITS},
+  {"length", TokenType::LENGTH},
+  {"md5", TokenType::MD5},
+  {"sha1", TokenType::SHA1},
+  {"sha256", TokenType::SHA256},
+  {"blake3", TokenType::BLAKE3},
+  {"encodings", TokenType::ENCODINGS},
+  {"nocase", TokenType::NOCASE},
+  {"fixed", TokenType::FIXED},
+  {"and", TokenType::AND},
+  {"or", TokenType::OR}
+};
+
 
 class LineCol {
 public:
