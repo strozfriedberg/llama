@@ -502,8 +502,8 @@ TEST_CASE("parseFuncCallWithNumber") {
   REQUIRE(func.Name == TokenType::COUNT);
   REQUIRE(func.Args.size() == 1);
   REQUIRE(func.Args.at(0) == "s1");
-  REQUIRE(func.Operator == TokenType::EQUAL_EQUAL);
-  REQUIRE(func.Value == "5");
+  REQUIRE(parser.getLexemeAt(func.Operator) == "==");
+  REQUIRE(parser.getLexemeAt(func.Value) == "5");
 }
 
 TEST_CASE("parseFuncCallWithOperator") {
@@ -515,7 +515,7 @@ TEST_CASE("parseFuncCallWithOperator") {
   REQUIRE(func.Args.size() == 2);
   REQUIRE(func.Args.at(0) == "s1");
   REQUIRE(func.Args.at(1) == "5");
-  REQUIRE(func.Value == "5");
+  REQUIRE(parser.getLexemeAt(func.Value) == "5");
 }
 
 TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {

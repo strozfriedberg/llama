@@ -13,15 +13,15 @@ void ConditionFunction::assignValidators() {
   }
 }
 
-void ConditionFunction::validate() {
+void ConditionFunction::validate(const LlamaParser& parser) {
   assignValidators();
   if (IsCompFunc) {
-    if (Operator == TokenType::NONE || Value.empty()) {
+    if (Operator == SIZE_MAX || Value == SIZE_MAX) {
       throw ParserError("Expected operator and value for comparison", Pos);
     }
   }
   else {
-    if (Operator != TokenType::NONE || !Value.empty()) {
+    if (Operator != SIZE_MAX || Value != SIZE_MAX) {
       throw ParserError("Unexpected operator or value for function", Pos);
     }
   }
@@ -279,10 +279,11 @@ ConditionFunction LlamaParser::parseFuncCall() {
   }
   mustParse("Expected close parenthesis", TokenType::CLOSE_PAREN);
   if (matchAny(TokenType::EQUAL, TokenType::EQUAL_EQUAL, TokenType::NOT_EQUAL, TokenType::GREATER_THAN, TokenType::GREATER_THAN_EQUAL, TokenType::LESS_THAN, TokenType::LESS_THAN_EQUAL)) {
-    func.Operator = previous().Type;
-    func.Value = parseNumber();
+    func.Operator = CurIdx - 1;
+    parseNumber();
+    func.Value = CurIdx - 1;
   }
-  func.validate();
+  func.validate(*this);
   return func;
 }
 

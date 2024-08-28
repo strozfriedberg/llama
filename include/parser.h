@@ -53,19 +53,21 @@ struct PatternSection {
   std::map<std::string, std::vector<PatternDef>> Patterns;
 };
 
+class LlamaParser;
+
 struct ConditionFunction : public Atom {
   ConditionFunction() = default;
   ConditionFunction(LineCol pos) : Pos(pos) {}
   ~ConditionFunction() = default;
 
   void assignValidators();
-  void validate();
+  void validate(const LlamaParser& parser);
 
   LineCol Pos;
   TokenType Name;
   std::vector<std::string> Args;
-  TokenType Operator = TokenType::NONE;
-  std::string Value;
+  size_t Operator = SIZE_MAX;
+  size_t Value = SIZE_MAX;
 
   // validators
   size_t MinArgs;
@@ -117,8 +119,8 @@ struct std::hash<ConditionFunction>
       }
       boost::hash_combine(hash, std::hash<TokenType>{}(func.Name));
       boost::hash_combine(hash, h2);
-      boost::hash_combine(hash, std::hash<TokenType>{}(func.Operator));
-      boost::hash_combine(hash, std::hash<std::string>{}(func.Value));
+      boost::hash_combine(hash, std::hash<size_t>{}(func.Operator));
+      boost::hash_combine(hash, std::hash<size_t>{}(func.Value));
       return hash;
     }
 };
