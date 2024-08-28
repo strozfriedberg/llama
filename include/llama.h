@@ -3,6 +3,7 @@
 #include "boost_asio.h"
 #include "llamaduck.h"
 #include "options.h"
+#include "rulereader.h"
 
 struct ProgramHandle;
 
@@ -35,6 +36,7 @@ private:
   std::shared_ptr<ProgramHandle> LgProg;
   std::shared_ptr<InputReader> Input;
 
+  RuleReader Reader;
   LlamaDB Db;
   LlamaDBConnection DbConn;
 };

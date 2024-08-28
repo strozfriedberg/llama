@@ -31,7 +31,7 @@ namespace fs = std::filesystem;
 Llama::Llama()
     : CliParser(std::make_shared<Cli>()), Pool(),
       LgProg(nullptr, lg_destroy_program),
-      Db(), DbConn(Db) {}
+      Reader(), Db(), DbConn(Db) {}
 
 int Llama::run(int argc, const char* const argv[]) {
   try {
@@ -154,6 +154,12 @@ bool Llama::init() {
   auto db = make_future(Pool, [this]() {
     return dbInit();
   });
+
+  if (!this->Opts->RuleFile.empty()) {
+    std::string ruleStr = readfile(this->Opts->RuleFile);
+    Reader.read(ruleStr);
+  }
+
   return readPats.get() && open.get() && db.get();
 }
 
