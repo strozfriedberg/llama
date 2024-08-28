@@ -10,7 +10,7 @@ std::vector<Token> getTokensFromString(const std::string& input) {
   return lexer.getTokens();
 }
 
-Token makeToken(TokenType type) {
+Token makeToken(LlamaTokenType type) {
   return Token(type, 0, 0, {0, 0});
 }
 
@@ -24,14 +24,14 @@ TEST_CASE("TestLlamaParserPrevious") {
   std::string input = "rule { meta: description = \"test\" }";
   LlamaParser parser(input, getTokensFromString(input));
   parser.CurIdx = 1;
-  REQUIRE(parser.previous().Type == TokenType::RULE);
+  REQUIRE(parser.previous().Type == LlamaTokenType::RULE);
 }
 
 TEST_CASE("TestLlamaParserPeek") {
   std::string input = "rule { meta: description = \"test\" }";
   LlamaParser parser(input, getTokensFromString(input));
   parser.CurIdx = 1;
-  REQUIRE(parser.peek().Type == TokenType::OPEN_BRACE);
+  REQUIRE(parser.peek().Type == LlamaTokenType::OPEN_BRACE);
 }
 
 TEST_CASE("TestLlamaParserIsAtEndTrue") {
@@ -51,46 +51,46 @@ TEST_CASE("TestLlamaParserAdvance") {
   std::string input = "rule { meta: description = \"test\" }";
   LlamaParser parser(input, getTokensFromString(input));
   parser.advance();
-  REQUIRE(parser.previous().Type == TokenType::RULE);
-  REQUIRE(parser.peek().Type == TokenType::OPEN_BRACE);
+  REQUIRE(parser.previous().Type == LlamaTokenType::RULE);
+  REQUIRE(parser.peek().Type == LlamaTokenType::OPEN_BRACE);
 }
 
 TEST_CASE("TestLlamaParserCheckTrue") {
   std::string input = "rule { meta: description = \"test\" }";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE(parser.checkAny(TokenType::RULE));
+  REQUIRE(parser.checkAny(LlamaTokenType::RULE));
 }
 
 TEST_CASE("TestLlamaParserCheckFalse") {
   std::string input = "rule { meta: description = \"test\" }";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_FALSE(parser.checkAny(TokenType::OPEN_BRACE));
+  REQUIRE_FALSE(parser.checkAny(LlamaTokenType::OPEN_BRACE));
 }
 
 TEST_CASE("TestLlamaParserMatchTrue") {
   std::string input = "rule { meta: description = \"test\" }";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE(parser.matchAny(TokenType::RULE));
+  REQUIRE(parser.matchAny(LlamaTokenType::RULE));
   REQUIRE(parser.CurIdx == 1);
 }
 
 TEST_CASE("TestLlamaParserMatchFalse") {
   std::string input = "rule { meta: description = \"test\" }";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_FALSE(parser.matchAny(TokenType::OPEN_BRACE));
+  REQUIRE_FALSE(parser.matchAny(LlamaTokenType::OPEN_BRACE));
   REQUIRE(parser.CurIdx == 0);
 }
 
 TEST_CASE("TestLlamaParserMatchMultipleTrue") {
   std::string input = "rule { meta: description = \"test\" }";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE(parser.matchAny(TokenType::RULE, TokenType::META));
+  REQUIRE(parser.matchAny(LlamaTokenType::RULE, LlamaTokenType::META));
 }
 
 TEST_CASE("TestLlamaParserMatchMultipleFalse") {
   std::string input = "rule { meta: description = \"test\" }";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_FALSE(parser.matchAny(TokenType::OPEN_BRACE, TokenType::META));
+  REQUIRE_FALSE(parser.matchAny(LlamaTokenType::OPEN_BRACE, LlamaTokenType::META));
 }
 
 TEST_CASE("parseHashThrowsIfNotHash") {
@@ -167,9 +167,9 @@ TEST_CASE("parseOperatorThrowsIfNotOperator") {
 TEST_CASE("parseOperatorDoesNotThrowIfOperator") {
   std::string input = "==";
   LlamaParser parser(input, getTokensFromString(input));
-  TokenType op;
+  LlamaTokenType op;
   REQUIRE_NOTHROW(op = parser.parseOperator());
-  REQUIRE(op == TokenType::EQUAL_EQUAL);
+  REQUIRE(op == LlamaTokenType::EQUAL_EQUAL);
 }
 
 TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
@@ -253,10 +253,10 @@ TEST_CASE("parseTermWithAnd") {
   REQUIRE(node->Type == NodeType::AND);
   auto left = std::static_pointer_cast<FuncNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::FUNC);
-  REQUIRE(left->Value.Name == TokenType::ANY);
+  REQUIRE(left->Value.Name == LlamaTokenType::ANY);
   auto right = std::static_pointer_cast<FuncNode>(node->Right);
   REQUIRE(node->Right->Type == NodeType::FUNC);
-  REQUIRE(right->Value.Name == TokenType::COUNT);
+  REQUIRE(right->Value.Name == LlamaTokenType::COUNT);
 }
 
 TEST_CASE("parseTermWithoutAnd") {
@@ -294,11 +294,11 @@ TEST_CASE("parseSignatureSection") {
   REQUIRE(node->Type == NodeType::OR);
   auto sigDefNodeLeft = std::static_pointer_cast<SigDefNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::SIG);
-  REQUIRE(sigDefNodeLeft->Value.Attr == TokenType::NAME);
+  REQUIRE(sigDefNodeLeft->Value.Attr == LlamaTokenType::NAME);
   REQUIRE(sigDefNodeLeft->Value.Val == "Executable");
   auto sigDefNodeRight = std::static_pointer_cast<SigDefNode>(node->Right);
   REQUIRE(node->Right->Type == NodeType::SIG);
-  REQUIRE(sigDefNodeRight->Value.Attr == TokenType::ID);
+  REQUIRE(sigDefNodeRight->Value.Attr == LlamaTokenType::ID);
   REQUIRE(sigDefNodeRight->Value.Val == "123456789");
 }
 
@@ -326,8 +326,8 @@ TEST_CASE("parseFileMetadataDefFileSize") {
   LlamaParser parser(input, getTokensFromString(input));
   FileMetadataDef def;
   REQUIRE_NOTHROW(def = parser.parseFileMetadataDef());
-  REQUIRE(def.Property == TokenType::FILESIZE);
-  REQUIRE(def.Operator == TokenType::GREATER_THAN);
+  REQUIRE(def.Property == LlamaTokenType::FILESIZE);
+  REQUIRE(def.Operator == LlamaTokenType::GREATER_THAN);
   REQUIRE(def.Value == "100");
 }
 
@@ -380,7 +380,7 @@ TEST_CASE("parseRuleDecl") {
   REQUIRE_NOTHROW(rule = parser.parseRuleDecl());
   REQUIRE(rule.Hash.FileHashRecords.size() == 1);
   auto root = std::static_pointer_cast<SigDefNode>(rule.Signature);
-  REQUIRE(root->Value.Attr == TokenType::NAME);
+  REQUIRE(root->Value.Attr == LlamaTokenType::NAME);
   REQUIRE(root->Value.Val == "Executable");
   REQUIRE(parser.Atoms.size() == 3);
 }
@@ -481,7 +481,7 @@ TEST_CASE("parseFuncCallAny") {
   LlamaParser parser(input, getTokensFromString(input));
   ConditionFunction func;
   REQUIRE_NOTHROW(func = parser.parseFuncCall());
-  REQUIRE(func.Name == TokenType::ANY);
+  REQUIRE(func.Name == LlamaTokenType::ANY);
   REQUIRE(func.Args.size() == 3);
   REQUIRE(func.Args.at(0) == "s1");
   REQUIRE(func.Args.at(1) == "s2");
@@ -493,7 +493,7 @@ TEST_CASE("parseFuncCallAll") {
   LlamaParser parser(input, getTokensFromString(input));
   ConditionFunction func;
   REQUIRE_NOTHROW(func = parser.parseFuncCall());
-  REQUIRE(func.Name == TokenType::ALL);
+  REQUIRE(func.Name == LlamaTokenType::ALL);
   REQUIRE(func.Args.size() == 0);
 }
 
@@ -502,10 +502,10 @@ TEST_CASE("parseFuncCallWithNumber") {
   LlamaParser parser(input, getTokensFromString(input));
   ConditionFunction func;
   REQUIRE_NOTHROW(func = parser.parseFuncCall());
-  REQUIRE(func.Name == TokenType::COUNT);
+  REQUIRE(func.Name == LlamaTokenType::COUNT);
   REQUIRE(func.Args.size() == 1);
   REQUIRE(func.Args.at(0) == "s1");
-  REQUIRE(func.Operator == TokenType::EQUAL_EQUAL);
+  REQUIRE(func.Operator == LlamaTokenType::EQUAL_EQUAL);
   REQUIRE(func.Value == "5");
 }
 
@@ -514,7 +514,7 @@ TEST_CASE("parseFuncCallWithOperator") {
   LlamaParser parser(input, getTokensFromString(input));
   ConditionFunction func;
   REQUIRE_NOTHROW(func = parser.parseFuncCall());
-  REQUIRE(func.Name == TokenType::OFFSET);
+  REQUIRE(func.Name == LlamaTokenType::OFFSET);
   REQUIRE(func.Args.size() == 2);
   REQUIRE(func.Args.at(0) == "s1");
   REQUIRE(func.Args.at(1) == "5");
@@ -528,7 +528,7 @@ TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
   REQUIRE_NOTHROW(node = parser.parseFactor());
   REQUIRE(node->Type == NodeType::FUNC);
   auto root = std::static_pointer_cast<FuncNode>(node);
-  REQUIRE(root->Value.Name == TokenType::ANY);
+  REQUIRE(root->Value.Name == LlamaTokenType::ANY);
   REQUIRE(root->Value.Args.size() == 3);
 }
 
