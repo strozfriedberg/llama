@@ -8,7 +8,7 @@ void LlamaLexer::scanTokens() {
   while (!isAtEnd()) {
     scanToken();
   }
-  addToken(TokenType::END_OF_FILE, CurIdx, CurIdx+1, Pos);
+  addToken(LlamaTokenType::END_OF_FILE, CurIdx, CurIdx+1, Pos);
 }
 
 void LlamaLexer::scanToken() {
@@ -23,7 +23,7 @@ void LlamaLexer::scanToken() {
 
     case '!' : {
       if (match('=')) {
-        addToken(TokenType::NOT_EQUAL, start, CurIdx, pos);
+        addToken(LlamaTokenType::NOT_EQUAL, start, CurIdx, pos);
       }
       else {
         throw UnexpectedInputError("Unexpected input character: ! at ", pos);
@@ -33,9 +33,9 @@ void LlamaLexer::scanToken() {
 
     case '"': parseString(pos); break;
 
-    case '(': addToken(TokenType::OPEN_PAREN, start, CurIdx, pos); break;
-    case ')': addToken(TokenType::CLOSE_PAREN, start, CurIdx, pos); break;
-    case ',': addToken(TokenType::COMMA, start, CurIdx, pos); break;
+    case '(': addToken(LlamaTokenType::OPEN_PAREN, start, CurIdx, pos); break;
+    case ')': addToken(LlamaTokenType::CLOSE_PAREN, start, CurIdx, pos); break;
+    case ',': addToken(LlamaTokenType::COMMA, start, CurIdx, pos); break;
 
     case '/': {
       if (match('/')) {
@@ -50,12 +50,12 @@ void LlamaLexer::scanToken() {
       break;
     }
 
-    case ':': addToken(TokenType::COLON, start, CurIdx, pos); break;
-    case '<': addToken(match('=') ? TokenType::LESS_THAN_EQUAL : TokenType::LESS_THAN, start, CurIdx, pos); break;
-    case '=': addToken(match('=') ? TokenType::EQUAL_EQUAL : TokenType::EQUAL, start, CurIdx, pos); break;
-    case '>': addToken(match('=') ? TokenType::GREATER_THAN_EQUAL : TokenType::GREATER_THAN, start, CurIdx, pos); break;
-    case '{': addToken(TokenType::OPEN_BRACE, start, CurIdx, pos); break;
-    case '}': addToken(TokenType::CLOSE_BRACE, start, CurIdx, pos); break;
+    case ':': addToken(LlamaTokenType::COLON, start, CurIdx, pos); break;
+    case '<': addToken(match('=') ? LlamaTokenType::LESS_THAN_EQUAL : LlamaTokenType::LESS_THAN, start, CurIdx, pos); break;
+    case '=': addToken(match('=') ? LlamaTokenType::EQUAL_EQUAL : LlamaTokenType::EQUAL, start, CurIdx, pos); break;
+    case '>': addToken(match('=') ? LlamaTokenType::GREATER_THAN_EQUAL : LlamaTokenType::GREATER_THAN, start, CurIdx, pos); break;
+    case '{': addToken(LlamaTokenType::OPEN_BRACE, start, CurIdx, pos); break;
+    case '}': addToken(LlamaTokenType::CLOSE_BRACE, start, CurIdx, pos); break;
 
     default:
       if (isdigit(c)) {
@@ -80,13 +80,13 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
   }
 
   uint64_t end = CurIdx;
-  auto found = Llama::keywords.find(Input.substr(start, end - start));
+  auto found = LlamaKeywords.find(Input.substr(start, end - start));
 
-  if (found != Llama::keywords.end()) {
+  if (found != LlamaKeywords.end()) {
     addToken(found->second, start, end, pos);
   }
   else {
-    addToken(TokenType::IDENTIFIER, start, end, pos);
+    addToken(LlamaTokenType::IDENTIFIER, start, end, pos);
   }
 }
 
@@ -103,7 +103,7 @@ void LlamaLexer::parseString(LineCol pos) {
   }
   uint64_t end = CurIdx;
   advance(); // consume closing quote
-  addToken(TokenType::DOUBLE_QUOTED_STRING, start, end, pos);
+  addToken(LlamaTokenType::DOUBLE_QUOTED_STRING, start, end, pos);
 }
 
 void LlamaLexer::parseNumber(LineCol pos) {
@@ -116,7 +116,7 @@ void LlamaLexer::parseNumber(LineCol pos) {
   }
 
   uint64_t end = CurIdx;
-  addToken(TokenType::NUMBER, start, end, pos);
+  addToken(LlamaTokenType::NUMBER, start, end, pos);
 }
 
 void LlamaLexer::parseSingleLineComment() {
@@ -146,7 +146,7 @@ void LlamaLexer::parseMultiLineComment(LineCol pos) {
   }
 }
 
-void LlamaLexer::addToken(TokenType type, uint64_t start, uint64_t end, LineCol pos) {
+void LlamaLexer::addToken(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos) {
   Tokens.push_back(Token(type, start, end, pos));
 }
 

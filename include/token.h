@@ -10,7 +10,7 @@
 #include <boost/bimap.hpp>
 
 
-enum class TokenType {
+enum class LlamaTokenType {
   NONE,
 
   // reserved keywords
@@ -70,40 +70,39 @@ enum class TokenType {
   END_OF_FILE
 };
 
-namespace Llama {
-  const std::unordered_map<std::string, TokenType> keywords = {
-    {"rule", TokenType::RULE},
-    {"meta", TokenType::META},
-    {"file_metadata", TokenType::FILE_METADATA},
-    {"signature", TokenType::SIGNATURE},
-    {"grep", TokenType::GREP},
-    {"patterns", TokenType::PATTERNS},
-    {"hash", TokenType::HASH},
-    {"condition", TokenType::CONDITION},
-    {"created", TokenType::CREATED},
-    {"modified", TokenType::MODIFIED},
-    {"filesize", TokenType::FILESIZE},
-    {"filename", TokenType::FILENAME},
-    {"filepath", TokenType::FILEPATH},
-    {"id", TokenType::ID},
-    {"name", TokenType::NAME},
-    {"all", TokenType::ALL},
-    {"any", TokenType::ANY},
-    {"offset", TokenType::OFFSET},
-    {"count", TokenType::COUNT},
-    {"count_has_hits", TokenType::COUNT_HAS_HITS},
-    {"length", TokenType::LENGTH},
-    {"md5", TokenType::MD5},
-    {"sha1", TokenType::SHA1},
-    {"sha256", TokenType::SHA256},
-    {"blake3", TokenType::BLAKE3},
-    {"encodings", TokenType::ENCODINGS},
-    {"nocase", TokenType::NOCASE},
-    {"fixed", TokenType::FIXED},
-    {"and", TokenType::AND},
-    {"or", TokenType::OR}
-  };
-}
+const std::unordered_map<std::string, LlamaTokenType> LlamaKeywords = {
+  {"rule", LlamaTokenType::RULE},
+  {"meta", LlamaTokenType::META},
+  {"file_metadata", LlamaTokenType::FILE_METADATA},
+  {"signature", LlamaTokenType::SIGNATURE},
+  {"grep", LlamaTokenType::GREP},
+  {"patterns", LlamaTokenType::PATTERNS},
+  {"hash", LlamaTokenType::HASH},
+  {"condition", LlamaTokenType::CONDITION},
+  {"created", LlamaTokenType::CREATED},
+  {"modified", LlamaTokenType::MODIFIED},
+  {"filesize", LlamaTokenType::FILESIZE},
+  {"filename", LlamaTokenType::FILENAME},
+  {"filepath", LlamaTokenType::FILEPATH},
+  {"id", LlamaTokenType::ID},
+  {"name", LlamaTokenType::NAME},
+  {"all", LlamaTokenType::ALL},
+  {"any", LlamaTokenType::ANY},
+  {"offset", LlamaTokenType::OFFSET},
+  {"count", LlamaTokenType::COUNT},
+  {"count_has_hits", LlamaTokenType::COUNT_HAS_HITS},
+  {"length", LlamaTokenType::LENGTH},
+  {"md5", LlamaTokenType::MD5},
+  {"sha1", LlamaTokenType::SHA1},
+  {"sha256", LlamaTokenType::SHA256},
+  {"blake3", LlamaTokenType::BLAKE3},
+  {"encodings", LlamaTokenType::ENCODINGS},
+  {"nocase", LlamaTokenType::NOCASE},
+  {"fixed", LlamaTokenType::FIXED},
+  {"and", LlamaTokenType::AND},
+  {"or", LlamaTokenType::OR}
+};
+
 
 class LineCol {
 public:
@@ -121,12 +120,12 @@ public:
 
 class Token {
 public:
-  Token(TokenType type, uint64_t start, uint64_t end, LineCol pos)
+  Token(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos)
        : Type(type), Start(start), End(end), Pos(pos){}
 
   size_t length() const { return End - Start; }
 
-  TokenType Type;
+  LlamaTokenType Type;
   uint64_t Start, End;
   LineCol Pos;
 };

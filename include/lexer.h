@@ -22,7 +22,7 @@ public:
   void parseSingleLineComment();
   void parseMultiLineComment(LineCol pos);
 
-  void addToken(TokenType type, uint64_t start, uint64_t end, LineCol pos);
+  void addToken(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos);
 
   char advance();
 

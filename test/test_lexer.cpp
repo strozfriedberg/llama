@@ -6,13 +6,13 @@ TEST_CASE("ScanToken") {
   std::string input = "{}:= \n\r\t";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::OPEN_BRACE);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::OPEN_BRACE);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(1).Type == TokenType::CLOSE_BRACE);
+  REQUIRE(lexer.getTokens().at(1).Type == LlamaTokenType::CLOSE_BRACE);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(2).Type == TokenType::COLON);
+  REQUIRE(lexer.getTokens().at(2).Type == LlamaTokenType::COLON);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(3).Type == TokenType::EQUAL);
+  REQUIRE(lexer.getTokens().at(3).Type == LlamaTokenType::EQUAL);
   lexer.scanToken();
   lexer.scanToken();
   lexer.scanToken();
@@ -26,7 +26,7 @@ TEST_CASE("ScanOpenParen") {
   std::string input = "(";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::OPEN_PAREN);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::OPEN_PAREN);
   std::string lexeme(lexer.getLexeme(0));
   REQUIRE(lexeme == "(");
 }
@@ -35,7 +35,7 @@ TEST_CASE("ScanCloseParen") {
   std::string input = ")";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::CLOSE_PAREN);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::CLOSE_PAREN);
   std::string lexeme(lexer.getLexeme(0));
   REQUIRE(lexeme == ")");
 }
@@ -44,7 +44,7 @@ TEST_CASE("ScanComma") {
   std::string input = ",";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::COMMA);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::COMMA);
   std::string lexeme(lexer.getLexeme(0));
   REQUIRE(lexeme == ",");
 }
@@ -53,16 +53,16 @@ TEST_CASE("ScanTokenString") {
   std::string input = "\"some string\"{";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(1).Type == TokenType::OPEN_BRACE);
+  REQUIRE(lexer.getTokens().at(1).Type == LlamaTokenType::OPEN_BRACE);
 }
 
 TEST_CASE("parseString") {
   std::string input = "some string\"";
   LlamaLexer lexer(input);
   lexer.parseString({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
 }
 
 TEST_CASE("parseEncodingsList") {
@@ -70,26 +70,26 @@ TEST_CASE("parseEncodingsList") {
   LlamaLexer lexer(input);
   lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 6);
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::ENCODINGS);
-  REQUIRE(lexer.getTokens().at(1).Type == TokenType::EQUAL);
-  REQUIRE(lexer.getTokens().at(2).Type == TokenType::IDENTIFIER);
-  REQUIRE(lexer.getTokens().at(3).Type == TokenType::COMMA);
-  REQUIRE(lexer.getTokens().at(4).Type == TokenType::IDENTIFIER);
-  REQUIRE(lexer.getTokens().at(5).Type == TokenType::END_OF_FILE);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::ENCODINGS);
+  REQUIRE(lexer.getTokens().at(1).Type == LlamaTokenType::EQUAL);
+  REQUIRE(lexer.getTokens().at(2).Type == LlamaTokenType::IDENTIFIER);
+  REQUIRE(lexer.getTokens().at(3).Type == LlamaTokenType::COMMA);
+  REQUIRE(lexer.getTokens().at(4).Type == LlamaTokenType::IDENTIFIER);
+  REQUIRE(lexer.getTokens().at(5).Type == LlamaTokenType::END_OF_FILE);
 }
 
 TEST_CASE("parseNocase") {
   std::string input = "nocase";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::NOCASE);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::NOCASE);
 }
 
 TEST_CASE("parseFixed") {
   std::string input = "fixed";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::FIXED);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::FIXED);
 }
 
 TEST_CASE("unterminatedString") {
@@ -102,182 +102,182 @@ TEST_CASE("parseRuleId") {
   std::string input = "rule";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::RULE);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::RULE);
 }
 
 TEST_CASE("parseMetaId") {
   std::string input = "meta";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::META);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::META);
 }
 
 TEST_CASE("parseFileMetadataId") {
   std::string input = "file_metadata";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::FILE_METADATA);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::FILE_METADATA);
 }
 
 TEST_CASE("parseSignatureId") {
   std::string input = "signature";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::SIGNATURE);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::SIGNATURE);
 }
 
 TEST_CASE("parseGrepId") {
   std::string input = "grep";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::GREP);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::GREP);
 }
 
 TEST_CASE("parseHashId") {
   std::string input = "hash";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::HASH);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::HASH);
 }
 
 TEST_CASE("parseConditionId") {
   std::string input = "condition";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::CONDITION);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::CONDITION);
 }
 
 TEST_CASE("parseCreatedTimeId") {
   std::string input = "created";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::CREATED);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::CREATED);
 }
 
 TEST_CASE("parseModifiedTimeId") {
   std::string input = "modified";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::MODIFIED);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::MODIFIED);
 }
 
 TEST_CASE("parseFilesizeId") {
   std::string input = "filesize";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::FILESIZE);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::FILESIZE);
 }
 
 TEST_CASE("parseFilenameId") {
   std::string input = "filename";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::FILENAME);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::FILENAME);
 }
 
 TEST_CASE("parseFilepathId") {
   std::string input = "filepath";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::FILEPATH);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::FILEPATH);
 }
 
 TEST_CASE("parseIdId") {
   std::string input = "id";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::ID);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::ID);
 }
 
 TEST_CASE("parseNameId") {
   std::string input = "name";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::NAME);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::NAME);
 }
 
 TEST_CASE("parsePatternsId") {
   std::string input = "patterns";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::PATTERNS);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::PATTERNS);
 }
 
 TEST_CASE("parseAllId") {
   std::string input = "all";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::ALL);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::ALL);
 }
 
 TEST_CASE("parseAnyId") {
   std::string input = "any";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::ANY);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::ANY);
 }
 
 TEST_CASE("parseOffsetId") {
   std::string input = "offset";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::OFFSET);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::OFFSET);
 }
 
 TEST_CASE("parseCountId") {
   std::string input = "count";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::COUNT);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::COUNT);
 }
 
 TEST_CASE("parseCountHasHitsId") {
   std::string input = "count_has_hits";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::COUNT_HAS_HITS);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::COUNT_HAS_HITS);
 }
 
 TEST_CASE("parseLengthId") {
   std::string input = "length";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::LENGTH);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::LENGTH);
 }
 
 TEST_CASE("parseMd5Id") {
   std::string input = "md5";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::MD5);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::MD5);
 }
 
 TEST_CASE("parseSha1Id") {
   std::string input = "sha1";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::SHA1);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::SHA1);
 }
 
 TEST_CASE("parseSha256Id") {
   std::string input = "sha256";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::SHA256);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::SHA256);
 }
 
 TEST_CASE("parseBlake3Id") {
   std::string input = "blake3";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::BLAKE3);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::BLAKE3);
 }
 
 TEST_CASE("parseNotEqual") {
   std::string input = "!=";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::NOT_EQUAL);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::NOT_EQUAL);
   REQUIRE(lexer.isAtEnd());
 }
 
@@ -291,7 +291,7 @@ TEST_CASE("parseLessThan") {
   std::string input = "<";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::LESS_THAN);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::LESS_THAN);
   REQUIRE(lexer.isAtEnd());
 }
 
@@ -299,7 +299,7 @@ TEST_CASE("parseLessThanEqual") {
   std::string input = "<=";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::LESS_THAN_EQUAL);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::LESS_THAN_EQUAL);
   REQUIRE(lexer.isAtEnd());
 }
 
@@ -307,7 +307,7 @@ TEST_CASE("parseEqual") {
   std::string input = "=";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::EQUAL);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::EQUAL);
   REQUIRE(lexer.isAtEnd());
 }
 
@@ -315,7 +315,7 @@ TEST_CASE("parseEqualEqual") {
   std::string input = "==";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::EQUAL_EQUAL);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::EQUAL_EQUAL);
   REQUIRE(lexer.isAtEnd());
 }
 
@@ -323,7 +323,7 @@ TEST_CASE("parseGreaterThan") {
   std::string input = ">";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::GREATER_THAN);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::GREATER_THAN);
   REQUIRE(lexer.isAtEnd());
 }
 
@@ -331,7 +331,7 @@ TEST_CASE("parseGreaterThanEqual") {
   std::string input = ">=";
   LlamaLexer lexer(input);
   lexer.scanToken();
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::GREATER_THAN_EQUAL);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::GREATER_THAN_EQUAL);
   REQUIRE(lexer.isAtEnd());
 }
 
@@ -339,7 +339,7 @@ TEST_CASE("parseAlphaNumUnderscore") {
   std::string input = "not_a_keyword";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::IDENTIFIER);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::IDENTIFIER);
 }
 
 TEST_CASE("parseNumber") {
@@ -348,7 +348,7 @@ TEST_CASE("parseNumber") {
   lexer.parseNumber({0,0});
   std::vector<Token> tokens = lexer.getTokens();
   REQUIRE(tokens.size() == 1);
-  REQUIRE(tokens[0].Type == TokenType::NUMBER);
+  REQUIRE(tokens[0].Type == LlamaTokenType::NUMBER);
 }
 
 TEST_CASE("scanTokens") {
@@ -356,9 +356,9 @@ TEST_CASE("scanTokens") {
   LlamaLexer lexer(input);
   lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 3);
-  REQUIRE(lexer.getTokens()[0].Type == TokenType::OPEN_BRACE);
-  REQUIRE(lexer.getTokens()[1].Type == TokenType::CLOSE_BRACE);
-  REQUIRE(lexer.getTokens()[2].Type == TokenType::END_OF_FILE);
+  REQUIRE(lexer.getTokens()[0].Type == LlamaTokenType::OPEN_BRACE);
+  REQUIRE(lexer.getTokens()[1].Type == LlamaTokenType::CLOSE_BRACE);
+  REQUIRE(lexer.getTokens()[2].Type == LlamaTokenType::END_OF_FILE);
 }
 
 TEST_CASE("scanTokensParseIdentifierKeyword") {
@@ -366,8 +366,8 @@ TEST_CASE("scanTokensParseIdentifierKeyword") {
   LlamaLexer lexer(input);
   lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 2);
-  REQUIRE(lexer.getTokens()[0].Type == TokenType::RULE);
-  REQUIRE(lexer.getTokens()[1].Type == TokenType::END_OF_FILE);
+  REQUIRE(lexer.getTokens()[0].Type == LlamaTokenType::RULE);
+  REQUIRE(lexer.getTokens()[1].Type == LlamaTokenType::END_OF_FILE);
 }
 
 TEST_CASE("parseTokensParseIdentifierNonKeyword") {
@@ -375,8 +375,8 @@ TEST_CASE("parseTokensParseIdentifierNonKeyword") {
   LlamaLexer lexer(input);
   lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 2);
-  REQUIRE(lexer.getTokens()[0].Type == TokenType::IDENTIFIER);
-  REQUIRE(lexer.getTokens()[1].Type == TokenType::END_OF_FILE);
+  REQUIRE(lexer.getTokens()[0].Type == LlamaTokenType::IDENTIFIER);
+  REQUIRE(lexer.getTokens()[1].Type == LlamaTokenType::END_OF_FILE);
 }
 
 TEST_CASE("inputIterator") {
@@ -400,19 +400,19 @@ TEST_CASE("scanTokensFullRule") {
   lexer.scanTokens();
   std::vector<Token> tokens = lexer.getTokens();
   REQUIRE(tokens.size() == 13);
-  REQUIRE(tokens[0].Type == TokenType::RULE);
-  REQUIRE(tokens[1].Type == TokenType::IDENTIFIER);
-  REQUIRE(tokens[2].Type == TokenType::OPEN_BRACE);
-  REQUIRE(tokens[3].Type == TokenType::META);
-  REQUIRE(tokens[4].Type == TokenType::COLON);
-  REQUIRE(tokens[5].Type == TokenType::IDENTIFIER);
-  REQUIRE(tokens[6].Type == TokenType::EQUAL);
-  REQUIRE(tokens[7].Type == TokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(tokens[8].Type == TokenType::IDENTIFIER);
-  REQUIRE(tokens[9].Type == TokenType::EQUAL);
-  REQUIRE(tokens[10].Type == TokenType::NUMBER);
-  REQUIRE(tokens[11].Type == TokenType::CLOSE_BRACE);
-  REQUIRE(tokens[12].Type == TokenType::END_OF_FILE);
+  REQUIRE(tokens[0].Type == LlamaTokenType::RULE);
+  REQUIRE(tokens[1].Type == LlamaTokenType::IDENTIFIER);
+  REQUIRE(tokens[2].Type == LlamaTokenType::OPEN_BRACE);
+  REQUIRE(tokens[3].Type == LlamaTokenType::META);
+  REQUIRE(tokens[4].Type == LlamaTokenType::COLON);
+  REQUIRE(tokens[5].Type == LlamaTokenType::IDENTIFIER);
+  REQUIRE(tokens[6].Type == LlamaTokenType::EQUAL);
+  REQUIRE(tokens[7].Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(tokens[8].Type == LlamaTokenType::IDENTIFIER);
+  REQUIRE(tokens[9].Type == LlamaTokenType::EQUAL);
+  REQUIRE(tokens[10].Type == LlamaTokenType::NUMBER);
+  REQUIRE(tokens[11].Type == LlamaTokenType::CLOSE_BRACE);
+  REQUIRE(tokens[12].Type == LlamaTokenType::END_OF_FILE);
 }
 
 TEST_CASE("streamPositionInit") {
@@ -468,14 +468,14 @@ TEST_CASE("andKeyword") {
   std::string input = "and";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::AND);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::AND);
 }
 
 TEST_CASE("orKeyword") {
   std::string input = "or";
   LlamaLexer lexer(input);
   lexer.parseIdentifier({0,0});
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::OR);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::OR);
 }
 
 TEST_CASE("parseSingleLineCommentIsIgnored") {
@@ -578,6 +578,6 @@ TEST_CASE("parseStringWithEscapedDoubleQuote") {
   LlamaLexer lexer(input);
   lexer.parseString({0,0});
   REQUIRE(lexer.getTokens().size() == 1);
-  REQUIRE(lexer.getTokens().at(0).Type == TokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
   REQUIRE(lexer.getTokens().at(0).length() == input.size() - 1);
 }

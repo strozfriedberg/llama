@@ -64,7 +64,7 @@ struct ConditionFunction : public Atom {
   void validate(const LlamaParser& parser);
 
   LineCol Pos;
-  TokenType Name;
+  LlamaTokenType Name;
   std::vector<std::string> Args;
   size_t Operator = SIZE_MAX;
   size_t Value = SIZE_MAX;
@@ -117,7 +117,7 @@ struct std::hash<ConditionFunction>
         const std::size_t h = std::hash<std::string>{}(arg);
         boost::hash_combine(h2, h);
       }
-      boost::hash_combine(hash, std::hash<TokenType>{}(func.Name));
+      boost::hash_combine(hash, std::hash<LlamaTokenType>{}(func.Name));
       boost::hash_combine(hash, h2);
       boost::hash_combine(hash, std::hash<size_t>{}(func.Operator));
       boost::hash_combine(hash, std::hash<size_t>{}(func.Value));
@@ -170,10 +170,10 @@ public:
   template <class... TokenTypes>
   bool checkAny(TokenTypes... types) { return ((peek().Type == types) || ...);};
 
-  bool isAtEnd() const { return peek().Type == TokenType::END_OF_FILE; }
+  bool isAtEnd() const { return peek().Type == LlamaTokenType::END_OF_FILE; }
 
-  template <class... TokenTypes>
-  void mustParse(const std::string& errMsg, TokenTypes... types);
+  template <class... LlamaTokenTypes>
+  void mustParse(const std::string& errMsg, LlamaTokenTypes... types);
 
   std::string getPreviousLexeme() const { return Input.substr(previous().Start, previous().length()); }
   std::string getLexemeAt(size_t idx) const { return Input.substr(Tokens.at(idx).Start, Tokens.at(idx).length()); } 
@@ -218,8 +218,8 @@ bool LlamaParser::matchAny(TokenTypes... types) {
   return false;
 }
 
-template <class... TokenTypes>
-void LlamaParser::mustParse(const std::string& errMsg, TokenTypes... types) {
+template <class... LlamaTokenTypes>
+void LlamaParser::mustParse(const std::string& errMsg, LlamaTokenTypes... types) {
   if (!matchAny(types...)) {
     throw ParserError(errMsg, peek().Pos);
   }
