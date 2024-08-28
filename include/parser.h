@@ -133,9 +133,9 @@ struct std::hash<FileMetadataDef>
 {
     std::size_t operator()(const FileMetadataDef& meta) const noexcept {
       std::size_t hash = 0;
-      boost::hash_combine(hash, std::hash<TokenType>{}(meta.Property));
-      boost::hash_combine(hash, std::hash<TokenType>{}(meta.Operator));
-      boost::hash_combine(hash, std::hash<std::string>{}(meta.Value));
+      boost::hash_combine(hash, std::hash<size_t>{}(meta.Property));
+      boost::hash_combine(hash, std::hash<size_t>{}(meta.Operator));
+      boost::hash_combine(hash, std::hash<size_t>{}(meta.Value));
       return hash;
     }
 };
@@ -174,12 +174,13 @@ public:
   void mustParse(const std::string& errMsg, TokenTypes... types);
 
   std::string getPreviousLexeme() const { return Input.substr(previous().Start, previous().length()); }
+  std::string getLexemeAt(size_t idx) const { return Input.substr(Tokens.at(idx).Start, Tokens.at(idx).length()); } 
 
   HashSection parseHashSection();
   SFHASH_HashAlgorithm parseHash();
   FileHashRecord parseFileHashRecord();
   std::string parseHashValue();
-  TokenType parseOperator();
+  void parseOperator();
   std::vector<PatternDef> parsePatternMod();
   std::vector<std::string> parseEncodings();
   std::string parseEncoding();

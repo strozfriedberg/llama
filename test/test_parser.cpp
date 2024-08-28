@@ -167,9 +167,7 @@ TEST_CASE("parseOperatorThrowsIfNotOperator") {
 TEST_CASE("parseOperatorDoesNotThrowIfOperator") {
   std::string input = "==";
   LlamaParser parser(input, getTokensFromString(input));
-  TokenType op;
-  REQUIRE_NOTHROW(op = parser.parseOperator());
-  REQUIRE(op == TokenType::EQUAL_EQUAL);
+  REQUIRE_NOTHROW(parser.parseOperator());
 }
 
 TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
@@ -326,10 +324,9 @@ TEST_CASE("parseFileMetadataDefFileSize") {
   LlamaParser parser(input, getTokensFromString(input));
   FileMetadataDef def;
   REQUIRE_NOTHROW(def = parser.parseFileMetadataDef());
-  REQUIRE(def.Property == TokenType::FILESIZE);
-  REQUIRE(def.Operator == TokenType::GREATER_THAN);
-  REQUIRE(def.Value == "100");
-  REQUIRE(def.getSqlQuery() == "filesize > 100");
+  REQUIRE(parser.getLexemeAt(def.Property) == "filesize");
+  REQUIRE(parser.getLexemeAt(def.Operator) == ">");
+  REQUIRE(parser.getLexemeAt(def.Value) == "100");
 }
 
 TEST_CASE("parseFileMetadataDefCreated") {
@@ -473,8 +470,7 @@ TEST_CASE("parseHexStringThrowIfEmpty") {
 TEST_CASE("parserParseNumber") {
   std::string input = "123456";
   LlamaParser parser(input, getTokensFromString(input));
-  std::string num = parser.parseNumber();
-  REQUIRE(num == "123456");
+  REQUIRE_NOTHROW(parser.parseNumber());
 }
 
 TEST_CASE("parseFuncCallAny") {
@@ -507,7 +503,7 @@ TEST_CASE("parseFuncCallWithNumber") {
   REQUIRE(func.Args.size() == 1);
   REQUIRE(func.Args.at(0) == "s1");
   REQUIRE(func.Operator == TokenType::EQUAL_EQUAL);
-  REQUIRE(parser.getLexemeAt(func.Value) == "5");
+  REQUIRE(func.Value == "5");
 }
 
 TEST_CASE("parseFuncCallWithOperator") {

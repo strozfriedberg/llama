@@ -85,7 +85,7 @@ SFHASH_HashAlgorithm LlamaParser::parseHash() {
   }
 }
 
-TokenType LlamaParser::parseOperator() {
+void LlamaParser::parseOperator() {
   mustParse(
     "Expected operator",
     TokenType::EQUAL_EQUAL,
@@ -95,7 +95,6 @@ TokenType LlamaParser::parseOperator() {
     TokenType::LESS_THAN,
     TokenType::LESS_THAN_EQUAL
   );
-  return previous().Type;
 }
 
 std::vector<PatternDef> LlamaParser::parsePatternMod() {
@@ -328,11 +327,12 @@ FileMetadataDef LlamaParser::parseFileMetadataDef() {
   if (!matchAny(TokenType::CREATED, TokenType::MODIFIED, TokenType::FILESIZE, TokenType::FILEPATH, TokenType::FILENAME)) {
     throw ParserError("Expected created, modified, filesize, filepath, or filename", peek().Pos);
   }
-
-  def.Property = previous().Type;
-  expectNum = (def.Property == TokenType::FILESIZE);
-  def.Operator = parseOperator();
-  def.Value = expectNum ? parseNumber() : parseDoubleQuotedString();
+  expectNum = (previous().Type == TokenType::FILESIZE);
+  def.Property = CurIdx - 1;
+  parseOperator();
+  def.Operator = CurIdx - 1;
+  expectNum ? parseNumber() : parseDoubleQuotedString();
+  def.Value = CurIdx - 1;
   return def;
 }
 
