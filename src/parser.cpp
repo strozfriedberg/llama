@@ -1,11 +1,5 @@
 #include "parser.h"
 
-std::string FileMetadataDef::getSqlQuery() const {
-  std::string prop = Llama::keywords.right.find(Property)->second;
-  std::string op = Llama::keywords.right.find(Operator)->second;
-  return prop + " " + op + " " + Value;
-}
-
 void ConditionFunction::assignValidators() {
   switch(Name) {
     case TokenType::ALL:            MinArgs = 0; MaxArgs = SIZE_MAX; IsCompFunc = false; break;

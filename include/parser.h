@@ -38,11 +38,9 @@ struct SignatureDef : public Atom {
 
 
 struct FileMetadataDef : public Atom {
-  TokenType Property;
-  TokenType Operator;
-  std::string Value;
-
-  std::string getSqlQuery() const;
+  size_t Property;
+  size_t Operator;
+  size_t Value;
 };
 
 struct PatternDef {

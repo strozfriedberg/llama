@@ -507,7 +507,7 @@ TEST_CASE("parseFuncCallWithNumber") {
   REQUIRE(func.Args.size() == 1);
   REQUIRE(func.Args.at(0) == "s1");
   REQUIRE(func.Operator == TokenType::EQUAL_EQUAL);
-  REQUIRE(func.Value == "5");
+  REQUIRE(parser.getLexemeAt(func.Value) == "5");
 }
 
 TEST_CASE("parseFuncCallWithOperator") {
