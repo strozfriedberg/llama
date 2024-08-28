@@ -302,10 +302,10 @@ std::shared_ptr<Node> LlamaParser::parseExpr() {
 SignatureDef LlamaParser::parseSignatureDef() {
   SignatureDef def;
   mustParse("Expected name or id keyword", TokenType::NAME, TokenType::ID);
-  def.Attr = previous().Type;
+  def.Attr = CurIdx - 1;
   mustParse("Expected equality operator sign", TokenType::EQUAL_EQUAL);
   mustParse("Expected double quoted string", TokenType::DOUBLE_QUOTED_STRING);
-  def.Val = getPreviousLexeme();
+  def.Val = CurIdx - 1;
   return def;
 }
 

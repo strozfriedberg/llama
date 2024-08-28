@@ -292,12 +292,12 @@ TEST_CASE("parseSignatureSection") {
   REQUIRE(node->Type == NodeType::OR);
   auto sigDefNodeLeft = std::static_pointer_cast<SigDefNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::SIG);
-  REQUIRE(sigDefNodeLeft->Value.Attr == TokenType::NAME);
-  REQUIRE(sigDefNodeLeft->Value.Val == "Executable");
+  REQUIRE(parser.getLexemeAt(sigDefNodeLeft->Value.Attr) == "name");
+  REQUIRE(parser.getLexemeAt(sigDefNodeLeft->Value.Val) == "Executable");
   auto sigDefNodeRight = std::static_pointer_cast<SigDefNode>(node->Right);
   REQUIRE(node->Right->Type == NodeType::SIG);
-  REQUIRE(sigDefNodeRight->Value.Attr == TokenType::ID);
-  REQUIRE(sigDefNodeRight->Value.Val == "123456789");
+  REQUIRE(parser.getLexemeAt(sigDefNodeRight->Value.Attr) == "id");
+  REQUIRE(parser.getLexemeAt(sigDefNodeRight->Value.Val) == "123456789");
 }
 
 TEST_CASE("parseGrepSection") {
@@ -378,8 +378,8 @@ TEST_CASE("parseRuleDecl") {
   REQUIRE_NOTHROW(rule = parser.parseRuleDecl());
   REQUIRE(rule.Hash.FileHashRecords.size() == 1);
   auto root = std::static_pointer_cast<SigDefNode>(rule.Signature);
-  REQUIRE(root->Value.Attr == TokenType::NAME);
-  REQUIRE(root->Value.Val == "Executable");
+  REQUIRE(parser.getLexemeAt(root->Value.Attr) == "name");
+  REQUIRE(parser.getLexemeAt(root->Value.Val) == "Executable");
   REQUIRE(parser.Atoms.size() == 3);
 }
 

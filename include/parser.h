@@ -32,8 +32,8 @@ struct HashSection {
 struct Atom {};
 
 struct SignatureDef : public Atom {
-  TokenType Attr;
-  std::string Val;
+  size_t Attr;
+  size_t Val;
 };
 
 
@@ -95,8 +95,8 @@ struct std::hash<SignatureDef>
 {
     std::size_t operator()(const SignatureDef& sig) const noexcept {
       std::size_t hash = 0;
-      boost::hash_combine(hash, std::hash<TokenType>{}(sig.Attr));
-      boost::hash_combine(hash, std::hash<std::string>{}(sig.Val));
+      boost::hash_combine(hash, std::hash<size_t>{}(sig.Attr));
+      boost::hash_combine(hash, std::hash<size_t>{}(sig.Val));
       return hash;
     }
 };
