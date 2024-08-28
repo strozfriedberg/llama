@@ -6,9 +6,6 @@
 #include <string>
 #include <tuple>
 
-#include <boost/assign.hpp>
-#include <boost/bimap.hpp>
-
 
 enum class LlamaTokenType {
   NONE,
