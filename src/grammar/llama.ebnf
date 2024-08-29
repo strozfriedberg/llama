@@ -10,7 +10,9 @@ file_metadata_section = FILE_METADATA COLON file_metadata_def+;
 
 grep_section        = GREP COLON patterns_section? condition_section;
 
-signature_section   = SIGNATURE COLON DOUBLE_QUOTED_STRING+;
+signature_section   = SIGNATURE COLON expr+;
+
+signature_def       = (name|id) EQUAL_EQUAL DOUBLE_QUOTED_STRING;
 
 hash_section        = HASH COLON hash_expr+;
 
@@ -35,7 +37,9 @@ expr                = term (OR term)*;
 term                = factor (AND factor)*;
 
 factor              = OPEN_PAREN expr CLOSE_PAREN
-                    | func_call;
+                    | func_call
+                    | file_metadata_def
+                    | signature_def;
 
 func_call           = func OPEN_PAREN (IDENTIFIER (COMMA IDENTIFIER)*)? CLOSE_PAREN;
 

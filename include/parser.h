@@ -32,14 +32,14 @@ struct HashSection {
 struct Atom {};
 
 struct SignatureDef : public Atom {
-  TokenType Attr;
+  LlamaTokenType Attr;
   std::string Val;
 };
 
 
 struct FileMetadataDef : public Atom {
-  TokenType Property;
-  TokenType Operator;
+  LlamaTokenType Property;
+  LlamaTokenType Operator;
   std::string Value;
 };
 
@@ -62,9 +62,9 @@ struct ConditionFunction : public Atom {
   void validate();
 
   LineCol Pos;
-  TokenType Name;
+  LlamaTokenType Name;
   std::vector<std::string> Args;
-  TokenType Operator = TokenType::NONE;
+  LlamaTokenType Operator = LlamaTokenType::NONE;
   std::string Value;
 
   // validators
@@ -95,7 +95,7 @@ struct std::hash<SignatureDef>
 {
     std::size_t operator()(const SignatureDef& sig) const noexcept {
       std::size_t hash = 0;
-      boost::hash_combine(hash, std::hash<TokenType>{}(sig.Attr));
+      boost::hash_combine(hash, std::hash<LlamaTokenType>{}(sig.Attr));
       boost::hash_combine(hash, std::hash<std::string>{}(sig.Val));
       return hash;
     }
@@ -115,9 +115,9 @@ struct std::hash<ConditionFunction>
         const std::size_t h = std::hash<std::string>{}(arg);
         boost::hash_combine(h2, h);
       }
-      boost::hash_combine(hash, std::hash<TokenType>{}(func.Name));
+      boost::hash_combine(hash, std::hash<LlamaTokenType>{}(func.Name));
       boost::hash_combine(hash, h2);
-      boost::hash_combine(hash, std::hash<TokenType>{}(func.Operator));
+      boost::hash_combine(hash, std::hash<LlamaTokenType>{}(func.Operator));
       boost::hash_combine(hash, std::hash<std::string>{}(func.Value));
       return hash;
     }
@@ -133,8 +133,8 @@ struct std::hash<FileMetadataDef>
 {
     std::size_t operator()(const FileMetadataDef& meta) const noexcept {
       std::size_t hash = 0;
-      boost::hash_combine(hash, std::hash<TokenType>{}(meta.Property));
-      boost::hash_combine(hash, std::hash<TokenType>{}(meta.Operator));
+      boost::hash_combine(hash, std::hash<LlamaTokenType>{}(meta.Property));
+      boost::hash_combine(hash, std::hash<LlamaTokenType>{}(meta.Operator));
       boost::hash_combine(hash, std::hash<std::string>{}(meta.Value));
       return hash;
     }
@@ -168,7 +168,7 @@ public:
   template <class... TokenTypes>
   bool checkAny(TokenTypes... types) { return ((peek().Type == types) || ...);};
 
-  bool isAtEnd() const { return peek().Type == TokenType::END_OF_FILE; }
+  bool isAtEnd() const { return peek().Type == LlamaTokenType::END_OF_FILE; }
 
   template <class... TokenTypes>
   void mustParse(const std::string& errMsg, TokenTypes... types);
@@ -179,7 +179,7 @@ public:
   SFHASH_HashAlgorithm parseHash();
   FileHashRecord parseFileHashRecord();
   std::string parseHashValue();
-  TokenType parseOperator();
+  LlamaTokenType parseOperator();
   std::vector<PatternDef> parsePatternMod();
   std::vector<std::string> parseEncodings();
   std::string parseEncoding();
