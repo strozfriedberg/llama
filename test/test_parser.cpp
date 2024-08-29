@@ -660,3 +660,11 @@ TEST_CASE("EmptyStringNoRules") {
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE(parser.parseRules().size() == 0);
 }
+
+TEST_CASE("GetSqlQueryFromRule") {
+  std::string input = "rule MyRule { }";
+  LlamaParser parser(input, getTokensFromString(input));
+  std::vector<Rule> rules = parser.parseRules();
+  REQUIRE(rules.at(0).Name == "MyRule");
+  REQUIRE(rules.at(0).getSqlQuery() == "SELECT * FROM inode;");
+}

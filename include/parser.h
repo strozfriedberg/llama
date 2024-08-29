@@ -154,6 +154,8 @@ struct Rule {
   std::shared_ptr<Node> Signature;
   std::shared_ptr<Node> FileMetadata;
   GrepSection Grep;
+
+  std::string getSqlQuery() const;
 };
 
 class LlamaParser {

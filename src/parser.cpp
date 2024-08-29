@@ -31,6 +31,12 @@ void ConditionFunction::validate(const LlamaParser& parser) {
   }
 }
 
+std::string Rule::getSqlQuery() const {
+  std::string query = "SELECT * FROM inode";
+  query += ";";
+  return query;
+}
+
 HashSection LlamaParser::parseHashSection() {
   HashSection hashSection;
   FileHashRecord rec;
