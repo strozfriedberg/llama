@@ -51,10 +51,10 @@ std::string FileMetadataNode::getSqlQuery(const LlamaParser& parser) const {
 }
 
 std::string Rule::getSqlQuery(const LlamaParser& parser) const {
-  std::string query = "SELECT * FROM inode";
+  std::string query = "SELECT * FROM dirent, inode WHERE dirent.metaaddr == inode.addr";
 
   if (FileMetadata) {
-    query += " WHERE ";
+    query += " AND ";
     query += FileMetadata->getSqlQuery(parser);
   }
 

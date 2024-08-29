@@ -666,7 +666,7 @@ TEST_CASE("GetSqlQueryFromRule") {
   LlamaParser parser(input, getTokensFromString(input));
   std::vector<Rule> rules = parser.parseRules();
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM inode;");
+  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM dirent, inode WHERE dirent.metaaddr == inode.addr;");
 }
 
 TEST_CASE("GetSqlQueryFromRuleWithOneNumberFileMetadataCondition") {
@@ -674,7 +674,7 @@ TEST_CASE("GetSqlQueryFromRuleWithOneNumberFileMetadataCondition") {
   LlamaParser parser(input, getTokensFromString(input));
   std::vector<Rule> rules = parser.parseRules();
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM inode WHERE filesize == 30000;");
+  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM dirent, inode WHERE dirent.metaaddr == inode.addr AND filesize == 30000;");
 }
 
 TEST_CASE("GetSqlQueryFromRuleWithOneStringFileMetadataCondition") {
@@ -682,13 +682,14 @@ TEST_CASE("GetSqlQueryFromRuleWithOneStringFileMetadataCondition") {
   LlamaParser parser(input, getTokensFromString(input));
   std::vector<Rule> rules = parser.parseRules();
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM inode WHERE created > \"2023-05-04\";");
+  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM dirent, inode WHERE dirent.metaaddr == inode.addr AND created > \"2023-05-04\";");
 }
 
 TEST_CASE("GetSqlQueryFromRuleWithCompoundFileMetadataDef") {
-  std::string input = "rule MyRule { file_metadata: filesize == 123456 or created > \"2023-05-04\" and modified < \"2023-05-06\" }";
+  std::string input = "rule MyRule { file_metadata: filesize == 123456 or created > \"2023-05-04\" and modified < \"2023-05-06\" and filename == \"test\" }";
   LlamaParser parser(input, getTokensFromString(input));
   std::vector<Rule> rules = parser.parseRules();
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM inode WHERE (filesize == 123456 OR (created > \"2023-05-04\" AND modified < \"2023-05-06\"));");
+  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM dirent, inode WHERE dirent.metaaddr == inode.addr AND (filesize == 123456 OR ((created > \"2023-05-04\" AND modified < \"2023-05-06\") AND filename == \"test\"));");
 }
+
