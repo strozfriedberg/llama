@@ -142,8 +142,8 @@ TEST_CASE("parseHashSectionMultipleAlg") {
   LlamaParser parser(input, getTokensFromString(input));
   HashSection hashSection;
   REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
-  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_MD5)->second == "test");
-  REQUIRE(hashSection.FileHashRecords.at(1).find(SFHASH_SHA_1)->second == "abcdef");
+  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_MD5)->second == "\"test\"");
+  REQUIRE(hashSection.FileHashRecords.at(1).find(SFHASH_SHA_1)->second == "\"abcdef\"");
 }
 
 TEST_CASE("parseHashSectionMultipleRecords") {
@@ -152,9 +152,9 @@ TEST_CASE("parseHashSectionMultipleRecords") {
   HashSection hashSection;
   REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
   REQUIRE(hashSection.FileHashRecords.size() == 2);
-  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_MD5)->second == "test");
-  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_SHA_1)->second == "abcdef");
-  REQUIRE(hashSection.FileHashRecords.at(1).find(SFHASH_MD5)->second == "test2");
+  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_MD5)->second == "\"test\"");
+  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_SHA_1)->second == "\"abcdef\"");
+  REQUIRE(hashSection.FileHashRecords.at(1).find(SFHASH_MD5)->second == "\"test2\"");
   REQUIRE(hashSection.HashAlgs == (SFHASH_MD5 | SFHASH_SHA_1));
 }
 
@@ -176,7 +176,7 @@ TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
   std::vector<PatternDef> defs;
   REQUIRE_NOTHROW(defs = parser.parsePatternDef());
   REQUIRE(defs.size() == 1);
-  REQUIRE(defs.at(0).Pattern == "test");
+  REQUIRE(defs.at(0).Pattern == "\"test\"");
   REQUIRE(defs.at(0).Encoding == "ASCII");
   REQUIRE(defs.at(0).Options.CaseInsensitive);
   REQUIRE(!defs.at(0).Options.FixedString);
@@ -238,8 +238,8 @@ TEST_CASE("parsePatternsSectionDoesNotThrowIfPatterns") {
   PatternSection patternSection;
   REQUIRE_NOTHROW(patternSection = parser.parsePatternsSection());
   REQUIRE(patternSection.Patterns.size() == 3);
-  REQUIRE(patternSection.Patterns.find("a")->second.at(0).Pattern == "test");
-  REQUIRE(patternSection.Patterns.find("b")->second.at(0).Pattern == "test2");
+  REQUIRE(patternSection.Patterns.find("a")->second.at(0).Pattern == "\"test\"");
+  REQUIRE(patternSection.Patterns.find("b")->second.at(0).Pattern == "\"test2\"");
   REQUIRE(patternSection.Patterns.find("c")->second.at(0).Pattern == "\\z12\\z34\\z56\\z78\\z9a\\zbc\\zde\\zf0");
 }
 
@@ -293,11 +293,11 @@ TEST_CASE("parseSignatureSection") {
   auto sigDefNodeLeft = std::static_pointer_cast<SigDefNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::SIG);
   REQUIRE(parser.getLexemeAt(sigDefNodeLeft->Value.Attr) == "name");
-  REQUIRE(parser.getLexemeAt(sigDefNodeLeft->Value.Val) == "Executable");
+  REQUIRE(parser.getLexemeAt(sigDefNodeLeft->Value.Val) == "\"Executable\"");
   auto sigDefNodeRight = std::static_pointer_cast<SigDefNode>(node->Right);
   REQUIRE(node->Right->Type == NodeType::SIG);
   REQUIRE(parser.getLexemeAt(sigDefNodeRight->Value.Attr) == "id");
-  REQUIRE(parser.getLexemeAt(sigDefNodeRight->Value.Val) == "123456789");
+  REQUIRE(parser.getLexemeAt(sigDefNodeRight->Value.Val) == "\"123456789\"");
 }
 
 TEST_CASE("parseGrepSection") {
@@ -312,7 +312,7 @@ TEST_CASE("parseGrepSection") {
   GrepSection section;
   REQUIRE_NOTHROW(section = parser.parseGrepSection());
   REQUIRE(section.Patterns.Patterns.size() == 2);
-  REQUIRE(section.Patterns.Patterns.find("a")->second.at(0).Pattern == "test");
+  REQUIRE(section.Patterns.Patterns.find("a")->second.at(0).Pattern == "\"test\"");
   REQUIRE(section.Patterns.Patterns.find("a")->second.at(0).Encoding == "UTF-8");
   REQUIRE(section.Condition->Type == NodeType::AND);
   REQUIRE(section.Condition->Left->Type == NodeType::FUNC);
@@ -356,8 +356,8 @@ TEST_CASE("parseMetaSection") {
   MetaSection meta;
   REQUIRE_NOTHROW(meta = parser.parseMetaSection());
   REQUIRE(meta.Fields.size() == 2);
-  REQUIRE(meta.Fields.find("arbitrary")->second == "something");
-  REQUIRE(meta.Fields.find("another")->second == "something else");
+  REQUIRE(meta.Fields.find("arbitrary")->second == "\"something\"");
+  REQUIRE(meta.Fields.find("another")->second == "\"something else\"");
 }
 
 TEST_CASE("parseRuleDecl") {
@@ -379,7 +379,7 @@ TEST_CASE("parseRuleDecl") {
   REQUIRE(rule.Hash.FileHashRecords.size() == 1);
   auto root = std::static_pointer_cast<SigDefNode>(rule.Signature);
   REQUIRE(parser.getLexemeAt(root->Value.Attr) == "name");
-  REQUIRE(parser.getLexemeAt(root->Value.Val) == "Executable");
+  REQUIRE(parser.getLexemeAt(root->Value.Val) == "\"Executable\"");
   REQUIRE(parser.Atoms.size() == 3);
 }
 
@@ -424,7 +424,7 @@ TEST_CASE("startRule") {
   REQUIRE_NOTHROW(rules = parser.parseRules());
   REQUIRE(rules.size() == 2);
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).Meta.Fields.find("description")->second == "test");
+  REQUIRE(rules.at(0).Meta.Fields.find("description")->second == "\"test\"");
   REQUIRE(rules.at(1).Name == "AnotherRule");
   REQUIRE(rules.at(1).Grep.Patterns.Patterns.find("c")->second.at(0).Pattern == "\\z34\\z56\\z78\\zab\\zcd\\zEF");
 }
@@ -534,8 +534,8 @@ TEST_CASE("parseFileHashRecord") {
   LlamaParser parser(input, getTokensFromString(input));
   FileHashRecord rec;
   REQUIRE_NOTHROW(rec = parser.parseFileHashRecord());
-  REQUIRE(rec.find(SFHASH_MD5)->second == "test");
-  REQUIRE(rec.find(SFHASH_SHA_1)->second == "test2");
+  REQUIRE(rec.find(SFHASH_MD5)->second == "\"test\"");
+  REQUIRE(rec.find(SFHASH_SHA_1)->second == "\"test2\"");
 }
 
 TEST_CASE("parseFileHashRecordThrowsIfDuplicateHashType") {

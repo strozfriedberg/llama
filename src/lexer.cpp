@@ -91,7 +91,7 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
 }
 
 void LlamaLexer::parseString(LineCol pos) {
-  uint64_t start = CurIdx;
+  uint64_t start = CurIdx - 1;
   while(getCurChar() != '"' && !isAtEnd()) {
     if (getCurChar() == '\\') {
       advance();
@@ -101,8 +101,8 @@ void LlamaLexer::parseString(LineCol pos) {
   if (isAtEnd()) {
     throw UnexpectedInputError("Unterminated string at ", pos);
   }
-  uint64_t end = CurIdx;
   advance(); // consume closing quote
+  uint64_t end = CurIdx;
   addToken(LlamaTokenType::DOUBLE_QUOTED_STRING, start, end, pos);
 }
 
