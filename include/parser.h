@@ -89,7 +89,7 @@ struct Node {
 };
 
 struct BoolNode : public Node {
-  std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
+  std::string getSqlQuery(const LlamaParser& parser) const override;
 };
 
 struct SigDefNode : public Node {

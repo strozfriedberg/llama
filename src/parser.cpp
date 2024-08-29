@@ -31,6 +31,15 @@ void ConditionFunction::validate(const LlamaParser& parser) {
   }
 }
 
+std::string BoolNode::getSqlQuery(const LlamaParser& parser) const {
+  std::string query = "(";
+  query += Left->getSqlQuery(parser);
+  query += Type == NodeType::AND ? " AND " : " OR ";
+  query += Right->getSqlQuery(parser);
+  query += ")";
+  return query;
+}
+
 std::string FileMetadataNode::getSqlQuery(const LlamaParser& parser) const {
   std::string query = "";
   query += parser.getLexemeAt(Value.Property);

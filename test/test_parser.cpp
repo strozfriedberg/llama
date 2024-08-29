@@ -684,3 +684,11 @@ TEST_CASE("GetSqlQueryFromRuleWithOneStringFileMetadataCondition") {
   REQUIRE(rules.at(0).Name == "MyRule");
   REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM inode WHERE created > \"2023-05-04\";");
 }
+
+TEST_CASE("GetSqlQueryFromRuleWithCompoundFileMetadataDef") {
+  std::string input = "rule MyRule { file_metadata: filesize == 123456 or created > \"2023-05-04\" and modified < \"2023-05-06\" }";
+  LlamaParser parser(input, getTokensFromString(input));
+  std::vector<Rule> rules = parser.parseRules();
+  REQUIRE(rules.at(0).Name == "MyRule");
+  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM inode WHERE (filesize == 123456 OR (created > \"2023-05-04\" AND modified < \"2023-05-06\"));");
+}
