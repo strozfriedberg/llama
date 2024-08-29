@@ -81,15 +81,22 @@ enum class NodeType {
 
 struct Node {
   virtual ~Node() = default;
+  virtual std::string getSqlQuery(const LlamaParser& parser) const = 0;
 
   NodeType Type;
   std::shared_ptr<Node> Left;
   std::shared_ptr<Node> Right;
 };
 
+struct BoolNode : public Node {
+  std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
+};
+
 struct SigDefNode : public Node {
   SigDefNode() { Type = NodeType::SIG; }
   SignatureDef Value;
+
+  std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
 };
 
 template<>
@@ -106,6 +113,8 @@ struct std::hash<SignatureDef>
 struct FuncNode : public Node {
   FuncNode() { Type = NodeType::FUNC; }
   ConditionFunction Value;
+
+  std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
 };
 
 template<>
@@ -128,6 +137,8 @@ struct std::hash<ConditionFunction>
 struct FileMetadataNode : public Node {
   FileMetadataNode() { Type = NodeType::META; }
   FileMetadataDef Value;
+
+  std::string getSqlQuery(const LlamaParser& parser) const override;
 };
 
 template<>
@@ -155,7 +166,7 @@ struct Rule {
   std::shared_ptr<Node> FileMetadata;
   GrepSection Grep;
 
-  std::string getSqlQuery() const;
+  std::string getSqlQuery(const LlamaParser&) const;
 };
 
 class LlamaParser {

@@ -31,8 +31,24 @@ void ConditionFunction::validate(const LlamaParser& parser) {
   }
 }
 
-std::string Rule::getSqlQuery() const {
+std::string FileMetadataNode::getSqlQuery(const LlamaParser& parser) const {
+  std::string query = "";
+  query += parser.getLexemeAt(Value.Property);
+  query += " ";
+  query += parser.getLexemeAt(Value.Operator);
+  query += " ";
+  query += parser.getLexemeAt(Value.Value);
+  return query;
+}
+
+std::string Rule::getSqlQuery(const LlamaParser& parser) const {
   std::string query = "SELECT * FROM inode";
+
+  if (FileMetadata) {
+    query += " WHERE ";
+    query += FileMetadata->getSqlQuery(parser);
+  }
+
   query += ";";
   return query;
 }
@@ -229,10 +245,10 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
 }
 
 std::shared_ptr<Node> LlamaParser::parseTerm() {
-  std::shared_ptr <Node> left = parseFactor();
+  std::shared_ptr<Node> left = parseFactor();
 
   while (matchAny(LlamaTokenType::AND)) {
-    std::shared_ptr<Node> node = std::make_shared<Node>();
+    std::shared_ptr<Node> node = std::make_shared<BoolNode>();
     node->Type = NodeType::AND;
     node->Left = left;
     node->Right = parseFactor();
@@ -297,7 +313,7 @@ std::shared_ptr<Node> LlamaParser::parseExpr() {
   std::shared_ptr<Node> left = parseTerm();
 
   while (matchAny(LlamaTokenType::OR)) {
-    std::shared_ptr<Node> node = std::make_shared<Node>();
+    std::shared_ptr<Node> node = std::make_shared<BoolNode>();
     node->Type = NodeType::OR;
     node->Left = left;
     node->Right = parseTerm();

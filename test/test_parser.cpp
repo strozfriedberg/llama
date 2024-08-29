@@ -246,7 +246,7 @@ TEST_CASE("parsePatternsSectionDoesNotThrowIfPatterns") {
 TEST_CASE("parseTermWithAnd") {
   std::string input = "any(s1, s2, s3) and count(s1) == 5";
   LlamaParser parser(input, getTokensFromString(input));
-  auto node = std::make_shared<Node>();
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
   REQUIRE_NOTHROW(node = parser.parseTerm());
   REQUIRE(node->Type == NodeType::AND);
   auto left = std::static_pointer_cast<FuncNode>(node->Left);
@@ -266,7 +266,7 @@ TEST_CASE("parseTermWithoutAnd") {
 TEST_CASE("parseExpr") {
   std::string input = "(any(s1, s2, s3) and length(s1, 5) == 5) or all()";
   LlamaParser parser(input, getTokensFromString(input));
-  auto node = std::make_shared<Node>();
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
   REQUIRE_NOTHROW(node = parser.parseExpr());
   REQUIRE(node->Type == NodeType::OR);
   REQUIRE(node->Left);
@@ -521,7 +521,7 @@ TEST_CASE("parseFuncCallWithOperator") {
 TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
   std::string input = "any(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
-  auto node = std::make_shared<Node>();
+  std::shared_ptr<Node> node = std::make_shared<FuncNode>();
   REQUIRE_NOTHROW(node = parser.parseFactor());
   REQUIRE(node->Type == NodeType::FUNC);
   auto root = std::static_pointer_cast<FuncNode>(node);
@@ -666,5 +666,13 @@ TEST_CASE("GetSqlQueryFromRule") {
   LlamaParser parser(input, getTokensFromString(input));
   std::vector<Rule> rules = parser.parseRules();
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery() == "SELECT * FROM inode;");
+  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM inode;");
+}
+
+TEST_CASE("GetSqlQueryFromRuleWithOneFileMetadataCondition") {
+  std::string input = "rule MyRule { file_metadata: filesize > 30000 }";
+  LlamaParser parser(input, getTokensFromString(input));
+  std::vector<Rule> rules = parser.parseRules();
+  REQUIRE(rules.at(0).Name == "MyRule");
+  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM inode WHERE filesize > 30000;");
 }
