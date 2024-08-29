@@ -669,10 +669,18 @@ TEST_CASE("GetSqlQueryFromRule") {
   REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM inode;");
 }
 
-TEST_CASE("GetSqlQueryFromRuleWithOneFileMetadataCondition") {
-  std::string input = "rule MyRule { file_metadata: filesize > 30000 }";
+TEST_CASE("GetSqlQueryFromRuleWithOneNumberFileMetadataCondition") {
+  std::string input = "rule MyRule { file_metadata: filesize == 30000 }";
   LlamaParser parser(input, getTokensFromString(input));
   std::vector<Rule> rules = parser.parseRules();
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM inode WHERE filesize > 30000;");
+  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM inode WHERE filesize == 30000;");
+}
+
+TEST_CASE("GetSqlQueryFromRuleWithOneStringFileMetadataCondition") {
+  std::string input = "rule MyRule { file_metadata: created > \"2023-05-04\" }";
+  LlamaParser parser(input, getTokensFromString(input));
+  std::vector<Rule> rules = parser.parseRules();
+  REQUIRE(rules.at(0).Name == "MyRule");
+  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM inode WHERE created > \"2023-05-04\";");
 }
