@@ -12,6 +12,9 @@
 #include <duckdb.h>
 #include <tuple>
 
+TEST_CASE("testDuckDBVersion") {
+  REQUIRE(std::string("v1.0.0") == duckdb_library_version());
+}
 
 TEST_CASE("TestMakeDuckDB") { 
   LlamaDB db;
