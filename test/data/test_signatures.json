@@ -26,24 +26,27 @@
     "signature": {
       "checks": [
         {
-          "compare_type": "=",
-          "offset": "0x4",
-          "value": "0x667479703367"
+          "compare_type": "=/c",
+          "offset": "0x0",
+          "value": "0x336770"
         }
       ],
       "description": "3GPP Media",
+      "encoding": "UTF-8,UTF-16LE",
       "extensions": {
         "3G2": "",
         "3GG": "",
         "3GP": "",
         "MP4": "MPEG-4 Video"
       },
-      "id": "7017e81b-b3f6-45af-b9c0-430d46f0e3f2",
-      "notes": "ftyp3g",
-      "source": "http://www.garykessler.net/library/file_sigs.html",
+      "id": "22d3b2da-b778-4333-9464-7647268355df",
+      "notes": "Third Generation Partnership Project (3GPP) Multimedia 1",
+      "pattern": "(.{4}ftyp)?3[Gg][Pp]",
+      "source": "Encase7",
       "tags": [
         "video"
-      ]
+      ],
+      "name": "3GPP Media"
     }
   },
   {
