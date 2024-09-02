@@ -1,5 +1,9 @@
 Llama is Lightgrep's Amazing Media Analyzer.
 
+Llama 0.1.0 is *experimental* and should not be used for casework.
+
+Llama is copyright (c) 2019-2024, Stroz Friedberg, LLC. Llama is available under version 2 of the Apache License. See [COPYING](COPYING) for details.
+
 ## Writing Llama Rules
 
 If you're used to [writing YARA rules](https://yara.readthedocs.io/en/stable/writingrules.html), you'll have no problem learning how to write Llama rules.
