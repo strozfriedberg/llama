@@ -15,6 +15,7 @@ void LlamaLexer::scanToken() {
   uint64_t start = CurIdx;
   LineCol pos(Pos);
   char c = advance();
+  LlamaTokenType op;
   switch(c) {
     case '\t': break;
     case '\n': Pos.ColNum = 1; Pos.LineNum++; break;
@@ -51,9 +52,9 @@ void LlamaLexer::scanToken() {
     }
 
     case ':': addToken(LlamaTokenType::COLON, start, CurIdx, pos); break;
-    case '<': addToken(match('=') ? LlamaTokenType::LESS_THAN_EQUAL : LlamaTokenType::LESS_THAN, start, CurIdx, pos); break;
-    case '=': addToken(match('=') ? LlamaTokenType::EQUAL_EQUAL : LlamaTokenType::EQUAL, start, CurIdx, pos); break;
-    case '>': addToken(match('=') ? LlamaTokenType::GREATER_THAN_EQUAL : LlamaTokenType::GREATER_THAN, start, CurIdx, pos); break;
+    case '<': op = match('=') ? LlamaTokenType::LESS_THAN_EQUAL : LlamaTokenType::LESS_THAN; addToken(op, start, CurIdx, pos); break;
+    case '=': op = match('=') ? LlamaTokenType::EQUAL_EQUAL : LlamaTokenType::EQUAL; addToken(op, start, CurIdx, pos); break;
+    case '>': op = match('=') ? LlamaTokenType::GREATER_THAN_EQUAL : LlamaTokenType::GREATER_THAN; addToken(op, start, CurIdx, pos); break;
     case '{': addToken(LlamaTokenType::OPEN_BRACE, start, CurIdx, pos); break;
     case '}': addToken(LlamaTokenType::CLOSE_BRACE, start, CurIdx, pos); break;
 
