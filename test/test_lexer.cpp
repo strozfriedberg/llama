@@ -314,11 +314,13 @@ TEST_CASE("parseEqual") {
 }
 
 TEST_CASE("parseEqualEqual") {
-  std::string input = "==";
+    std::string input = "==";
   LlamaLexer lexer(input);
   lexer.scanToken();
   REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::EQUAL_EQUAL);
-  REQUIRE(lexer.isAtEnd());
+  REQUIRE(lexer.getTokens().at(0).length() == 2);
+  REQUIRE(lexer.getTokens().at(0).Start == 0);
+  REQUIRE(lexer.getTokens().at(0).End == 2);
 }
 
 TEST_CASE("parseGreaterThan") {
