@@ -142,8 +142,8 @@ TEST_CASE("parseHashSectionMultipleAlg") {
   LlamaParser parser(input, getTokensFromString(input));
   HashSection hashSection;
   REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
-  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_MD5)->second == "test");
-  REQUIRE(hashSection.FileHashRecords.at(1).find(SFHASH_SHA_1)->second == "abcdef");
+  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_MD5)->second == "\"test\"");
+  REQUIRE(hashSection.FileHashRecords.at(1).find(SFHASH_SHA_1)->second == "\"abcdef\"");
 }
 
 TEST_CASE("parseHashSectionMultipleRecords") {
@@ -152,9 +152,9 @@ TEST_CASE("parseHashSectionMultipleRecords") {
   HashSection hashSection;
   REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
   REQUIRE(hashSection.FileHashRecords.size() == 2);
-  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_MD5)->second == "test");
-  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_SHA_1)->second == "abcdef");
-  REQUIRE(hashSection.FileHashRecords.at(1).find(SFHASH_MD5)->second == "test2");
+  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_MD5)->second == "\"test\"");
+  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_SHA_1)->second == "\"abcdef\"");
+  REQUIRE(hashSection.FileHashRecords.at(1).find(SFHASH_MD5)->second == "\"test2\"");
   REQUIRE(hashSection.HashAlgs == (SFHASH_MD5 | SFHASH_SHA_1));
 }
 
@@ -167,9 +167,7 @@ TEST_CASE("parseOperatorThrowsIfNotOperator") {
 TEST_CASE("parseOperatorDoesNotThrowIfOperator") {
   std::string input = "==";
   LlamaParser parser(input, getTokensFromString(input));
-  LlamaTokenType op;
-  REQUIRE_NOTHROW(op = parser.parseOperator());
-  REQUIRE(op == LlamaTokenType::EQUAL_EQUAL);
+  REQUIRE_NOTHROW(parser.parseOperator());
 }
 
 TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
@@ -178,7 +176,7 @@ TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
   std::vector<PatternDef> defs;
   REQUIRE_NOTHROW(defs = parser.parsePatternDef());
   REQUIRE(defs.size() == 1);
-  REQUIRE(defs.at(0).Pattern == "test");
+  REQUIRE(defs.at(0).Pattern == "\"test\"");
   REQUIRE(defs.at(0).Encoding == "ASCII");
   REQUIRE(defs.at(0).Options.CaseInsensitive);
   REQUIRE(!defs.at(0).Options.FixedString);
@@ -240,15 +238,15 @@ TEST_CASE("parsePatternsSectionDoesNotThrowIfPatterns") {
   PatternSection patternSection;
   REQUIRE_NOTHROW(patternSection = parser.parsePatternsSection());
   REQUIRE(patternSection.Patterns.size() == 3);
-  REQUIRE(patternSection.Patterns.find("a")->second.at(0).Pattern == "test");
-  REQUIRE(patternSection.Patterns.find("b")->second.at(0).Pattern == "test2");
+  REQUIRE(patternSection.Patterns.find("a")->second.at(0).Pattern == "\"test\"");
+  REQUIRE(patternSection.Patterns.find("b")->second.at(0).Pattern == "\"test2\"");
   REQUIRE(patternSection.Patterns.find("c")->second.at(0).Pattern == "\\z12\\z34\\z56\\z78\\z9a\\zbc\\zde\\zf0");
 }
 
 TEST_CASE("parseTermWithAnd") {
   std::string input = "any(s1, s2, s3) and count(s1) == 5";
   LlamaParser parser(input, getTokensFromString(input));
-  auto node = std::make_shared<Node>();
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
   REQUIRE_NOTHROW(node = parser.parseTerm());
   REQUIRE(node->Type == NodeType::AND);
   auto left = std::static_pointer_cast<FuncNode>(node->Left);
@@ -268,7 +266,7 @@ TEST_CASE("parseTermWithoutAnd") {
 TEST_CASE("parseExpr") {
   std::string input = "(any(s1, s2, s3) and length(s1, 5) == 5) or all()";
   LlamaParser parser(input, getTokensFromString(input));
-  auto node = std::make_shared<Node>();
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
   REQUIRE_NOTHROW(node = parser.parseExpr());
   REQUIRE(node->Type == NodeType::OR);
   REQUIRE(node->Left);
@@ -294,12 +292,12 @@ TEST_CASE("parseSignatureSection") {
   REQUIRE(node->Type == NodeType::OR);
   auto sigDefNodeLeft = std::static_pointer_cast<SigDefNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::SIG);
-  REQUIRE(sigDefNodeLeft->Value.Attr == LlamaTokenType::NAME);
-  REQUIRE(sigDefNodeLeft->Value.Val == "Executable");
+  REQUIRE(parser.getLexemeAt(sigDefNodeLeft->Value.Attr) == "name");
+  REQUIRE(parser.getLexemeAt(sigDefNodeLeft->Value.Val) == "\"Executable\"");
   auto sigDefNodeRight = std::static_pointer_cast<SigDefNode>(node->Right);
   REQUIRE(node->Right->Type == NodeType::SIG);
-  REQUIRE(sigDefNodeRight->Value.Attr == LlamaTokenType::ID);
-  REQUIRE(sigDefNodeRight->Value.Val == "123456789");
+  REQUIRE(parser.getLexemeAt(sigDefNodeRight->Value.Attr) == "id");
+  REQUIRE(parser.getLexemeAt(sigDefNodeRight->Value.Val) == "\"123456789\"");
 }
 
 TEST_CASE("parseGrepSection") {
@@ -314,7 +312,7 @@ TEST_CASE("parseGrepSection") {
   GrepSection section;
   REQUIRE_NOTHROW(section = parser.parseGrepSection());
   REQUIRE(section.Patterns.Patterns.size() == 2);
-  REQUIRE(section.Patterns.Patterns.find("a")->second.at(0).Pattern == "test");
+  REQUIRE(section.Patterns.Patterns.find("a")->second.at(0).Pattern == "\"test\"");
   REQUIRE(section.Patterns.Patterns.find("a")->second.at(0).Encoding == "UTF-8");
   REQUIRE(section.Condition->Type == NodeType::AND);
   REQUIRE(section.Condition->Left->Type == NodeType::FUNC);
@@ -326,9 +324,9 @@ TEST_CASE("parseFileMetadataDefFileSize") {
   LlamaParser parser(input, getTokensFromString(input));
   FileMetadataDef def;
   REQUIRE_NOTHROW(def = parser.parseFileMetadataDef());
-  REQUIRE(def.Property == LlamaTokenType::FILESIZE);
-  REQUIRE(def.Operator == LlamaTokenType::GREATER_THAN);
-  REQUIRE(def.Value == "100");
+  REQUIRE(parser.getLexemeAt(def.Property) == "filesize");
+  REQUIRE(parser.getLexemeAt(def.Operator) == ">");
+  REQUIRE(parser.getLexemeAt(def.Value) == "100");
 }
 
 TEST_CASE("parseFileMetadataDefCreated") {
@@ -358,8 +356,8 @@ TEST_CASE("parseMetaSection") {
   MetaSection meta;
   REQUIRE_NOTHROW(meta = parser.parseMetaSection());
   REQUIRE(meta.Fields.size() == 2);
-  REQUIRE(meta.Fields.find("arbitrary")->second == "something");
-  REQUIRE(meta.Fields.find("another")->second == "something else");
+  REQUIRE(meta.Fields.find("arbitrary")->second == "\"something\"");
+  REQUIRE(meta.Fields.find("another")->second == "\"something else\"");
 }
 
 TEST_CASE("parseRuleDecl") {
@@ -380,8 +378,8 @@ TEST_CASE("parseRuleDecl") {
   REQUIRE_NOTHROW(rule = parser.parseRuleDecl());
   REQUIRE(rule.Hash.FileHashRecords.size() == 1);
   auto root = std::static_pointer_cast<SigDefNode>(rule.Signature);
-  REQUIRE(root->Value.Attr == LlamaTokenType::NAME);
-  REQUIRE(root->Value.Val == "Executable");
+  REQUIRE(parser.getLexemeAt(root->Value.Attr) == "name");
+  REQUIRE(parser.getLexemeAt(root->Value.Val) == "\"Executable\"");
   REQUIRE(parser.Atoms.size() == 3);
 }
 
@@ -426,7 +424,7 @@ TEST_CASE("startRule") {
   REQUIRE_NOTHROW(rules = parser.parseRules());
   REQUIRE(rules.size() == 2);
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).Meta.Fields.find("description")->second == "test");
+  REQUIRE(rules.at(0).Meta.Fields.find("description")->second == "\"test\"");
   REQUIRE(rules.at(1).Name == "AnotherRule");
   REQUIRE(rules.at(1).Grep.Patterns.Patterns.find("c")->second.at(0).Pattern == "\\z34\\z56\\z78\\zab\\zcd\\zEF");
 }
@@ -472,8 +470,7 @@ TEST_CASE("parseHexStringThrowIfEmpty") {
 TEST_CASE("parserParseNumber") {
   std::string input = "123456";
   LlamaParser parser(input, getTokensFromString(input));
-  std::string num = parser.parseNumber();
-  REQUIRE(num == "123456");
+  REQUIRE_NOTHROW(parser.parseNumber());
 }
 
 TEST_CASE("parseFuncCallAny") {
@@ -505,8 +502,8 @@ TEST_CASE("parseFuncCallWithNumber") {
   REQUIRE(func.Name == LlamaTokenType::COUNT);
   REQUIRE(func.Args.size() == 1);
   REQUIRE(func.Args.at(0) == "s1");
-  REQUIRE(func.Operator == LlamaTokenType::EQUAL_EQUAL);
-  REQUIRE(func.Value == "5");
+  REQUIRE(parser.getLexemeAt(func.Operator) == "==");
+  REQUIRE(parser.getLexemeAt(func.Value) == "5");
 }
 
 TEST_CASE("parseFuncCallWithOperator") {
@@ -518,13 +515,13 @@ TEST_CASE("parseFuncCallWithOperator") {
   REQUIRE(func.Args.size() == 2);
   REQUIRE(func.Args.at(0) == "s1");
   REQUIRE(func.Args.at(1) == "5");
-  REQUIRE(func.Value == "5");
+  REQUIRE(parser.getLexemeAt(func.Value) == "5");
 }
 
 TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
   std::string input = "any(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
-  auto node = std::make_shared<Node>();
+  std::shared_ptr<Node> node = std::make_shared<FuncNode>();
   REQUIRE_NOTHROW(node = parser.parseFactor());
   REQUIRE(node->Type == NodeType::FUNC);
   auto root = std::static_pointer_cast<FuncNode>(node);
@@ -537,8 +534,8 @@ TEST_CASE("parseFileHashRecord") {
   LlamaParser parser(input, getTokensFromString(input));
   FileHashRecord rec;
   REQUIRE_NOTHROW(rec = parser.parseFileHashRecord());
-  REQUIRE(rec.find(SFHASH_MD5)->second == "test");
-  REQUIRE(rec.find(SFHASH_SHA_1)->second == "test2");
+  REQUIRE(rec.find(SFHASH_MD5)->second == "\"test\"");
+  REQUIRE(rec.find(SFHASH_SHA_1)->second == "\"test2\"");
 }
 
 TEST_CASE("parseFileHashRecordThrowsIfDuplicateHashType") {
@@ -663,3 +660,36 @@ TEST_CASE("EmptyStringNoRules") {
   LlamaParser parser(input, getTokensFromString(input));
   REQUIRE(parser.parseRules().size() == 0);
 }
+
+TEST_CASE("GetSqlQueryFromRule") {
+  std::string input = "rule MyRule { }";
+  LlamaParser parser(input, getTokensFromString(input));
+  std::vector<Rule> rules = parser.parseRules();
+  REQUIRE(rules.at(0).Name == "MyRule");
+  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM dirent, inode WHERE dirent.metaaddr == inode.addr;");
+}
+
+TEST_CASE("GetSqlQueryFromRuleWithOneNumberFileMetadataCondition") {
+  std::string input = "rule MyRule { file_metadata: filesize == 30000 }";
+  LlamaParser parser(input, getTokensFromString(input));
+  std::vector<Rule> rules = parser.parseRules();
+  REQUIRE(rules.at(0).Name == "MyRule");
+  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM dirent, inode WHERE dirent.metaaddr == inode.addr AND filesize == 30000;");
+}
+
+TEST_CASE("GetSqlQueryFromRuleWithOneStringFileMetadataCondition") {
+  std::string input = "rule MyRule { file_metadata: created > \"2023-05-04\" }";
+  LlamaParser parser(input, getTokensFromString(input));
+  std::vector<Rule> rules = parser.parseRules();
+  REQUIRE(rules.at(0).Name == "MyRule");
+  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM dirent, inode WHERE dirent.metaaddr == inode.addr AND created > \"2023-05-04\";");
+}
+
+TEST_CASE("GetSqlQueryFromRuleWithCompoundFileMetadataDef") {
+  std::string input = "rule MyRule { file_metadata: filesize == 123456 or created > \"2023-05-04\" and modified < \"2023-05-06\" and filename == \"test\" }";
+  LlamaParser parser(input, getTokensFromString(input));
+  std::vector<Rule> rules = parser.parseRules();
+  REQUIRE(rules.at(0).Name == "MyRule");
+  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT * FROM dirent, inode WHERE dirent.metaaddr == inode.addr AND (filesize == 123456 OR ((created > \"2023-05-04\" AND modified < \"2023-05-06\") AND filename == \"test\"));");
+}
+

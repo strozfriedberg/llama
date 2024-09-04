@@ -13,15 +13,15 @@ void ConditionFunction::assignValidators() {
   }
 }
 
-void ConditionFunction::validate() {
+void ConditionFunction::validate(const LlamaParser& parser) {
   assignValidators();
   if (IsCompFunc) {
-    if (Operator == LlamaTokenType::NONE || Value.empty()) {
+    if (Operator == SIZE_MAX || Value == SIZE_MAX) {
       throw ParserError("Expected operator and value for comparison", Pos);
     }
   }
   else {
-    if (Operator != LlamaTokenType::NONE || !Value.empty()) {
+    if (Operator != SIZE_MAX || Value != SIZE_MAX) {
       throw ParserError("Unexpected operator or value for function", Pos);
     }
   }
@@ -29,6 +29,37 @@ void ConditionFunction::validate() {
   if (Args.size() < MinArgs || Args.size() > MaxArgs) {
     throw ParserError("Invalid number of arguments", Pos);
   }
+}
+
+std::string BoolNode::getSqlQuery(const LlamaParser& parser) const {
+  std::string query = "(";
+  query += Left->getSqlQuery(parser);
+  query += Type == NodeType::AND ? " AND " : " OR ";
+  query += Right->getSqlQuery(parser);
+  query += ")";
+  return query;
+}
+
+std::string FileMetadataNode::getSqlQuery(const LlamaParser& parser) const {
+  std::string query = "";
+  query += parser.getLexemeAt(Value.Property);
+  query += " ";
+  query += parser.getLexemeAt(Value.Operator);
+  query += " ";
+  query += parser.getLexemeAt(Value.Value);
+  return query;
+}
+
+std::string Rule::getSqlQuery(const LlamaParser& parser) const {
+  std::string query = "SELECT * FROM dirent, inode WHERE dirent.metaaddr == inode.addr";
+
+  if (FileMetadata) {
+    query += " AND ";
+    query += FileMetadata->getSqlQuery(parser);
+  }
+
+  query += ";";
+  return query;
 }
 
 HashSection LlamaParser::parseHashSection() {
@@ -85,7 +116,7 @@ SFHASH_HashAlgorithm LlamaParser::parseHash() {
   }
 }
 
-LlamaTokenType LlamaParser::parseOperator() {
+void LlamaParser::parseOperator() {
   mustParse(
     "Expected operator",
     LlamaTokenType::EQUAL_EQUAL,
@@ -95,7 +126,6 @@ LlamaTokenType LlamaParser::parseOperator() {
     LlamaTokenType::LESS_THAN,
     LlamaTokenType::LESS_THAN_EQUAL
   );
-  return previous().Type;
 }
 
 std::vector<PatternDef> LlamaParser::parsePatternMod() {
@@ -182,6 +212,11 @@ std::string LlamaParser::parseNumber() {
   return getPreviousLexeme();
 }
 
+std::string LlamaParser::parseDoubleQuotedString() {
+  mustParse("Expected double-quoted string", LlamaTokenType::DOUBLE_QUOTED_STRING);
+  return getPreviousLexeme();
+}
+
 std::vector<PatternDef> LlamaParser::parseHexString() {
   std::vector<PatternDef> defs;
   PatternDef patternDef;
@@ -219,10 +254,10 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
 }
 
 std::shared_ptr<Node> LlamaParser::parseTerm() {
-  std::shared_ptr <Node> left = parseFactor();
+  std::shared_ptr<Node> left = parseFactor();
 
   while (matchAny(LlamaTokenType::AND)) {
-    std::shared_ptr<Node> node = std::make_shared<Node>();
+    std::shared_ptr<Node> node = std::make_shared<BoolNode>();
     node->Type = NodeType::AND;
     node->Left = left;
     node->Right = parseFactor();
@@ -275,10 +310,11 @@ ConditionFunction LlamaParser::parseFuncCall() {
   }
   mustParse("Expected close parenthesis", LlamaTokenType::CLOSE_PAREN);
   if (matchAny(LlamaTokenType::EQUAL, LlamaTokenType::EQUAL_EQUAL, LlamaTokenType::NOT_EQUAL, LlamaTokenType::GREATER_THAN, LlamaTokenType::GREATER_THAN_EQUAL, LlamaTokenType::LESS_THAN, LlamaTokenType::LESS_THAN_EQUAL)) {
-    func.Operator = previous().Type;
-    func.Value = parseNumber();
+    func.Operator = CurIdx - 1;
+    parseNumber();
+    func.Value = CurIdx - 1;
   }
-  func.validate();
+  func.validate(*this);
   return func;
 }
 
@@ -286,7 +322,7 @@ std::shared_ptr<Node> LlamaParser::parseExpr() {
   std::shared_ptr<Node> left = parseTerm();
 
   while (matchAny(LlamaTokenType::OR)) {
-    std::shared_ptr<Node> node = std::make_shared<Node>();
+    std::shared_ptr<Node> node = std::make_shared<BoolNode>();
     node->Type = NodeType::OR;
     node->Left = left;
     node->Right = parseTerm();
@@ -298,10 +334,10 @@ std::shared_ptr<Node> LlamaParser::parseExpr() {
 SignatureDef LlamaParser::parseSignatureDef() {
   SignatureDef def;
   mustParse("Expected name or id keyword", LlamaTokenType::NAME, LlamaTokenType::ID);
-  def.Attr = previous().Type;
+  def.Attr = CurIdx - 1;
   mustParse("Expected equality operator sign", LlamaTokenType::EQUAL_EQUAL);
   mustParse("Expected double quoted string", LlamaTokenType::DOUBLE_QUOTED_STRING);
-  def.Val = getPreviousLexeme();
+  def.Val = CurIdx - 1;
   return def;
 }
 
@@ -318,20 +354,17 @@ GrepSection LlamaParser::parseGrepSection() {
 
 FileMetadataDef LlamaParser::parseFileMetadataDef() {
   FileMetadataDef def;
-  if (matchAny(LlamaTokenType::CREATED, LlamaTokenType::MODIFIED, LlamaTokenType::FILEPATH, LlamaTokenType::FILENAME)) {
-    def.Property = previous().Type;
-    def.Operator = parseOperator();
-    mustParse("Expected double quoted string", LlamaTokenType::DOUBLE_QUOTED_STRING);
-    def.Value = getPreviousLexeme();
+  bool expectNum = false;
+
+  if (!matchAny(LlamaTokenType::CREATED, LlamaTokenType::MODIFIED, LlamaTokenType::FILESIZE, LlamaTokenType::FILEPATH, LlamaTokenType::FILENAME)) {
+    throw ParserError("Expected created, modified, filesize, filepath, or filename", peek().Pos);
   }
-  else if (matchAny(LlamaTokenType::FILESIZE)) {
-    def.Property = previous().Type;
-    def.Operator = parseOperator();
-    def.Value = parseNumber();
-  }
-  else {
-    throw ParserError("Expected created, modified, or filesize", peek().Pos);
-  }
+  expectNum = (previous().Type == LlamaTokenType::FILESIZE);
+  def.Property = CurIdx - 1;
+  parseOperator();
+  def.Operator = CurIdx - 1;
+  expectNum ? parseNumber() : parseDoubleQuotedString();
+  def.Value = CurIdx - 1;
   return def;
 }
 

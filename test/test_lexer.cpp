@@ -59,10 +59,12 @@ TEST_CASE("ScanTokenString") {
 }
 
 TEST_CASE("parseString") {
-  std::string input = "some string\"";
+  std::string input = "\"some string\"";
   LlamaLexer lexer(input);
-  lexer.parseString({0,0});
+  lexer.scanTokens();
   REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.getTokens().at(0).Start == 0);
+  REQUIRE(lexer.getTokens().at(0).End == input.size());
 }
 
 TEST_CASE("parseEncodingsList") {
@@ -312,11 +314,13 @@ TEST_CASE("parseEqual") {
 }
 
 TEST_CASE("parseEqualEqual") {
-  std::string input = "==";
+    std::string input = "==";
   LlamaLexer lexer(input);
   lexer.scanToken();
   REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::EQUAL_EQUAL);
-  REQUIRE(lexer.isAtEnd());
+  REQUIRE(lexer.getTokens().at(0).length() == 2);
+  REQUIRE(lexer.getTokens().at(0).Start == 0);
+  REQUIRE(lexer.getTokens().at(0).End == 2);
 }
 
 TEST_CASE("parseGreaterThan") {
@@ -574,10 +578,11 @@ TEST_CASE("parseMultiLineCommentIncreasesLineNumAndResetsColumnNum") {
 }
 
 TEST_CASE("parseStringWithEscapedDoubleQuote") {
-  std::string input = R"(this is a \"string\" that is escaped")";
+  std::string input = R"("this is a \"string\" that is escaped")";
   LlamaLexer lexer(input);
-  lexer.parseString({0,0});
-  REQUIRE(lexer.getTokens().size() == 1);
+  lexer.scanTokens();
+  REQUIRE(lexer.getTokens().size() == 2);
   REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(lexer.getTokens().at(0).length() == input.size() - 1);
+  REQUIRE(lexer.getTokens().at(0).length() == input.size());
+  REQUIRE(lexer.getTokens().at(1).Type == LlamaTokenType::END_OF_FILE);
 }
