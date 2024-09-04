@@ -29,6 +29,8 @@ struct HashSection {
   uint64_t HashAlgs = 0;
 };
 
+class LlamaParser;
+
 struct Atom {};
 
 struct SignatureDef : public Atom {
@@ -42,18 +44,6 @@ struct FileMetadataDef : public Atom {
   size_t Operator;
   size_t Value;
 };
-
-struct PatternDef {
-  std::string Pattern;
-  LG_KeyOptions Options = {0,0,0};
-  std::string Encoding;
-};
-
-struct PatternSection {
-  std::map<std::string, std::vector<PatternDef>> Patterns;
-};
-
-class LlamaParser;
 
 struct ConditionFunction : public Atom {
   ConditionFunction() = default;
@@ -74,6 +64,16 @@ struct ConditionFunction : public Atom {
   size_t MinArgs;
   size_t MaxArgs;
   bool IsCompFunc;
+};
+
+struct PatternDef {
+  std::string Pattern;
+  LG_KeyOptions Options = {0,0,0};
+  std::string Encoding;
+};
+
+struct PatternSection {
+  std::map<std::string, std::vector<PatternDef>> Patterns;
 };
 
 enum class NodeType {

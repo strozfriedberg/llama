@@ -249,19 +249,6 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
   return defs;
 }
 
-std::shared_ptr<Node> LlamaParser::parseTerm() {
-  std::shared_ptr<Node> left = parseFactor();
-
-  while (matchAny(LlamaTokenType::AND)) {
-    std::shared_ptr<Node> node = std::make_shared<BoolNode>();
-    node->Type = NodeType::AND;
-    node->Left = left;
-    node->Right = parseFactor();
-    left = node;
-  }
-  return left;
-}
-
 std::shared_ptr<Node> LlamaParser::parseFactor() {
   std::shared_ptr<Node> node;
   if (matchAny(LlamaTokenType::OPEN_PAREN)) {
@@ -292,6 +279,32 @@ std::shared_ptr<Node> LlamaParser::parseFactor() {
   return node;
 }
 
+std::shared_ptr<Node> LlamaParser::parseTerm() {
+  std::shared_ptr<Node> left = parseFactor();
+
+  while (matchAny(LlamaTokenType::AND)) {
+    std::shared_ptr<Node> node = std::make_shared<BoolNode>();
+    node->Type = NodeType::AND;
+    node->Left = left;
+    node->Right = parseFactor();
+    left = node;
+  }
+  return left;
+}
+
+std::shared_ptr<Node> LlamaParser::parseExpr() {
+  std::shared_ptr<Node> left = parseTerm();
+
+  while (matchAny(LlamaTokenType::OR)) {
+    std::shared_ptr<Node> node = std::make_shared<BoolNode>();
+    node->Type = NodeType::OR;
+    node->Left = left;
+    node->Right = parseTerm();
+    left = node;
+  }
+  return left;
+}
+
 ConditionFunction LlamaParser::parseFuncCall() {
   mustParse("Expected function name", LlamaTokenType::ALL, LlamaTokenType::ANY, LlamaTokenType::OFFSET, LlamaTokenType::COUNT, LlamaTokenType::COUNT_HAS_HITS, LlamaTokenType::LENGTH);
   LineCol pos = peek().Pos;
@@ -315,19 +328,6 @@ ConditionFunction LlamaParser::parseFuncCall() {
   ConditionFunction func(pos, name, args, op, val);
   func.validate(*this);
   return func;
-}
-
-std::shared_ptr<Node> LlamaParser::parseExpr() {
-  std::shared_ptr<Node> left = parseTerm();
-
-  while (matchAny(LlamaTokenType::OR)) {
-    std::shared_ptr<Node> node = std::make_shared<BoolNode>();
-    node->Type = NodeType::OR;
-    node->Left = left;
-    node->Right = parseTerm();
-    left = node;
-  }
-  return left;
 }
 
 SignatureDef LlamaParser::parseSignatureDef() {
