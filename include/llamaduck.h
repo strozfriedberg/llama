@@ -199,6 +199,18 @@ struct SchemaType : public BaseStruct {
     return state != DuckDBError;
   }
 
+  static constexpr auto colIndex(const char* col) {
+    unsigned int i = 0;
+    const auto nameLen = std::char_traits<char>::length(col);
+    for (auto name : BaseStruct::ColNames) {
+      if (std::char_traits<char>::length(col) == nameLen && std::char_traits<char>::compare(col, name, nameLen) == 0) {
+        break;
+      }
+      ++i;
+    }
+    return i;
+  }
+
   SchemaType(): BaseStruct() {}
   SchemaType(const BaseStruct& base): BaseStruct(base) {}
 };

@@ -161,10 +161,12 @@ TEST_CASE("inodeWriting") {
   LlamaDBConnection conn(db);
 
   static_assert(DuckInode::ColNames.size() == 15);
+  static_assert(DuckInode::colIndex("Id") == 0);
+  static_assert(DuckInode::colIndex("Modified") == 13);
   REQUIRE(DuckInode::createTable(conn.get(), "inode"));
 
   Inode i1{"id 1", "File", "Allocated", 16, 32768, 12345, 500, 1000, "", 1, 37, "1978-04-01 12:32:25", "2024-08-22 14:45:00", "2024-08-22 22:42:23", "2024-07-13 02:12:59"};
-  Inode i2{"id 2", "File", "Deleted", 17, 32768, 9876543210987654321u, 501, 1001, "", 2, 38, "1978-04-01 12:32:25", "2024-08-22 14:45:00", "2024-08-22 22:42:23", "2024-07-13 02:12:59"};
+  Inode i2{"id 2", "File", "Deleted", 17, 32768, 987654321098765432u, 501, 1001, "", 2, 38, "1978-04-01 12:32:25", "2024-08-22 14:45:00", "2024-08-22 22:42:23", "2024-07-13 02:12:59"};
 
   InodeBatch batch;
   batch.add(i1);
