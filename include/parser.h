@@ -189,20 +189,19 @@ public:
   void mustParse(const std::string& errMsg, LlamaTokenTypes... types);
 
   std::string getPreviousLexeme() const { return Input.substr(previous().Start, previous().length()); }
-  std::string getLexemeAt(size_t idx) const { return Input.substr(Tokens.at(idx).Start, Tokens.at(idx).length()); } 
+  std::string getLexemeAt(size_t idx) const { return Input.substr(Tokens.at(idx).Start, Tokens.at(idx).length()); }
 
+  void parseOperator();
+  std::string expect(LlamaTokenType);
   HashSection parseHashSection();
   SFHASH_HashAlgorithm parseHash();
   FileHashRecord parseFileHashRecord();
   std::string parseHashValue();
-  void parseOperator();
   std::vector<PatternDef> parsePatternMod();
   std::vector<std::string> parseEncodings();
   std::string parseEncoding();
   std::vector<PatternDef> parsePatternDef();
   PatternSection parsePatternsSection();
-  std::string parseNumber();
-  std::string parseDoubleQuotedString();
   std::vector<PatternDef> parseHexString();
   ConditionFunction parseFuncCall();
   std::shared_ptr<Node> parseFactor();

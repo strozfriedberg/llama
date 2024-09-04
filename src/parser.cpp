@@ -62,6 +62,32 @@ std::string Rule::getSqlQuery(const LlamaParser& parser) const {
   return query;
 }
 
+std::string LlamaParser::expect(LlamaTokenType token) {
+  switch (token) {
+    case LlamaTokenType::RULE: mustParse("Expected rule keyword", LlamaTokenType::RULE); break;
+    case LlamaTokenType::META: mustParse("Expected meta keyword", LlamaTokenType::META); break;
+    case LlamaTokenType::FILE_METADATA: mustParse("Expected file_metadata keyword", LlamaTokenType::FILE_METADATA); break;
+    case LlamaTokenType::SIGNATURE: mustParse("Expected signature keyword", LlamaTokenType::SIGNATURE); break;
+    case LlamaTokenType::GREP: mustParse("Expected grep keyword", LlamaTokenType::GREP); break;
+    case LlamaTokenType::PATTERNS: mustParse("Expected patterns keyword", LlamaTokenType::PATTERNS); break;
+    case LlamaTokenType::HASH: mustParse("Expected hash keyword", LlamaTokenType::HASH); break;
+    case LlamaTokenType::CONDITION: mustParse("Expected condition keyword", LlamaTokenType::CONDITION); break;
+    case LlamaTokenType::OPEN_BRACE: mustParse("Expected open brace", LlamaTokenType::OPEN_BRACE); break;
+    case LlamaTokenType::CLOSE_BRACE: mustParse("Expected close brace", LlamaTokenType::CLOSE_BRACE); break;
+    case LlamaTokenType::OPEN_PAREN: mustParse("Expected open parenthesis", LlamaTokenType::OPEN_PAREN); break;
+    case LlamaTokenType::CLOSE_PAREN: mustParse("Expected close parenthesis", LlamaTokenType::CLOSE_PAREN); break;
+    case LlamaTokenType::COLON: mustParse("Expected colon", LlamaTokenType::COLON); break;
+    case LlamaTokenType::EQUAL: mustParse("Expected equal sign", LlamaTokenType::EQUAL); break;
+    case LlamaTokenType::EQUAL_EQUAL: mustParse("Expected equality operator", LlamaTokenType::EQUAL_EQUAL); break;
+    case LlamaTokenType::IDENTIFIER: mustParse("Expected identifier", LlamaTokenType::IDENTIFIER); break;
+    case LlamaTokenType::DOUBLE_QUOTED_STRING: mustParse("Expected double quoted string", LlamaTokenType::DOUBLE_QUOTED_STRING); break;
+    case LlamaTokenType::NUMBER: mustParse("Expected number", LlamaTokenType::NUMBER); break;
+    default:
+      throw ParserError("Invalid token type", peek().Pos);
+  }
+  return getPreviousLexeme();
+}
+
 HashSection LlamaParser::parseHashSection() {
   HashSection hashSection;
   FileHashRecord rec;
@@ -93,9 +119,8 @@ FileHashRecord LlamaParser::parseFileHashRecord() {
 }
 
 std::string LlamaParser::parseHashValue() {
-  mustParse("Expected equality operator", LlamaTokenType::EQUAL_EQUAL);
-  mustParse("Expected double quoted string", LlamaTokenType::DOUBLE_QUOTED_STRING);
-  return getPreviousLexeme();
+  expect(LlamaTokenType::EQUAL_EQUAL);
+  return expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
 }
 
 SFHASH_HashAlgorithm LlamaParser::parseHash() {
@@ -166,21 +191,16 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
 
 std::vector<std::string> LlamaParser::parseEncodings() {
   std::vector<std::string> encodings;
-  mustParse("Expected equal sign after encodings keyword", LlamaTokenType::EQUAL);
-  encodings.push_back(parseEncoding());
+  expect(LlamaTokenType::EQUAL);
+  encodings.push_back(expect(LlamaTokenType::IDENTIFIER));
   while (matchAny(LlamaTokenType::COMMA)) {
-    encodings.push_back(parseEncoding());
+    encodings.push_back(expect(LlamaTokenType::IDENTIFIER));
   }
   return encodings;
 }
 
-std::string LlamaParser::parseEncoding () {
-  mustParse("Expected encoding", LlamaTokenType::IDENTIFIER);
-  return getPreviousLexeme();
-}
-
 std::vector<PatternDef> LlamaParser::parsePatternDef() {
-  mustParse("Expected equal sign", LlamaTokenType::EQUAL);
+  expect(LlamaTokenType::EQUAL);
 
   std::vector<PatternDef> defs;
   if (matchAny(LlamaTokenType::DOUBLE_QUOTED_STRING)) {
@@ -205,16 +225,6 @@ PatternSection LlamaParser::parsePatternsSection() {
     throw ParserError("No patterns specified", peek().Pos);
   }
   return patternSection;
-}
-
-std::string LlamaParser::parseNumber() {
-  mustParse("Expected number", LlamaTokenType::NUMBER);
-  return getPreviousLexeme();
-}
-
-std::string LlamaParser::parseDoubleQuotedString() {
-  mustParse("Expected double-quoted string", LlamaTokenType::DOUBLE_QUOTED_STRING);
-  return getPreviousLexeme();
 }
 
 std::vector<PatternDef> LlamaParser::parseHexString() {
@@ -247,7 +257,7 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
   if (hexString.size() == 0) {
     throw ParserError("Empty hex string", peek().Pos);
   }
-  mustParse("Expected close brace", LlamaTokenType::CLOSE_BRACE);
+  expect(LlamaTokenType::CLOSE_BRACE);
   patternDef.Pattern = hexString;
   defs.push_back(patternDef);
   return defs;
@@ -270,7 +280,7 @@ std::shared_ptr<Node> LlamaParser::parseFactor() {
   std::shared_ptr<Node> node;
   if (matchAny(LlamaTokenType::OPEN_PAREN)) {
     node = parseExpr();
-    mustParse("Expected close parenthesis", LlamaTokenType::CLOSE_PAREN);
+    expect(LlamaTokenType::CLOSE_PAREN);
   }
   else if (checkAny(LlamaTokenType::ANY, LlamaTokenType::ALL, LlamaTokenType::OFFSET, LlamaTokenType::COUNT, LlamaTokenType::COUNT_HAS_HITS, LlamaTokenType::LENGTH)) {
     auto funcNode = std::make_shared<FuncNode>();
@@ -300,7 +310,7 @@ ConditionFunction LlamaParser::parseFuncCall() {
   ConditionFunction func(peek().Pos);
   mustParse("Expected function name", LlamaTokenType::ALL, LlamaTokenType::ANY, LlamaTokenType::OFFSET, LlamaTokenType::COUNT, LlamaTokenType::COUNT_HAS_HITS, LlamaTokenType::LENGTH);
   func.Name = previous().Type;
-  mustParse("Expected open parenthesis", LlamaTokenType::OPEN_PAREN);
+  expect(LlamaTokenType::OPEN_PAREN);
   if (matchAny(LlamaTokenType::IDENTIFIER)) {
     func.Args.push_back(getPreviousLexeme());
   }
@@ -308,10 +318,10 @@ ConditionFunction LlamaParser::parseFuncCall() {
     mustParse("Expected identifier or number", LlamaTokenType::IDENTIFIER, LlamaTokenType::NUMBER);
     func.Args.push_back(getPreviousLexeme());
   }
-  mustParse("Expected close parenthesis", LlamaTokenType::CLOSE_PAREN);
+  expect(LlamaTokenType::CLOSE_PAREN);
   if (matchAny(LlamaTokenType::EQUAL, LlamaTokenType::EQUAL_EQUAL, LlamaTokenType::NOT_EQUAL, LlamaTokenType::GREATER_THAN, LlamaTokenType::GREATER_THAN_EQUAL, LlamaTokenType::LESS_THAN, LlamaTokenType::LESS_THAN_EQUAL)) {
     func.Operator = CurIdx - 1;
-    parseNumber();
+    expect(LlamaTokenType::NUMBER);
     func.Value = CurIdx - 1;
   }
   func.validate(*this);
@@ -335,19 +345,19 @@ SignatureDef LlamaParser::parseSignatureDef() {
   SignatureDef def;
   mustParse("Expected name or id keyword", LlamaTokenType::NAME, LlamaTokenType::ID);
   def.Attr = CurIdx - 1;
-  mustParse("Expected equality operator sign", LlamaTokenType::EQUAL_EQUAL);
-  mustParse("Expected double quoted string", LlamaTokenType::DOUBLE_QUOTED_STRING);
+  expect(LlamaTokenType::EQUAL_EQUAL);
+  expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
   def.Val = CurIdx - 1;
   return def;
 }
 
 GrepSection LlamaParser::parseGrepSection() {
   GrepSection grepSection;
-  mustParse("Expected patterns section", LlamaTokenType::PATTERNS);
-  mustParse("Expected colon", LlamaTokenType::COLON);
+  expect(LlamaTokenType::PATTERNS);
+  expect(LlamaTokenType::COLON);
   grepSection.Patterns = parsePatternsSection();
-  mustParse("Expected condition section", LlamaTokenType::CONDITION);
-  mustParse("Expected colon", LlamaTokenType::COLON);
+  expect(LlamaTokenType::CONDITION);
+  expect(LlamaTokenType::COLON);
   grepSection.Condition = parseExpr();
   return grepSection;
 }
@@ -356,14 +366,20 @@ FileMetadataDef LlamaParser::parseFileMetadataDef() {
   FileMetadataDef def;
   bool expectNum = false;
 
-  if (!matchAny(LlamaTokenType::CREATED, LlamaTokenType::MODIFIED, LlamaTokenType::FILESIZE, LlamaTokenType::FILEPATH, LlamaTokenType::FILENAME)) {
-    throw ParserError("Expected created, modified, filesize, filepath, or filename", peek().Pos);
-  }
+  mustParse(
+    "Expected created, modified, filesize, filepath, or filename", 
+    LlamaTokenType::CREATED,
+    LlamaTokenType::MODIFIED,
+    LlamaTokenType::FILESIZE,
+    LlamaTokenType::FILEPATH,
+    LlamaTokenType::FILENAME
+  );
+
   expectNum = (previous().Type == LlamaTokenType::FILESIZE);
   def.Property = CurIdx - 1;
   parseOperator();
   def.Operator = CurIdx - 1;
-  expectNum ? parseNumber() : parseDoubleQuotedString();
+  expectNum ? expect(LlamaTokenType::NUMBER) : expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
   def.Value = CurIdx - 1;
   return def;
 }
@@ -372,8 +388,8 @@ MetaSection LlamaParser::parseMetaSection() {
   MetaSection meta;
   while (matchAny(LlamaTokenType::IDENTIFIER)) {
     std::string key = getPreviousLexeme();
-    mustParse("Expected equal sign", LlamaTokenType::EQUAL);
-    mustParse("Expected double quoted string", LlamaTokenType::DOUBLE_QUOTED_STRING);
+    expect(LlamaTokenType::EQUAL);
+    expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
     std::string value = getPreviousLexeme();
     meta.Fields.insert(std::make_pair(key, value));
   }
@@ -382,32 +398,32 @@ MetaSection LlamaParser::parseMetaSection() {
 
 Rule LlamaParser::parseRuleDecl() {
   Rule rule;
-  mustParse("Expected rule keyword", LlamaTokenType::RULE);
-  mustParse("Expected rule name", LlamaTokenType::IDENTIFIER);
+  expect(LlamaTokenType::RULE);
+  expect(LlamaTokenType::IDENTIFIER);
   rule.Name = getPreviousLexeme();
-  mustParse("Expected open curly brace", LlamaTokenType::OPEN_BRACE);
+  expect(LlamaTokenType::OPEN_BRACE);
 
   if (matchAny(LlamaTokenType::META)) {
-    mustParse("Expected colon", LlamaTokenType::COLON);
+    expect(LlamaTokenType::COLON);
     rule.Meta = parseMetaSection();
   }
   if (matchAny(LlamaTokenType::HASH)) {
-    mustParse("Expected colon", LlamaTokenType::COLON);
+    expect(LlamaTokenType::COLON);
     rule.Hash = parseHashSection();
   }
   if (matchAny(LlamaTokenType::FILE_METADATA)) {
-    mustParse("Expected colon", LlamaTokenType::COLON);
+    expect(LlamaTokenType::COLON);
     rule.FileMetadata = parseExpr();
   }
   if (matchAny(LlamaTokenType::SIGNATURE)) {
-    mustParse("Expected colon", LlamaTokenType::COLON);
+    expect(LlamaTokenType::COLON);
     rule.Signature = parseExpr();
   }
   if (matchAny(LlamaTokenType::GREP)) {
-    mustParse("Expected colon", LlamaTokenType::COLON);
+    expect(LlamaTokenType::COLON);
     rule.Grep = parseGrepSection();
   }
-  mustParse("Expected close curly brace", LlamaTokenType::CLOSE_BRACE);
+  expect(LlamaTokenType::CLOSE_BRACE);
   return rule;
 }
 
