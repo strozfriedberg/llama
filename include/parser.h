@@ -57,7 +57,8 @@ class LlamaParser;
 
 struct ConditionFunction : public Atom {
   ConditionFunction() = default;
-  ConditionFunction(LineCol pos) : Pos(pos) {}
+  ConditionFunction(LineCol pos, LlamaTokenType name, std::vector<std::string> args, size_t op, size_t val)
+                  : Pos(pos), Name(name), Args(args), Operator(op), Value(val) { assignValidators(); }
   ~ConditionFunction() = default;
 
   void assignValidators();

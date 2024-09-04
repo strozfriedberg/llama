@@ -293,23 +293,26 @@ std::shared_ptr<Node> LlamaParser::parseFactor() {
 }
 
 ConditionFunction LlamaParser::parseFuncCall() {
-  ConditionFunction func(peek().Pos);
   mustParse("Expected function name", LlamaTokenType::ALL, LlamaTokenType::ANY, LlamaTokenType::OFFSET, LlamaTokenType::COUNT, LlamaTokenType::COUNT_HAS_HITS, LlamaTokenType::LENGTH);
-  func.Name = previous().Type;
+  LineCol pos = peek().Pos;
+  LlamaTokenType name = previous().Type;
+  std::vector<std::string> args;
+  size_t op = SIZE_MAX, val = SIZE_MAX;
   expect(LlamaTokenType::OPEN_PAREN);
   if (matchAny(LlamaTokenType::IDENTIFIER)) {
-    func.Args.push_back(getPreviousLexeme());
+    args.push_back(getPreviousLexeme());
   }
   while (matchAny(LlamaTokenType::COMMA)) {
     mustParse("Expected identifier or number", LlamaTokenType::IDENTIFIER, LlamaTokenType::NUMBER);
-    func.Args.push_back(getPreviousLexeme());
+    args.push_back(getPreviousLexeme());
   }
   expect(LlamaTokenType::CLOSE_PAREN);
   if (matchAny(LlamaTokenType::EQUAL, LlamaTokenType::EQUAL_EQUAL, LlamaTokenType::NOT_EQUAL, LlamaTokenType::GREATER_THAN, LlamaTokenType::GREATER_THAN_EQUAL, LlamaTokenType::LESS_THAN, LlamaTokenType::LESS_THAN_EQUAL)) {
-    func.Operator = CurIdx - 1;
+    op = CurIdx - 1;
     expect(LlamaTokenType::NUMBER);
-    func.Value = CurIdx - 1;
+    val = CurIdx - 1;
   }
+  ConditionFunction func(pos, name, args, op, val);
   func.validate(*this);
   return func;
 }
