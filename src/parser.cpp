@@ -15,15 +15,11 @@ void ConditionFunction::assignValidators() {
 
 void ConditionFunction::validate(const LlamaParser& parser) {
   assignValidators();
-  if (IsCompFunc) {
-    if (Operator == SIZE_MAX || Value == SIZE_MAX) {
-      throw ParserError("Expected operator and value for comparison", Pos);
-    }
+  if (IsCompFunc && (Operator == SIZE_MAX || Value == SIZE_MAX)) {
+    throw ParserError("Expected operator and value for comparison", Pos);
   }
-  else {
-    if (Operator != SIZE_MAX || Value != SIZE_MAX) {
-      throw ParserError("Unexpected operator or value for function", Pos);
-    }
+  else if (!IsCompFunc && (Operator != SIZE_MAX || Value != SIZE_MAX)) {
+    throw ParserError("Unexpected operator or value for function", Pos);
   }
 
   if (Args.size() < MinArgs || Args.size() > MaxArgs) {
