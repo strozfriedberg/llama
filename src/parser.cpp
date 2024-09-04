@@ -264,30 +264,50 @@ std::shared_ptr<Node> LlamaParser::parseTerm() {
 
 std::shared_ptr<Node> LlamaParser::parseFactor() {
   std::shared_ptr<Node> node;
-  if (matchAny(LlamaTokenType::OPEN_PAREN)) {
-    node = parseExpr();
-    expect(LlamaTokenType::CLOSE_PAREN);
-  }
-  else if (checkAny(LlamaTokenType::ANY, LlamaTokenType::ALL, LlamaTokenType::OFFSET, LlamaTokenType::COUNT, LlamaTokenType::COUNT_HAS_HITS, LlamaTokenType::LENGTH)) {
-    auto funcNode = std::make_shared<FuncNode>();
-    funcNode->Value = parseFuncCall();
-    node = funcNode;
-    Atoms.insert(std::make_pair(std::hash<ConditionFunction>{}(funcNode->Value), funcNode->Value));
-  }
-  else if (checkAny(LlamaTokenType::NAME, LlamaTokenType::ID)) {
-    auto sigDefNode = std::make_shared<SigDefNode>();
-    sigDefNode->Value = parseSignatureDef();
-    node = sigDefNode;
-    Atoms.insert(std::make_pair(std::hash<SignatureDef>{}(sigDefNode->Value), sigDefNode->Value));
-  }
-  else if (checkAny(LlamaTokenType::CREATED, LlamaTokenType::MODIFIED, LlamaTokenType::FILESIZE, LlamaTokenType::FILEPATH, LlamaTokenType::FILENAME)) {
-    auto fileMetadataNode = std::make_shared<FileMetadataNode>();
-    fileMetadataNode->Value = parseFileMetadataDef();
-    node = fileMetadataNode;
-    Atoms.insert(std::make_pair(std::hash<FileMetadataDef>{}(fileMetadataNode->Value), fileMetadataNode->Value));
-  }
-  else {
-    throw ParserError("Expected function call or signature definition", peek().Pos);
+  switch (peek().Type) {
+    case LlamaTokenType::OPEN_PAREN:
+    {
+      expect(LlamaTokenType::OPEN_PAREN);
+      node = parseExpr();
+      expect(LlamaTokenType::CLOSE_PAREN);
+      break;
+    }
+    case LlamaTokenType::ANY:
+    case LlamaTokenType::ALL:
+    case LlamaTokenType::OFFSET:
+    case LlamaTokenType::COUNT:
+    case LlamaTokenType::COUNT_HAS_HITS:
+    case LlamaTokenType::LENGTH:
+    {
+      auto funcNode = std::make_shared<FuncNode>();
+      funcNode->Value = parseFuncCall();
+      node = funcNode;
+      Atoms.insert(std::make_pair(std::hash<ConditionFunction>{}(funcNode->Value), funcNode->Value));
+      break;
+    }
+    case LlamaTokenType::NAME:
+    case LlamaTokenType::ID:
+    {
+      auto sigDefNode = std::make_shared<SigDefNode>();
+      sigDefNode->Value = parseSignatureDef();
+      node = sigDefNode;
+      Atoms.insert(std::make_pair(std::hash<SignatureDef>{}(sigDefNode->Value), sigDefNode->Value));
+      break;
+    }
+    case LlamaTokenType::CREATED:
+    case LlamaTokenType::MODIFIED:
+    case LlamaTokenType::FILESIZE:
+    case LlamaTokenType::FILEPATH:
+    case LlamaTokenType::FILENAME:
+    {
+      auto fileMetadataNode = std::make_shared<FileMetadataNode>();
+      fileMetadataNode->Value = parseFileMetadataDef();
+      node = fileMetadataNode;
+      Atoms.insert(std::make_pair(std::hash<FileMetadataDef>{}(fileMetadataNode->Value), fileMetadataNode->Value));
+      break;
+    }
+    default:
+      throw ParserError("Expected function call, signature expression, or file metadata expression", peek().Pos);
   }
   return node;
 }
