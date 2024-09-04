@@ -219,7 +219,7 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
   std::string hexDigit, hexString;
   while (!checkAny(LlamaTokenType::CLOSE_BRACE) && !isAtEnd()) {
     if (matchAny(LlamaTokenType::IDENTIFIER, LlamaTokenType::NUMBER)) {
-      if (!(hexString.size() & 1)) {
+      if (!(hexString.size() & 1)) { // check if hexString is even
         hexString += "\\z";
       }
       hexDigit = getPreviousLexeme();
@@ -237,7 +237,7 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
   if (isAtEnd()) {
     throw ParserError("Unterminated hex string", peek().Pos);
   }
-  if (hexString.size() & 1) {
+  if (hexString.size() & 1) {  // check if hexString is odd
     throw ParserError("Odd number of hex digits", peek().Pos);
   }
   if (hexString.size() == 0) {
