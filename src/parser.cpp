@@ -163,15 +163,11 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
     }
   }
 
-  if (encodings.empty()) {
-    encodings.push_back("ASCII");
-  }
+  if (encodings.empty()) encodings.push_back("ASCII");
 
   for (const std::string& encoding : encodings) {
     PatternDef curDef = patternDef;
-    if (encoding != "ASCII") {
-      curDef.Options.UnicodeMode = true;
-    }
+    curDef.Options.UnicodeMode = (encoding != "ASCII");
     curDef.Encoding = encoding;
     defs.push_back(curDef);
   }
