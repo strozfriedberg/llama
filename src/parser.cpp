@@ -100,6 +100,24 @@ HashSection LlamaParser::parseHashSection() {
   return hashSection;
 }
 
+SFHASH_HashAlgorithm LlamaParser::parseHash() {
+  mustParse(
+    "Expected hash type", LlamaTokenType::MD5, LlamaTokenType::SHA1, LlamaTokenType::SHA256, LlamaTokenType::BLAKE3
+  );
+  switch(previous().Type) {
+    case LlamaTokenType::MD5:
+      return SFHASH_MD5;
+    case LlamaTokenType::SHA1:
+      return SFHASH_SHA_1;
+    case LlamaTokenType::SHA256:
+      return SFHASH_SHA_2_256;
+    case LlamaTokenType::BLAKE3:
+      return SFHASH_BLAKE3;
+    default:
+      throw ParserError("Invalid hash type", previous().Pos);
+  }
+}
+
 FileHashRecord LlamaParser::parseFileHashRecord() {
   FileHashRecord record;
   SFHASH_HashAlgorithm alg = parseHash();
@@ -117,24 +135,6 @@ FileHashRecord LlamaParser::parseFileHashRecord() {
 std::string LlamaParser::parseHashValue() {
   expect(LlamaTokenType::EQUAL_EQUAL);
   return expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
-}
-
-SFHASH_HashAlgorithm LlamaParser::parseHash() {
-  mustParse(
-    "Expected hash type", LlamaTokenType::MD5, LlamaTokenType::SHA1, LlamaTokenType::SHA256, LlamaTokenType::BLAKE3
-  );
-  switch(previous().Type) {
-    case LlamaTokenType::MD5:
-      return SFHASH_MD5;
-    case LlamaTokenType::SHA1:
-      return SFHASH_SHA_1;
-    case LlamaTokenType::SHA256:
-      return SFHASH_SHA_2_256;
-    case LlamaTokenType::BLAKE3:
-      return SFHASH_BLAKE3;
-    default:
-      throw ParserError("Invalid hash type", previous().Pos);
-  }
 }
 
 void LlamaParser::parseOperator() {
