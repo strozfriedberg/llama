@@ -11,8 +11,10 @@ src_llama_common = \
 	src/blocksequence_impl.cpp \
 	src/cli.cpp \
 	src/dirconversion.cpp \
+	src/direntbatch.cpp \
 	src/direntstack.cpp \
 	src/dirreader.cpp \
+	src/duckinode.cpp \
 	src/fieldhasher.cpp \
 	src/filerecord.cpp \
 	src/filescheduler.cpp \

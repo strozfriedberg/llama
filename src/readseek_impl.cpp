@@ -55,16 +55,50 @@ size_t ReadSeekFile::size(void) const {
 
 //*******************************************************************
 
-ReadSeekTSK::ReadSeekTSK(TSK_FS_ATTR*) {}
+ReadSeekTSK::ReadSeekTSK(const std::shared_ptr<TSK_FS_INFO>& fs, uint64_t inum):
+  Fs(fs),
+  Inum(inum),
+  FilePtr(nullptr),
+  Pos(0)
+{}
 
-int64_t ReadSeekTSK::read(size_t, std::vector<uint8_t>&) {
+bool ReadSeekTSK::open(void) {
+  if (!FilePtr) {
+    FilePtr = tsk_fs_file_open_meta(Fs.get(), nullptr, Inum);
+    if (!FilePtr) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void ReadSeekTSK::close(void) {
+  if (FilePtr) {
+    tsk_fs_file_close(FilePtr);
+    FilePtr = nullptr;
+  }
+}
+
+int64_t ReadSeekTSK::read(size_t len, std::vector<uint8_t>& buf) {
+  if (FilePtr && Pos < size_t(FilePtr->meta->size)) {
+    buf.resize(len);
+    auto bytesRead = tsk_fs_file_read(FilePtr, Pos, (char*)buf.data(), len, TSK_FS_FILE_READ_FLAG_NONE);
+    buf.resize(bytesRead);
+    Pos += bytesRead;
+    return bytesRead;
+  }
   return 0;
 }
 
-size_t ReadSeekTSK::seek(size_t) {
+size_t ReadSeekTSK::seek(size_t pos) {
+  if (FilePtr) {
+    Pos = std::min(pos, size_t(FilePtr->meta->size));
+    return Pos;
+  }
   return 0;
 }
 
 size_t ReadSeekTSK::size(void) const {
-  return 0;
+  return FilePtr ? FilePtr->meta->size : 0;
 }
+

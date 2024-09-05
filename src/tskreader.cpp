@@ -1,10 +1,12 @@
 #include "tskreader.h"
 
 #include "blocksequence_impl.h"
+#include "inode.h"
 #include "inodeandblocktracker.h"
 #include "inodeandblocktrackerimpl.h"
 #include "inputhandler.h"
 #include "outputhandler.h"
+#include "readseek_impl.h"
 
 #include "tskconversion.h"
 #include "tskfacade.h"
@@ -14,11 +16,9 @@ TskReader::TskReader(const std::string& imgPath):
   ImgPath(imgPath),
   Img(nullptr, nullptr),
   Input(),
-  Output(),
   Tsk(new TskFacade),
   Asm(),
   Tsg(nullptr),
-  Tracker(new InodeAndBlockTrackerImpl()),
   RecHasher(),
   Dirents(RecHasher)
 {
@@ -46,9 +46,9 @@ bool TskReader::startReading() {
   if (ret) {
     // wrap up the walk
     while (!Dirents.empty()) {
-      Output->outputDirent(Dirents.pop());
+      Input->push(Dirents.pop());
     }
-    Output->outputImage(Asm.dump());
+//    Output->outputImage(Asm.dump());
 
     // teardown
     Input->flush();
@@ -69,10 +69,12 @@ TSK_FILTER_ENUM TskReader::filterVol(const TSK_VS_PART_INFO* vs_part) {
 TSK_FILTER_ENUM TskReader::filterFs(TSK_FS_INFO* fs_info) {
   Asm.addFileSystem(Tsk->convertFS(*fs_info));
   Tsg = Tsk->makeTimestampGetter(fs_info->ftype);
-  Tracker->setInodeRange(fs_info->first_inum, fs_info->last_inum + 1);
-  Tracker->setBlockRange(fs_info->first_block * fs_info->block_size, (fs_info->last_block + 1) * fs_info->block_size);
+//  Tracker->setInodeRange(fs_info->first_inum, fs_info->last_inum + 1);
+//  Tracker->setBlockRange(fs_info->first_block * fs_info->block_size, (fs_info->last_block + 1) * fs_info->block_size);
   CurFsOffset = fs_info->offset;
   CurFsBlockSize = fs_info->block_size;
+  InodeTracker.clear();
+  InodeTracker.resize(fs_info->last_inum - fs_info->first_inum, false);
   return TSK_FILTER_CONT;
 }
 
@@ -91,39 +93,38 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
     return false;
   }
   const TSK_FS_META& meta = *fs_file->meta;
+  if (!InodeTracker[meta.addr - fs_file->fs_info->first_inum]) {
+    Inode inode;
+    TskUtils::convertMetaToInode(meta, *Tsg, inode);
 
-  // this is also a bug, that we can skip files based on dupe inum before writing dirent info
-  // skipping dupe inodes must come _after_ full consideration/writing of dirents. more tests. -- jls
-  const uint64_t inum = meta.addr;
-  if (Tracker->markInodeSeen(inum)) {
-    // been here, done that
-    return false;
+    // handle the attrs
+    Tsk->populateAttrs(fs_file);
+
+    /*TskReaderHelper::handleAttrs(
+      meta, CurFsOffset, CurFsBlockSize, inum, *Tsk, *Tracker, jmeta["attrs"]
+    );*/
+    // why on earth are we making this separate block sequence thing? it's goofy -- jls
+    //Input->push({std::move(jmeta), makeBlockSequence(fs_file)});
+
+    Input->push(inode);
+    Input->push(makeReadSeek(fs_file));
+    InodeTracker[meta.addr - fs_file->fs_info->first_inum] = true;
   }
-
   // handle the name
   if (fs_file->name) {
     const TSK_INUM_T parentAddr =  fs_file->name->par_addr;
     Dirent dirent;
 
-    while (!Dirents.empty() && parentAddr != Dirents.top().MetaAddr) {
-      Output->outputDirent(Dirents.pop());
+    if (!Dirents.empty() && parentAddr != Dirents.top().MetaAddr) {
+      do {
+        Input->push(Dirents.pop());
+      } while (!Dirents.empty() && parentAddr != Dirents.top().MetaAddr);
+      Input->maybeFlush();
     }
     // std::cerr << par_addr << " -> " << fs_file->meta->addr << '\n';
     TskUtils::convertNameToDirent("", *fs_file->name, dirent);
     Dirents.push(std::move(dirent));
   }
-
-  // handle the meta
-  jsoncons::json jmeta = Tsk->convertMeta(meta, *Tsg);
-
-  // handle the attrs
-  Tsk->populateAttrs(fs_file);
-
-  TskReaderHelper::handleAttrs(
-    meta, CurFsOffset, CurFsBlockSize, inum, *Tsk, *Tracker, jmeta["attrs"]
-  );
-  // why on earth are we making this separate block sequence thing? it's goofy -- jls
-  Input->push({std::move(jmeta), makeBlockSequence(fs_file)});
 
   return true;
 }
@@ -132,19 +133,31 @@ std::shared_ptr<BlockSequence> TskReader::makeBlockSequence(TSK_FS_FILE* fs_file
   TSK_FS_INFO* their_fs = fs_file->fs_info;
 
   // open our own copy of the fs, since TskAuto closes the ones it opens
-  auto [i, absent] = Fs.try_emplace(their_fs->offset, nullptr, nullptr);
+  auto [itr, absent] = Fs.try_emplace(their_fs->offset, nullptr);
   if (absent) {
-    i->second = Tsk->openFS(
-      Img.get(), their_fs->offset, their_fs->ftype
-    );
+    itr->second.reset(Tsk->openFS(Img.get(), their_fs->offset, their_fs->ftype).release(), tsk_fs_close);
   }
-  TSK_FS_INFO* our_fs = i->second.get();
+  TSK_FS_INFO* our_fs = itr->second.get();
 
   // open our own copy of the file, since TskAuto closes the ones it opens
   return std::static_pointer_cast<BlockSequence>(
     std::make_shared<TskBlockSequence>(
       Tsk->openFile(our_fs, fs_file->meta->addr)
     )
+  );
+}
+
+std::unique_ptr<ReadSeek> TskReader::makeReadSeek(TSK_FS_FILE* fs_file) {
+  TSK_FS_INFO* their_fs = fs_file->fs_info;
+
+  // open our own copy of the fs, since TskAuto closes the ones it opens
+  auto [itr, absent] = Fs.try_emplace(their_fs->offset, nullptr);
+  if (absent) {
+    itr->second.reset(Tsk->openFS(Img.get(), their_fs->offset, their_fs->ftype).release(), tsk_fs_close);
+  }
+  return std::make_unique<ReadSeekTSK>(
+    // each file has a shared_ptr to its fs, so it can be opened on demand
+    itr->second, fs_file->meta->addr
   );
 }
 
