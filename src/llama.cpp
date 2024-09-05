@@ -14,6 +14,7 @@
 #include "outputtar.h"
 #include "pooloutputhandler.h"
 #include "processor.h"
+#include "throw.h"
 #include "timer.h"
 #include "tsk.h"
 
@@ -79,8 +80,16 @@ void Llama::search() {
     Pool.join();
     std::cerr << "Hashing Time: " << scheduler->getProcessorTime() << "s\n";
 
-    writeDB(outdir.string());
+    std::string ruleName = Reader.getRules().at(0).Name;
+    std::string ruleQuery = Reader.getRules().at(0).getSqlQuery(Reader.getParser());
+    duckdb_result result;
+    std::string fullQuery("CREATE TABLE " + ruleName + " AS (" + ruleQuery + ");");
+    std::cout << fullQuery << std::endl;
+    auto state = duckdb_query(DbConn.get(), fullQuery.c_str(), &result);
+    THROW_IF(state == DuckDBError, "Error creating rule match table");
     // std::cout << "All done" << std::endl;
+
+    writeDB(outdir.string());
   }
   else {
     std::cerr << "init returned false!" << std::endl;
