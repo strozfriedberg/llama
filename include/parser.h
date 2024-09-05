@@ -171,6 +171,7 @@ struct Rule {
 
 class LlamaParser {
 public:
+  LlamaParser() = default;
   LlamaParser(const std::string& input, const std::vector<Token>& tokens) : Input(input), Tokens(tokens) {}
 
   Token previous() const { return Tokens.at(CurIdx - 1); }
