@@ -46,7 +46,9 @@ std::string FileMetadataNode::getSqlQuery(const LlamaParser& parser) const {
   query += " ";
   query += parser.getLexemeAt(Value.Operator);
   query += " ";
-  query += parser.getLexemeAt(Value.Value);
+  std::string val = parser.getLexemeAt(Value.Value);
+  std::replace(val.begin(), val.end(), '"', '\'');
+  query += val;
   return query;
 }
 
@@ -58,7 +60,6 @@ std::string Rule::getSqlQuery(const LlamaParser& parser) const {
     query += FileMetadata->getSqlQuery(parser);
   }
 
-  query += ";";
   return query;
 }
 
