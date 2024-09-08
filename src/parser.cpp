@@ -13,7 +13,7 @@ void ConditionFunction::assignValidators() {
   }
 }
 
-void ConditionFunction::validate(const LlamaParser& parser) {
+void ConditionFunction::validate(const LlamaParser& ) {
   assignValidators();
   if (IsCompFunc) {
     if (Operator == SIZE_MAX || Value == SIZE_MAX) {
