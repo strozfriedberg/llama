@@ -62,3 +62,6 @@ private:
 
   std::function<void()> _f;
 };
+
+std::string randomNumString();
+

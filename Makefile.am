@@ -41,7 +41,8 @@ src_llama_common = \
 	src/tskimgassembler.cpp \
 	src/tskreader.cpp \
 	src/tskreaderhelper.cpp \
-	src/tsktimestamps.cpp
+	src/tsktimestamps.cpp \
+	src/util.cpp
 
 src_llama_SOURCES = $(src_llama_common) src/main.cpp
 
