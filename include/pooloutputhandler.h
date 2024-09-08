@@ -18,7 +18,7 @@ public:
 
   virtual void outputImage(const FileRecord& rec) override;
 
-  virtual void outputDirent(const Dirent& rec) override {}
+  virtual void outputDirent(const Dirent&) override {}
 
   virtual void outputInode(const FileRecord&) override {}
   virtual void outputInode(const Inode&) override {}
