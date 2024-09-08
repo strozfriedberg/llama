@@ -7,7 +7,7 @@
 
 #include "dummytracker.h"
 #include "dummytsk.h"
-
+/*
 class FakeHandleAttrsTsk: public DummyTsk {
 public:
   jsoncons::json convertAttr(const TSK_FS_ATTR& attr) const {
@@ -204,7 +204,7 @@ TEST_CASE("testHandleRunsEndHasNextWtf") {
 
   REQUIRE(exp == jnrd_runs);
 }
-
+*/
 /*
 TEST_CASE("testHandleRunsNoSkipDataNoSlack") {
   const uint64_t fsOffset = 12;

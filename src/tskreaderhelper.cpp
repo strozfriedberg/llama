@@ -1,7 +1,7 @@
 #include "tskreaderhelper.h"
 
 namespace TskReaderHelper {
-  void handleRuns(
+/*  void handleRuns(
     const TSK_FS_ATTR& a,
     uint64_t fsOffset,
     uint64_t blockSize,
@@ -119,5 +119,5 @@ namespace TskReaderHelper {
 
       jattrs.push_back(std::move(jattr));
     }
-  }
+  }*/
 }
