@@ -42,7 +42,25 @@ std::string BoolNode::getSqlQuery(const LlamaParser& parser) const {
 
 std::string FileMetadataNode::getSqlQuery(const LlamaParser& parser) const {
   std::string query = "";
-  query += parser.getLexemeAt(Value.Property);
+  switch (parser.Tokens.at(Value.Property).Type) {
+    case LlamaTokenType::CREATED:
+      query += "created";
+      break;
+    case LlamaTokenType::MODIFIED:
+      query += "modified";
+      break;
+    case LlamaTokenType::FILESIZE:
+      query += "filesize";
+      break;
+    case LlamaTokenType::FILEPATH:
+      query += "path";
+      break;
+    case LlamaTokenType::FILENAME:
+      query += "name";
+      break;
+    default:
+      throw ParserError("Invalid property", parser.Tokens.at(Value.Property).Pos);
+  }
   query += " ";
   query += parser.getLexemeAt(Value.Operator);
   query += " ";
