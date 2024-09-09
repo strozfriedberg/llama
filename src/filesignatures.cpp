@@ -10,8 +10,11 @@
 #include <string>
 #include <string_view>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-builtins"
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
+#pragma GCC diagnostic pop
 
 #include "filesignatures.h"
 #include "jsoncons_wrapper.h"
