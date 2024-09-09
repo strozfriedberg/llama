@@ -84,6 +84,9 @@ struct Node {
   virtual ~Node() = default;
   virtual std::string getSqlQuery(const LlamaParser& parser) const = 0;
 
+  Node(NodeType type) : Type(type) {}
+  Node() = default;
+
   NodeType Type;
   std::shared_ptr<Node> Left;
   std::shared_ptr<Node> Right;
@@ -94,21 +97,21 @@ struct BoolNode : public Node {
 };
 
 struct SigDefNode : public Node {
-  SigDefNode() { Type = NodeType::SIG; }
+  SigDefNode() : Node(NodeType::SIG) {}
   SignatureDef Value;
 
   std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
 };
 
 struct FileMetadataNode : public Node {
-  FileMetadataNode() { Type = NodeType::META; }
+  FileMetadataNode() : Node(NodeType::META) {}
   FileMetadataDef Value;
 
   std::string getSqlQuery(const LlamaParser& parser) const override;
 };
 
 struct FuncNode : public Node {
-  FuncNode() { Type = NodeType::FUNC; }
+  FuncNode() : Node(NodeType::FUNC) {}
   ConditionFunction Value;
 
   std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
