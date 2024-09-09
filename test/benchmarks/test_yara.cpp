@@ -2,7 +2,11 @@
 #include <catch2/catch_test_macros.hpp>
 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-length-array"
 #include "yara.h"
+#pragma GCC diagnostic pop
+
 #include <lightgrep/api.h>
 
 #include <filesystem>
