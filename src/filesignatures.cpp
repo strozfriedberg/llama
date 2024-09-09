@@ -391,7 +391,7 @@ expected<Binary> FileSigAnalyzer::getBuf(std::ifstream &ifs,
     auto streamData = ifs.read((char *)check_buf.data(), check_buf.size()).gcount();
     if (streamData != (std::streamsize)size) {
       return makeUnexpected(("read(" + std::to_string(size) + ") at " +
-                             std::to_string(offset.count) + ", ",
+                             std::to_string(offset.count) + ", " +
                              std::to_string(offset.from_start) + " failed."));
     }
 
