@@ -2,8 +2,11 @@
 
 #include "inodeandblocktracker.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-builtins"
 #include <boost/icl/interval_map.hpp>
 #include <boost/icl/interval_set.hpp>
+#pragma GCC diagnostic pop
 
 //#include <vector>
 #include <set>
