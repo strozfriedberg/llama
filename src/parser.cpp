@@ -325,7 +325,7 @@ ConditionFunction LlamaParser::parseFuncCall() {
     expect(LlamaTokenType::NUMBER);
     val = CurIdx - 1;
   }
-  ConditionFunction func(pos, name, args, op, val);
+  ConditionFunction func(pos, name, std::move(args), op, val);
   func.validate(*this);
   return func;
 }
