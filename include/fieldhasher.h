@@ -67,6 +67,13 @@ public:
 
   void hash_it(const std::string_view& s);
 
+  template <typename IterType, typename FnType> 
+  void hash_iter(IterType beg, IterType end, FnType fn) {
+    for (auto it = beg; it != end; ++it) {
+      hash_it(fn(*it));
+    }
+  }
+
 /*
   template <
     typename T,
