@@ -4,7 +4,6 @@
 #include <memory>
 
 #pragma GCC diagnostic push
-// #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #pragma GCC diagnostic ignored "-Wpedantic"
 #include <boost/program_options.hpp>
 #pragma GCC diagnostic pop
