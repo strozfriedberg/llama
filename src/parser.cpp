@@ -81,6 +81,12 @@ std::string Rule::getSqlQuery(const LlamaParser& parser) const {
   return query;
 }
 
+FieldHash Rule::getHash(const LlamaParser& parser) const {
+  FieldHasher hasher;
+  hasher.hash_iter(parser.Tokens.begin() + Start, parser.Tokens.begin() + End, [](const Token& token) { return token.Type; });
+  return hasher.get_hash();
+}
+
 HashSection LlamaParser::parseHashSection() {
   HashSection hashSection;
   FileHashRecord rec;
@@ -410,6 +416,7 @@ Rule LlamaParser::parseRuleDecl() {
     mustParse("Expected colon", LlamaTokenType::COLON);
     rule.Meta = parseMetaSection();
   }
+  rule.Start = CurIdx;
   if (matchAny(LlamaTokenType::HASH)) {
     mustParse("Expected colon", LlamaTokenType::COLON);
     rule.Hash = parseHashSection();
@@ -426,6 +433,7 @@ Rule LlamaParser::parseRuleDecl() {
     mustParse("Expected colon", LlamaTokenType::COLON);
     rule.Grep = parseGrepSection();
   }
+  rule.End = CurIdx;
   mustParse("Expected close curly brace", LlamaTokenType::CLOSE_BRACE);
   return rule;
 }

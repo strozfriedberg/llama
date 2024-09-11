@@ -13,6 +13,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <fieldhasher.h>
+
 class ParserError : public UnexpectedInputError {
 public:
   ParserError(const std::string& message, LineCol pos) : UnexpectedInputError(message, pos) {}
@@ -166,7 +168,11 @@ struct Rule {
   std::shared_ptr<Node> FileMetadata;
   GrepSection Grep;
 
+  uint64_t Start = 0;
+  uint64_t End = 0;
+
   std::string getSqlQuery(const LlamaParser&) const;
+  FieldHash getHash(const LlamaParser&) const;
 };
 
 class LlamaParser {
