@@ -14,6 +14,7 @@
 #include "outputtar.h"
 #include "pooloutputhandler.h"
 #include "processor.h"
+#include "ruleengine.h"
 #include "throw.h"
 #include "timer.h"
 #include "tsk.h"
@@ -81,7 +82,9 @@ void Llama::search() {
     std::cerr << "Hashing Time: " << scheduler->getProcessorTime() << "s\n";
 
     // std::cout << "All done" << std::endl;
-    makeRuleTable();
+    RuleEngine engine;
+    engine.writeRulesToDb(this->Reader, DbConn);
+
     writeDB(outdir.string());
   }
   else {
@@ -175,28 +178,4 @@ void Llama::writeDB(const std::string& outdir) {
   query += outdir;
   query += "' (FORMAT PARQUET);";
   duckdb_query(DbConn.get(), query.c_str(), nullptr);
-}
-
-void Llama::makeRuleTable() {
-  duckdb_result result;
-  std::string rule_query("CREATE TABLE rules (id VARCHAR, name VARCHAR);");
-  rule_query += "INSERT INTO rules VALUES ";
-
-  std::string matches_query("CREATE TABLE rule_matches (id VARCHAR, path VARCHAR, name VARCHAR, addr UBIGINT);");
-  matches_query += "INSERT INTO rule_matches ";
-  const std::string sqlUnion(" UNION ");
-  for (const Rule& rule : Reader.getRules()) {
-    rule_query += "('" + rule.getHash(this->Reader.getParser()).to_string() + "', '" + rule.Name + "'),";
-    matches_query += "(" + rule.getSqlQuery(this->Reader.getParser()) + ")";
-    matches_query += sqlUnion;
-  }
-  matches_query.erase(matches_query.size() - sqlUnion.size()); // remove last UNION
-  matches_query += ";";
-  std::cout << matches_query << std::endl;
-  rule_query.pop_back();
-  rule_query += ";";
-  auto state = duckdb_query(DbConn.get(), rule_query.c_str(), &result);
-  THROW_IF(state == DuckDBError, "Error creating rule table");
-  state = duckdb_query(DbConn.get(), matches_query.c_str(), &result);
-  THROW_IF(state == DuckDBError, "Error creating rule matches table");
 }
