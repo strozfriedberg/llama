@@ -83,6 +83,7 @@ void Llama::search() {
 
     // std::cout << "All done" << std::endl;
     RuleEngine engine;
+    engine.createTables(DbConn);
     engine.writeRulesToDb(this->Reader, DbConn);
 
     writeDB(outdir.string());
