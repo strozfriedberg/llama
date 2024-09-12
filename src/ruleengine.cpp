@@ -17,9 +17,9 @@ void RuleEngine::writeRulesToDb(const RuleReader& reader, LlamaDBConnection& dbC
   rule_query.pop_back();
   rule_query += ";";
   auto state = duckdb_query(dbConn.get(), rule_query.c_str(), &result);
-  THROW_IF(state == DuckDBError, "Error creating rule table");
+  THROW_IF(state == DuckDBError, "Error inserting into rule table");
   state = duckdb_query(dbConn.get(), matches_query.c_str(), &result);
-  THROW_IF(state == DuckDBError, "Error creating rule matches table");
+  THROW_IF(state == DuckDBError, "Error inserting into rule matches table");
 }
 
 void RuleEngine::createTables(LlamaDBConnection& dbConn) {
