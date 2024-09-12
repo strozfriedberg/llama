@@ -12,6 +12,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#pragma GCC diagnostic ignored "-Wdeprecated-builtins"
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #pragma GCC diagnostic pop
