@@ -81,7 +81,7 @@ void Llama::search() {
     std::cerr << "Hashing Time: " << scheduler->getProcessorTime() << "s\n";
 
     // std::cout << "All done" << std::endl;
-    makeRuleTables();
+    makeRuleTable();
     writeDB(outdir.string());
   }
   else {
@@ -177,14 +177,15 @@ void Llama::writeDB(const std::string& outdir) {
   duckdb_query(DbConn.get(), query.c_str(), nullptr);
 }
 
-void Llama::makeRuleTables() {
+void Llama::makeRuleTable() {
+  duckdb_result result;
+  std::string rule_query("CREATE TABLE rules (id VARCHAR, name VARCHAR);");
+  rule_query += "INSERT INTO rules VALUES ";
   for (const Rule& rule : Reader.getRules()) {
-    std::string ruleName = rule.Name;
-    std::string ruleQuery = rule.getSqlQuery(Reader.getParser());
-    duckdb_result result;
-    std::string fullQuery("CREATE TABLE " + ruleName + " AS (" + ruleQuery + ");");
-    std::cout << fullQuery << std::endl;
-    auto state = duckdb_query(DbConn.get(), fullQuery.c_str(), &result);
-    THROW_IF(state == DuckDBError, "Error creating rule match table");
+    rule_query += "('" + rule.getHash(this->Reader.getParser()).to_string() + "', '" + rule.Name + "'),";
   }
+  rule_query.pop_back();
+  rule_query += ";";
+  auto state = duckdb_query(DbConn.get(), rule_query.c_str(), &result);
+  THROW_IF(state == DuckDBError, "Error creating rule table");
 }
