@@ -1,6 +1,8 @@
 *.la
 *.lo
 *.o
+*.parquet
+*.sql
 *.pyc
 *.trs
 .*.swp
