@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cstdint>
 
+#include "hex.h"
+
 struct FieldHash {
   uint8_t hash[32];
 
@@ -12,6 +14,10 @@ struct FieldHash {
 
   bool operator!=(const FieldHash& other) const {
     return !(*this == other);
+  }
+
+  std::string to_string() const {
+    return hexEncode(hash, 32);
   }
 };
 
