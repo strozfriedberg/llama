@@ -9,6 +9,7 @@
 #include "tsktimestamps.h"
 
 struct Dirent;
+struct Inode;
 
 namespace TskUtils {
   std::string extractString(const char* str, unsigned int size);
@@ -65,6 +66,7 @@ namespace TskUtils {
   jsoncons::json convertRun(const TSK_FS_ATTR_RUN& run);
 
   void convertNameToDirent(const std::string& path, const TSK_FS_NAME& name, Dirent& dirent);
+  void convertMetaToInode(const TSK_FS_META& meta, TimestampGetter& tsg, Inode& n);
 
   std::unique_ptr<TimestampGetter> makeTimestampGetter(TSK_FS_TYPE_ENUM fstype);
 }

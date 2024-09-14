@@ -3,6 +3,7 @@
 #include <map>
 #include <memory>
 #include <stack>
+#include <unordered_map>
 #include <vector>
 
 #include "tsk.h"
@@ -12,12 +13,12 @@
 #include "hex.h"
 #include "inputreader.h"
 #include "recordhasher.h"
+#include "readseek.h"
 #include "tskimgassembler.h"
 #include "tskreaderhelper.h"
 #include "util.h"
 
 class BlockSequence;
-class InodeAndBlockTracker;
 class InputHandler;
 class OutputHandler;
 class TimestampGetter;
@@ -34,8 +35,7 @@ public:
     Input = in;
   }
 
-  virtual void setOutputHandler(const std::shared_ptr<OutputHandler>& out) override {
-    Output = out;
+  virtual void setOutputHandler(const std::shared_ptr<OutputHandler>&) override {
   }
 
   virtual bool startReading() override;
@@ -50,18 +50,19 @@ private:
   bool addToBatch(TSK_FS_FILE* fs_file);
 
   std::shared_ptr<BlockSequence> makeBlockSequence(TSK_FS_FILE* fs_file);
+  std::unique_ptr<ReadSeek> makeReadSeek(TSK_FS_FILE* fs_file);
 
   std::string ImgPath;
   std::unique_ptr<TSK_IMG_INFO, void(*)(TSK_IMG_INFO*)> Img;
-  std::map<TSK_OFF_T, std::unique_ptr<TSK_FS_INFO, void(*)(TSK_FS_INFO*)>> Fs;
+  std::unordered_map<TSK_OFF_T, std::shared_ptr<TSK_FS_INFO>> Fs;
 
   std::shared_ptr<InputHandler> Input;
-  std::shared_ptr<OutputHandler> Output;
 
   std::unique_ptr<TskFacade> Tsk;
   TskImgAssembler Asm;
   std::unique_ptr<TimestampGetter> Tsg;
-  std::unique_ptr<InodeAndBlockTracker> Tracker;
+
+  std::vector<bool> InodeTracker;
 
   RecordHasher RecHasher;
   DirentStack Dirents;
@@ -69,3 +70,4 @@ private:
   uint64_t CurFsOffset;
   uint64_t CurFsBlockSize;
 };
+

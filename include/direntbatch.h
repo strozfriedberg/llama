@@ -7,9 +7,24 @@
 
 #include <duckdb.h>
 
+#include "llamaduck.h"
 #include "throw.h"
 
-struct Dirent {
+
+//struct Dirent : public SchemaType<const char*, const char*, const char*, const char*, const char*, const char*, uint64_t, uint64_t, uint64_t, uint64_t>
+struct Dirent
+{
+  static constexpr auto ColNames = {"Id",
+                                    "Path",
+                                    "Name",
+                                    "ShortName",
+                                    "Type",
+                                    "Flags",
+                                    "MetaAddr",
+                                    "ParentAddr",
+                                    "MetaSeq",
+                                    "ParentSeq"};
+
   std::string Id;
   std::string Path;
   std::string Name;
@@ -50,88 +65,49 @@ struct Dirent {
   }
 };
 
-struct DirentBatch {
-  struct StrOffsets {
-    size_t PathOffset,
-           NameOffset,
-           ShortOffset,
-           TypeOffset,
-           FlagsOffset;
-  };
+struct DuckDirent : public SchemaType<Dirent, const char*, const char*, const char*, const char*, const char*, const char*, uint64_t, uint64_t, uint64_t, uint64_t>
+{
+  DuckDirent(): SchemaType() {}
+  DuckDirent(const Dirent& base): SchemaType(base) {}
+};
 
-  struct Uint64Vals {
-    uint64_t MetaAddr,
-             ParentAddr,
-             MetaSeq,
-             ParentSeq;
-  };
-
-  size_t size() const { return Offsets.size(); }
-
-  std::vector<char> Buf;
-  std::vector<StrOffsets> Offsets;
-  std::vector<Uint64Vals> Nums;
-
-  static bool createTable(duckdb_connection& dbconn, const std::string& table) {
-    std::string query = "CREATE TABLE " + table + " (path VARCHAR, name VARCHAR, short_name VARCHAR, type VARCHAR, flags VARCHAR, meta_addr UBIGINT, parent_addr UBIGINT, meta_seq UBIGINT, parent_seq UBIGINT);";
-    return DuckDBSuccess == duckdb_query(dbconn, query.c_str(), nullptr);
-  }
+class DirentBatch : public DuckBatch {
+public:
 
   void add(const Dirent& dent) {
-    size_t pathSize = dent.Path.size() + 1;
-    size_t nameSize = dent.Name.size() + 1;
-    size_t shrtSize = dent.ShortName.size() + 1;
-    size_t typeSize = dent.Type.size() + 1;
-    size_t flagsSize = dent.Flags.size() + 1;
     size_t startOffset = Buf.size();
-    size_t totalSize = pathSize + nameSize + shrtSize + typeSize + flagsSize;
+    size_t totalSize = totalStringSize(dent.Id, dent.Path, dent.Name, dent.ShortName, dent.Type, dent.Flags);
     Buf.resize(startOffset + totalSize);
-    StrOffsets offsets{startOffset,
-                       startOffset + pathSize,
-                       startOffset + pathSize + nameSize,
-                       startOffset + pathSize + nameSize + shrtSize,
-                       startOffset + pathSize + nameSize + shrtSize + typeSize};
 
-    std::copy_n(dent.Path.begin(), pathSize, Buf.begin() + offsets.PathOffset);
-    std::copy_n(dent.Name.begin(), nameSize, Buf.begin() + offsets.NameOffset);
-    std::copy_n(dent.ShortName.begin(), shrtSize, Buf.begin() + offsets.ShortOffset);
-    std::copy_n(dent.Type.begin(), typeSize, Buf.begin() + offsets.TypeOffset);
-    std::copy_n(dent.Flags.begin(), flagsSize, Buf.begin() + offsets.FlagsOffset);
-
-    Offsets.push_back(offsets);
-    Nums.push_back(Uint64Vals{dent.MetaAddr, dent.ParentAddr, dent.MetaSeq, dent.ParentSeq});
+    addStrings(*this, startOffset, dent.Id, dent.Path, dent.Name, dent.ShortName, dent.Type, dent.Flags);
+ 
+    OffsetVals.push_back(dent.MetaAddr);
+    OffsetVals.push_back(dent.ParentAddr);
+    OffsetVals.push_back(dent.MetaSeq);
+    OffsetVals.push_back(dent.ParentSeq);
+    ++NumRows;
   }
 
   void copyToDB(duckdb_appender& appender) {
     duckdb_state state;
-    for (uint32_t i = 0; i < Offsets.size(); ++i) {
-      auto& offsets(Offsets[i]);
-      state = duckdb_append_varchar(appender, Buf.data() + offsets.PathOffset);
-      THROW_IF(state == DuckDBError, "Failed to append path");
-      state = duckdb_append_varchar(appender, Buf.data() + offsets.NameOffset);
-      THROW_IF(state == DuckDBError, "Failed to append name");
-      state = duckdb_append_varchar(appender, Buf.data() + offsets.ShortOffset);
-      THROW_IF(state == DuckDBError, "Failed to append shrt_name");
-      state = duckdb_append_varchar(appender, Buf.data() + offsets.TypeOffset);
-      THROW_IF(state == DuckDBError, "Failed to append type");
-      state = duckdb_append_varchar(appender, Buf.data() + offsets.FlagsOffset);
-      THROW_IF(state == DuckDBError, "Failed to append flags");
+    for (unsigned int i = 0; i + (DuckDirent::NumCols - 1) < OffsetVals.size(); i += DuckDirent::NumCols) {
 
-      auto& nums(Nums[i]);
-      state = duckdb_append_uint64(appender, nums.MetaAddr);
-      THROW_IF(state == DuckDBError, "Failed to append meta_addr");
-      state = duckdb_append_uint64(appender, nums.ParentAddr);
-      THROW_IF(state == DuckDBError, "Failed to append parent_addr");
-      state = duckdb_append_uint64(appender, nums.MetaSeq);
-      THROW_IF(state == DuckDBError, "Failed to append meta_seq");
-      state = duckdb_append_uint64(appender, nums.ParentSeq);
-      THROW_IF(state == DuckDBError, "Failed to append parent_seq");
-
+      append(appender,
+             Buf.data() + OffsetVals[i],
+             Buf.data() + OffsetVals[i + 1],
+             Buf.data() + OffsetVals[i + 2],
+             Buf.data() + OffsetVals[i + 3],
+             Buf.data() + OffsetVals[i + 4],
+             Buf.data() + OffsetVals[i + 5],
+             OffsetVals[i + 6],
+             OffsetVals[i + 7],
+             OffsetVals[i + 8],
+             OffsetVals[i + 9]
+      );
       state = duckdb_appender_end_row(appender);
       THROW_IF(state == DuckDBError, "Failed call to end_row");
     }
-    Buf.clear();
-    Offsets.clear();
-    Nums.clear();
+    DuckBatch::clear();
   }
 };
+

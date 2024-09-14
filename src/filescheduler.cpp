@@ -1,25 +1,47 @@
 #include "filescheduler.h"
 
+#include "direntbatch.h"
 #include "filerecord.h"
+#include "duckinode.h"
 #include "options.h"
 #include "outputhandler.h"
 #include "processor.h"
 
-FileScheduler::FileScheduler(boost::asio::thread_pool& pool,
+#include <random>
+
+namespace {
+  std::string randomNumString() {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, 999999999);
+    return std::to_string(dis(gen));
+  }
+}
+
+FileScheduler::FileScheduler(LlamaDB& db,
+                             boost::asio::thread_pool& pool,
                              const std::shared_ptr<Processor>& protoProc,
-                             const std::shared_ptr<OutputHandler>& output,
                              const std::shared_ptr<Options>& opts)
-    : Pool(pool), Strand(Pool.get_executor()), Output(output),
+    : DBConn(db), Pool(pool), Strand(Pool.get_executor()),
       ProcMutex(), ProcCV() {
   for (unsigned int i = 0; i < opts->NumThreads; ++i) {
     Processors.push_back(protoProc->clone());
   }
 }
 
-void FileScheduler::scheduleFileBatch(std::shared_ptr<std::vector<FileRecord>> batch) {
+void FileScheduler::scheduleFileBatch(const DirentBatch& dirents,
+                                      const InodeBatch& inodes,
+                                      const std::shared_ptr<std::vector<std::unique_ptr<ReadSeek>>>& streams)
+{
+  // here we copy the batches in the lambda capture, so that the passed-in batches
+  // can be reused by the caller while the scheduler does its work on a separate thread
+  auto dPtr = std::make_shared<DirentBatch>(dirents);
+  auto iPtr = std::make_shared<InodeBatch>(inodes);
   boost::asio::post(
     Strand,
-    [this, batch{std::move(batch)}]() { performScheduling(batch); }
+    [=]() {
+      performScheduling(*dPtr, *iPtr, streams);
+    }
   );
 }
 
@@ -31,19 +53,46 @@ double FileScheduler::getProcessorTime() {
   return ret;
 }
 
-void FileScheduler::performScheduling(std::shared_ptr<std::vector<FileRecord>> batch) {
-  // check scratch location capacity and other stuff here
-  // this is useful work that can be done on a separate thread from TSK
-  // traversal
+void FileScheduler::performScheduling(DirentBatch& dirents,
+                                      InodeBatch& inodes,
+                                      const std::shared_ptr<std::vector<std::unique_ptr<ReadSeek>>>& streams)
+{
+  std::string tmpDents = "_temp_dirent";
+  std::string tmpInodes = "_temp_inode";
+  //std::string batchTbl = "_temp_batch_" + randomNumString();
 
-//  Output->outputInodes(batch);
+  DuckDirent::createTable(DBConn.get(), tmpDents);
+  DuckInode::createTable(DBConn.get(), tmpInodes);
 
-  // then post for multithreaded processing
+  LlamaDBAppender dAppender(DBConn.get(), tmpDents);
+  LlamaDBAppender iAppender(DBConn.get(), tmpInodes);
+
+  dirents.copyToDB(dAppender.get());
+  dAppender.flush();
+  inodes.copyToDB(iAppender.get());
+  iAppender.flush();
+
+  duckdb_result result;
+  auto state = duckdb_query(DBConn.get(), "INSERT INTO dirent SELECT * FROM _temp_dirent;", &result);
+  THROW_IF(state == DuckDBError, "Error inserting into dirent table");
+  state = duckdb_query(DBConn.get(), "INSERT INTO inode SELECT * FROM _temp_inode;", &result);
+  THROW_IF(state == DuckDBError, "Error inserting into inode table");
+
+  state = duckdb_query(DBConn.get(), "DROP TABLE _temp_dirent;", &result);
+  THROW_IF(state == DuckDBError, "Error dropping _temp_dirent table");
+  state = duckdb_query(DBConn.get(), "DROP TABLE _temp_inode;", &result);
+  THROW_IF(state == DuckDBError, "Error dropping _temp_inode table");
+
+  // post for multithreaded processing
   auto proc = popProc(); // blocks
   boost::asio::post(Pool, [=]() {
-    for (auto& rec : *batch) {
-      proc->process(rec, *Output);
+    for (auto& stream : *streams) {
+      if (stream->open()) {
+        proc->process(*stream);
+        stream->close();
+      }
     }
+    proc->flush();
     this->pushProc(proc);
   });
 }
@@ -67,3 +116,4 @@ void FileScheduler::pushProc(const std::shared_ptr<Processor>& proc) {
   Processors.push_back(proc);
   ProcCV.notify_one();
 }
+

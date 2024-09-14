@@ -38,23 +38,44 @@ std::string BoolNode::getSqlQuery(const LlamaParser& parser) const {
 
 std::string FileMetadataNode::getSqlQuery(const LlamaParser& parser) const {
   std::string query = "";
-  query += parser.getLexemeAt(Value.Property);
+  switch (parser.Tokens.at(Value.Property).Type) {
+    case LlamaTokenType::CREATED:
+      query += "created";
+      break;
+    case LlamaTokenType::MODIFIED:
+      query += "modified";
+      break;
+    case LlamaTokenType::FILESIZE:
+      query += "filesize";
+      break;
+    case LlamaTokenType::FILEPATH:
+      query += "path";
+      break;
+    case LlamaTokenType::FILENAME:
+      query += "name";
+      break;
+    default:
+      throw ParserError("Invalid property", parser.Tokens.at(Value.Property).Pos);
+  }
   query += " ";
   query += parser.getLexemeAt(Value.Operator);
   query += " ";
-  query += parser.getLexemeAt(Value.Value);
+  std::string val = parser.getLexemeAt(Value.Value);
+  std::replace(val.begin(), val.end(), '"', '\'');
+  query += val;
   return query;
 }
 
 std::string Rule::getSqlQuery(const LlamaParser& parser) const {
-  std::string query = "SELECT * FROM dirent, inode WHERE dirent.metaaddr == inode.addr";
+  std::string query = "SELECT '";
+  query += this->getHash(parser).to_string();
+  query += "', path, name, addr FROM dirent, inode WHERE dirent.metaaddr == inode.addr";
 
   if (FileMetadata) {
     query += " AND ";
     query += FileMetadata->getSqlQuery(parser);
   }
 
-  query += ";";
   return query;
 }
 
@@ -82,6 +103,12 @@ std::string LlamaParser::expect(LlamaTokenType token) {
       throw ParserError("Invalid token type", peek().Pos);
   }
   return getPreviousLexeme();
+}
+
+FieldHash Rule::getHash(const LlamaParser& parser) const {
+  FieldHasher hasher;
+  hasher.hash_iter(parser.Tokens.begin() + Start, parser.Tokens.begin() + End, [](const Token& token) { return token.Type; });
+  return hasher.get_hash();
 }
 
 HashSection LlamaParser::parseHashSection() {
@@ -396,6 +423,7 @@ Rule LlamaParser::parseRuleDecl() {
     expect(LlamaTokenType::COLON);
     rule.Meta = parseMetaSection();
   }
+  rule.Start = CurIdx;
   if (matchAny(LlamaTokenType::HASH)) {
     expect(LlamaTokenType::COLON);
     rule.Hash = parseHashSection();
@@ -412,6 +440,7 @@ Rule LlamaParser::parseRuleDecl() {
     expect(LlamaTokenType::COLON);
     rule.Grep = parseGrepSection();
   }
+  rule.End = CurIdx;
   expect(LlamaTokenType::CLOSE_BRACE);
   return rule;
 }

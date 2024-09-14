@@ -6,6 +6,7 @@
 
 struct FileRecord;
 struct Dirent;
+struct Inode;
 
 class OutputHandler {
 public:
@@ -16,6 +17,7 @@ public:
   virtual void outputDirent(const Dirent& rec) = 0;
 
   virtual void outputInode(const FileRecord& rec) = 0;
+  virtual void outputInode(const Inode& rec) = 0;
 
   virtual void outputInodes(const std::shared_ptr<std::vector<FileRecord>>& batch) = 0;
 
