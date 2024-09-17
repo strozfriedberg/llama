@@ -10,19 +10,12 @@
 #include "inputhandler.h"
 #include "inputreader.h"
 #include "llamaduck.h"
-#include "outputhandler.h"
-#include "outputtar.h"
-#include "pooloutputhandler.h"
 #include "processor.h"
 #include "timer.h"
-#include "tsk.h"
 
 #include <filesystem>
 #include <fstream>
-#include <functional>
 #include <iostream>
-#include <streambuf>
-#include <unordered_map>
 
 #include <hasher/api.h>
 
