@@ -1,6 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "throw.h"
 
 #include "direntbatch.h"
 #include "duckhash.h"
@@ -8,7 +7,6 @@
 #include "inode.h"
 #include "llamaduck.h"
 
-#include <cmath>
 #include <duckdb.h>
 #include <tuple>
 
