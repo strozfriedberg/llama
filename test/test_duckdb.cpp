@@ -104,55 +104,82 @@ public:
 */
 };
 
-class DuckRecColumns {
+struct DuckRecColumns {
 public:
   static constexpr auto ColNames = {"path", "meta_addr", "parent_addr"};
+
+  std::string path;
+  uint64_t    meta_addr;
+  uint64_t    parent_addr;
 };
 
-/*
-class DuckRec : public SchemaType<
-                        std::string,
-                        uint64_t,
-                        uint64_t> {
- 
-public:
-  enum {
-    Path = 0,
-    MetaAddr = 1,
-    ParentAddr = 2
-  };
 
-  static constexpr auto ColNames = {"path", "meta_addr", "parent_addr"};
+#include <tuple>
+#include <type_traits>
+#include <cassert>
 
-  static void createTable(duckdb_connection& dbconn) {  
-    std::string query = "CREATE TABLE DuckRec (path VARCHAR, meta_addr UBIGINT, parent_addr UBIGINT);";
-    THROW_IF(duckdb_query(dbconn, query.c_str(), nullptr) == DuckDBError, "Failed to create table");
+template <class T, class... TArgs> decltype(void(T{std::declval<TArgs>()...}), std::true_type{}) test_is_braces_constructible(int);
+template <class, class...> std::false_type test_is_braces_constructible(...);
+template <class T, class... TArgs> using is_braces_constructible = decltype(test_is_braces_constructible<T, TArgs...>(0));
+
+struct any_type {
+  template<class T>
+  constexpr operator T(); // non explicit
+};
+
+template<typename T>
+auto to_tuple(T&& t) noexcept {
+  using type = std::decay_t<T>;
+  if constexpr (is_braces_constructible<type, any_type, any_type>{}) {
+    auto&& [a, b, c] = t;
+    return std::make_tuple(a, b, c);
+  }
+  else {
+    return std::make_tuple();
+  }
+}
+
+template<typename T>
+struct DBType {
+  typedef decltype(to_tuple<T>(T())) TupleType; // this requires default constructor... come back to it
+
+  static constexpr auto& ColNames = T::ColNames;
+
+  static constexpr auto colIndex(const char* col) {
+    unsigned int i = 0;
+    const auto nameLen = std::char_traits<char>::length(col);
+    for (auto name : T::ColNames) {
+      if (std::char_traits<char>::length(col) == nameLen && std::char_traits<char>::compare(col, name, nameLen) == 0) {
+        break;
+      }
+      ++i;
+    }
+    return i;
   }
 };
 
+struct DuckRec : public DBType<DuckRecColumns> {
+};
+
 TEST_CASE("testTypesFiguring") {
-//  DuckRec rec;
-
-//  std::get<DuckRec::Path>(rec.Values) = "howdy";
-//  REQUIRE("howdy" == std::get<DuckRec::Path>(rec.Values));
-
-  REQUIRE(3 == DuckRecColumns::ColNames.size());
-
-//  REQUIRE(DuckRec::colIndex("meta_addr") == 1);
-//  static_assert(findIndex<0, 3>("meta_addr", DuckRecColumns::ColNames) == 1);
-//  static_assert(DuckRec::colIndex("meta_addr") == 1);
+  REQUIRE(DuckRec::colIndex("meta_addr") == 1);
+  REQUIRE(DuckRec::colIndex("parent_addr") == 2);
+  REQUIRE(DuckRec::colIndex("path") == 0);
 
   REQUIRE(std::string("VARCHAR") == duckdbType<std::string>());
   static_assert(std::char_traits<char>::compare(duckdbType<std::string>(), "VARCHAR", 7) == 0);
+  REQUIRE(std::string("UBIGINT") == duckdbType<uint64_t>());
+  static_assert(std::char_traits<char>::compare(duckdbType<uint64_t>(), "UBIGINT", 7) == 0);
 
   REQUIRE(createQuery<DuckRec>("DuckRec") == "CREATE TABLE DuckRec (path VARCHAR, meta_addr UBIGINT, parent_addr UBIGINT);");
 
-//  REQUIRE(rec["path"] == "howdy");
-//  rec["path"] = "hello";
-//  REQUIRE(rec["path"] == "hello");
-}
-*/
+  REQUIRE(3 == DuckRecColumns::ColNames.size());
+  
+  static_assert(std::is_same<decltype(to_tuple(DuckRecColumns{"/a/path", 21, 17})), std::tuple<std::string, uint64_t, uint64_t>>::value);
+  REQUIRE(std::make_tuple("/a/path", 21, 17) == to_tuple(DuckRecColumns{"/a/path", 21, 17}));
 
+  static_assert(std::is_same<DuckRec::TupleType, std::tuple<std::string, uint64_t, uint64_t>>::value);
+}
 
 TEST_CASE("inodeWriting") {
   LlamaDB db;
