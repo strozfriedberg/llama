@@ -147,6 +147,8 @@ struct DBType {
 
   static constexpr auto NumCols = std::tuple_size_v<TupleType>;
 
+  static_assert(ColNames.size() == NumCols, "The list of column names must match the number of fields in the tuple.");
+
   static constexpr auto colIndex(const char* col) {
     unsigned int i = 0;
     const auto nameLen = std::char_traits<char>::length(col);
