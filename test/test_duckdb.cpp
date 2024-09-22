@@ -104,15 +104,6 @@ public:
 */
 };
 
-struct DuckRecColumns {
-public:
-  static constexpr auto ColNames = {"path", "meta_addr", "parent_addr"};
-
-  std::string path;
-  uint64_t    meta_addr;
-  uint64_t    parent_addr;
-};
-
 
 #include <tuple>
 #include <type_traits>
@@ -160,6 +151,15 @@ struct DBType {
     }
     return i;
   }
+};
+
+struct DuckRecColumns {
+public:
+  static constexpr auto ColNames = {"path", "meta_addr", "parent_addr"};
+
+  std::string path;
+  uint64_t    meta_addr;
+  uint64_t    parent_addr;
 };
 
 struct DuckRec : public DBType<DuckRecColumns> {
