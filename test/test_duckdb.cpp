@@ -145,6 +145,8 @@ struct DBType {
 
   static constexpr auto& ColNames = T::ColNames;
 
+  static constexpr auto NumCols = std::tuple_size_v<TupleType>;
+
   static constexpr auto colIndex(const char* col) {
     unsigned int i = 0;
     const auto nameLen = std::char_traits<char>::length(col);
@@ -174,7 +176,9 @@ TEST_CASE("testTypesFiguring") {
   REQUIRE(createQuery<DuckRec>("DuckRec") == "CREATE TABLE DuckRec (path VARCHAR, meta_addr UBIGINT, parent_addr UBIGINT);");
 
   REQUIRE(3 == DuckRecColumns::ColNames.size());
-  
+  REQUIRE(3 == DuckRec::ColNames.size());
+  REQUIRE(3 == DuckRec::NumCols);
+
   static_assert(std::is_same<decltype(to_tuple(DuckRecColumns{"/a/path", 21, 17})), std::tuple<std::string, uint64_t, uint64_t>>::value);
   REQUIRE(std::make_tuple("/a/path", 21, 17) == to_tuple(DuckRecColumns{"/a/path", 21, 17}));
 
