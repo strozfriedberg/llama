@@ -22,7 +22,7 @@ TEST_CASE("RuleReader") {
   REQUIRE(result == 2);
   result = reader.read(input2);
   REQUIRE(result == -1);
-  REQUIRE(reader.getLastError() == "Expected rule name at line 1 column 6");
+  REQUIRE(reader.getLastError() == "Expected identifier at line 1 column 6");
   result = reader.read(input3);
   REQUIRE(result == 3);
 }

@@ -31,6 +31,8 @@ struct HashSection {
   uint64_t HashAlgs = 0;
 };
 
+class LlamaParser;
+
 struct Atom {};
 
 struct SignatureDef : public Atom {
@@ -45,21 +47,10 @@ struct FileMetadataDef : public Atom {
   size_t Value;
 };
 
-struct PatternDef {
-  std::string Pattern;
-  LG_KeyOptions Options = {0,0,0};
-  std::string Encoding;
-};
-
-struct PatternSection {
-  std::map<std::string, std::vector<PatternDef>> Patterns;
-};
-
-class LlamaParser;
-
 struct ConditionFunction : public Atom {
   ConditionFunction() = default;
-  ConditionFunction(LineCol pos) : Pos(pos) {}
+  ConditionFunction(LineCol pos, LlamaTokenType name, const std::vector<std::string>&& args, size_t op, size_t val)
+                  : Pos(pos), Name(name), Args(args), Operator(op), Value(val) { assignValidators(); }
   ~ConditionFunction() = default;
 
   void assignValidators();
@@ -77,6 +68,16 @@ struct ConditionFunction : public Atom {
   bool IsCompFunc;
 };
 
+struct PatternDef {
+  std::string Pattern;
+  LG_KeyOptions Options = {0,0,0};
+  std::string Encoding;
+};
+
+struct PatternSection {
+  std::map<std::string, std::vector<PatternDef>> Patterns;
+};
+
 enum class NodeType {
   AND, OR, FUNC, SIG, META
 };
@@ -84,6 +85,9 @@ enum class NodeType {
 struct Node {
   virtual ~Node() = default;
   virtual std::string getSqlQuery(const LlamaParser& parser) const = 0;
+
+  Node(NodeType type) : Type(type) {}
+  Node() = default;
 
   NodeType Type;
   std::shared_ptr<Node> Left;
@@ -95,8 +99,22 @@ struct BoolNode : public Node {
 };
 
 struct SigDefNode : public Node {
-  SigDefNode() { Type = NodeType::SIG; }
+  SigDefNode() : Node(NodeType::SIG) {}
   SignatureDef Value;
+
+  std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
+};
+
+struct FileMetadataNode : public Node {
+  FileMetadataNode() : Node(NodeType::META) {}
+  FileMetadataDef Value;
+
+  std::string getSqlQuery(const LlamaParser& parser) const override;
+};
+
+struct FuncNode : public Node {
+  FuncNode() : Node(NodeType::FUNC) {}
+  ConditionFunction Value;
 
   std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
 };
@@ -112,11 +130,16 @@ struct std::hash<SignatureDef>
     }
 };
 
-struct FuncNode : public Node {
-  FuncNode() { Type = NodeType::FUNC; }
-  ConditionFunction Value;
-
-  std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
+template<>
+struct std::hash<FileMetadataDef>
+{
+    std::size_t operator()(const FileMetadataDef& meta) const noexcept {
+      std::size_t hash = 0;
+      boost::hash_combine(hash, std::hash<size_t>{}(meta.Property));
+      boost::hash_combine(hash, std::hash<size_t>{}(meta.Operator));
+      boost::hash_combine(hash, std::hash<size_t>{}(meta.Value));
+      return hash;
+    }
 };
 
 template<>
@@ -132,25 +155,6 @@ struct std::hash<ConditionFunction>
       boost::hash_combine(hash, h2);
       boost::hash_combine(hash, std::hash<size_t>{}(func.Operator));
       boost::hash_combine(hash, std::hash<size_t>{}(func.Value));
-      return hash;
-    }
-};
-
-struct FileMetadataNode : public Node {
-  FileMetadataNode() { Type = NodeType::META; }
-  FileMetadataDef Value;
-
-  std::string getSqlQuery(const LlamaParser& parser) const override;
-};
-
-template<>
-struct std::hash<FileMetadataDef>
-{
-    std::size_t operator()(const FileMetadataDef& meta) const noexcept {
-      std::size_t hash = 0;
-      boost::hash_combine(hash, std::hash<size_t>{}(meta.Property));
-      boost::hash_combine(hash, std::hash<size_t>{}(meta.Operator));
-      boost::hash_combine(hash, std::hash<size_t>{}(meta.Value));
       return hash;
     }
 };
@@ -196,8 +200,9 @@ public:
   void mustParse(const std::string& errMsg, LlamaTokenTypes... types);
 
   std::string getPreviousLexeme() const { return Input.substr(previous().Start, previous().length()); }
-  std::string getLexemeAt(size_t idx) const { return Input.substr(Tokens.at(idx).Start, Tokens.at(idx).length()); } 
+  std::string getLexemeAt(size_t idx) const { return Input.substr(Tokens.at(idx).Start, Tokens.at(idx).length()); }
 
+  std::string expect(LlamaTokenType);
   HashSection parseHashSection();
   SFHASH_HashAlgorithm parseHash();
   FileHashRecord parseFileHashRecord();
@@ -205,16 +210,13 @@ public:
   void parseOperator();
   std::vector<PatternDef> parsePatternMod();
   std::vector<std::string> parseEncodings();
-  std::string parseEncoding();
   std::vector<PatternDef> parsePatternDef();
   PatternSection parsePatternsSection();
-  std::string parseNumber();
-  std::string parseDoubleQuotedString();
   std::vector<PatternDef> parseHexString();
-  ConditionFunction parseFuncCall();
   std::shared_ptr<Node> parseFactor();
   std::shared_ptr<Node> parseTerm();
   std::shared_ptr<Node> parseExpr();
+  ConditionFunction parseFuncCall();
   SignatureDef parseSignatureDef();
   GrepSection parseGrepSection();
   FileMetadataDef parseFileMetadataDef();
