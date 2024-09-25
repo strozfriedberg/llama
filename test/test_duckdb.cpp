@@ -165,6 +165,43 @@ public:
 struct DuckRec : public DBType<DuckRecColumns> {
 };
 
+template<typename T>
+struct DBBatch {
+  size_t size() const { return NumRows; }
+
+  std::vector<char>    Buf; // strings stored in sequence here  
+  std::vector<uint64_t> OffsetVals; // offsets to strings OR uint64_t values
+
+  uint64_t NumRows = 0;
+
+  size_t addString(uint64_t offset, const std::string& s) {
+    OffsetVals.push_back(offset);
+    std::copy_n(s.begin(), s.size() + 1, Buf.begin() + OffsetVals.back());
+    return offset + s.size() + 1;
+  }
+
+  void clear() {
+    Buf.clear();
+    OffsetVals.clear();
+    NumRows = 0;
+  }
+/*
+  void add(const T& t) {
+    size_t startOffset = Buf.size();
+    size_t totalSize = totalStringSize(t);
+    Buf.resize(startOffset + totalSize);
+
+    const auto& tupes = to_tuple(t);
+
+    std::apply([&](auto... args) {
+      if constexpr (
+      addStrings(*this, startOffset, args...);
+    }, tupes);
+
+    ++NumRows;
+  }*/
+};
+
 TEST_CASE("testTypesFiguring") {
   REQUIRE(DuckRec::colIndex("meta_addr") == 1);
   REQUIRE(DuckRec::colIndex("parent_addr") == 2);
@@ -181,10 +218,22 @@ TEST_CASE("testTypesFiguring") {
   REQUIRE(3 == DuckRec::ColNames.size());
   REQUIRE(3 == DuckRec::NumCols);
 
-  static_assert(std::is_same<decltype(to_tuple(DuckRecColumns{"/a/path", 21, 17})), std::tuple<std::string, uint64_t, uint64_t>>::value);
-  REQUIRE(std::make_tuple("/a/path", 21, 17) == to_tuple(DuckRecColumns{"/a/path", 21, 17}));
+  DuckRecColumns drc{"/a/path", 21, 17};
+
+  static_assert(std::is_same<decltype(to_tuple(drc)), std::tuple<std::string, uint64_t, uint64_t>>::value);
+  REQUIRE(std::make_tuple("/a/path", 21, 17) == to_tuple(drc));
 
   static_assert(std::is_same<DuckRec::TupleType, std::tuple<std::string, uint64_t, uint64_t>>::value);
+
+  DBBatch<DuckRec> batch;
+  
+  REQUIRE(8 == totalStringSize(to_tuple(drc)));
+  /*
+  batch.add(drc);
+  REQUIRE(batch.size() == 1);
+  REQUIRE(batch.Buf.size() == 8);
+  REQUIRE(batch.OffsetVals.size() == 3);
+  */
 }
 
 TEST_CASE("inodeWriting") {

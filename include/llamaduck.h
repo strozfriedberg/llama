@@ -169,7 +169,7 @@ void appendBatchImpl(duckdb_appender& appender, DuckBatch& batch, size_t i) {
 }
 
 template<typename T>
-size_t totalStringSize(T cur) {
+size_t totalStringSize(const T& cur) {
   if constexpr (std::is_convertible_v<T, std::string>) {
     return cur.size() + 1;
   }
@@ -185,6 +185,15 @@ size_t totalStringSize(T cur, Args... others) {
     totalSize += cur.size() + 1;
   }
   totalSize += totalStringSize(others...);
+  return totalSize;
+}
+
+template<typename... Args>
+size_t totalStringSize(const std::tuple<Args...>& tup) {
+  size_t totalSize = 0;
+  std::apply([&totalSize](auto&&... elem) {
+    totalSize = (totalStringSize(elem) + ...);
+  }, tup);
   return totalSize;
 }
 
