@@ -91,6 +91,7 @@ test_test_SOURCES = \
 	test/test_tskreader.cpp \
 	test/test_tskreaderhelper.cpp \
 	test/test_tsktimestamps.cpp \
+	test/test_util.cpp \
 	test/test_filesignatures.cpp
 
 test_test_CPPFLAGS = -I$(srcdir)/src $(AM_CPPFLAGS) $(CATCH2_CPPFLAGS)
