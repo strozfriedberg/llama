@@ -1,6 +1,6 @@
 #include "parser.h"
 
-void ConditionFunction::assignValidators() {
+void ConditionFunction::initValidators() {
   switch(Name) {
     case LlamaTokenType::ALL:            MinArgs = 0; MaxArgs = SIZE_MAX; IsCompFunc = false; break;
     case LlamaTokenType::ANY:            MinArgs = 0; MaxArgs = SIZE_MAX; IsCompFunc = false; break;
@@ -14,7 +14,7 @@ void ConditionFunction::assignValidators() {
 }
 
 void ConditionFunction::validate(const LlamaParser& parser) {
-  assignValidators();
+  initValidators();
   if (IsCompFunc && (Operator == SIZE_MAX || Value == SIZE_MAX)) {
     throw ParserError("Expected operator and value for comparison", Pos);
   }

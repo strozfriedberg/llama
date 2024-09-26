@@ -50,10 +50,10 @@ struct FileMetadataDef : public Atom {
 struct ConditionFunction : public Atom {
   ConditionFunction() = default;
   ConditionFunction(LineCol pos, LlamaTokenType name, const std::vector<std::string>&& args, size_t op, size_t val)
-                  : Pos(pos), Name(name), Args(args), Operator(op), Value(val) { assignValidators(); }
+                  : Pos(pos), Name(name), Args(args), Operator(op), Value(val) { initValidators(); }
   ~ConditionFunction() = default;
 
-  void assignValidators();
+  void initValidators();
   void validate(const LlamaParser& parser);
 
   LineCol Pos;
