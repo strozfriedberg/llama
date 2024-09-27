@@ -199,7 +199,7 @@ public:
   template <class... LlamaTokenTypes>
   void mustParse(const std::string& errMsg, LlamaTokenTypes... types);
 
-  std::string_view getPreviousLexeme() const { return std::string_view(Input.data() + previous().Start, previous().length()); } //Input.substr(previous().Start, previous().length()); }
+  std::string_view getPreviousLexeme() const { return std::string_view(Input).substr(previous().Start, previous().length()); }
   std::string getLexemeAt(size_t idx) const { return Input.substr(Tokens.at(idx).Start, Tokens.at(idx).length()); }
 
   std::string_view expect(LlamaTokenType);
