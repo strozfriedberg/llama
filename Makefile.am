@@ -98,6 +98,8 @@ test_test_CPPFLAGS = -I$(srcdir)/src $(AM_CPPFLAGS) $(CATCH2_CPPFLAGS)
 test_test_LDADD = $(CATCH2_LIBS) $(LLAMA_LIBS) $(LG_LIBS) $(TSK_LIBS) $(LIBARCHIVE_LIBS) $(YARA_LIBS) $(HASHER_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_ASIO_LIB) $(DUCKDB_LIBS) $(STDCXX_LIB)
 
 test_benchmarks_benchmarks_SOURCES = \
+  $(src_llama_common) \
+  test/benchmarks/test_parser.cpp \
 	test/benchmarks/test_yara.cpp
 
 test_benchmarks_benchmarks_CPPFLAGS = -I$(srcdir)/src $(AM_CPPFLAGS) $(CATCH2_CPPFLAGS)

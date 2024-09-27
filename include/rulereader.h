@@ -8,6 +8,7 @@
 class RuleReader {
 public:
   int read(const std::string& input);
+  void clear() { Rules.clear(); LastError.clear(); Parser.clear(); }
 
   const std::vector<Rule>& getRules() const { return Rules; }
   const std::string& getLastError() const { return LastError; }
