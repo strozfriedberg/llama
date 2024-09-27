@@ -232,7 +232,7 @@ std::vector<PatternDef> LlamaParser::parsePatternDef() {
 PatternSection LlamaParser::parsePatternsSection() {
   PatternSection patternSection;
   while (matchAny(LlamaTokenType::IDENTIFIER)) {
-    std::string key = std::string(getPreviousLexeme());
+    std::string_view key = getPreviousLexeme();
     patternSection.Patterns.insert(std::make_pair(key, parsePatternDef()));
   }
   if (patternSection.Patterns.empty()) {

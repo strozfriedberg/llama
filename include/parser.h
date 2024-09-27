@@ -75,7 +75,7 @@ struct PatternDef {
 };
 
 struct PatternSection {
-  std::map<std::string, std::vector<PatternDef>> Patterns;
+  std::map<std::string_view, std::vector<PatternDef>> Patterns;
 };
 
 enum class NodeType {
