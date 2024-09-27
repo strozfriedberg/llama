@@ -132,7 +132,7 @@ enum class LlamaLiteral {
   ST_FIXED = (int)(LlamaTokenType::FIXED),
   ST_AND = (int)(LlamaTokenType::AND),
   ST_OR = (int)(LlamaTokenType::OR),
-  ST_ASCII = 1000
+  ST_ASCII
 };
 
 static const std::vector<std::string> Literals = {
