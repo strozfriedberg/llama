@@ -250,7 +250,7 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
       if (isEven(hexString.size())) { // check if hexString is even
         hexString += "\\z";
       }
-      hexDigit = std::string(getPreviousLexeme());
+      hexDigit = getPreviousLexeme();
       for (char c : hexDigit) {
         if (!isxdigit(c)) {
           throw ParserError("Invalid hex digit", previous().Pos);
