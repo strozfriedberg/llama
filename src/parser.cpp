@@ -80,7 +80,7 @@ std::string Rule::getSqlQuery(const LlamaParser& parser) const {
   return query;
 }
 
-std::string LlamaParser::expect(LlamaTokenType token) {
+std::string_view LlamaParser::expect(LlamaTokenType token) {
   switch (token) {
     case LlamaTokenType::RULE: mustParse("Expected rule keyword", LlamaTokenType::RULE); break;
     case LlamaTokenType::META: mustParse("Expected meta keyword", LlamaTokenType::META); break;
@@ -162,7 +162,7 @@ FileHashRecord LlamaParser::parseFileHashRecord() {
 
 std::string LlamaParser::parseHashValue() {
   expect(LlamaTokenType::EQUAL_EQUAL);
-  return expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
+  return std::string(expect(LlamaTokenType::DOUBLE_QUOTED_STRING));
 }
 
 void LlamaParser::parseOperator() {
@@ -206,9 +206,9 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
 std::vector<std::string> LlamaParser::parseEncodings() {
   std::vector<std::string> encodings;
   expect(LlamaTokenType::EQUAL);
-  encodings.push_back(expect(LlamaTokenType::IDENTIFIER));
+  encodings.push_back(std::string(expect(LlamaTokenType::IDENTIFIER)));
   while (matchAny(LlamaTokenType::COMMA)) {
-    encodings.push_back(expect(LlamaTokenType::IDENTIFIER));
+    encodings.push_back(std::string(expect(LlamaTokenType::IDENTIFIER)));
   }
   return encodings;
 }
@@ -232,7 +232,7 @@ std::vector<PatternDef> LlamaParser::parsePatternDef() {
 PatternSection LlamaParser::parsePatternsSection() {
   PatternSection patternSection;
   while (matchAny(LlamaTokenType::IDENTIFIER)) {
-    std::string key = getPreviousLexeme();
+    std::string key = std::string(getPreviousLexeme());
     patternSection.Patterns.insert(std::make_pair(key, parsePatternDef()));
   }
   if (patternSection.Patterns.empty()) {
@@ -250,7 +250,7 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
       if (isEven(hexString.size())) { // check if hexString is even
         hexString += "\\z";
       }
-      hexDigit = getPreviousLexeme();
+      hexDigit = std::string(getPreviousLexeme());
       for (char c : hexDigit) {
         if (!isxdigit(c)) {
           throw ParserError("Invalid hex digit", previous().Pos);
@@ -341,11 +341,11 @@ ConditionFunction LlamaParser::parseFuncCall() {
   size_t op = SIZE_MAX, val = SIZE_MAX;
   expect(LlamaTokenType::OPEN_PAREN);
   if (matchAny(LlamaTokenType::IDENTIFIER)) {
-    args.push_back(getPreviousLexeme());
+    args.push_back(std::string(getPreviousLexeme()));
   }
   while (matchAny(LlamaTokenType::COMMA)) {
     mustParse("Expected identifier or number", LlamaTokenType::IDENTIFIER, LlamaTokenType::NUMBER);
-    args.push_back(getPreviousLexeme());
+    args.push_back(std::string(getPreviousLexeme()));
   }
   expect(LlamaTokenType::CLOSE_PAREN);
   if (matchAny(LlamaTokenType::EQUAL, LlamaTokenType::EQUAL_EQUAL, LlamaTokenType::NOT_EQUAL, LlamaTokenType::GREATER_THAN, LlamaTokenType::GREATER_THAN_EQUAL, LlamaTokenType::LESS_THAN, LlamaTokenType::LESS_THAN_EQUAL)) {
@@ -404,10 +404,10 @@ FileMetadataDef LlamaParser::parseFileMetadataDef() {
 MetaSection LlamaParser::parseMetaSection() {
   MetaSection meta;
   while (matchAny(LlamaTokenType::IDENTIFIER)) {
-    std::string key = getPreviousLexeme();
+    std::string key = std::string(getPreviousLexeme());
     expect(LlamaTokenType::EQUAL);
     expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
-    std::string value = getPreviousLexeme();
+    std::string value = std::string(getPreviousLexeme());
     meta.Fields.insert(std::make_pair(key, value));
   }
   return meta;
@@ -417,7 +417,7 @@ Rule LlamaParser::parseRuleDecl() {
   Rule rule;
   expect(LlamaTokenType::RULE);
   expect(LlamaTokenType::IDENTIFIER);
-  rule.Name = getPreviousLexeme();
+  rule.Name = std::string(getPreviousLexeme());
   expect(LlamaTokenType::OPEN_BRACE);
 
   if (matchAny(LlamaTokenType::META)) {

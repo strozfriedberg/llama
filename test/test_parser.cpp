@@ -699,3 +699,11 @@ TEST_CASE("GetRuleHashWithNoSections") {
   std::vector<Rule> rules = parser.parseRules();
   REQUIRE(rules.at(0).getHash(parser) != rules.at(1).getHash(parser));
 }
+
+TEST_CASE("getPreviousLexemeStringInvalidation") {
+  std::string input = "rule {}";
+  LlamaParser parser(input, getTokensFromString(input));
+  parser.matchAny(LlamaTokenType::RULE);
+  std::string_view sv = parser.getPreviousLexeme();
+  REQUIRE(sv == std::string_view("rule"));
+}
