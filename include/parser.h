@@ -48,24 +48,26 @@ struct FileMetadataDef : public Atom {
 };
 
 struct ConditionFunction : public Atom {
+  struct Properties {
+    size_t MinArgs;
+    size_t MaxArgs;
+    bool IsCompFunc;
+  };
+
   ConditionFunction() = default;
   ConditionFunction(LineCol pos, LlamaTokenType name, const std::vector<std::string>&& args, size_t op, size_t val)
-                  : Pos(pos), Name(name), Args(args), Operator(op), Value(val) { initValidators(); }
+                  : Pos(pos), Name(name), Args(args), Operator(op), Value(val) { Props = initProperties(); }
   ~ConditionFunction() = default;
 
-  void initValidators();
+  Properties initProperties();
   void validate(const LlamaParser& parser);
 
   LineCol Pos;
   LlamaTokenType Name;
+  Properties Props;
   std::vector<std::string> Args;
   size_t Operator = SIZE_MAX;
   size_t Value = SIZE_MAX;
-
-  // validators
-  size_t MinArgs;
-  size_t MaxArgs;
-  bool IsCompFunc;
 };
 
 struct PatternDef {

@@ -1,29 +1,29 @@
 #include "parser.h"
 #include "util.h"
 
-void ConditionFunction::initValidators() {
+ConditionFunction::Properties ConditionFunction::initProperties() {
   switch(Name) {
-    case LlamaTokenType::ALL:            MinArgs = 0; MaxArgs = SIZE_MAX; IsCompFunc = false; break;
-    case LlamaTokenType::ANY:            MinArgs = 0; MaxArgs = SIZE_MAX; IsCompFunc = false; break;
-    case LlamaTokenType::OFFSET:         MinArgs = 1; MaxArgs = 2; IsCompFunc = true;         break;
-    case LlamaTokenType::COUNT:          MinArgs = 1; MaxArgs = 1; IsCompFunc = true;         break;
-    case LlamaTokenType::COUNT_HAS_HITS: MinArgs = 0; MaxArgs = SIZE_MAX; IsCompFunc = true;  break;
-    case LlamaTokenType::LENGTH:         MinArgs = 1; MaxArgs = 2; IsCompFunc = true;         break;
+    case LlamaTokenType::ALL:            return ConditionFunction::Properties{0, SIZE_MAX, false};
+    case LlamaTokenType::ANY:            return ConditionFunction::Properties{0, SIZE_MAX, false};
+    case LlamaTokenType::OFFSET:         return ConditionFunction::Properties{1, 2, true};
+    case LlamaTokenType::COUNT:          return ConditionFunction::Properties{1, 1, true};
+    case LlamaTokenType::COUNT_HAS_HITS: return ConditionFunction::Properties{0, SIZE_MAX, true};
+    case LlamaTokenType::LENGTH:         return ConditionFunction::Properties{1, 2, true};
     default:
       throw ParserError("Invalid function name", Pos);
   }
 }
 
 void ConditionFunction::validate(const LlamaParser& parser) {
-  initValidators();
-  if (IsCompFunc && (Operator == SIZE_MAX || Value == SIZE_MAX)) {
+  initProperties();
+  if (Props.IsCompFunc && (Operator == SIZE_MAX || Value == SIZE_MAX)) {
     throw ParserError("Expected operator and value for comparison", Pos);
   }
-  else if (!IsCompFunc && (Operator != SIZE_MAX || Value != SIZE_MAX)) {
+  else if (!Props.IsCompFunc && (Operator != SIZE_MAX || Value != SIZE_MAX)) {
     throw ParserError("Unexpected operator or value for function", Pos);
   }
 
-  if (Args.size() < MinArgs || Args.size() > MaxArgs) {
+  if (Args.size() < Props.MinArgs || Args.size() > Props.MaxArgs) {
     throw ParserError("Invalid number of arguments", Pos);
   }
 }
