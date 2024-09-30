@@ -56,11 +56,11 @@ struct ConditionFunction : public Atom {
 
   ConditionFunction() = default;
   ConditionFunction(LineCol pos, LlamaTokenType name, const std::vector<std::string>&& args, size_t op, size_t val)
-                  : Pos(pos), Name(name), Args(args), Operator(op), Value(val) { Props = initProperties(); }
+                  : Pos(pos), Name(name), Args(args), Operator(op), Value(val) { Props = initProperties(); validate(); }
   ~ConditionFunction() = default;
 
   Properties initProperties();
-  void validate(const LlamaParser& parser);
+  void validate();
 
   LineCol Pos;
   LlamaTokenType Name;

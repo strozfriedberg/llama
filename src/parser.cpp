@@ -14,8 +14,7 @@ ConditionFunction::Properties ConditionFunction::initProperties() {
   }
 }
 
-void ConditionFunction::validate(const LlamaParser& parser) {
-  initProperties();
+void ConditionFunction::validate() {
   if (Props.IsCompFunc && (Operator == SIZE_MAX || Value == SIZE_MAX)) {
     throw ParserError("Expected operator and value for comparison", Pos);
   }
@@ -354,7 +353,6 @@ ConditionFunction LlamaParser::parseFuncCall() {
     val = CurIdx - 1;
   }
   ConditionFunction func(pos, name, std::move(args), op, val);
-  func.validate(*this);
   return func;
 }
 
