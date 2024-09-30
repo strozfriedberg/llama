@@ -276,10 +276,10 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
   return defs;
 }
 
-std::shared_ptr<Node> LlamaParser::parseFactor() {
+std::shared_ptr<Node> LlamaParser::parseFactor(LlamaTokenType section) {
   std::shared_ptr<Node> node;
   if (matchAny(LlamaTokenType::OPEN_PAREN)) {
-    node = parseExpr();
+    node = parseExpr(section);
     expect(LlamaTokenType::CLOSE_PAREN);
   }
   else if (checkAny(LlamaTokenType::ANY, LlamaTokenType::ALL, LlamaTokenType::OFFSET, LlamaTokenType::COUNT, LlamaTokenType::COUNT_HAS_HITS, LlamaTokenType::LENGTH)) {
@@ -289,6 +289,9 @@ std::shared_ptr<Node> LlamaParser::parseFactor() {
     Atoms.insert(std::make_pair(std::hash<ConditionFunction>{}(funcNode->Value), funcNode->Value));
   }
   else if (checkAny(LlamaTokenType::NAME, LlamaTokenType::ID)) {
+    if (section != LlamaTokenType::SIGNATURE) {
+      throw ParserError("Invalid property in section", previous().Pos);
+    }
     auto sigDefNode = std::make_shared<SigDefNode>();
     sigDefNode->Value = parseSignatureDef();
     node = sigDefNode;
@@ -306,27 +309,27 @@ std::shared_ptr<Node> LlamaParser::parseFactor() {
   return node;
 }
 
-std::shared_ptr<Node> LlamaParser::parseTerm() {
-  std::shared_ptr<Node> left = parseFactor();
+std::shared_ptr<Node> LlamaParser::parseTerm(LlamaTokenType section) {
+  std::shared_ptr<Node> left = parseFactor(section);
 
   while (matchAny(LlamaTokenType::AND)) {
     std::shared_ptr<Node> node = std::make_shared<BoolNode>();
     node->Type = NodeType::AND;
     node->Left = left;
-    node->Right = parseFactor();
+    node->Right = parseFactor(section);
     left = node;
   }
   return left;
 }
 
-std::shared_ptr<Node> LlamaParser::parseExpr() {
-  std::shared_ptr<Node> left = parseTerm();
+std::shared_ptr<Node> LlamaParser::parseExpr(LlamaTokenType section) {
+  std::shared_ptr<Node> left = parseTerm(section);
 
   while (matchAny(LlamaTokenType::OR)) {
     std::shared_ptr<Node> node = std::make_shared<BoolNode>();
     node->Type = NodeType::OR;
     node->Left = left;
-    node->Right = parseTerm();
+    node->Right = parseTerm(section);
     left = node;
   }
   return left;
@@ -373,7 +376,7 @@ GrepSection LlamaParser::parseGrepSection() {
   grepSection.Patterns = parsePatternsSection();
   expect(LlamaTokenType::CONDITION);
   expect(LlamaTokenType::COLON);
-  grepSection.Condition = parseExpr();
+  grepSection.Condition = parseExpr(LlamaTokenType::CONDITION);
   return grepSection;
 }
 
@@ -429,11 +432,11 @@ Rule LlamaParser::parseRuleDecl() {
   }
   if (matchAny(LlamaTokenType::FILE_METADATA)) {
     expect(LlamaTokenType::COLON);
-    rule.FileMetadata = parseExpr();
+    rule.FileMetadata = parseExpr(LlamaTokenType::FILE_METADATA);
   }
   if (matchAny(LlamaTokenType::SIGNATURE)) {
     expect(LlamaTokenType::COLON);
-    rule.Signature = parseExpr();
+    rule.Signature = parseExpr(LlamaTokenType::SIGNATURE);
   }
   if (matchAny(LlamaTokenType::GREP)) {
     expect(LlamaTokenType::COLON);

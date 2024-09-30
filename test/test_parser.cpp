@@ -247,7 +247,7 @@ TEST_CASE("parseTermWithAnd") {
   std::string input = "any(s1, s2, s3) and count(s1) == 5";
   LlamaParser parser(input, getTokensFromString(input));
   std::shared_ptr<Node> node = std::make_shared<BoolNode>();
-  REQUIRE_NOTHROW(node = parser.parseTerm());
+  REQUIRE_NOTHROW(node = parser.parseTerm(LlamaTokenType::CONDITION));
   REQUIRE(node->Type == NodeType::AND);
   auto left = std::static_pointer_cast<FuncNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::FUNC);
@@ -260,14 +260,14 @@ TEST_CASE("parseTermWithAnd") {
 TEST_CASE("parseTermWithoutAnd") {
   std::string input = "any()";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseTerm());
+  REQUIRE_NOTHROW(parser.parseTerm(LlamaTokenType::CONDITION));
 }
 
 TEST_CASE("parseExpr") {
   std::string input = "(any(s1, s2, s3) and length(s1, 5) == 5) or all()";
   LlamaParser parser(input, getTokensFromString(input));
   std::shared_ptr<Node> node = std::make_shared<BoolNode>();
-  REQUIRE_NOTHROW(node = parser.parseExpr());
+  REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
   REQUIRE(node->Type == NodeType::OR);
   REQUIRE(node->Left);
   REQUIRE(node->Left->Type == NodeType::AND);
@@ -279,7 +279,7 @@ TEST_CASE("parseConditionSection") {
   std::string input = "(any(s1, s2, s3) and count(s1) == 5) or all(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
   std::shared_ptr<Node> node;
-  REQUIRE_NOTHROW(node = parser.parseExpr());
+  REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
   REQUIRE(parser.CurIdx == parser.Tokens.size() - 1);
   REQUIRE(node->Type == NodeType::OR);
 }
@@ -288,7 +288,7 @@ TEST_CASE("parseSignatureSection") {
   std::string input = "name == \"Executable\" or id == \"123456789\"";
   LlamaParser parser(input, getTokensFromString(input));
   std::shared_ptr<Node> node;
-  REQUIRE_NOTHROW(node = parser.parseExpr());
+  REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::SIGNATURE));
   REQUIRE(node->Type == NodeType::OR);
   auto sigDefNodeLeft = std::static_pointer_cast<SigDefNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::SIG);
@@ -344,7 +344,7 @@ TEST_CASE("parseFileMetadataDefModified") {
 TEST_CASE("parseFileMetadataSection") {
   std::string input = R"(created > "2023-05-04" or (modified < "2023-05-06" and filesize >= 100))";
   LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseExpr());
+  REQUIRE_NOTHROW(parser.parseExpr(LlamaTokenType::FILE_METADATA));
 }
 
 TEST_CASE("parseMetaSection") {
@@ -522,11 +522,18 @@ TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
   std::string input = "any(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
   std::shared_ptr<Node> node = std::make_shared<FuncNode>();
-  REQUIRE_NOTHROW(node = parser.parseFactor());
+  REQUIRE_NOTHROW(node = parser.parseFactor(LlamaTokenType::CONDITION));
   REQUIRE(node->Type == NodeType::FUNC);
   auto root = std::static_pointer_cast<FuncNode>(node);
   REQUIRE(root->Value.Name == LlamaTokenType::ANY);
   REQUIRE(root->Value.Args.size() == 3);
+}
+
+TEST_CASE("parseFactorFileMetadataSection") {
+  std::string input = "name == \"Executable\"";
+  LlamaParser parser(input, getTokensFromString(input));
+  std::shared_ptr<Node> node = std::make_shared<FuncNode>();
+  REQUIRE_THROWS(node = parser.parseFactor(LlamaTokenType::FILE_METADATA));
 }
 
 TEST_CASE("parseFileHashRecord") {

@@ -217,9 +217,9 @@ public:
   std::vector<PatternDef> parsePatternDef();
   PatternSection parsePatternsSection();
   std::vector<PatternDef> parseHexString();
-  std::shared_ptr<Node> parseFactor();
-  std::shared_ptr<Node> parseTerm();
-  std::shared_ptr<Node> parseExpr();
+  std::shared_ptr<Node> parseFactor(LlamaTokenType section);
+  std::shared_ptr<Node> parseTerm(LlamaTokenType section);
+  std::shared_ptr<Node> parseExpr(LlamaTokenType section);
   ConditionFunction parseFuncCall();
   SignatureDef parseSignatureDef();
   GrepSection parseGrepSection();
