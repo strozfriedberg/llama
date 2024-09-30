@@ -21,7 +21,7 @@ public:
 };
 
 struct MetaSection {
-  std::unordered_map<std::string, std::string> Fields;
+  std::unordered_map<std::string_view, std::string_view> Fields;
 };
 
 using FileHashRecord = std::unordered_map<SFHASH_HashAlgorithm, std::string>;

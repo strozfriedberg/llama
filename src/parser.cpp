@@ -404,10 +404,10 @@ FileMetadataDef LlamaParser::parseFileMetadataDef() {
 MetaSection LlamaParser::parseMetaSection() {
   MetaSection meta;
   while (matchAny(LlamaTokenType::IDENTIFIER)) {
-    std::string key = std::string(getPreviousLexeme());
+    std::string_view key = getPreviousLexeme();
     expect(LlamaTokenType::EQUAL);
     expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
-    std::string value = std::string(getPreviousLexeme());
+    std::string_view value = getPreviousLexeme();
     meta.Fields.insert(std::make_pair(key, value));
   }
   return meta;
