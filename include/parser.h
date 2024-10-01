@@ -20,77 +20,16 @@ public:
   ParserError(const std::string& message, LineCol pos) : UnexpectedInputError(message, pos) {}
 };
 
-struct MetaSection {
-  std::unordered_map<std::string_view, std::string_view> Fields;
-};
-
-using FileHashRecord = std::unordered_map<SFHASH_HashAlgorithm, std::string>;
-
-struct HashSection {
-  std::vector<FileHashRecord> FileHashRecords;
-  uint64_t HashAlgs = 0;
-};
-
 class LlamaParser;
 
 struct Atom {};
-
-struct SigDef : public Atom {
-  size_t Attr;
-  size_t Val;
-};
-
-
-struct FileMetadataDef : public Atom {
-  size_t Property;
-  size_t Operator;
-  size_t Value;
-};
-
-struct Function : public Atom {
-  Function() = default;
-  Function(LineCol pos, LlamaTokenType name, const std::vector<std::string_view>&& args, size_t op, size_t val)
-                  : Pos(pos), Name(name), Args(args), Operator(op), Value(val) { validate(); }
-  ~Function() = default;
-
-  void validate();
-
-  LineCol Pos;
-  LlamaTokenType Name;
-  std::vector<std::string_view> Args;
-  size_t Operator = SIZE_MAX;
-  size_t Value = SIZE_MAX;
-};
-
-struct FunctionProperties {
-  size_t MinArgs;
-  size_t MaxArgs;
-  bool IsCompFunc;
-};
-
-static const std::unordered_map<LlamaTokenType, FunctionProperties> FunctionValidProperties {
-  {LlamaTokenType::ALL,            FunctionProperties{0, SIZE_MAX, false}},
-  {LlamaTokenType::ANY,            FunctionProperties{0, SIZE_MAX, false}},
-  {LlamaTokenType::OFFSET,         FunctionProperties{1, 2, true}},
-  {LlamaTokenType::COUNT,          FunctionProperties{1, 1, true}},
-  {LlamaTokenType::COUNT_HAS_HITS, FunctionProperties{0, SIZE_MAX, true}},
-  {LlamaTokenType::LENGTH,         FunctionProperties{1, 2, true}}
-};
-
-struct PatternDef {
-  std::string Pattern;
-  LG_KeyOptions Options = {0,0,0};
-  std::string Encoding;
-};
-
-struct PatternSection {
-  std::map<std::string_view, std::vector<PatternDef>> Patterns;
-};
 
 enum class NodeType {
   AND, OR, FUNC, SIG, META
 };
 
+// Holds information about expressions under the `file_metadata`, `signature`, and `condition`
+// sections.
 struct Node {
   virtual ~Node() = default;
   virtual std::string getSqlQuery(const LlamaParser& parser) const = 0;
@@ -103,34 +42,22 @@ struct Node {
   std::shared_ptr<Node> Right;
 };
 
+// Reserved for AND and OR nodes.
 struct BoolNode : public Node {
   std::string getSqlQuery(const LlamaParser& parser) const override;
 };
 
-struct SigDefNode : public Node {
-  SigDefNode() : Node(NodeType::SIG) {}
-  SigDefNode(SigDef&& value) : Node(NodeType::SIG) { Value = value; }
-  SigDef Value;
+/************************************ SIGNATURE SECTION *******************************************/
 
-  std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
+// Holds information about expressions in the `signature` section.
+// SigDef has no Operator member (like FileMetadataDef) because expressions in the `signature`
+// section should not use any operator besides equality.
+struct SigDef : public Atom {
+  size_t Attr;
+  size_t Val;
 };
 
-struct FileMetadataNode : public Node {
-  FileMetadataNode() : Node(NodeType::META) {}
-  FileMetadataNode(FileMetadataDef&& value) : Node(NodeType::META) { Value = value; }
-  FileMetadataDef Value;
-
-  std::string getSqlQuery(const LlamaParser& parser) const override;
-};
-
-struct FuncNode : public Node {
-  FuncNode() : Node(NodeType::FUNC) {}
-  FuncNode(Function&& value) : Node(NodeType::FUNC) { Value = value; }
-  Function Value;
-
-  std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
-};
-
+// Defines a hash function for a SigDef object.
 template<>
 struct std::hash<SigDef>
 {
@@ -142,6 +69,25 @@ struct std::hash<SigDef>
     }
 };
 
+// Expression node for expressions under the `signature` section.
+struct SigDefNode : public Node {
+  SigDefNode() : Node(NodeType::SIG) {}
+  SigDefNode(SigDef&& value) : Node(NodeType::SIG) { Value = value; }
+  SigDef Value;
+
+  std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
+};
+
+/************************************ FILE_METADATA SECTION ***************************************/
+
+// Holds information about expressions in the `file_metadata` section.
+struct FileMetadataDef : public Atom {
+  size_t Property;
+  size_t Operator;
+  size_t Value;
+};
+
+// Defines a hash function for a FileMetadataDef object.
 template<>
 struct std::hash<FileMetadataDef>
 {
@@ -154,6 +100,36 @@ struct std::hash<FileMetadataDef>
     }
 };
 
+// Expression node for expressions under the `file_metadata` section.
+struct FileMetadataNode : public Node {
+  FileMetadataNode() : Node(NodeType::META) {}
+  FileMetadataNode(FileMetadataDef&& value) : Node(NodeType::META) { Value = value; }
+  FileMetadataDef Value;
+
+  std::string getSqlQuery(const LlamaParser& parser) const override;
+};
+
+/*************************************** FUNCTIONS ************************************************/
+
+// Holds information about expressions in the `condition` section under the `grep` section.
+struct Function : public Atom {
+  Function() = default;
+  Function(LineCol pos, LlamaTokenType name, const std::vector<std::string_view>&& args, size_t op, size_t val)
+                  : Pos(pos), Name(name), Args(args), Operator(op), Value(val) { validate(); }
+  ~Function() = default;
+
+  // Used to validate that the function is called with the right number of arguments
+  // and that its return value is compared to a value if the function type demands it.
+  void validate();
+
+  LineCol Pos;
+  LlamaTokenType Name;
+  std::vector<std::string_view> Args;
+  size_t Operator = SIZE_MAX;
+  size_t Value = SIZE_MAX;
+};
+
+// Defines a hash function for a Function object.
 template<>
 struct std::hash<Function>
 {
@@ -171,10 +147,68 @@ struct std::hash<Function>
     }
 };
 
+// Expression node for expressions under the `condition` section under the `grep` section.
+struct FuncNode : public Node {
+  FuncNode() : Node(NodeType::FUNC) {}
+  FuncNode(Function&& value) : Node(NodeType::FUNC) { Value = value; }
+  Function Value;
+
+  std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
+};
+
+// Holds information about minimum and maximum number of arguments in a function and whether
+// or not its return value should be compared to a value in the expression.
+struct FunctionProperties {
+  size_t MinArgs;
+  size_t MaxArgs;
+  bool IsCompFunc;
+};
+
+// Holds the valid FunctionProperties for each function type. Used in Functions's validate().
+static const std::unordered_map<LlamaTokenType, FunctionProperties> FunctionValidProperties {
+  {LlamaTokenType::ALL,            FunctionProperties{0, SIZE_MAX, false}},
+  {LlamaTokenType::ANY,            FunctionProperties{0, SIZE_MAX, false}},
+  {LlamaTokenType::OFFSET,         FunctionProperties{1, 2, true}},
+  {LlamaTokenType::COUNT,          FunctionProperties{1, 1, true}},
+  {LlamaTokenType::COUNT_HAS_HITS, FunctionProperties{0, SIZE_MAX, true}},
+  {LlamaTokenType::LENGTH,         FunctionProperties{1, 2, true}}
+};
+
+/********************************** PATTERNS SECTION **********************************************/
+
+// Holds information about each pattern defined in the `patterns` section under the `grep` section.
+struct PatternDef {
+  std::string Pattern;
+  LG_KeyOptions Options = {0,0,0};
+  std::string Encoding;
+};
+
+// Holds a mapping from the user-defined name of each pattern to the rest of its information.
+struct PatternSection {
+  std::map<std::string_view, std::vector<PatternDef>> Patterns;
+};
+
 struct GrepSection {
   PatternSection Patterns;
   std::shared_ptr<Node> Condition;
 };
+
+/************************************ META SECTION ************************************************/
+
+struct MetaSection {
+  std::unordered_map<std::string_view, std::string_view> Fields;
+};
+
+/************************************ HASH SECTION ************************************************/
+
+using FileHashRecord = std::unordered_map<SFHASH_HashAlgorithm, std::string>;
+
+struct HashSection {
+  std::vector<FileHashRecord> FileHashRecords;
+  uint64_t HashAlgs = 0;
+};
+
+/************************************ RULE ********************************************************/
 
 struct Rule {
   std::string Name;
@@ -184,12 +218,18 @@ struct Rule {
   std::shared_ptr<Node> FileMetadata;
   GrepSection Grep;
 
+  // Relative input offset where the Meta section ends and the first "real" section begins.
   uint64_t Start = 0;
+  // Relative input offset right before the rule's closing brace.
   uint64_t End = 0;
 
   std::string getSqlQuery(const LlamaParser&) const;
+
+  // Used for unique rule ID in the database.
   FieldHash getHash(const LlamaParser&) const;
 };
+
+/************************************ PARSER ******************************************************/
 
 class LlamaParser {
 public:
@@ -200,14 +240,17 @@ public:
   Token peek() const { return Tokens.at(CurIdx); }
   Token advance() { if (!isAtEnd()) ++CurIdx; return previous();}
 
+  // Increments CurIdx if match.
   template <class... TokenTypes>
   bool matchAny(TokenTypes... types);
 
+  // Does not increment CurIdx if match.
   template <class... TokenTypes>
   bool checkAny(TokenTypes... types) { return ((peek().Type == types) || ...);};
 
   bool isAtEnd() const { return peek().Type == LlamaTokenType::END_OF_FILE; }
 
+  // Increments CurIdx if match. Otherwise throws exception with given errMsg.
   template <class... LlamaTokenTypes>
   void mustParse(const std::string& errMsg, LlamaTokenTypes... types);
 
@@ -221,6 +264,8 @@ public:
   SFHASH_HashAlgorithm parseHash();
   FileHashRecord parseFileHashRecord();
   std::string parseHashValue();
+  // This does not return anything because we have no use for the operator itself,
+  // and if we did, we could just get it from `previous().Type`.
   void parseOperator();
   std::vector<PatternDef> parsePatternMod();
   std::vector<std::string> parseEncodings();
@@ -241,6 +286,7 @@ public:
   std::string Input;
   std::vector<Token> Tokens;
   std::unordered_map<std::string, std::string> Patterns;
+  // This aggregates all expressions under the `signature`, `file_metadata`, and `condition` sections.
   std::unordered_map<std::size_t, Atom> Atoms;
   uint64_t CurIdx = 0;
 };
