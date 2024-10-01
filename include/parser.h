@@ -48,26 +48,33 @@ struct FileMetadataDef : public Atom {
 };
 
 struct ConditionFunction : public Atom {
-  struct Properties {
-    size_t MinArgs;
-    size_t MaxArgs;
-    bool IsCompFunc;
-  };
-
   ConditionFunction() = default;
   ConditionFunction(LineCol pos, LlamaTokenType name, const std::vector<std::string>&& args, size_t op, size_t val)
-                  : Pos(pos), Name(name), Args(args), Operator(op), Value(val) { Props = initProperties(); validate(); }
+                  : Pos(pos), Name(name), Args(args), Operator(op), Value(val) { validate(); }
   ~ConditionFunction() = default;
 
-  Properties initProperties();
   void validate();
 
   LineCol Pos;
   LlamaTokenType Name;
-  Properties Props;
   std::vector<std::string> Args;
   size_t Operator = SIZE_MAX;
   size_t Value = SIZE_MAX;
+};
+
+struct ConditionFunctionProperties {
+  size_t MinArgs;
+  size_t MaxArgs;
+  bool IsCompFunc;
+};
+
+static const std::unordered_map<LlamaTokenType, ConditionFunctionProperties> ConditionFunctionValidProperties {
+  {LlamaTokenType::ALL, ConditionFunctionProperties{0, SIZE_MAX, false}},
+  {LlamaTokenType::ANY, ConditionFunctionProperties{0, SIZE_MAX, false}},
+  {LlamaTokenType::OFFSET, ConditionFunctionProperties{1, 2, true}},
+  {LlamaTokenType::COUNT, ConditionFunctionProperties{1, 1, true}},
+  {LlamaTokenType::COUNT_HAS_HITS, ConditionFunctionProperties{0, SIZE_MAX, true}},
+  {LlamaTokenType::LENGTH, ConditionFunctionProperties{1, 2, true}}
 };
 
 struct PatternDef {
