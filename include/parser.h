@@ -109,6 +109,7 @@ struct BoolNode : public Node {
 
 struct SigDefNode : public Node {
   SigDefNode() : Node(NodeType::SIG) {}
+  SigDefNode(SignatureDef&& value) : Node(NodeType::SIG) { Value = value; }
   SignatureDef Value;
 
   std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
@@ -116,6 +117,7 @@ struct SigDefNode : public Node {
 
 struct FileMetadataNode : public Node {
   FileMetadataNode() : Node(NodeType::META) {}
+  FileMetadataNode(FileMetadataDef&& value) : Node(NodeType::META) { Value = value; }
   FileMetadataDef Value;
 
   std::string getSqlQuery(const LlamaParser& parser) const override;
@@ -123,6 +125,7 @@ struct FileMetadataNode : public Node {
 
 struct FuncNode : public Node {
   FuncNode() : Node(NodeType::FUNC) {}
+  FuncNode(Function&& value) : Node(NodeType::FUNC) { Value = value; }
   Function Value;
 
   std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
@@ -227,10 +230,10 @@ public:
   std::shared_ptr<Node> parseFactor(LlamaTokenType section);
   std::shared_ptr<Node> parseTerm(LlamaTokenType section);
   std::shared_ptr<Node> parseExpr(LlamaTokenType section);
-  Function parseFuncCall();
-  SignatureDef parseSignatureDef();
+  FuncNode parseFuncCall();
+  SigDefNode parseSignatureDef();
   GrepSection parseGrepSection();
-  FileMetadataDef parseFileMetadataDef();
+  FileMetadataNode parseFileMetadataDef();
   MetaSection parseMetaSection();
   Rule parseRuleDecl();
   std::vector<Rule> parseRules();

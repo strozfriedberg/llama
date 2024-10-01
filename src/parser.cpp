@@ -272,22 +272,19 @@ std::shared_ptr<Node> LlamaParser::parseFactor(LlamaTokenType section) {
   }
   else if (checkAny(LlamaTokenType::ANY, LlamaTokenType::ALL, LlamaTokenType::OFFSET, LlamaTokenType::COUNT, LlamaTokenType::COUNT_HAS_HITS, LlamaTokenType::LENGTH)) {
     if (section != LlamaTokenType::CONDITION) throw ParserError("Invalid property in section", previous().Pos);
-    auto funcNode = std::make_shared<FuncNode>();
-    funcNode->Value = parseFuncCall();
+    auto funcNode = std::make_shared<FuncNode>(parseFuncCall());
     node = funcNode;
     Atoms.insert(std::make_pair(std::hash<Function>{}(funcNode->Value), funcNode->Value));
   }
   else if (checkAny(LlamaTokenType::NAME, LlamaTokenType::ID)) {
     if (section != LlamaTokenType::SIGNATURE) throw ParserError("Invalid property in section", previous().Pos);
-    auto sigDefNode = std::make_shared<SigDefNode>();
-    sigDefNode->Value = parseSignatureDef();
+    auto sigDefNode = std::make_shared<SigDefNode>(parseSignatureDef());
     node = sigDefNode;
     Atoms.insert(std::make_pair(std::hash<SignatureDef>{}(sigDefNode->Value), sigDefNode->Value));
   }
   else if (checkAny(LlamaTokenType::CREATED, LlamaTokenType::MODIFIED, LlamaTokenType::FILESIZE, LlamaTokenType::FILEPATH, LlamaTokenType::FILENAME)) {
     if (section != LlamaTokenType::FILE_METADATA) throw ParserError("Invalid property in section", previous().Pos);
-    auto fileMetadataNode = std::make_shared<FileMetadataNode>();
-    fileMetadataNode->Value = parseFileMetadataDef();
+    auto fileMetadataNode = std::make_shared<FileMetadataNode>(parseFileMetadataDef());
     node = fileMetadataNode;
     Atoms.insert(std::make_pair(std::hash<FileMetadataDef>{}(fileMetadataNode->Value), fileMetadataNode->Value));
   }
@@ -323,7 +320,7 @@ std::shared_ptr<Node> LlamaParser::parseExpr(LlamaTokenType section) {
   return left;
 }
 
-Function LlamaParser::parseFuncCall() {
+FuncNode LlamaParser::parseFuncCall() {
   mustParse("Expected function name", LlamaTokenType::ALL, LlamaTokenType::ANY, LlamaTokenType::OFFSET, LlamaTokenType::COUNT, LlamaTokenType::COUNT_HAS_HITS, LlamaTokenType::LENGTH);
   LineCol pos = peek().Pos;
   LlamaTokenType name = previous().Type;
@@ -344,17 +341,17 @@ Function LlamaParser::parseFuncCall() {
     val = CurIdx - 1;
   }
   Function func(pos, name, std::move(args), op, val);
-  return func;
+  return FuncNode(std::move(func));
 }
 
-SignatureDef LlamaParser::parseSignatureDef() {
+SigDefNode LlamaParser::parseSignatureDef() {
   SignatureDef def;
   mustParse("Expected name or id keyword", LlamaTokenType::NAME, LlamaTokenType::ID);
   def.Attr = CurIdx - 1;
   expect(LlamaTokenType::EQUAL_EQUAL);
   expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
   def.Val = CurIdx - 1;
-  return def;
+  return SigDefNode(std::move(def));
 }
 
 GrepSection LlamaParser::parseGrepSection() {
@@ -368,7 +365,7 @@ GrepSection LlamaParser::parseGrepSection() {
   return grepSection;
 }
 
-FileMetadataDef LlamaParser::parseFileMetadataDef() {
+FileMetadataNode LlamaParser::parseFileMetadataDef() {
   FileMetadataDef def;
   bool expectNum = false;
 
@@ -387,7 +384,7 @@ FileMetadataDef LlamaParser::parseFileMetadataDef() {
   def.Operator = CurIdx - 1;
   expectNum ? expect(LlamaTokenType::NUMBER) : expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
   def.Value = CurIdx - 1;
-  return def;
+  return FileMetadataNode(std::move(def));
 }
 
 MetaSection LlamaParser::parseMetaSection() {

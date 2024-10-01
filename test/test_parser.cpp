@@ -322,11 +322,11 @@ TEST_CASE("parseGrepSection") {
 TEST_CASE("parseFileMetadataDefFileSize") {
   std::string input = "filesize > 100";
   LlamaParser parser(input, getTokensFromString(input));
-  FileMetadataDef def;
-  REQUIRE_NOTHROW(def = parser.parseFileMetadataDef());
-  REQUIRE(parser.getLexemeAt(def.Property) == "filesize");
-  REQUIRE(parser.getLexemeAt(def.Operator) == ">");
-  REQUIRE(parser.getLexemeAt(def.Value) == "100");
+  FileMetadataNode node;
+  REQUIRE_NOTHROW(node = parser.parseFileMetadataDef());
+  REQUIRE(parser.getLexemeAt(node.Value.Property) == "filesize");
+  REQUIRE(parser.getLexemeAt(node.Value.Operator) == ">");
+  REQUIRE(parser.getLexemeAt(node.Value.Value) == "100");
 }
 
 TEST_CASE("parseFileMetadataDefCreated") {
@@ -476,46 +476,46 @@ TEST_CASE("parserExpectNumber") {
 TEST_CASE("parseFuncCallAny") {
   std::string input = "any(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
-  Function func;
-  REQUIRE_NOTHROW(func = parser.parseFuncCall());
-  REQUIRE(func.Name == LlamaTokenType::ANY);
-  REQUIRE(func.Args.size() == 3);
-  REQUIRE(func.Args.at(0) == "s1");
-  REQUIRE(func.Args.at(1) == "s2");
-  REQUIRE(func.Args.at(2) == "s3");
+  FuncNode node;
+  REQUIRE_NOTHROW(node = parser.parseFuncCall());
+  REQUIRE(node.Value.Name == LlamaTokenType::ANY);
+  REQUIRE(node.Value.Args.size() == 3);
+  REQUIRE(node.Value.Args.at(0) == "s1");
+  REQUIRE(node.Value.Args.at(1) == "s2");
+  REQUIRE(node.Value.Args.at(2) == "s3");
 }
 
 TEST_CASE("parseFuncCallAll") {
   std::string input = "all()";
   LlamaParser parser(input, getTokensFromString(input));
-  Function func;
-  REQUIRE_NOTHROW(func = parser.parseFuncCall());
-  REQUIRE(func.Name == LlamaTokenType::ALL);
-  REQUIRE(func.Args.size() == 0);
+  FuncNode node;
+  REQUIRE_NOTHROW(node = parser.parseFuncCall());
+  REQUIRE(node.Value.Name == LlamaTokenType::ALL);
+  REQUIRE(node.Value.Args.size() == 0);
 }
 
 TEST_CASE("parseFuncCallWithNumber") {
   std::string input = "count(s1) == 5";
   LlamaParser parser(input, getTokensFromString(input));
-  Function func;
-  REQUIRE_NOTHROW(func = parser.parseFuncCall());
-  REQUIRE(func.Name == LlamaTokenType::COUNT);
-  REQUIRE(func.Args.size() == 1);
-  REQUIRE(func.Args.at(0) == "s1");
-  REQUIRE(parser.getLexemeAt(func.Operator) == "==");
-  REQUIRE(parser.getLexemeAt(func.Value) == "5");
+  FuncNode node;
+  REQUIRE_NOTHROW(node = parser.parseFuncCall());
+  REQUIRE(node.Value.Name == LlamaTokenType::COUNT);
+  REQUIRE(node.Value.Args.size() == 1);
+  REQUIRE(node.Value.Args.at(0) == "s1");
+  REQUIRE(parser.getLexemeAt(node.Value.Operator) == "==");
+  REQUIRE(parser.getLexemeAt(node.Value.Value) == "5");
 }
 
 TEST_CASE("parseFuncCallWithOperator") {
   std::string input = "offset(s1, 5) == 5";
   LlamaParser parser(input, getTokensFromString(input));
-  Function func;
-  REQUIRE_NOTHROW(func = parser.parseFuncCall());
-  REQUIRE(func.Name == LlamaTokenType::OFFSET);
-  REQUIRE(func.Args.size() == 2);
-  REQUIRE(func.Args.at(0) == "s1");
-  REQUIRE(func.Args.at(1) == "5");
-  REQUIRE(parser.getLexemeAt(func.Value) == "5");
+  FuncNode node;
+  REQUIRE_NOTHROW(node = parser.parseFuncCall());
+  REQUIRE(node.Value.Name == LlamaTokenType::OFFSET);
+  REQUIRE(node.Value.Args.size() == 2);
+  REQUIRE(node.Value.Args.at(0) == "s1");
+  REQUIRE(node.Value.Args.at(1) == "5");
+  REQUIRE(parser.getLexemeAt(node.Value.Value) == "5");
 }
 
 TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
@@ -622,77 +622,77 @@ TEST_CASE("parseConditionFunctionValid") {
   SECTION("all with zero args") {
     std::string input = "all()";
     LlamaParser parser(input, getTokensFromString(input));
-    Function func;
+    FuncNode func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("all with many args") {
     std::string input = "all(arg1, arg2, arg3)";
     LlamaParser parser(input, getTokensFromString(input));
-    Function func;
+    FuncNode func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("any with zero args") {
     std::string input = "any()";
     LlamaParser parser(input, getTokensFromString(input));
-    Function func;
+    FuncNode func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("any with many args") {
     std::string input = "any(arg1, arg2, arg3)";
     LlamaParser parser(input, getTokensFromString(input));
-    Function func;
+    FuncNode func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("count with one arg and comparison") {
     std::string input = "count(arg1) == 5";
     LlamaParser parser(input, getTokensFromString(input));
-    Function func;
+    FuncNode func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("length with one arg and comparison") {
     std::string input = "length(arg1) == 5";
     LlamaParser parser(input, getTokensFromString(input));
-    Function func;
+    FuncNode func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("length with two args and comparison") {
     std::string input = "length(arg1, 4) == 5";
     LlamaParser parser(input, getTokensFromString(input));
-    Function func;
+    FuncNode func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("offset with one arg and comparison") {
     std::string input = "offset(arg1) == 5";
     LlamaParser parser(input, getTokensFromString(input));
-    Function func;
+    FuncNode func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("offset with two args and comparison") {
     std::string input = "offset(arg1, 4) == 5";
     LlamaParser parser(input, getTokensFromString(input));
-    Function func;
+    FuncNode func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("count_has_hits with zero args and comparison") {
     std::string input = "count_has_hits() > 6";
     LlamaParser parser(input, getTokensFromString(input));
-    Function func;
+    FuncNode func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("count_has_hits with many args and comparison") {
     std::string input = "count_has_hits(arg1, arg2, arg3) == 3";
     LlamaParser parser(input, getTokensFromString(input));
-    Function func;
+    FuncNode func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 }
