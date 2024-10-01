@@ -35,7 +35,7 @@ class LlamaParser;
 
 struct Atom {};
 
-struct SignatureDef : public Atom {
+struct SigDef : public Atom {
   size_t Attr;
   size_t Val;
 };
@@ -109,8 +109,8 @@ struct BoolNode : public Node {
 
 struct SigDefNode : public Node {
   SigDefNode() : Node(NodeType::SIG) {}
-  SigDefNode(SignatureDef&& value) : Node(NodeType::SIG) { Value = value; }
-  SignatureDef Value;
+  SigDefNode(SigDef&& value) : Node(NodeType::SIG) { Value = value; }
+  SigDef Value;
 
   std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
 };
@@ -132,9 +132,9 @@ struct FuncNode : public Node {
 };
 
 template<>
-struct std::hash<SignatureDef>
+struct std::hash<SigDef>
 {
-    std::size_t operator()(const SignatureDef& sig) const noexcept {
+    std::size_t operator()(const SigDef& sig) const noexcept {
       std::size_t hash = 0;
       boost::hash_combine(hash, std::hash<size_t>{}(sig.Attr));
       boost::hash_combine(hash, std::hash<size_t>{}(sig.Val));
@@ -231,7 +231,7 @@ public:
   std::shared_ptr<Node> parseTerm(LlamaTokenType section);
   std::shared_ptr<Node> parseExpr(LlamaTokenType section);
   FuncNode parseFuncCall();
-  SigDefNode parseSignatureDef();
+  SigDefNode parseSigDef();
   GrepSection parseGrepSection();
   FileMetadataNode parseFileMetadataDef();
   MetaSection parseMetaSection();

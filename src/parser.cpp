@@ -278,9 +278,9 @@ std::shared_ptr<Node> LlamaParser::parseFactor(LlamaTokenType section) {
   }
   else if (checkAny(LlamaTokenType::NAME, LlamaTokenType::ID)) {
     if (section != LlamaTokenType::SIGNATURE) throw ParserError("Invalid property in section", previous().Pos);
-    auto sigDefNode = std::make_shared<SigDefNode>(parseSignatureDef());
+    auto sigDefNode = std::make_shared<SigDefNode>(parseSigDef());
     node = sigDefNode;
-    Atoms.insert(std::make_pair(std::hash<SignatureDef>{}(sigDefNode->Value), sigDefNode->Value));
+    Atoms.insert(std::make_pair(std::hash<SigDef>{}(sigDefNode->Value), sigDefNode->Value));
   }
   else if (checkAny(LlamaTokenType::CREATED, LlamaTokenType::MODIFIED, LlamaTokenType::FILESIZE, LlamaTokenType::FILEPATH, LlamaTokenType::FILENAME)) {
     if (section != LlamaTokenType::FILE_METADATA) throw ParserError("Invalid property in section", previous().Pos);
@@ -344,8 +344,8 @@ FuncNode LlamaParser::parseFuncCall() {
   return FuncNode(std::move(func));
 }
 
-SigDefNode LlamaParser::parseSignatureDef() {
-  SignatureDef def;
+SigDefNode LlamaParser::parseSigDef() {
+  SigDef def;
   mustParse("Expected name or id keyword", LlamaTokenType::NAME, LlamaTokenType::ID);
   def.Attr = CurIdx - 1;
   expect(LlamaTokenType::EQUAL_EQUAL);
