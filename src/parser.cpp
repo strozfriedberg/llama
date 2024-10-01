@@ -327,15 +327,15 @@ Function LlamaParser::parseFuncCall() {
   mustParse("Expected function name", LlamaTokenType::ALL, LlamaTokenType::ANY, LlamaTokenType::OFFSET, LlamaTokenType::COUNT, LlamaTokenType::COUNT_HAS_HITS, LlamaTokenType::LENGTH);
   LineCol pos = peek().Pos;
   LlamaTokenType name = previous().Type;
-  std::vector<std::string> args;
+  std::vector<std::string_view> args;
   size_t op = SIZE_MAX, val = SIZE_MAX;
   expect(LlamaTokenType::OPEN_PAREN);
   if (matchAny(LlamaTokenType::IDENTIFIER)) {
-    args.push_back(std::string(getPreviousLexeme()));
+    args.push_back(getPreviousLexeme());
   }
   while (matchAny(LlamaTokenType::COMMA)) {
     mustParse("Expected identifier or number", LlamaTokenType::IDENTIFIER, LlamaTokenType::NUMBER);
-    args.push_back(std::string(getPreviousLexeme()));
+    args.push_back(getPreviousLexeme());
   }
   expect(LlamaTokenType::CLOSE_PAREN);
   if (matchAny(LlamaTokenType::EQUAL, LlamaTokenType::EQUAL_EQUAL, LlamaTokenType::NOT_EQUAL, LlamaTokenType::GREATER_THAN, LlamaTokenType::GREATER_THAN_EQUAL, LlamaTokenType::LESS_THAN, LlamaTokenType::LESS_THAN_EQUAL)) {

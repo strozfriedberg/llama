@@ -49,7 +49,7 @@ struct FileMetadataDef : public Atom {
 
 struct Function : public Atom {
   Function() = default;
-  Function(LineCol pos, LlamaTokenType name, const std::vector<std::string>&& args, size_t op, size_t val)
+  Function(LineCol pos, LlamaTokenType name, const std::vector<std::string_view>&& args, size_t op, size_t val)
                   : Pos(pos), Name(name), Args(args), Operator(op), Value(val) { validate(); }
   ~Function() = default;
 
@@ -57,7 +57,7 @@ struct Function : public Atom {
 
   LineCol Pos;
   LlamaTokenType Name;
-  std::vector<std::string> Args;
+  std::vector<std::string_view> Args;
   size_t Operator = SIZE_MAX;
   size_t Value = SIZE_MAX;
 };
@@ -157,7 +157,7 @@ struct std::hash<Function>
     std::size_t operator()(const Function& func) const noexcept {
       std::size_t hash = 0, h2 = 0;
       for (const auto& arg : func.Args) {
-        const std::size_t h = std::hash<std::string>{}(arg);
+        const std::size_t h = std::hash<std::string_view>{}(arg);
         boost::hash_combine(h2, h);
       }
       boost::hash_combine(hash, std::hash<LlamaTokenType>{}(func.Name));
