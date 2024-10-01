@@ -1,8 +1,8 @@
 #include "parser.h"
 #include "util.h"
 
-void ConditionFunction::validate() {
-  ConditionFunctionProperties props = ConditionFunctionValidProperties.find(Name)->second;
+void Function::validate() {
+  FunctionProperties props = FunctionValidProperties.find(Name)->second;
   if (props.IsCompFunc && (Operator == SIZE_MAX || Value == SIZE_MAX)) {
     throw ParserError("Expected operator and value for comparison", Pos);
   }
@@ -275,7 +275,7 @@ std::shared_ptr<Node> LlamaParser::parseFactor(LlamaTokenType section) {
     auto funcNode = std::make_shared<FuncNode>();
     funcNode->Value = parseFuncCall();
     node = funcNode;
-    Atoms.insert(std::make_pair(std::hash<ConditionFunction>{}(funcNode->Value), funcNode->Value));
+    Atoms.insert(std::make_pair(std::hash<Function>{}(funcNode->Value), funcNode->Value));
   }
   else if (checkAny(LlamaTokenType::NAME, LlamaTokenType::ID)) {
     if (section != LlamaTokenType::SIGNATURE) throw ParserError("Invalid property in section", previous().Pos);
@@ -323,7 +323,7 @@ std::shared_ptr<Node> LlamaParser::parseExpr(LlamaTokenType section) {
   return left;
 }
 
-ConditionFunction LlamaParser::parseFuncCall() {
+Function LlamaParser::parseFuncCall() {
   mustParse("Expected function name", LlamaTokenType::ALL, LlamaTokenType::ANY, LlamaTokenType::OFFSET, LlamaTokenType::COUNT, LlamaTokenType::COUNT_HAS_HITS, LlamaTokenType::LENGTH);
   LineCol pos = peek().Pos;
   LlamaTokenType name = previous().Type;
@@ -343,7 +343,7 @@ ConditionFunction LlamaParser::parseFuncCall() {
     expect(LlamaTokenType::NUMBER);
     val = CurIdx - 1;
   }
-  ConditionFunction func(pos, name, std::move(args), op, val);
+  Function func(pos, name, std::move(args), op, val);
   return func;
 }
 

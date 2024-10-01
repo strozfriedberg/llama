@@ -47,11 +47,11 @@ struct FileMetadataDef : public Atom {
   size_t Value;
 };
 
-struct ConditionFunction : public Atom {
-  ConditionFunction() = default;
-  ConditionFunction(LineCol pos, LlamaTokenType name, const std::vector<std::string>&& args, size_t op, size_t val)
+struct Function : public Atom {
+  Function() = default;
+  Function(LineCol pos, LlamaTokenType name, const std::vector<std::string>&& args, size_t op, size_t val)
                   : Pos(pos), Name(name), Args(args), Operator(op), Value(val) { validate(); }
-  ~ConditionFunction() = default;
+  ~Function() = default;
 
   void validate();
 
@@ -62,19 +62,19 @@ struct ConditionFunction : public Atom {
   size_t Value = SIZE_MAX;
 };
 
-struct ConditionFunctionProperties {
+struct FunctionProperties {
   size_t MinArgs;
   size_t MaxArgs;
   bool IsCompFunc;
 };
 
-static const std::unordered_map<LlamaTokenType, ConditionFunctionProperties> ConditionFunctionValidProperties {
-  {LlamaTokenType::ALL, ConditionFunctionProperties{0, SIZE_MAX, false}},
-  {LlamaTokenType::ANY, ConditionFunctionProperties{0, SIZE_MAX, false}},
-  {LlamaTokenType::OFFSET, ConditionFunctionProperties{1, 2, true}},
-  {LlamaTokenType::COUNT, ConditionFunctionProperties{1, 1, true}},
-  {LlamaTokenType::COUNT_HAS_HITS, ConditionFunctionProperties{0, SIZE_MAX, true}},
-  {LlamaTokenType::LENGTH, ConditionFunctionProperties{1, 2, true}}
+static const std::unordered_map<LlamaTokenType, FunctionProperties> FunctionValidProperties {
+  {LlamaTokenType::ALL,            FunctionProperties{0, SIZE_MAX, false}},
+  {LlamaTokenType::ANY,            FunctionProperties{0, SIZE_MAX, false}},
+  {LlamaTokenType::OFFSET,         FunctionProperties{1, 2, true}},
+  {LlamaTokenType::COUNT,          FunctionProperties{1, 1, true}},
+  {LlamaTokenType::COUNT_HAS_HITS, FunctionProperties{0, SIZE_MAX, true}},
+  {LlamaTokenType::LENGTH,         FunctionProperties{1, 2, true}}
 };
 
 struct PatternDef {
@@ -123,7 +123,7 @@ struct FileMetadataNode : public Node {
 
 struct FuncNode : public Node {
   FuncNode() : Node(NodeType::FUNC) {}
-  ConditionFunction Value;
+  Function Value;
 
   std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
 };
@@ -152,9 +152,9 @@ struct std::hash<FileMetadataDef>
 };
 
 template<>
-struct std::hash<ConditionFunction>
+struct std::hash<Function>
 {
-    std::size_t operator()(const ConditionFunction& func) const noexcept {
+    std::size_t operator()(const Function& func) const noexcept {
       std::size_t hash = 0, h2 = 0;
       for (const auto& arg : func.Args) {
         const std::size_t h = std::hash<std::string>{}(arg);
@@ -227,7 +227,7 @@ public:
   std::shared_ptr<Node> parseFactor(LlamaTokenType section);
   std::shared_ptr<Node> parseTerm(LlamaTokenType section);
   std::shared_ptr<Node> parseExpr(LlamaTokenType section);
-  ConditionFunction parseFuncCall();
+  Function parseFuncCall();
   SignatureDef parseSignatureDef();
   GrepSection parseGrepSection();
   FileMetadataDef parseFileMetadataDef();

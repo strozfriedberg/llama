@@ -476,7 +476,7 @@ TEST_CASE("parserExpectNumber") {
 TEST_CASE("parseFuncCallAny") {
   std::string input = "any(s1, s2, s3)";
   LlamaParser parser(input, getTokensFromString(input));
-  ConditionFunction func;
+  Function func;
   REQUIRE_NOTHROW(func = parser.parseFuncCall());
   REQUIRE(func.Name == LlamaTokenType::ANY);
   REQUIRE(func.Args.size() == 3);
@@ -488,7 +488,7 @@ TEST_CASE("parseFuncCallAny") {
 TEST_CASE("parseFuncCallAll") {
   std::string input = "all()";
   LlamaParser parser(input, getTokensFromString(input));
-  ConditionFunction func;
+  Function func;
   REQUIRE_NOTHROW(func = parser.parseFuncCall());
   REQUIRE(func.Name == LlamaTokenType::ALL);
   REQUIRE(func.Args.size() == 0);
@@ -497,7 +497,7 @@ TEST_CASE("parseFuncCallAll") {
 TEST_CASE("parseFuncCallWithNumber") {
   std::string input = "count(s1) == 5";
   LlamaParser parser(input, getTokensFromString(input));
-  ConditionFunction func;
+  Function func;
   REQUIRE_NOTHROW(func = parser.parseFuncCall());
   REQUIRE(func.Name == LlamaTokenType::COUNT);
   REQUIRE(func.Args.size() == 1);
@@ -509,7 +509,7 @@ TEST_CASE("parseFuncCallWithNumber") {
 TEST_CASE("parseFuncCallWithOperator") {
   std::string input = "offset(s1, 5) == 5";
   LlamaParser parser(input, getTokensFromString(input));
-  ConditionFunction func;
+  Function func;
   REQUIRE_NOTHROW(func = parser.parseFuncCall());
   REQUIRE(func.Name == LlamaTokenType::OFFSET);
   REQUIRE(func.Args.size() == 2);
@@ -622,77 +622,77 @@ TEST_CASE("parseConditionFunctionValid") {
   SECTION("all with zero args") {
     std::string input = "all()";
     LlamaParser parser(input, getTokensFromString(input));
-    ConditionFunction func;
+    Function func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("all with many args") {
     std::string input = "all(arg1, arg2, arg3)";
     LlamaParser parser(input, getTokensFromString(input));
-    ConditionFunction func;
+    Function func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("any with zero args") {
     std::string input = "any()";
     LlamaParser parser(input, getTokensFromString(input));
-    ConditionFunction func;
+    Function func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("any with many args") {
     std::string input = "any(arg1, arg2, arg3)";
     LlamaParser parser(input, getTokensFromString(input));
-    ConditionFunction func;
+    Function func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("count with one arg and comparison") {
     std::string input = "count(arg1) == 5";
     LlamaParser parser(input, getTokensFromString(input));
-    ConditionFunction func;
+    Function func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("length with one arg and comparison") {
     std::string input = "length(arg1) == 5";
     LlamaParser parser(input, getTokensFromString(input));
-    ConditionFunction func;
+    Function func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("length with two args and comparison") {
     std::string input = "length(arg1, 4) == 5";
     LlamaParser parser(input, getTokensFromString(input));
-    ConditionFunction func;
+    Function func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("offset with one arg and comparison") {
     std::string input = "offset(arg1) == 5";
     LlamaParser parser(input, getTokensFromString(input));
-    ConditionFunction func;
+    Function func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("offset with two args and comparison") {
     std::string input = "offset(arg1, 4) == 5";
     LlamaParser parser(input, getTokensFromString(input));
-    ConditionFunction func;
+    Function func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("count_has_hits with zero args and comparison") {
     std::string input = "count_has_hits() > 6";
     LlamaParser parser(input, getTokensFromString(input));
-    ConditionFunction func;
+    Function func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("count_has_hits with many args and comparison") {
     std::string input = "count_has_hits(arg1, arg2, arg3) == 3";
     LlamaParser parser(input, getTokensFromString(input));
-    ConditionFunction func;
+    Function func;
     REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 }
