@@ -529,11 +529,46 @@ TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
   REQUIRE(root->Value.Args.size() == 3);
 }
 
+TEST_CASE("parseFactorSignatureSection") {
+  std::string input = "name == \"Executable\"";
+  LlamaParser parser(input, getTokensFromString(input));
+  std::shared_ptr<Node> node = std::make_shared<FuncNode>();
+  REQUIRE_NOTHROW(node = parser.parseFactor(LlamaTokenType::SIGNATURE));
+}
+
 TEST_CASE("parseFactorFileMetadataSection") {
+  std::string input = "created == \"2023-04-05\"";
+  LlamaParser parser(input, getTokensFromString(input));
+  std::shared_ptr<Node> node = std::make_shared<FuncNode>();
+  REQUIRE_NOTHROW(node = parser.parseFactor(LlamaTokenType::FILE_METADATA));
+}
+
+TEST_CASE("parseFactorConditionSection") {
+  std::string input = "any(s1, s2, s3)";
+  LlamaParser parser(input, getTokensFromString(input));
+  std::shared_ptr<Node> node = std::make_shared<FuncNode>();
+  REQUIRE_NOTHROW(node = parser.parseFactor(LlamaTokenType::CONDITION));
+}
+
+TEST_CASE("parseFactorFileMetadataSectionWrongProperty") {
   std::string input = "name == \"Executable\"";
   LlamaParser parser(input, getTokensFromString(input));
   std::shared_ptr<Node> node = std::make_shared<FuncNode>();
   REQUIRE_THROWS(node = parser.parseFactor(LlamaTokenType::FILE_METADATA));
+}
+
+TEST_CASE("parseFactorSignatureSectionWrongProperty") {
+  std::string input = "created > \"2023-04-05\"";
+  LlamaParser parser(input, getTokensFromString(input));
+  std::shared_ptr<Node> node = std::make_shared<FuncNode>();
+  REQUIRE_THROWS(node = parser.parseFactor(LlamaTokenType::SIGNATURE));
+}
+
+TEST_CASE("parseFactorConditionSectionWrongProperty") {
+  std::string input = "created > \"2023-04-05\"";
+  LlamaParser parser(input, getTokensFromString(input));
+  std::shared_ptr<Node> node = std::make_shared<FuncNode>();
+  REQUIRE_THROWS(node = parser.parseFactor(LlamaTokenType::CONDITION));
 }
 
 TEST_CASE("parseFileHashRecord") {

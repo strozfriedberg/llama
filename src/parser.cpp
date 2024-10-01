@@ -283,21 +283,21 @@ std::shared_ptr<Node> LlamaParser::parseFactor(LlamaTokenType section) {
     expect(LlamaTokenType::CLOSE_PAREN);
   }
   else if (checkAny(LlamaTokenType::ANY, LlamaTokenType::ALL, LlamaTokenType::OFFSET, LlamaTokenType::COUNT, LlamaTokenType::COUNT_HAS_HITS, LlamaTokenType::LENGTH)) {
+    if (section != LlamaTokenType::CONDITION) throw ParserError("Invalid property in section", previous().Pos);
     auto funcNode = std::make_shared<FuncNode>();
     funcNode->Value = parseFuncCall();
     node = funcNode;
     Atoms.insert(std::make_pair(std::hash<ConditionFunction>{}(funcNode->Value), funcNode->Value));
   }
   else if (checkAny(LlamaTokenType::NAME, LlamaTokenType::ID)) {
-    if (section != LlamaTokenType::SIGNATURE) {
-      throw ParserError("Invalid property in section", previous().Pos);
-    }
+    if (section != LlamaTokenType::SIGNATURE) throw ParserError("Invalid property in section", previous().Pos);
     auto sigDefNode = std::make_shared<SigDefNode>();
     sigDefNode->Value = parseSignatureDef();
     node = sigDefNode;
     Atoms.insert(std::make_pair(std::hash<SignatureDef>{}(sigDefNode->Value), sigDefNode->Value));
   }
   else if (checkAny(LlamaTokenType::CREATED, LlamaTokenType::MODIFIED, LlamaTokenType::FILESIZE, LlamaTokenType::FILEPATH, LlamaTokenType::FILENAME)) {
+    if (section != LlamaTokenType::FILE_METADATA) throw ParserError("Invalid property in section", previous().Pos);
     auto fileMetadataNode = std::make_shared<FileMetadataNode>();
     fileMetadataNode->Value = parseFileMetadataDef();
     node = fileMetadataNode;
