@@ -257,7 +257,7 @@ public:
   std::string_view getPreviousLexeme() const { return std::string_view(Input).substr(previous().Start, previous().length()); }
   std::string_view getLexemeAt(size_t idx) const { return std::string_view(Input).substr(Tokens.at(idx).Start, Tokens.at(idx).length()); }
 
-  void clear() { Patterns.clear(); Atoms.clear(); Tokens.clear(); Input.clear(); CurIdx = 0; }
+  void clear();
 
   std::string_view expect(LlamaTokenType);
   HashSection parseHashSection();

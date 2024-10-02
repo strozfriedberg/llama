@@ -67,6 +67,14 @@ std::string Rule::getSqlQuery(const LlamaParser& parser) const {
   return query;
 }
 
+void LlamaParser::clear() {
+  Patterns.clear();
+  Atoms.clear();
+  Tokens.clear();
+  Input.clear();
+  CurIdx = 0;
+}
+
 std::string_view LlamaParser::expect(LlamaTokenType token) {
   switch (token) {
     case LlamaTokenType::RULE: mustParse("Expected rule keyword", LlamaTokenType::RULE); break;
