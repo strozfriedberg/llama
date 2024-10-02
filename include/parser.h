@@ -246,7 +246,7 @@ public:
 
   // Does not increment CurIdx if match.
   template <class... TokenTypes>
-  bool checkAny(TokenTypes... types) { return ((peek().Type == types) || ...);};
+  bool checkAny(TokenTypes... types) const { return ((peek().Type == types) || ...);};
 
   bool isAtEnd() const { return peek().Type == LlamaTokenType::END_OF_FILE; }
 
