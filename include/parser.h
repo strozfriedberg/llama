@@ -73,9 +73,10 @@ struct std::hash<SigDef>
 struct SigDefNode : public Node {
   SigDefNode() : Node(NodeType::SIG) {}
   SigDefNode(SigDef&& value) : Node(NodeType::SIG) { Value = value; }
-  SigDef Value;
 
   std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
+
+  SigDef Value;
 };
 
 /************************************ FILE_METADATA SECTION ***************************************/
