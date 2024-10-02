@@ -121,9 +121,81 @@ struct any_type {
 template<typename T>
 auto to_tuple(T&& t) noexcept {
   using type = std::decay_t<T>;
-  if constexpr (is_braces_constructible<type, any_type, any_type>{}) {
+  if constexpr (is_braces_constructible<type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type>{}) {
+    auto&& [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s] = t;
+    return std::make_tuple(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s);
+  }
+  else if constexpr (is_braces_constructible<type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type>{}) {
+    auto&& [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r] = t;
+    return std::make_tuple(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r);
+  }
+  else if constexpr (is_braces_constructible<type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type>{}) {
+    auto&& [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q] = t;
+    return std::make_tuple(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q);
+  }
+  else if constexpr (is_braces_constructible<type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type>{}) {
+    auto&& [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p] = t;
+    return std::make_tuple(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p);
+  }
+  else if constexpr (is_braces_constructible<type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type>{}) {
+    auto&& [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o] = t;
+    return std::make_tuple(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o);
+  }
+  else if constexpr (is_braces_constructible<type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type>{}) {
+    auto&& [a, b, c, d, e, f, g, h, i, j, k, l, m, n] = t;
+    return std::make_tuple(a, b, c, d, e, f, g, h, i, j, k, l, m, n);
+  }
+  else if constexpr (is_braces_constructible<type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type>{}) {
+    auto&& [a, b, c, d, e, f, g, h, i, j, k, l, m] = t;
+    return std::make_tuple(a, b, c, d, e, f, g, h, i, j, k, l, m);
+  }
+  else if constexpr (is_braces_constructible<type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type>{}) {
+    auto&& [a, b, c, d, e, f, g, h, i, j, k, l] = t;
+    return std::make_tuple(a, b, c, d, e, f, g, h, i, j, k, l);
+  }
+  else if constexpr (is_braces_constructible<type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type>{}) {
+    auto&& [a, b, c, d, e, f, g, h, i, j, k] = t;
+    return std::make_tuple(a, b, c, d, e, f, g, h, i, j, k);
+  }
+  else if constexpr (is_braces_constructible<type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type>{}) {
+    auto&& [a, b, c, d, e, f, g, h, i, j] = t;
+    return std::make_tuple(a, b, c, d, e, f, g, h, i, j);
+  }
+  else if constexpr (is_braces_constructible<type, any_type, any_type, any_type, any_type, any_type, any_type, any_type, any_type>{}) {
+    auto&& [a, b, c, d, e, f, g, h, i] = t;
+    return std::make_tuple(a, b, c, d, e, f, g, h, i);
+  }
+  else if constexpr (is_braces_constructible<type, any_type, any_type, any_type, any_type, any_type, any_type, any_type>{}) {
+    auto&& [a, b, c, d, e, f, g, h] = t;
+    return std::make_tuple(a, b, c, d, e, f, g, h);
+  }
+  else if constexpr (is_braces_constructible<type, any_type, any_type, any_type, any_type, any_type, any_type>{}) {
+    auto&& [a, b, c, d, e, f, g] = t;
+    return std::make_tuple(a, b, c, d, e, f, g);
+  }
+  else if constexpr (is_braces_constructible<type, any_type, any_type, any_type, any_type, any_type>{}) {
+    auto&& [a, b, c, d, e, f] = t;
+    return std::make_tuple(a, b, c, d, e, f);
+  }
+  /*else if constexpr (is_braces_constructible<type, any_type, any_type, any_type, any_type>{}) {
+    auto&& [a, b, c, d, e] = t;
+    return std::make_tuple(a, b, c, d, e);
+  }*/
+  else if constexpr (is_braces_constructible<type, any_type, any_type, any_type>{}) {
+    auto&& [a, b, c, d] = t;
+    return std::make_tuple(a, b, c, d);
+  }
+  else if constexpr (is_braces_constructible<type, any_type, any_type>{}) {
     auto&& [a, b, c] = t;
     return std::make_tuple(a, b, c);
+  }
+  else if constexpr (is_braces_constructible<type, any_type>{}) {
+    auto&& [a, b] = t;
+    return std::make_tuple(a, b);
+  }
+  else if constexpr (is_braces_constructible<type>{}) {
+    auto&& [a] = t;
+    return std::make_tuple(a);
   }
   else {
     return std::make_tuple();
@@ -132,6 +204,8 @@ auto to_tuple(T&& t) noexcept {
 
 template<typename T>
 struct DBType {
+  typedef T BaseType;
+
   typedef decltype(to_tuple<T>(T())) TupleType; // this requires default constructor... come back to it
 
   static constexpr auto& ColNames = T::ColNames;
@@ -155,15 +229,16 @@ struct DBType {
 
 struct DuckRecColumns {
 public:
-  static constexpr auto ColNames = {"path", "meta_addr", "parent_addr"};
+  static constexpr auto ColNames = {"path", "meta_addr", "parent_addr", "flags"};
 
   std::string path;
   uint64_t    meta_addr;
   uint64_t    parent_addr;
+  std::string flags;
 };
 
-struct DuckRec : public DBType<DuckRecColumns> {
-};
+typedef DBType<DuckRecColumns> DuckRec;
+
 
 template<typename T>
 struct DBBatch {
@@ -185,55 +260,63 @@ struct DBBatch {
     OffsetVals.clear();
     NumRows = 0;
   }
-/*
+
+  template<typename Cur>
+  void add(size_t offset, const Cur& cur) {
+    if constexpr (std::is_convertible<Cur, std::string>()) {
+      addString(offset, cur);
+    }
+    else if constexpr (std::is_integral_v<Cur>) {
+      OffsetVals.push_back(cur);
+    }
+  }
+
   void add(const T& t) {
+    auto&& tupes = to_tuple(t);
     size_t startOffset = Buf.size();
-    size_t totalSize = totalStringSize(t);
+    size_t totalSize = totalStringSize(tupes);
     Buf.resize(startOffset + totalSize);
 
-    const auto& tupes = to_tuple(t);
-
-    std::apply([&](auto... args) {
-      if constexpr (
-      addStrings(*this, startOffset, args...);
+    std::apply([&](auto&&... car) { // "cons car cdr"
+      (add(startOffset, car), ...);
     }, tupes);
 
     ++NumRows;
-  }*/
+  }
 };
 
 TEST_CASE("testTypesFiguring") {
   REQUIRE(DuckRec::colIndex("meta_addr") == 1);
   REQUIRE(DuckRec::colIndex("parent_addr") == 2);
   REQUIRE(DuckRec::colIndex("path") == 0);
+  REQUIRE(DuckRec::colIndex("flags") == 3);
 
   REQUIRE(std::string("VARCHAR") == duckdbType<std::string>());
   static_assert(std::char_traits<char>::compare(duckdbType<std::string>(), "VARCHAR", 7) == 0);
   REQUIRE(std::string("UBIGINT") == duckdbType<uint64_t>());
   static_assert(std::char_traits<char>::compare(duckdbType<uint64_t>(), "UBIGINT", 7) == 0);
 
-  REQUIRE(createQuery<DuckRec>("DuckRec") == "CREATE TABLE DuckRec (path VARCHAR, meta_addr UBIGINT, parent_addr UBIGINT);");
+  REQUIRE(createQuery<DuckRec>("DuckRec") == "CREATE TABLE DuckRec (path VARCHAR, meta_addr UBIGINT, parent_addr UBIGINT, flags VARCHAR);");
 
-  REQUIRE(3 == DuckRecColumns::ColNames.size());
-  REQUIRE(3 == DuckRec::ColNames.size());
-  REQUIRE(3 == DuckRec::NumCols);
+  REQUIRE(4 == DuckRecColumns::ColNames.size());
+  REQUIRE(4 == DuckRec::ColNames.size());
+  REQUIRE(4 == DuckRec::NumCols);
 
-  DuckRecColumns drc{"/a/path", 21, 17};
+  DuckRecColumns drc{"/a/path", 21, 17, "File"};
 
-  static_assert(std::is_same<decltype(to_tuple(drc)), std::tuple<std::string, uint64_t, uint64_t>>::value);
-  REQUIRE(std::make_tuple("/a/path", 21, 17) == to_tuple(drc));
+  static_assert(std::is_same<decltype(to_tuple(drc)), std::tuple<std::string, uint64_t, uint64_t, std::string>>::value);
+  REQUIRE(std::make_tuple("/a/path", 21, 17, "File") == to_tuple(drc));
 
-  static_assert(std::is_same<DuckRec::TupleType, std::tuple<std::string, uint64_t, uint64_t>>::value);
+  static_assert(std::is_same<DuckRec::TupleType, std::tuple<std::string, uint64_t, uint64_t, std::string>>::value);
 
-  DBBatch<DuckRec> batch;
+  DBBatch<DuckRecColumns> batch;
   
-  REQUIRE(8 == totalStringSize(to_tuple(drc)));
-  /*
+  REQUIRE(13 == totalStringSize(to_tuple(drc)));
+
   batch.add(drc);
   REQUIRE(batch.size() == 1);
-  REQUIRE(batch.Buf.size() == 8);
-  REQUIRE(batch.OffsetVals.size() == 3);
-  */
+  REQUIRE(batch.Buf.size() == 13);
+  REQUIRE(batch.OffsetVals.size() == 4);
 }
 
 TEST_CASE("inodeWriting") {
