@@ -116,7 +116,7 @@ struct FileMetadataNode : public Node {
 struct Function : public Atom {
   Function() = default;
   Function(LineCol pos, LlamaTokenType name, const std::vector<std::string_view>&& args, size_t op, size_t val)
-                  : Pos(pos), Name(name), Args(args), Operator(op), Value(val) { validate(); }
+                  : Args(args), Operator(op), Value(val), Pos(pos), Name(name) { validate(); }
 
   // Used to validate that the function is called with the right number of arguments
   // and that its return value is compared to a value if the function type demands it.
@@ -234,7 +234,7 @@ struct Rule {
 class LlamaParser {
 public:
   LlamaParser() = default;
-  LlamaParser(const std::string& input, const std::vector<Token>& tokens) : Input(input), Tokens(tokens) {}
+  LlamaParser(const std::string& input, const std::vector<Token>& tokens) : Tokens(tokens), Input(input) {}
 
   Token previous() const { return Tokens.at(CurIdx - 1); }
   Token peek() const { return Tokens.at(CurIdx); }
@@ -248,6 +248,9 @@ public:
   template <class... TokenTypes>
   bool checkAny(TokenTypes... types) const { return ((peek().Type == types) || ...);};
 
+  // Throws if CurIdx is not pointing to the given LlamaTokenType.
+  std::string_view expect(LlamaTokenType);
+
   bool isAtEnd() const { return peek().Type == LlamaTokenType::END_OF_FILE; }
 
   // Increments CurIdx if match. Otherwise throws exception with given errMsg.
@@ -259,35 +262,42 @@ public:
 
   void clear();
 
-  std::string_view expect(LlamaTokenType);
-  HashSection parseHashSection();
-  SFHASH_HashAlgorithm parseHash();
-  FileHashRecord parseFileHashRecord();
-  std::string parseHashValue();
   // This does not return anything because we have no use for the operator itself,
   // and if we did, we could just get it from `previous().Type`.
   void parseOperator();
-  std::vector<PatternDef> parsePatternMod();
+
+  SFHASH_HashAlgorithm parseHash();
+  FileHashRecord       parseFileHashRecord();
+  std::string          parseHashValue();
+
+  std::vector<PatternDef>  parsePatternDef();
+  std::vector<PatternDef>  parsePatternMod();
+  std::vector<PatternDef>  parseHexString();
   std::vector<std::string> parseEncodings();
-  std::vector<PatternDef> parsePatternDef();
-  PatternSection parsePatternsSection();
-  std::vector<PatternDef> parseHexString();
+
   std::shared_ptr<Node> parseFactor(LlamaTokenType section);
   std::shared_ptr<Node> parseTerm(LlamaTokenType section);
   std::shared_ptr<Node> parseExpr(LlamaTokenType section);
-  FuncNode parseFuncCall();
-  SigDefNode parseSigDef();
-  GrepSection parseGrepSection();
+
+  FuncNode         parseFuncCall();
+  SigDefNode       parseSigDef();
   FileMetadataNode parseFileMetadataDef();
-  MetaSection parseMetaSection();
+
+  MetaSection    parseMetaSection();
+  HashSection    parseHashSection();
+  GrepSection    parseGrepSection();
+  PatternSection parsePatternsSection();
+
   Rule parseRuleDecl();
+
   std::vector<Rule> parseRules();
 
-  std::string Input;
-  std::vector<Token> Tokens;
-  std::unordered_map<std::string, std::string> Patterns;
   // This aggregates all expressions under the `signature`, `file_metadata`, and `condition` sections.
   std::unordered_map<std::size_t, Atom> Atoms;
+
+  std::unordered_map<std::string, std::string> Patterns;
+  std::vector<Token> Tokens;
+  std::string Input;
   uint64_t CurIdx = 0;
 };
 
