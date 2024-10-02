@@ -117,17 +117,16 @@ struct Function : public Atom {
   Function() = default;
   Function(LineCol pos, LlamaTokenType name, const std::vector<std::string_view>&& args, size_t op, size_t val)
                   : Pos(pos), Name(name), Args(args), Operator(op), Value(val) { validate(); }
-  ~Function() = default;
 
   // Used to validate that the function is called with the right number of arguments
   // and that its return value is compared to a value if the function type demands it.
   void validate();
 
-  LineCol Pos;
-  LlamaTokenType Name;
   std::vector<std::string_view> Args;
   size_t Operator = SIZE_MAX;
   size_t Value = SIZE_MAX;
+  LineCol Pos;
+  LlamaTokenType Name;
 };
 
 // Defines a hash function for a Function object.
