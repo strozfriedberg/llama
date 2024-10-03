@@ -292,9 +292,6 @@ public:
 
   std::vector<Rule> parseRules();
 
-  // This aggregates all expressions under the `signature`, `file_metadata`, and `condition` sections.
-  std::unordered_map<std::size_t, Atom> Atoms;
-
   std::unordered_map<std::string, std::string> Patterns;
   std::vector<Token> Tokens;
   std::string Input;

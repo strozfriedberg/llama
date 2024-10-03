@@ -69,7 +69,6 @@ std::string Rule::getSqlQuery(const LlamaParser& parser) const {
 
 void LlamaParser::clear() {
   Patterns.clear();
-  Atoms.clear();
   Tokens.clear();
   Input.clear();
   CurIdx = 0;
@@ -282,19 +281,16 @@ std::shared_ptr<Node> LlamaParser::parseFactor(LlamaTokenType section) {
     if (section != LlamaTokenType::CONDITION) throw ParserError("Invalid property in section", previous().Pos);
     auto funcNode = std::make_shared<FuncNode>(parseFuncCall());
     node = funcNode;
-    Atoms.insert(std::make_pair(std::hash<Function>{}(funcNode->Value), funcNode->Value));
   }
   else if (checkAny(LlamaTokenType::NAME, LlamaTokenType::ID)) {
     if (section != LlamaTokenType::SIGNATURE) throw ParserError("Invalid property in section", previous().Pos);
     auto sigDefNode = std::make_shared<SigDefNode>(parseSigDef());
     node = sigDefNode;
-    Atoms.insert(std::make_pair(std::hash<SigDef>{}(sigDefNode->Value), sigDefNode->Value));
   }
   else if (checkAny(LlamaTokenType::CREATED, LlamaTokenType::MODIFIED, LlamaTokenType::FILESIZE, LlamaTokenType::FILEPATH, LlamaTokenType::FILENAME)) {
     if (section != LlamaTokenType::FILE_METADATA) throw ParserError("Invalid property in section", previous().Pos);
     auto fileMetadataNode = std::make_shared<FileMetadataNode>(parseFileMetadataDef());
     node = fileMetadataNode;
-    Atoms.insert(std::make_pair(std::hash<FileMetadataDef>{}(fileMetadataNode->Value), fileMetadataNode->Value));
   }
   else {
     throw ParserError("Expected function call or signature definition", peek().Pos);
