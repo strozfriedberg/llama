@@ -17,7 +17,7 @@
 
 class ParserError : public UnexpectedInputError {
 public:
-  ParserError(const std::string& message, LineCol pos) : UnexpectedInputError(message, pos) {}
+  ParserError(const std::string_view& message, LineCol pos) : UnexpectedInputError(message, pos) {}
 };
 
 class LlamaParser;
@@ -255,7 +255,7 @@ public:
 
   // Increments CurIdx if match. Otherwise throws exception with given errMsg.
   template <class... LlamaTokenTypes>
-  void mustParse(const std::string& errMsg, LlamaTokenTypes... types);
+  void mustParse(const std::string_view& errMsg, LlamaTokenTypes... types);
 
   std::string_view getPreviousLexeme() const { return std::string_view(Input).substr(previous().Start, previous().length()); }
   std::string_view getLexemeAt(size_t idx) const { return std::string_view(Input).substr(Tokens.at(idx).Start, Tokens.at(idx).length()); }
@@ -311,7 +311,7 @@ bool LlamaParser::matchAny(TokenTypes... types) {
 }
 
 template <class... LlamaTokenTypes>
-void LlamaParser::mustParse(const std::string& errMsg, LlamaTokenTypes... types) {
+void LlamaParser::mustParse(const std::string_view& errMsg, LlamaTokenTypes... types) {
   if (!matchAny(types...)) {
     throw ParserError(errMsg, peek().Pos);
   }

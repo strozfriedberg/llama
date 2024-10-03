@@ -129,13 +129,14 @@ public:
 
 class UnexpectedInputError : public std::runtime_error {
 public:
-  UnexpectedInputError(const std::string& message, LineCol pos)
-  : std::runtime_error(message), Position(pos) {}
+  UnexpectedInputError(const std::string_view& message, LineCol pos)
+ : std::runtime_error(messageWithPos(message, pos)), Position(pos) {}
 
-  std::string messageWithPos() const {
-    std::string msg(what());
+private:
+  static std::string messageWithPos(std::string_view errMsg, LineCol pos) {
+    std::string msg(errMsg);
     msg += " at ";
-    msg += Position.toString();
+    msg += pos.toString();
     return msg;
   }
 
