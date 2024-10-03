@@ -110,6 +110,7 @@ struct FileMetadataNode : public Node {
   std::string getSqlQuery(const LlamaParser& parser) const override;
 };
 
+
 /*************************************** FUNCTIONS ************************************************/
 
 // Holds information about expressions in the `condition` section under the `grep` section.
