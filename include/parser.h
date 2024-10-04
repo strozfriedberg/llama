@@ -81,6 +81,14 @@ struct SigDefNode : public Node {
 
 /************************************ FILE_METADATA SECTION ***************************************/
 
+const static std::unordered_map<std::string_view, std::string> FileMetadataPropertySqlLookup {
+  {"created", "created"},
+  {"modified", "modified"},
+  {"filesize", "filesize"},
+  {"filepath", "path"},
+  {"filename", "name"}
+};
+
 // Holds information about expressions in the `file_metadata` section.
 struct FileMetadataDef : public Atom {
   size_t Property;
@@ -115,18 +123,18 @@ struct FileMetadataNode : public Node {
 // Holds information about expressions in the `condition` section under the `grep` section.
 struct Function : public Atom {
   Function() = default;
-  Function(LineCol pos, LlamaTokenType name, const std::vector<std::string_view>&& args, size_t op, size_t val)
-                  : Args(args), Operator(op), Value(val), Pos(pos), Name(name) { validate(); }
+  Function(LineCol pos, std::string_view name, const std::vector<std::string_view>&& args, size_t op, size_t val)
+                  : Args(args), Name(name), Operator(op), Value(val), Pos(pos) { validate(); }
 
   // Used to validate that the function is called with the right number of arguments
   // and that its return value is compared to a value if the function type demands it.
   void validate();
 
   std::vector<std::string_view> Args;
+  std::string_view Name;
   size_t Operator = SIZE_MAX;
   size_t Value = SIZE_MAX;
   LineCol Pos;
-  LlamaTokenType Name;
 };
 
 // Defines a hash function for a Function object.
@@ -139,7 +147,7 @@ struct std::hash<Function>
         const std::size_t h = std::hash<std::string_view>{}(arg);
         boost::hash_combine(h2, h);
       }
-      boost::hash_combine(hash, std::hash<LlamaTokenType>{}(func.Name));
+      boost::hash_combine(hash, std::hash<std::string_view>{}(func.Name));
       boost::hash_combine(hash, h2);
       boost::hash_combine(hash, std::hash<size_t>{}(func.Operator));
       boost::hash_combine(hash, std::hash<size_t>{}(func.Value));
@@ -165,13 +173,13 @@ struct FunctionProperties {
 };
 
 // Holds the valid FunctionProperties for each function type. Used in Functions's validate().
-static const std::unordered_map<LlamaTokenType, FunctionProperties> FunctionValidProperties {
-  {LlamaTokenType::ALL,            FunctionProperties{0, SIZE_MAX, false}},
-  {LlamaTokenType::ANY,            FunctionProperties{0, SIZE_MAX, false}},
-  {LlamaTokenType::OFFSET,         FunctionProperties{1, 2, true}},
-  {LlamaTokenType::COUNT,          FunctionProperties{1, 1, true}},
-  {LlamaTokenType::COUNT_HAS_HITS, FunctionProperties{0, SIZE_MAX, true}},
-  {LlamaTokenType::LENGTH,         FunctionProperties{1, 2, true}}
+static const std::unordered_map<std::string_view, FunctionProperties> FunctionValidProperties {
+  {"all",            FunctionProperties{0, SIZE_MAX, false}},
+  {"any",            FunctionProperties{0, SIZE_MAX, false}},
+  {"offset",         FunctionProperties{1, 2, true}},
+  {"count",          FunctionProperties{1, 1, true}},
+  {"count_has_hits", FunctionProperties{0, SIZE_MAX, true}},
+  {"length",         FunctionProperties{1, 2, true}}
 };
 
 /********************************** PATTERNS SECTION **********************************************/
@@ -258,10 +266,38 @@ public:
   void mustParse(const std::string_view& errMsg, LlamaTokenTypes... types);
 
   std::string_view getPreviousLexeme() const { return std::string_view(Input).substr(previous().Start, previous().length()); }
+  std::string_view getCurrentLexeme() const { return std::string_view(Input).substr(peek().Start, peek().length()); }
   std::string_view getLexemeAt(size_t idx) const { return std::string_view(Input).substr(Tokens.at(idx).Start, Tokens.at(idx).length()); }
 
   void clear();
 
+  bool checkFunctionName() {
+    std::string_view curLex = getCurrentLexeme();
+    return (
+      curLex == "any"            ||
+      curLex == "all"            ||
+      curLex == "offset"         ||
+      curLex == "count"          ||
+      curLex == "count_has_hits" ||
+      curLex == "length"
+    );
+  }
+
+  bool checkSignatureProperty() {
+    std::string_view curLex = getCurrentLexeme();
+    return (curLex == "name" || curLex == "id");
+  }
+
+  bool checkFileMetadataProperty() {
+    std::string_view curLex = getCurrentLexeme();
+    return (
+      curLex == "created"  ||
+      curLex == "modified" ||
+      curLex == "filesize" ||
+      curLex == "filepath" ||
+      curLex == "filename"
+    );
+  }
   // This does not return anything because we have no use for the operator itself,
   // and if we did, we could just get it from `previous().Type`.
   void parseOperator();

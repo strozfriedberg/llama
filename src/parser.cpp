@@ -26,25 +26,8 @@ std::string BoolNode::getSqlQuery(const LlamaParser& parser) const {
 
 std::string FileMetadataNode::getSqlQuery(const LlamaParser& parser) const {
   std::string query = "";
-  switch (parser.Tokens.at(Value.Property).Type) {
-    case LlamaTokenType::CREATED:
-      query += "created";
-      break;
-    case LlamaTokenType::MODIFIED:
-      query += "modified";
-      break;
-    case LlamaTokenType::FILESIZE:
-      query += "filesize";
-      break;
-    case LlamaTokenType::FILEPATH:
-      query += "path";
-      break;
-    case LlamaTokenType::FILENAME:
-      query += "name";
-      break;
-    default:
-      throw ParserError("Invalid property", parser.Tokens.at(Value.Property).Pos);
-  }
+  std::string_view curLex = parser.getLexemeAt(Value.Property);
+  query += FileMetadataPropertySqlLookup.find(curLex)->second;
   query += " ";
   query += parser.getLexemeAt(Value.Operator);
   query += " ";
@@ -277,17 +260,17 @@ std::shared_ptr<Node> LlamaParser::parseFactor(LlamaTokenType section) {
     node = parseExpr(section);
     expect(LlamaTokenType::CLOSE_PAREN);
   }
-  else if (checkAny(LlamaTokenType::ANY, LlamaTokenType::ALL, LlamaTokenType::OFFSET, LlamaTokenType::COUNT, LlamaTokenType::COUNT_HAS_HITS, LlamaTokenType::LENGTH)) {
+  else if (checkFunctionName()) {
     if (section != LlamaTokenType::CONDITION) throw ParserError("Invalid property in section", previous().Pos);
     auto funcNode = std::make_shared<FuncNode>(parseFuncCall());
     node = funcNode;
   }
-  else if (checkAny(LlamaTokenType::NAME, LlamaTokenType::ID)) {
+  else if (checkSignatureProperty()) {
     if (section != LlamaTokenType::SIGNATURE) throw ParserError("Invalid property in section", previous().Pos);
     auto sigDefNode = std::make_shared<SigDefNode>(parseSigDef());
     node = sigDefNode;
   }
-  else if (checkAny(LlamaTokenType::CREATED, LlamaTokenType::MODIFIED, LlamaTokenType::FILESIZE, LlamaTokenType::FILEPATH, LlamaTokenType::FILENAME)) {
+  else if (checkFileMetadataProperty()) {
     if (section != LlamaTokenType::FILE_METADATA) throw ParserError("Invalid property in section", previous().Pos);
     auto fileMetadataNode = std::make_shared<FileMetadataNode>(parseFileMetadataDef());
     node = fileMetadataNode;
@@ -325,9 +308,12 @@ std::shared_ptr<Node> LlamaParser::parseExpr(LlamaTokenType section) {
 }
 
 FuncNode LlamaParser::parseFuncCall() {
-  mustParse("Expected function name", LlamaTokenType::ALL, LlamaTokenType::ANY, LlamaTokenType::OFFSET, LlamaTokenType::COUNT, LlamaTokenType::COUNT_HAS_HITS, LlamaTokenType::LENGTH);
+  if (!checkFunctionName()) {
+    throw ParserError("Expected function name", peek().Pos);
+  }
+  advance();
   LineCol pos = peek().Pos;
-  LlamaTokenType name = previous().Type;
+  std::string_view name = getPreviousLexeme();
   std::vector<std::string_view> args;
   size_t op = SIZE_MAX, val = SIZE_MAX;
   expect(LlamaTokenType::OPEN_PAREN);
@@ -350,7 +336,10 @@ FuncNode LlamaParser::parseFuncCall() {
 
 SigDefNode LlamaParser::parseSigDef() {
   SigDef def;
-  mustParse("Expected name or id keyword", LlamaTokenType::NAME, LlamaTokenType::ID);
+  if (!checkSignatureProperty()) {
+    throw ParserError("Expected name or id keyword", peek().Pos);
+  }
+  advance();
   def.Attr = CurIdx - 1;
   expect(LlamaTokenType::EQUAL_EQUAL);
   expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
@@ -373,16 +362,12 @@ FileMetadataNode LlamaParser::parseFileMetadataDef() {
   FileMetadataDef def;
   bool expectNum = false;
 
-  mustParse(
-    "Expected created, modified, filesize, filepath, or filename", 
-    LlamaTokenType::CREATED,
-    LlamaTokenType::MODIFIED,
-    LlamaTokenType::FILESIZE,
-    LlamaTokenType::FILEPATH,
-    LlamaTokenType::FILENAME
-  );
+  if (!checkFileMetadataProperty()) {
+    throw ParserError("Expected created, modified, filesize, filepath, or filename", peek().Pos);
+  }
+  advance();
 
-  expectNum = (previous().Type == LlamaTokenType::FILESIZE);
+  expectNum = (getPreviousLexeme() == "filesize");
   def.Property = CurIdx - 1;
   parseOperator();
   def.Operator = CurIdx - 1;
