@@ -45,6 +45,7 @@
 /test/llama/test.log
 /test/test.trs
 /test/benchmarks/benchmarks
+/test/benchmarks/parser_benchmark_report.csv
 /test/test
 /test/test.log
 /tmp/
