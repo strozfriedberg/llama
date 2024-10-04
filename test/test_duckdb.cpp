@@ -190,6 +190,13 @@ TEST_CASE("testTypesFiguring") {
   REQUIRE(batch.size() == 1);
   REQUIRE(batch.Buf.size() == 13);
   REQUIRE(batch.OffsetVals.size() == 4);
+
+  drc = DuckRecColumns{"/another/path", 22, 18, "Deleted"};
+
+  batch.add(drc);
+  REQUIRE(batch.size() == 2);
+  REQUIRE(batch.Buf.size() == 35);
+  REQUIRE(batch.OffsetVals.size() == 8);
 }
 
 TEST_CASE("inodeWriting") {
