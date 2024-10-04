@@ -98,6 +98,11 @@ struct DBType {
     }
     return i;
   }
+
+  static bool createTable(duckdb_connection& dbconn, const std::string& table) {
+    auto result = duckdb_query(dbconn, createQuery<DBType<T>>(table.c_str()).c_str(), nullptr);
+    return result != DuckDBError;
+  }
 };
 
 struct DuckRecColumns {
@@ -197,6 +202,18 @@ TEST_CASE("testTypesFiguring") {
   REQUIRE(batch.size() == 2);
   REQUIRE(batch.Buf.size() == 35);
   REQUIRE(batch.OffsetVals.size() == 8);
+
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+
+  REQUIRE(DuckRec::createTable(conn.get(), "duckrec"));
+
+  duckdb_result result;
+  auto state = duckdb_query(conn.get(), "SELECT * FROM duckrec;", &result);
+  CHECK(state != DuckDBError);
+  CHECK(duckdb_result_error(&result) == nullptr);
+  CHECK(duckdb_row_count(&result) == 0);
+
 }
 
 TEST_CASE("inodeWriting") {
