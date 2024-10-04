@@ -11,7 +11,7 @@ int RuleReader::read(const std::string& input) {
     Rules.insert(Rules.end(), rules.begin(), rules.end());
   }
   catch (UnexpectedInputError& e) {
-    LastError = e.messageWithPos();
+    LastError = e.what();
     return -1;
   }
 

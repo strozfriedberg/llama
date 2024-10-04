@@ -1,28 +1,16 @@
 #include "parser.h"
+#include "util.h"
 
-void ConditionFunction::assignValidators() {
-  switch(Name) {
-    case LlamaTokenType::ALL:            MinArgs = 0; MaxArgs = SIZE_MAX; IsCompFunc = false; break;
-    case LlamaTokenType::ANY:            MinArgs = 0; MaxArgs = SIZE_MAX; IsCompFunc = false; break;
-    case LlamaTokenType::OFFSET:         MinArgs = 1; MaxArgs = 2; IsCompFunc = true;         break;
-    case LlamaTokenType::COUNT:          MinArgs = 1; MaxArgs = 1; IsCompFunc = true;         break;
-    case LlamaTokenType::COUNT_HAS_HITS: MinArgs = 0; MaxArgs = SIZE_MAX; IsCompFunc = true;  break;
-    case LlamaTokenType::LENGTH:         MinArgs = 1; MaxArgs = 2; IsCompFunc = true;         break;
-    default:
-      throw ParserError("Invalid function name", Pos);
-  }
-}
-
-void ConditionFunction::validate(const LlamaParser& parser) {
-  assignValidators();
-  if (IsCompFunc && (Operator == SIZE_MAX || Value == SIZE_MAX)) {
+void Function::validate() {
+  FunctionProperties props = FunctionValidProperties.find(Name)->second;
+  if (props.IsCompFunc && (Operator == SIZE_MAX || Value == SIZE_MAX)) {
     throw ParserError("Expected operator and value for comparison", Pos);
   }
-  else if (!IsCompFunc && (Operator != SIZE_MAX || Value != SIZE_MAX)) {
+  else if (!props.IsCompFunc && (Operator != SIZE_MAX || Value != SIZE_MAX)) {
     throw ParserError("Unexpected operator or value for function", Pos);
   }
 
-  if (Args.size() < MinArgs || Args.size() > MaxArgs) {
+  if (Args.size() < props.MinArgs || Args.size() > props.MaxArgs) {
     throw ParserError("Invalid number of arguments", Pos);
   }
 }
@@ -60,7 +48,7 @@ std::string FileMetadataNode::getSqlQuery(const LlamaParser& parser) const {
   query += " ";
   query += parser.getLexemeAt(Value.Operator);
   query += " ";
-  std::string val = parser.getLexemeAt(Value.Value);
+  std::string val = std::string(parser.getLexemeAt(Value.Value));
   std::replace(val.begin(), val.end(), '"', '\'');
   query += val;
   return query;
@@ -79,7 +67,14 @@ std::string Rule::getSqlQuery(const LlamaParser& parser) const {
   return query;
 }
 
-std::string LlamaParser::expect(LlamaTokenType token) {
+void LlamaParser::clear() {
+  Patterns.clear();
+  Tokens.clear();
+  Input.clear();
+  CurIdx = 0;
+}
+
+std::string_view LlamaParser::expect(LlamaTokenType token) {
   switch (token) {
     case LlamaTokenType::RULE: mustParse("Expected rule keyword", LlamaTokenType::RULE); break;
     case LlamaTokenType::META: mustParse("Expected meta keyword", LlamaTokenType::META); break;
@@ -161,7 +156,7 @@ FileHashRecord LlamaParser::parseFileHashRecord() {
 
 std::string LlamaParser::parseHashValue() {
   expect(LlamaTokenType::EQUAL_EQUAL);
-  return expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
+  return std::string(expect(LlamaTokenType::DOUBLE_QUOTED_STRING));
 }
 
 void LlamaParser::parseOperator() {
@@ -205,9 +200,9 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
 std::vector<std::string> LlamaParser::parseEncodings() {
   std::vector<std::string> encodings;
   expect(LlamaTokenType::EQUAL);
-  encodings.push_back(expect(LlamaTokenType::IDENTIFIER));
+  encodings.push_back(std::string(expect(LlamaTokenType::IDENTIFIER)));
   while (matchAny(LlamaTokenType::COMMA)) {
-    encodings.push_back(expect(LlamaTokenType::IDENTIFIER));
+    encodings.push_back(std::string(expect(LlamaTokenType::IDENTIFIER)));
   }
   return encodings;
 }
@@ -231,7 +226,7 @@ std::vector<PatternDef> LlamaParser::parsePatternDef() {
 PatternSection LlamaParser::parsePatternsSection() {
   PatternSection patternSection;
   while (matchAny(LlamaTokenType::IDENTIFIER)) {
-    std::string key = getPreviousLexeme();
+    std::string_view key = getPreviousLexeme();
     patternSection.Patterns.insert(std::make_pair(key, parsePatternDef()));
   }
   if (patternSection.Patterns.empty()) {
@@ -246,7 +241,7 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
   std::string hexDigit, hexString;
   while (!checkAny(LlamaTokenType::CLOSE_BRACE) && !isAtEnd()) {
     if (matchAny(LlamaTokenType::IDENTIFIER, LlamaTokenType::NUMBER)) {
-      if (!(hexString.size() & 1)) { // check if hexString is even
+      if (isEven(hexString.size())) { // check if hexString is even
         hexString += "\\z";
       }
       hexDigit = getPreviousLexeme();
@@ -264,7 +259,7 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
   if (isAtEnd()) {
     throw ParserError("Unterminated hex string", peek().Pos);
   }
-  if (hexString.size() & 1) {  // check if hexString is odd
+  if (isOdd(hexString.size())) {  // check if hexString is odd
     throw ParserError("Odd number of hex digits", peek().Pos);
   }
   if (hexString.size() == 0) {
@@ -276,29 +271,26 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
   return defs;
 }
 
-std::shared_ptr<Node> LlamaParser::parseFactor() {
+std::shared_ptr<Node> LlamaParser::parseFactor(LlamaTokenType section) {
   std::shared_ptr<Node> node;
   if (matchAny(LlamaTokenType::OPEN_PAREN)) {
-    node = parseExpr();
+    node = parseExpr(section);
     expect(LlamaTokenType::CLOSE_PAREN);
   }
   else if (checkAny(LlamaTokenType::ANY, LlamaTokenType::ALL, LlamaTokenType::OFFSET, LlamaTokenType::COUNT, LlamaTokenType::COUNT_HAS_HITS, LlamaTokenType::LENGTH)) {
-    auto funcNode = std::make_shared<FuncNode>();
-    funcNode->Value = parseFuncCall();
+    if (section != LlamaTokenType::CONDITION) throw ParserError("Invalid property in section", previous().Pos);
+    auto funcNode = std::make_shared<FuncNode>(parseFuncCall());
     node = funcNode;
-    Atoms.insert(std::make_pair(std::hash<ConditionFunction>{}(funcNode->Value), funcNode->Value));
   }
   else if (checkAny(LlamaTokenType::NAME, LlamaTokenType::ID)) {
-    auto sigDefNode = std::make_shared<SigDefNode>();
-    sigDefNode->Value = parseSignatureDef();
+    if (section != LlamaTokenType::SIGNATURE) throw ParserError("Invalid property in section", previous().Pos);
+    auto sigDefNode = std::make_shared<SigDefNode>(parseSigDef());
     node = sigDefNode;
-    Atoms.insert(std::make_pair(std::hash<SignatureDef>{}(sigDefNode->Value), sigDefNode->Value));
   }
   else if (checkAny(LlamaTokenType::CREATED, LlamaTokenType::MODIFIED, LlamaTokenType::FILESIZE, LlamaTokenType::FILEPATH, LlamaTokenType::FILENAME)) {
-    auto fileMetadataNode = std::make_shared<FileMetadataNode>();
-    fileMetadataNode->Value = parseFileMetadataDef();
+    if (section != LlamaTokenType::FILE_METADATA) throw ParserError("Invalid property in section", previous().Pos);
+    auto fileMetadataNode = std::make_shared<FileMetadataNode>(parseFileMetadataDef());
     node = fileMetadataNode;
-    Atoms.insert(std::make_pair(std::hash<FileMetadataDef>{}(fileMetadataNode->Value), fileMetadataNode->Value));
   }
   else {
     throw ParserError("Expected function call or signature definition", peek().Pos);
@@ -306,37 +298,37 @@ std::shared_ptr<Node> LlamaParser::parseFactor() {
   return node;
 }
 
-std::shared_ptr<Node> LlamaParser::parseTerm() {
-  std::shared_ptr<Node> left = parseFactor();
+std::shared_ptr<Node> LlamaParser::parseTerm(LlamaTokenType section) {
+  std::shared_ptr<Node> left = parseFactor(section);
 
   while (matchAny(LlamaTokenType::AND)) {
     std::shared_ptr<Node> node = std::make_shared<BoolNode>();
     node->Type = NodeType::AND;
     node->Left = left;
-    node->Right = parseFactor();
+    node->Right = parseFactor(section);
     left = node;
   }
   return left;
 }
 
-std::shared_ptr<Node> LlamaParser::parseExpr() {
-  std::shared_ptr<Node> left = parseTerm();
+std::shared_ptr<Node> LlamaParser::parseExpr(LlamaTokenType section) {
+  std::shared_ptr<Node> left = parseTerm(section);
 
   while (matchAny(LlamaTokenType::OR)) {
     std::shared_ptr<Node> node = std::make_shared<BoolNode>();
     node->Type = NodeType::OR;
     node->Left = left;
-    node->Right = parseTerm();
+    node->Right = parseTerm(section);
     left = node;
   }
   return left;
 }
 
-ConditionFunction LlamaParser::parseFuncCall() {
+FuncNode LlamaParser::parseFuncCall() {
   mustParse("Expected function name", LlamaTokenType::ALL, LlamaTokenType::ANY, LlamaTokenType::OFFSET, LlamaTokenType::COUNT, LlamaTokenType::COUNT_HAS_HITS, LlamaTokenType::LENGTH);
   LineCol pos = peek().Pos;
   LlamaTokenType name = previous().Type;
-  std::vector<std::string> args;
+  std::vector<std::string_view> args;
   size_t op = SIZE_MAX, val = SIZE_MAX;
   expect(LlamaTokenType::OPEN_PAREN);
   if (matchAny(LlamaTokenType::IDENTIFIER)) {
@@ -352,19 +344,18 @@ ConditionFunction LlamaParser::parseFuncCall() {
     expect(LlamaTokenType::NUMBER);
     val = CurIdx - 1;
   }
-  ConditionFunction func(pos, name, std::move(args), op, val);
-  func.validate(*this);
-  return func;
+  Function func(pos, name, std::move(args), op, val);
+  return FuncNode(std::move(func));
 }
 
-SignatureDef LlamaParser::parseSignatureDef() {
-  SignatureDef def;
+SigDefNode LlamaParser::parseSigDef() {
+  SigDef def;
   mustParse("Expected name or id keyword", LlamaTokenType::NAME, LlamaTokenType::ID);
   def.Attr = CurIdx - 1;
   expect(LlamaTokenType::EQUAL_EQUAL);
   expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
   def.Val = CurIdx - 1;
-  return def;
+  return SigDefNode(std::move(def));
 }
 
 GrepSection LlamaParser::parseGrepSection() {
@@ -374,11 +365,11 @@ GrepSection LlamaParser::parseGrepSection() {
   grepSection.Patterns = parsePatternsSection();
   expect(LlamaTokenType::CONDITION);
   expect(LlamaTokenType::COLON);
-  grepSection.Condition = parseExpr();
+  grepSection.Condition = parseExpr(LlamaTokenType::CONDITION);
   return grepSection;
 }
 
-FileMetadataDef LlamaParser::parseFileMetadataDef() {
+FileMetadataNode LlamaParser::parseFileMetadataDef() {
   FileMetadataDef def;
   bool expectNum = false;
 
@@ -397,16 +388,16 @@ FileMetadataDef LlamaParser::parseFileMetadataDef() {
   def.Operator = CurIdx - 1;
   expectNum ? expect(LlamaTokenType::NUMBER) : expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
   def.Value = CurIdx - 1;
-  return def;
+  return FileMetadataNode(std::move(def));
 }
 
 MetaSection LlamaParser::parseMetaSection() {
   MetaSection meta;
   while (matchAny(LlamaTokenType::IDENTIFIER)) {
-    std::string key = getPreviousLexeme();
+    std::string_view key = getPreviousLexeme();
     expect(LlamaTokenType::EQUAL);
     expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
-    std::string value = getPreviousLexeme();
+    std::string_view value = getPreviousLexeme();
     meta.Fields.insert(std::make_pair(key, value));
   }
   return meta;
@@ -416,7 +407,7 @@ Rule LlamaParser::parseRuleDecl() {
   Rule rule;
   expect(LlamaTokenType::RULE);
   expect(LlamaTokenType::IDENTIFIER);
-  rule.Name = getPreviousLexeme();
+  rule.Name = std::string(getPreviousLexeme());
   expect(LlamaTokenType::OPEN_BRACE);
 
   if (matchAny(LlamaTokenType::META)) {
@@ -430,11 +421,11 @@ Rule LlamaParser::parseRuleDecl() {
   }
   if (matchAny(LlamaTokenType::FILE_METADATA)) {
     expect(LlamaTokenType::COLON);
-    rule.FileMetadata = parseExpr();
+    rule.FileMetadata = parseExpr(LlamaTokenType::FILE_METADATA);
   }
   if (matchAny(LlamaTokenType::SIGNATURE)) {
     expect(LlamaTokenType::COLON);
-    rule.Signature = parseExpr();
+    rule.Signature = parseExpr(LlamaTokenType::SIGNATURE);
   }
   if (matchAny(LlamaTokenType::GREP)) {
     expect(LlamaTokenType::COLON);
