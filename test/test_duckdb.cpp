@@ -240,6 +240,7 @@ TEST_CASE("testTypesFiguring") {
   CHECK(state != DuckDBError);
   CHECK(duckdb_result_error(&result) == nullptr);
   CHECK(duckdb_row_count(&result) == 0);
+  duckdb_destroy_result(&result);
 
   LlamaDBAppender appender(conn.get(), "duckrec");
   REQUIRE(2 == batch.copyToDB(appender.get()));
@@ -249,6 +250,7 @@ TEST_CASE("testTypesFiguring") {
   CHECK(state != DuckDBError);
   CHECK(duckdb_result_error(&result) == nullptr);
   CHECK(duckdb_row_count(&result) == 2);
+  duckdb_destroy_result(&result);
 }
 
 TEST_CASE("inodeWriting") {
