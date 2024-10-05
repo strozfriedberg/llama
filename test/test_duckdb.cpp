@@ -183,7 +183,6 @@ struct DBBatch {
 
       appendRecord<DBType<T>::NumCols - 1>(appender, index + DBType<T>::NumCols - 1);
 
-
       duckdb_appender_end_row(appender);
       index += DBType<T>::NumCols;
     }
