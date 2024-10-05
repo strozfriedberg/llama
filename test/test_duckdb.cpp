@@ -161,6 +161,34 @@ struct DBBatch {
 
     ++NumRows;
   }
+
+  template<size_t CurIndex>
+  void appendRecord(duckdb_appender& appender, size_t index) {
+    using ColumnType = typename std::tuple_element<CurIndex, typename DBType<T>::TupleType>::type;
+    if constexpr (CurIndex > 0) {
+      appendRecord<CurIndex - 1>(appender, index - 1);
+    }
+    if constexpr (std::is_integral_v<ColumnType>) {
+      appendVal(appender, OffsetVals[index]);
+    }
+    else if constexpr (std::is_convertible_v<ColumnType, std::string>){
+      appendVal(appender, Buf.data() + OffsetVals[index]);
+    }
+  }
+
+  size_t copyToDB(duckdb_appender& appender) {
+    size_t index = 0;
+    for (size_t i = 0; i < NumRows; ++i) {
+      duckdb_appender_begin_row(appender);
+
+      appendRecord<DBType<T>::NumCols - 1>(appender, index + DBType<T>::NumCols - 1);
+
+
+      duckdb_appender_end_row(appender);
+      index += DBType<T>::NumCols;
+    }
+    return NumRows;
+  }
 };
 
 TEST_CASE("testTypesFiguring") {
@@ -214,6 +242,14 @@ TEST_CASE("testTypesFiguring") {
   CHECK(duckdb_result_error(&result) == nullptr);
   CHECK(duckdb_row_count(&result) == 0);
 
+  LlamaDBAppender appender(conn.get(), "duckrec");
+  REQUIRE(2 == batch.copyToDB(appender.get()));
+  REQUIRE(appender.flush());
+
+  state = duckdb_query(conn.get(), "SELECT * FROM duckrec;", &result);
+  CHECK(state != DuckDBError);
+  CHECK(duckdb_result_error(&result) == nullptr);
+  CHECK(duckdb_row_count(&result) == 2);
 }
 
 TEST_CASE("inodeWriting") {
