@@ -251,10 +251,10 @@ TEST_CASE("parseTermWithAnd") {
   REQUIRE(node->Type == NodeType::AND);
   auto left = std::static_pointer_cast<FuncNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::FUNC);
-  REQUIRE(left->Value.Name == LlamaTokenType::ANY);
+  REQUIRE(left->Value.Name == "any");
   auto right = std::static_pointer_cast<FuncNode>(node->Right);
   REQUIRE(node->Right->Type == NodeType::FUNC);
-  REQUIRE(right->Value.Name == LlamaTokenType::COUNT);
+  REQUIRE(right->Value.Name == "count");
 }
 
 TEST_CASE("parseTermWithoutAnd") {
@@ -477,7 +477,7 @@ TEST_CASE("parseFuncCallAny") {
   LlamaParser parser(input, getTokensFromString(input));
   FuncNode node;
   REQUIRE_NOTHROW(node = parser.parseFuncCall());
-  REQUIRE(node.Value.Name == LlamaTokenType::ANY);
+  REQUIRE(node.Value.Name == "any");
   REQUIRE(node.Value.Args.size() == 3);
   REQUIRE(node.Value.Args.at(0) == "s1");
   REQUIRE(node.Value.Args.at(1) == "s2");
@@ -489,7 +489,7 @@ TEST_CASE("parseFuncCallAll") {
   LlamaParser parser(input, getTokensFromString(input));
   FuncNode node;
   REQUIRE_NOTHROW(node = parser.parseFuncCall());
-  REQUIRE(node.Value.Name == LlamaTokenType::ALL);
+  REQUIRE(node.Value.Name == "all");
   REQUIRE(node.Value.Args.size() == 0);
 }
 
@@ -498,7 +498,7 @@ TEST_CASE("parseFuncCallWithNumber") {
   LlamaParser parser(input, getTokensFromString(input));
   FuncNode node;
   REQUIRE_NOTHROW(node = parser.parseFuncCall());
-  REQUIRE(node.Value.Name == LlamaTokenType::COUNT);
+  REQUIRE(node.Value.Name == "count");
   REQUIRE(node.Value.Args.size() == 1);
   REQUIRE(node.Value.Args.at(0) == "s1");
   REQUIRE(parser.getLexemeAt(node.Value.Operator) == "==");
@@ -510,7 +510,7 @@ TEST_CASE("parseFuncCallWithOperator") {
   LlamaParser parser(input, getTokensFromString(input));
   FuncNode node;
   REQUIRE_NOTHROW(node = parser.parseFuncCall());
-  REQUIRE(node.Value.Name == LlamaTokenType::OFFSET);
+  REQUIRE(node.Value.Name == "offset");
   REQUIRE(node.Value.Args.size() == 2);
   REQUIRE(node.Value.Args.at(0) == "s1");
   REQUIRE(node.Value.Args.at(1) == "5");
@@ -524,7 +524,7 @@ TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
   REQUIRE_NOTHROW(node = parser.parseFactor(LlamaTokenType::CONDITION));
   REQUIRE(node->Type == NodeType::FUNC);
   auto root = std::static_pointer_cast<FuncNode>(node);
-  REQUIRE(root->Value.Name == LlamaTokenType::ANY);
+  REQUIRE(root->Value.Name == "any");
   REQUIRE(root->Value.Args.size() == 3);
 }
 
