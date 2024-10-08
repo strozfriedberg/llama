@@ -259,7 +259,22 @@ struct Property {
 };
 
 struct Section {
-  const static std::unordered_map<std::string_view, Property> Props;
+  std::unordered_map<std::string_view, Property> Props;
+};
+
+const std::unordered_map<LlamaTokenType, Section> SectionDefs {
+  {
+    LlamaTokenType::FILE_METADATA,
+    Section{
+      {
+        {std::string("created"),  Property{AllLlamaOps, LlamaTokenType::DOUBLE_QUOTED_STRING}},
+        {std::string("modified"), Property{AllLlamaOps, LlamaTokenType::DOUBLE_QUOTED_STRING}},
+        {std::string("filesize"), Property{AllLlamaOps, LlamaTokenType::NUMBER}},
+        {std::string("filepath"), Property{LlamaOp::EQUAL_EQUAL | LlamaOp::NOT_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}},
+        {std::string("filename"), Property{LlamaOp::EQUAL_EQUAL | LlamaOp::NOT_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}}
+      }
+    }
+  }
 };
 
 /************************************ PARSER ******************************************************/
