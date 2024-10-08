@@ -219,6 +219,11 @@ struct HashSection {
 /************************************ RULE ********************************************************/
 
 struct Rule {
+  std::string getSqlQuery(const LlamaParser&) const;
+
+  // Used for unique rule ID in the database.
+  FieldHash getHash(const LlamaParser&) const;
+
   std::string Name;
   MetaSection Meta;
   HashSection Hash;
@@ -230,11 +235,6 @@ struct Rule {
   uint64_t Start = 0;
   // Relative input offset right before the rule's closing brace.
   uint64_t End = 0;
-
-  std::string getSqlQuery(const LlamaParser&) const;
-
-  // Used for unique rule ID in the database.
-  FieldHash getHash(const LlamaParser&) const;
 };
 
 /************************************ PARSER ******************************************************/
