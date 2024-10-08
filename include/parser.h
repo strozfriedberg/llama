@@ -237,6 +237,25 @@ struct Rule {
   uint64_t End = 0;
 };
 
+enum LlamaOp {
+  EQUAL              = 1 << 0,
+  EQUAL_EQUAL        = 1 << 1,
+  NOT_EQUAL          = 1 << 2,
+  GREATER_THAN       = 1 << 3,
+  GREATER_THAN_EQUAL = 1 << 4,
+  LESS_THAN          = 1 << 5,
+  LESS_THAN_EQUAL    = 1 << 6
+};
+
+struct Property {
+  uint64_t ValidOperators;
+  LlamaTokenType Type;
+};
+
+struct Section {
+  const static std::unordered_map<std::string_view, Property> Props;
+};
+
 /************************************ PARSER ******************************************************/
 
 class LlamaParser {
