@@ -246,6 +246,13 @@ enum LlamaOp {
   LESS_THAN_EQUAL    = 1 << 5
 };
 
+constexpr uint64_t AllLlamaOps = LlamaOp::EQUAL_EQUAL
+                               | LlamaOp::NOT_EQUAL
+                               | LlamaOp::GREATER_THAN
+                               | LlamaOp::GREATER_THAN_EQUAL
+                               | LlamaOp::LESS_THAN
+                               | LlamaOp::LESS_THAN_EQUAL;
+
 struct Property {
   uint64_t ValidOperators;
   LlamaTokenType Type;
