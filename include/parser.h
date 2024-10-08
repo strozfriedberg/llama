@@ -238,13 +238,12 @@ struct Rule {
 };
 
 enum LlamaOp {
-  EQUAL              = 1 << 0,
-  EQUAL_EQUAL        = 1 << 1,
-  NOT_EQUAL          = 1 << 2,
-  GREATER_THAN       = 1 << 3,
-  GREATER_THAN_EQUAL = 1 << 4,
-  LESS_THAN          = 1 << 5,
-  LESS_THAN_EQUAL    = 1 << 6
+  EQUAL_EQUAL        = 1 << 0,
+  NOT_EQUAL          = 1 << 1,
+  GREATER_THAN       = 1 << 2,
+  GREATER_THAN_EQUAL = 1 << 3,
+  LESS_THAN          = 1 << 4,
+  LESS_THAN_EQUAL    = 1 << 5
 };
 
 struct Property {
