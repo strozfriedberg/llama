@@ -266,6 +266,7 @@ struct LlamaFunc {
 
 struct Section {
   std::unordered_map<std::string_view, Property> Props;
+  std::unordered_map<std::string_view, LlamaFunc> Funcs;
 };
 
 const std::unordered_map<LlamaTokenType, Section> SectionDefs {
@@ -278,7 +279,8 @@ const std::unordered_map<LlamaTokenType, Section> SectionDefs {
         {std::string("filesize"), Property{AllLlamaOps, LlamaTokenType::NUMBER}},
         {std::string("filepath"), Property{LlamaOp::EQUAL_EQUAL | LlamaOp::NOT_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}},
         {std::string("filename"), Property{LlamaOp::EQUAL_EQUAL | LlamaOp::NOT_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}}
-      }
+      },
+      {}
     }
   },
   {
@@ -287,7 +289,8 @@ const std::unordered_map<LlamaTokenType, Section> SectionDefs {
       {
         {std::string("name"), Property{LlamaOp::EQUAL_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}},
         {std::string("id"), Property{LlamaOp::EQUAL_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}}
-      }
+      },
+      {}
     }
   }
 };
