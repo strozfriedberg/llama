@@ -274,6 +274,15 @@ const std::unordered_map<LlamaTokenType, Section> SectionDefs {
         {std::string("filename"), Property{LlamaOp::EQUAL_EQUAL | LlamaOp::NOT_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}}
       }
     }
+  },
+  {
+    LlamaTokenType::SIGNATURE,
+    Section{
+      {
+        {std::string("name"), Property{LlamaOp::EQUAL_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}},
+        {std::string("id"), Property{LlamaOp::EQUAL_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}}
+      }
+    }
   }
 };
 
