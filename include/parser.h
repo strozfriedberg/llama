@@ -260,7 +260,7 @@ enum LlamaReturnType {
   BOOL
 };
 
-struct Property {
+struct PropertyInfo {
   uint64_t ValidOperators;
   LlamaTokenType Type;
 };
@@ -273,7 +273,7 @@ struct LlamaFunc {
 };
 
 struct Section {
-  std::unordered_map<std::string_view, Property> Props;
+  std::unordered_map<std::string_view, PropertyInfo> Props;
   std::unordered_map<std::string_view, LlamaFunc> Funcs;
 };
 
@@ -282,11 +282,11 @@ const std::unordered_map<LlamaTokenType, Section> SectionDefs {
     LlamaTokenType::FILE_METADATA,
     Section{
       {
-        {std::string("created"),  Property{AllLlamaOps, LlamaTokenType::DOUBLE_QUOTED_STRING}},
-        {std::string("modified"), Property{AllLlamaOps, LlamaTokenType::DOUBLE_QUOTED_STRING}},
-        {std::string("filesize"), Property{AllLlamaOps, LlamaTokenType::NUMBER}},
-        {std::string("filepath"), Property{LlamaOp::EQUAL_EQUAL | LlamaOp::NOT_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}},
-        {std::string("filename"), Property{LlamaOp::EQUAL_EQUAL | LlamaOp::NOT_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}}
+        {std::string("created"),  PropertyInfo{AllLlamaOps, LlamaTokenType::DOUBLE_QUOTED_STRING}},
+        {std::string("modified"), PropertyInfo{AllLlamaOps, LlamaTokenType::DOUBLE_QUOTED_STRING}},
+        {std::string("filesize"), PropertyInfo{AllLlamaOps, LlamaTokenType::NUMBER}},
+        {std::string("filepath"), PropertyInfo{LlamaOp::EQUAL_EQUAL | LlamaOp::NOT_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}},
+        {std::string("filename"), PropertyInfo{LlamaOp::EQUAL_EQUAL | LlamaOp::NOT_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}}
       },
       {}
     }
@@ -295,8 +295,8 @@ const std::unordered_map<LlamaTokenType, Section> SectionDefs {
     LlamaTokenType::SIGNATURE,
     Section{
       {
-        {std::string("name"), Property{LlamaOp::EQUAL_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}},
-        {std::string("id"),   Property{LlamaOp::EQUAL_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}}
+        {std::string("name"), PropertyInfo{LlamaOp::EQUAL_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}},
+        {std::string("id"),   PropertyInfo{LlamaOp::EQUAL_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}}
       },
       {}
     }
