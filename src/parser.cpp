@@ -46,6 +46,19 @@ std::string FileMetadataNode::getSqlQuery(const LlamaParser& parser) const {
   return query;
 }
 
+std::string PropertyNode::getSqlQuery(const LlamaParser& parser) const {
+  std::string query = "";
+  std::string_view curLex = parser.getLexemeAt(Value.Name);
+  query += FileMetadataPropertySqlLookup.find(curLex)->second;
+  query += " ";
+  query += parser.getLexemeAt(Value.Op);
+  query += " ";
+  std::string val = std::string(parser.getLexemeAt(Value.Val));
+  std::replace(val.begin(), val.end(), '"', '\'');
+  query += val;
+  return query;
+}
+
 std::string Rule::getSqlQuery(const LlamaParser& parser) const {
   std::string query = "SELECT '";
   query += this->getHash(parser).to_string();
@@ -269,20 +282,14 @@ std::shared_ptr<Node> LlamaParser::parseFactor(LlamaTokenType section) {
     node = parseExpr(section);
     expect(LlamaTokenType::CLOSE_PAREN);
   }
+  else if (section == LlamaTokenType::FILE_METADATA || section == LlamaTokenType::SIGNATURE) {
+    auto propNode = std::make_shared<PropertyNode>(parseProperty(section));
+    node = propNode;
+  }
   else if (checkFunctionName()) {
     if (section != LlamaTokenType::CONDITION) throw ParserError("Invalid property in section", previous().Pos);
     auto funcNode = std::make_shared<FuncNode>(parseFuncCall());
     node = funcNode;
-  }
-  else if (checkSignatureProperty()) {
-    if (section != LlamaTokenType::SIGNATURE) throw ParserError("Invalid property in section", previous().Pos);
-    auto sigDefNode = std::make_shared<SigDefNode>(parseSigDef());
-    node = sigDefNode;
-  }
-  else if (checkFileMetadataProperty()) {
-    if (section != LlamaTokenType::FILE_METADATA) throw ParserError("Invalid property in section", previous().Pos);
-    auto fileMetadataNode = std::make_shared<FileMetadataNode>(parseFileMetadataDef());
-    node = fileMetadataNode;
   }
   else {
     throw ParserError("Expected function call or signature definition", peek().Pos);
@@ -413,7 +420,7 @@ PropertyNode LlamaParser::parseProperty(LlamaTokenType section) {
     throw ParserError("Unsupported operator for property", peek().Pos);
   }
 
-  if (peek().Type != PropertyInfo.Type) {
+  if (peek().Type == PropertyInfo.Type) {
     prop.Val = CurIdx;
     advance();
   }

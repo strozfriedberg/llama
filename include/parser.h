@@ -330,7 +330,7 @@ struct PropertyNode : public Node {
   PropertyNode(Property&& value) : Node(NodeType::PROP) { Value = value; }
   Property Value;
 
-  std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
+  std::string getSqlQuery(const LlamaParser& parser) const override;
 };
 
 /************************************ PARSER ******************************************************/

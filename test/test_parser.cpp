@@ -290,14 +290,14 @@ TEST_CASE("parseSignatureSection") {
   std::shared_ptr<Node> node;
   REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::SIGNATURE));
   REQUIRE(node->Type == NodeType::OR);
-  auto sigDefNodeLeft = std::static_pointer_cast<SigDefNode>(node->Left);
-  REQUIRE(node->Left->Type == NodeType::SIG);
-  REQUIRE(parser.getLexemeAt(sigDefNodeLeft->Value.Attr) == "name");
-  REQUIRE(parser.getLexemeAt(sigDefNodeLeft->Value.Val) == "\"Executable\"");
-  auto sigDefNodeRight = std::static_pointer_cast<SigDefNode>(node->Right);
-  REQUIRE(node->Right->Type == NodeType::SIG);
-  REQUIRE(parser.getLexemeAt(sigDefNodeRight->Value.Attr) == "id");
-  REQUIRE(parser.getLexemeAt(sigDefNodeRight->Value.Val) == "\"123456789\"");
+  auto propNodeLeft = std::static_pointer_cast<PropertyNode>(node->Left);
+  REQUIRE(node->Left->Type == NodeType::PROP);
+  REQUIRE(parser.getLexemeAt(propNodeLeft->Value.Name) == "name");
+  REQUIRE(parser.getLexemeAt(propNodeLeft->Value.Val) == "\"Executable\"");
+  auto propNodeRight = std::static_pointer_cast<PropertyNode>(node->Right);
+  REQUIRE(node->Right->Type == NodeType::PROP);
+  REQUIRE(parser.getLexemeAt(propNodeRight->Value.Name) == "id");
+  REQUIRE(parser.getLexemeAt(propNodeRight->Value.Val) == "\"123456789\"");
 }
 
 TEST_CASE("parseGrepSection") {
@@ -377,8 +377,8 @@ TEST_CASE("parseRuleDecl") {
   Rule rule;
   REQUIRE_NOTHROW(rule = parser.parseRuleDecl());
   REQUIRE(rule.Hash.FileHashRecords.size() == 1);
-  auto root = std::static_pointer_cast<SigDefNode>(rule.Signature);
-  REQUIRE(parser.getLexemeAt(root->Value.Attr) == "name");
+  auto root = std::static_pointer_cast<PropertyNode>(rule.Signature);
+  REQUIRE(parser.getLexemeAt(root->Value.Name) == "name");
   REQUIRE(parser.getLexemeAt(root->Value.Val) == "\"Executable\"");
 }
 
