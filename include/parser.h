@@ -282,11 +282,11 @@ const std::unordered_map<LlamaTokenType, Section> SectionDefs {
     LlamaTokenType::FILE_METADATA,
     Section{
       {
-        {std::string("created"),  PropertyInfo{AllLlamaOps, LlamaTokenType::DOUBLE_QUOTED_STRING}},
-        {std::string("modified"), PropertyInfo{AllLlamaOps, LlamaTokenType::DOUBLE_QUOTED_STRING}},
-        {std::string("filesize"), PropertyInfo{AllLlamaOps, LlamaTokenType::NUMBER}},
-        {std::string("filepath"), PropertyInfo{LlamaOp::EQUAL_EQUAL | LlamaOp::NOT_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}},
-        {std::string("filename"), PropertyInfo{LlamaOp::EQUAL_EQUAL | LlamaOp::NOT_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}}
+        {std::string_view("created"),  PropertyInfo{AllLlamaOps, LlamaTokenType::DOUBLE_QUOTED_STRING}},
+        {std::string_view("modified"), PropertyInfo{AllLlamaOps, LlamaTokenType::DOUBLE_QUOTED_STRING}},
+        {std::string_view("filesize"), PropertyInfo{AllLlamaOps, LlamaTokenType::NUMBER}},
+        {std::string_view("filepath"), PropertyInfo{LlamaOp::EQUAL_EQUAL | LlamaOp::NOT_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}},
+        {std::string_view("filename"), PropertyInfo{LlamaOp::EQUAL_EQUAL | LlamaOp::NOT_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}}
       },
       {}
     }
@@ -295,8 +295,8 @@ const std::unordered_map<LlamaTokenType, Section> SectionDefs {
     LlamaTokenType::SIGNATURE,
     Section{
       {
-        {std::string("name"), PropertyInfo{LlamaOp::EQUAL_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}},
-        {std::string("id"),   PropertyInfo{LlamaOp::EQUAL_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}}
+        {std::string_view("name"), PropertyInfo{LlamaOp::EQUAL_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}},
+        {std::string_view("id"),   PropertyInfo{LlamaOp::EQUAL_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}}
       },
       {}
     }
@@ -306,12 +306,12 @@ const std::unordered_map<LlamaTokenType, Section> SectionDefs {
     Section{
       {},
       {
-        {std::string("all"),            LlamaFunc{0, SIZE_MAX, 0, LlamaReturnType::BOOL}},
-        {std::string("any"),            LlamaFunc{0, SIZE_MAX, AllLlamaOps, LlamaReturnType::BOOL}},
-        {std::string("offset"),         LlamaFunc{1, 2, AllLlamaOps, LlamaReturnType::NUMBER}},
-        {std::string("count"),          LlamaFunc{1, 1, AllLlamaOps, LlamaReturnType::NUMBER}},
-        {std::string("count_has_hits"), LlamaFunc{0, SIZE_MAX, AllLlamaOps, LlamaReturnType::NUMBER}},
-        {std::string("length"),         LlamaFunc{1, 2, AllLlamaOps, LlamaReturnType::NUMBER}}
+        {std::string_view("all"),            LlamaFunc{0, SIZE_MAX, 0, LlamaReturnType::BOOL}},
+        {std::string_view("any"),            LlamaFunc{0, SIZE_MAX, AllLlamaOps, LlamaReturnType::BOOL}},
+        {std::string_view("offset"),         LlamaFunc{1, 2, AllLlamaOps, LlamaReturnType::NUMBER}},
+        {std::string_view("count"),          LlamaFunc{1, 1, AllLlamaOps, LlamaReturnType::NUMBER}},
+        {std::string_view("count_has_hits"), LlamaFunc{0, SIZE_MAX, AllLlamaOps, LlamaReturnType::NUMBER}},
+        {std::string_view("length"),         LlamaFunc{1, 2, AllLlamaOps, LlamaReturnType::NUMBER}}
       }
     }
   }
