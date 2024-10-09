@@ -238,12 +238,12 @@ struct Rule {
 };
 
 enum LlamaOp {
-  EQUAL_EQUAL        = 1 << 0,
-  NOT_EQUAL          = 1 << 1,
-  GREATER_THAN       = 1 << 2,
-  GREATER_THAN_EQUAL = 1 << 3,
-  LESS_THAN          = 1 << 4,
-  LESS_THAN_EQUAL    = 1 << 5
+  EQUAL_EQUAL        = 1 << 1,
+  NOT_EQUAL          = 1 << 2,
+  GREATER_THAN       = 1 << 3,
+  GREATER_THAN_EQUAL = 1 << 4,
+  LESS_THAN          = 1 << 5,
+  LESS_THAN_EQUAL    = 1 << 6
 };
 
 constexpr uint64_t AllLlamaOps = LlamaOp::EQUAL_EQUAL
@@ -253,15 +253,23 @@ constexpr uint64_t AllLlamaOps = LlamaOp::EQUAL_EQUAL
                                | LlamaOp::LESS_THAN
                                | LlamaOp::LESS_THAN_EQUAL;
 
+enum LlamaReturnType {
+  NONE,
+  STRING,
+  NUMBER,
+  BOOL
+};
+
 struct Property {
   uint64_t ValidOperators;
   LlamaTokenType Type;
 };
 
 struct LlamaFunc {
-  size_t NumArgs;
+  size_t MinArgs;
+  size_t MaxArgs;
   uint64_t ValidOperators;
-  LlamaTokenType ReturnType;
+  LlamaReturnType ReturnType;
 };
 
 struct Section {
@@ -288,9 +296,23 @@ const std::unordered_map<LlamaTokenType, Section> SectionDefs {
     Section{
       {
         {std::string("name"), Property{LlamaOp::EQUAL_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}},
-        {std::string("id"), Property{LlamaOp::EQUAL_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}}
+        {std::string("id"),   Property{LlamaOp::EQUAL_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}}
       },
       {}
+    }
+  },
+  {
+    LlamaTokenType::CONDITION,
+    Section{
+      {},
+      {
+        {std::string("all"),            LlamaFunc{0, SIZE_MAX, 0, LlamaReturnType::BOOL}},
+        {std::string("any"),            LlamaFunc{0, SIZE_MAX, AllLlamaOps, LlamaReturnType::BOOL}},
+        {std::string("offset"),         LlamaFunc{1, 2, AllLlamaOps, LlamaReturnType::NUMBER}},
+        {std::string("count"),          LlamaFunc{1, 1, AllLlamaOps, LlamaReturnType::NUMBER}},
+        {std::string("count_has_hits"), LlamaFunc{0, SIZE_MAX, AllLlamaOps, LlamaReturnType::NUMBER}},
+        {std::string("length"),         LlamaFunc{1, 2, AllLlamaOps, LlamaReturnType::NUMBER}}
+      }
     }
   }
 };
