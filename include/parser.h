@@ -47,38 +47,6 @@ struct BoolNode : public Node {
   std::string getSqlQuery(const LlamaParser& parser) const override;
 };
 
-/************************************ SIGNATURE SECTION *******************************************/
-
-// Holds information about expressions in the `signature` section.
-// SigDef has no Operator member (like FileMetadataDef) because expressions in the `signature`
-// section should not use any operator besides equality.
-struct SigDef : public Atom {
-  size_t Attr;
-  size_t Val;
-};
-
-// Defines a hash function for a SigDef object.
-template<>
-struct std::hash<SigDef>
-{
-    std::size_t operator()(const SigDef& sig) const noexcept {
-      std::size_t hash = 0;
-      boost::hash_combine(hash, std::hash<size_t>{}(sig.Attr));
-      boost::hash_combine(hash, std::hash<size_t>{}(sig.Val));
-      return hash;
-    }
-};
-
-// Expression node for expressions under the `signature` section.
-struct SigDefNode : public Node {
-  SigDefNode() : Node(NodeType::SIG) {}
-  SigDefNode(SigDef&& value) : Node(NodeType::SIG) { Value = value; }
-
-  std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
-
-  SigDef Value;
-};
-
 /************************************ FILE_METADATA SECTION ***************************************/
 
 const static std::unordered_map<std::string_view, std::string> FileMetadataPropertySqlLookup {
@@ -87,35 +55,6 @@ const static std::unordered_map<std::string_view, std::string> FileMetadataPrope
   {"filesize", "filesize"},
   {"filepath", "path"},
   {"filename", "name"}
-};
-
-// Holds information about expressions in the `file_metadata` section.
-struct FileMetadataDef : public Atom {
-  size_t Property;
-  size_t Operator;
-  size_t Value;
-};
-
-// Defines a hash function for a FileMetadataDef object.
-template<>
-struct std::hash<FileMetadataDef>
-{
-    std::size_t operator()(const FileMetadataDef& meta) const noexcept {
-      std::size_t hash = 0;
-      boost::hash_combine(hash, std::hash<size_t>{}(meta.Property));
-      boost::hash_combine(hash, std::hash<size_t>{}(meta.Operator));
-      boost::hash_combine(hash, std::hash<size_t>{}(meta.Value));
-      return hash;
-    }
-};
-
-// Expression node for expressions under the `file_metadata` section.
-struct FileMetadataNode : public Node {
-  FileMetadataNode() : Node(NodeType::META) {}
-  FileMetadataNode(FileMetadataDef&& value) : Node(NodeType::META) { Value = value; }
-  FileMetadataDef Value;
-
-  std::string getSqlQuery(const LlamaParser& parser) const override;
 };
 
 /*************************************** FUNCTIONS ************************************************/
@@ -412,8 +351,6 @@ public:
   std::shared_ptr<Node> parseExpr(LlamaTokenType section);
 
   FuncNode         parseFuncCall();
-  SigDefNode       parseSigDef();
-  FileMetadataNode parseFileMetadataDef();
   PropertyNode     parseProperty(LlamaTokenType);
 
   MetaSection    parseMetaSection();

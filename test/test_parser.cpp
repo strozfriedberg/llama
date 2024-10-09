@@ -319,28 +319,6 @@ TEST_CASE("parseGrepSection") {
   REQUIRE(section.Condition->Right->Type == NodeType::FUNC);
 }
 
-TEST_CASE("parseFileMetadataDefFileSize") {
-  std::string input = "filesize > 100";
-  LlamaParser parser(input, getTokensFromString(input));
-  FileMetadataNode node;
-  REQUIRE_NOTHROW(node = parser.parseFileMetadataDef());
-  REQUIRE(parser.getLexemeAt(node.Value.Property) == "filesize");
-  REQUIRE(parser.getLexemeAt(node.Value.Operator) == ">");
-  REQUIRE(parser.getLexemeAt(node.Value.Value) == "100");
-}
-
-TEST_CASE("parseFileMetadataDefCreated") {
-  std::string input = "created >= \"2024-05-06\"";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseFileMetadataDef());
-}
-
-TEST_CASE("parseFileMetadataDefModified") {
-  std::string input = "modified >= \"2024-05-06\"";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseFileMetadataDef());
-}
-
 TEST_CASE("parseFileMetadataSection") {
   std::string input = R"(created > "2023-05-04" or (modified < "2023-05-06" and filesize >= 100))";
   LlamaParser parser(input, getTokensFromString(input));

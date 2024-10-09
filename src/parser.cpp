@@ -33,19 +33,6 @@ std::string BoolNode::getSqlQuery(const LlamaParser& parser) const {
   return query;
 }
 
-std::string FileMetadataNode::getSqlQuery(const LlamaParser& parser) const {
-  std::string query = "";
-  std::string_view curLex = parser.getLexemeAt(Value.Property);
-  query += FileMetadataPropertySqlLookup.find(curLex)->second;
-  query += " ";
-  query += parser.getLexemeAt(Value.Operator);
-  query += " ";
-  std::string val = std::string(parser.getLexemeAt(Value.Value));
-  std::replace(val.begin(), val.end(), '"', '\'');
-  query += val;
-  return query;
-}
-
 std::string PropertyNode::getSqlQuery(const LlamaParser& parser) const {
   std::string query = "";
   std::string_view curLex = parser.getLexemeAt(Value.Name);
@@ -350,19 +337,6 @@ FuncNode LlamaParser::parseFuncCall() {
   return FuncNode(std::move(func));
 }
 
-SigDefNode LlamaParser::parseSigDef() {
-  SigDef def;
-  if (!checkSignatureProperty()) {
-    throw ParserError("Expected name or id keyword", peek().Pos);
-  }
-  advance();
-  def.Attr = CurIdx - 1;
-  expect(LlamaTokenType::EQUAL_EQUAL);
-  expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
-  def.Val = CurIdx - 1;
-  return SigDefNode(std::move(def));
-}
-
 GrepSection LlamaParser::parseGrepSection() {
   GrepSection grepSection;
   expect(LlamaTokenType::PATTERNS);
@@ -372,24 +346,6 @@ GrepSection LlamaParser::parseGrepSection() {
   expect(LlamaTokenType::COLON);
   grepSection.Condition = parseExpr(LlamaTokenType::CONDITION);
   return grepSection;
-}
-
-FileMetadataNode LlamaParser::parseFileMetadataDef() {
-  FileMetadataDef def;
-  bool expectNum = false;
-
-  if (!checkFileMetadataProperty()) {
-    throw ParserError("Expected created, modified, filesize, filepath, or filename", peek().Pos);
-  }
-  advance();
-
-  expectNum = (getPreviousLexeme() == "filesize");
-  def.Property = CurIdx - 1;
-  parseOperator();
-  def.Operator = CurIdx - 1;
-  expectNum ? expect(LlamaTokenType::NUMBER) : expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
-  def.Value = CurIdx - 1;
-  return FileMetadataNode(std::move(def));
 }
 
 PropertyNode LlamaParser::parseProperty(LlamaTokenType section) {
