@@ -25,7 +25,7 @@ class LlamaParser;
 struct Atom {};
 
 enum class NodeType {
-  AND, OR, FUNC, SIG, META
+  AND, OR, FUNC, SIG, META, PROP
 };
 
 // Holds information about expressions under the `file_metadata`, `signature`, and `condition`
@@ -238,12 +238,12 @@ struct Rule {
 };
 
 enum LlamaOp {
-  EQUAL_EQUAL        = 1 << 1,
-  NOT_EQUAL          = 1 << 2,
-  GREATER_THAN       = 1 << 3,
-  GREATER_THAN_EQUAL = 1 << 4,
-  LESS_THAN          = 1 << 5,
-  LESS_THAN_EQUAL    = 1 << 6
+  EQUAL_EQUAL        = 1 << 0,
+  NOT_EQUAL          = 1 << 1,
+  GREATER_THAN       = 1 << 2,
+  GREATER_THAN_EQUAL = 1 << 3,
+  LESS_THAN          = 1 << 4,
+  LESS_THAN_EQUAL    = 1 << 5
 };
 
 constexpr uint64_t AllLlamaOps = LlamaOp::EQUAL_EQUAL
@@ -315,6 +315,22 @@ const std::unordered_map<LlamaTokenType, Section> SectionDefs {
       }
     }
   }
+};
+
+uint64_t toLlamaOp(LlamaTokenType t);
+
+struct Property {
+  size_t Name;
+  size_t Op;
+  size_t Val;
+};
+
+struct PropertyNode : public Node {
+  PropertyNode() = default;
+  PropertyNode(Property&& value) : Node(NodeType::PROP) { Value = value; }
+  Property Value;
+
+  std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
 };
 
 /************************************ PARSER ******************************************************/
@@ -398,6 +414,7 @@ public:
   FuncNode         parseFuncCall();
   SigDefNode       parseSigDef();
   FileMetadataNode parseFileMetadataDef();
+  PropertyNode     parseProperty(LlamaTokenType);
 
   MetaSection    parseMetaSection();
   HashSection    parseHashSection();

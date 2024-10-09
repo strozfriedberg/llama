@@ -748,3 +748,12 @@ TEST_CASE("getPreviousLexemeStringInvalidation") {
   std::string_view sv = parser.getPreviousLexeme();
   REQUIRE(sv == std::string_view("rule"));
 }
+
+TEST_CASE("toLlamaOp") {
+  REQUIRE(toLlamaOp(LlamaTokenType::EQUAL_EQUAL) == LlamaOp::EQUAL_EQUAL);
+  REQUIRE(toLlamaOp(LlamaTokenType::NOT_EQUAL) == LlamaOp::NOT_EQUAL);
+  REQUIRE(toLlamaOp(LlamaTokenType::GREATER_THAN) == LlamaOp::GREATER_THAN);
+  REQUIRE(toLlamaOp(LlamaTokenType::GREATER_THAN_EQUAL) == LlamaOp::GREATER_THAN_EQUAL);
+  REQUIRE(toLlamaOp(LlamaTokenType::LESS_THAN) == LlamaOp::LESS_THAN);
+  REQUIRE(toLlamaOp(LlamaTokenType::LESS_THAN_EQUAL) == LlamaOp::LESS_THAN_EQUAL);
+}
