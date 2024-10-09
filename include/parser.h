@@ -258,6 +258,12 @@ struct Property {
   LlamaTokenType Type;
 };
 
+struct LlamaFunc {
+  size_t NumArgs;
+  uint64_t ValidOperators;
+  LlamaTokenType ReturnType;
+};
+
 struct Section {
   std::unordered_map<std::string_view, Property> Props;
 };
