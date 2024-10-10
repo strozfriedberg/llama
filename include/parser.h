@@ -192,7 +192,7 @@ constexpr uint64_t AllLlamaOps = LlamaOp::EQUAL_EQUAL
                                | LlamaOp::LESS_THAN
                                | LlamaOp::LESS_THAN_EQUAL;
 
-enum LlamaReturnType {
+enum class LlamaReturnType {
   NONE,
   STRING,
   NUMBER,
