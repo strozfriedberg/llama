@@ -1,6 +1,15 @@
 #include "parser.h"
 #include "util.h"
 
+uint64_t toLlamaOp(LlamaTokenType t) {
+    uint64_t res = 0;
+    if (t > LlamaTokenType::EQUAL && t < LlamaTokenType::IDENTIFIER) {
+      uint64_t shiftAmt = (uint64_t)(t) - (uint64_t)(LlamaTokenType::EQUAL_EQUAL);
+      res = 1 << shiftAmt;
+    }
+    return res;
+}
+
 void Function::validate() {
   FunctionProperties props = FunctionValidProperties.find(Name)->second;
   if (props.IsCompFunc && (Operator == SIZE_MAX || Value == SIZE_MAX)) {
@@ -24,14 +33,14 @@ std::string BoolNode::getSqlQuery(const LlamaParser& parser) const {
   return query;
 }
 
-std::string FileMetadataNode::getSqlQuery(const LlamaParser& parser) const {
+std::string PropertyNode::getSqlQuery(const LlamaParser& parser) const {
   std::string query = "";
-  std::string_view curLex = parser.getLexemeAt(Value.Property);
+  std::string_view curLex = parser.getLexemeAt(Value.Name);
   query += FileMetadataPropertySqlLookup.find(curLex)->second;
   query += " ";
-  query += parser.getLexemeAt(Value.Operator);
+  query += parser.getLexemeAt(Value.Op);
   query += " ";
-  std::string val = std::string(parser.getLexemeAt(Value.Value));
+  std::string val = std::string(parser.getLexemeAt(Value.Val));
   std::replace(val.begin(), val.end(), '"', '\'');
   query += val;
   return query;
@@ -260,20 +269,14 @@ std::shared_ptr<Node> LlamaParser::parseFactor(LlamaTokenType section) {
     node = parseExpr(section);
     expect(LlamaTokenType::CLOSE_PAREN);
   }
+  else if (section == LlamaTokenType::FILE_METADATA || section == LlamaTokenType::SIGNATURE) {
+    auto propNode = std::make_shared<PropertyNode>(parseProperty(section));
+    node = propNode;
+  }
   else if (checkFunctionName()) {
     if (section != LlamaTokenType::CONDITION) throw ParserError("Invalid property in section", previous().Pos);
     auto funcNode = std::make_shared<FuncNode>(parseFuncCall());
     node = funcNode;
-  }
-  else if (checkSignatureProperty()) {
-    if (section != LlamaTokenType::SIGNATURE) throw ParserError("Invalid property in section", previous().Pos);
-    auto sigDefNode = std::make_shared<SigDefNode>(parseSigDef());
-    node = sigDefNode;
-  }
-  else if (checkFileMetadataProperty()) {
-    if (section != LlamaTokenType::FILE_METADATA) throw ParserError("Invalid property in section", previous().Pos);
-    auto fileMetadataNode = std::make_shared<FileMetadataNode>(parseFileMetadataDef());
-    node = fileMetadataNode;
   }
   else {
     throw ParserError("Expected function call or signature definition", peek().Pos);
@@ -334,19 +337,6 @@ FuncNode LlamaParser::parseFuncCall() {
   return FuncNode(std::move(func));
 }
 
-SigDefNode LlamaParser::parseSigDef() {
-  SigDef def;
-  if (!checkSignatureProperty()) {
-    throw ParserError("Expected name or id keyword", peek().Pos);
-  }
-  advance();
-  def.Attr = CurIdx - 1;
-  expect(LlamaTokenType::EQUAL_EQUAL);
-  expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
-  def.Val = CurIdx - 1;
-  return SigDefNode(std::move(def));
-}
-
 GrepSection LlamaParser::parseGrepSection() {
   GrepSection grepSection;
   expect(LlamaTokenType::PATTERNS);
@@ -358,22 +348,43 @@ GrepSection LlamaParser::parseGrepSection() {
   return grepSection;
 }
 
-FileMetadataNode LlamaParser::parseFileMetadataDef() {
-  FileMetadataDef def;
-  bool expectNum = false;
-
-  if (!checkFileMetadataProperty()) {
-    throw ParserError("Expected created, modified, filesize, filepath, or filename", peek().Pos);
+PropertyNode LlamaParser::parseProperty(LlamaTokenType section) {
+  Property prop;
+  Section sectionInfo;
+  if (auto sectionSearch = SectionDefs.find(section); sectionSearch != SectionDefs.end()) {
+    sectionInfo = sectionSearch->second;
   }
-  advance();
+  else {
+    throw ParserError("Unexpected section name", peek().Pos);
+  }
 
-  expectNum = (getPreviousLexeme() == "filesize");
-  def.Property = CurIdx - 1;
-  parseOperator();
-  def.Operator = CurIdx - 1;
-  expectNum ? expect(LlamaTokenType::NUMBER) : expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
-  def.Value = CurIdx - 1;
-  return FileMetadataNode(std::move(def));
+  PropertyInfo PropertyInfo;
+  if (auto propertySearch = sectionInfo.Props.find(getCurrentLexeme()); propertySearch != sectionInfo.Props.end()) {
+    prop.Name = CurIdx;
+    PropertyInfo = propertySearch->second;
+    advance();
+  }
+  else {
+    throw ParserError("Unexpected property name in section", peek().Pos);
+  }
+
+  if ((toLlamaOp(peek().Type) & PropertyInfo.ValidOperators) > 0) {
+    prop.Op = CurIdx;
+    advance();
+  }
+  else {
+    throw ParserError("Unsupported operator for property", peek().Pos);
+  }
+
+  if (peek().Type == PropertyInfo.Type) {
+    prop.Val = CurIdx;
+    advance();
+  }
+  else {
+    throw ParserError("Unsupported type for right operand", peek().Pos);
+  }
+
+  return PropertyNode(std::move(prop));
 }
 
 MetaSection LlamaParser::parseMetaSection() {

@@ -6,6 +6,7 @@
 *.pyc
 *.trs
 .*.swp
+*.trace
 .deps/
 .dirstamp
 .libs/

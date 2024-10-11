@@ -290,14 +290,14 @@ TEST_CASE("parseSignatureSection") {
   std::shared_ptr<Node> node;
   REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::SIGNATURE));
   REQUIRE(node->Type == NodeType::OR);
-  auto sigDefNodeLeft = std::static_pointer_cast<SigDefNode>(node->Left);
-  REQUIRE(node->Left->Type == NodeType::SIG);
-  REQUIRE(parser.getLexemeAt(sigDefNodeLeft->Value.Attr) == "name");
-  REQUIRE(parser.getLexemeAt(sigDefNodeLeft->Value.Val) == "\"Executable\"");
-  auto sigDefNodeRight = std::static_pointer_cast<SigDefNode>(node->Right);
-  REQUIRE(node->Right->Type == NodeType::SIG);
-  REQUIRE(parser.getLexemeAt(sigDefNodeRight->Value.Attr) == "id");
-  REQUIRE(parser.getLexemeAt(sigDefNodeRight->Value.Val) == "\"123456789\"");
+  auto propNodeLeft = std::static_pointer_cast<PropertyNode>(node->Left);
+  REQUIRE(node->Left->Type == NodeType::PROP);
+  REQUIRE(parser.getLexemeAt(propNodeLeft->Value.Name) == "name");
+  REQUIRE(parser.getLexemeAt(propNodeLeft->Value.Val) == "\"Executable\"");
+  auto propNodeRight = std::static_pointer_cast<PropertyNode>(node->Right);
+  REQUIRE(node->Right->Type == NodeType::PROP);
+  REQUIRE(parser.getLexemeAt(propNodeRight->Value.Name) == "id");
+  REQUIRE(parser.getLexemeAt(propNodeRight->Value.Val) == "\"123456789\"");
 }
 
 TEST_CASE("parseGrepSection") {
@@ -317,28 +317,6 @@ TEST_CASE("parseGrepSection") {
   REQUIRE(section.Condition->Type == NodeType::AND);
   REQUIRE(section.Condition->Left->Type == NodeType::FUNC);
   REQUIRE(section.Condition->Right->Type == NodeType::FUNC);
-}
-
-TEST_CASE("parseFileMetadataDefFileSize") {
-  std::string input = "filesize > 100";
-  LlamaParser parser(input, getTokensFromString(input));
-  FileMetadataNode node;
-  REQUIRE_NOTHROW(node = parser.parseFileMetadataDef());
-  REQUIRE(parser.getLexemeAt(node.Value.Property) == "filesize");
-  REQUIRE(parser.getLexemeAt(node.Value.Operator) == ">");
-  REQUIRE(parser.getLexemeAt(node.Value.Value) == "100");
-}
-
-TEST_CASE("parseFileMetadataDefCreated") {
-  std::string input = "created >= \"2024-05-06\"";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseFileMetadataDef());
-}
-
-TEST_CASE("parseFileMetadataDefModified") {
-  std::string input = "modified >= \"2024-05-06\"";
-  LlamaParser parser(input, getTokensFromString(input));
-  REQUIRE_NOTHROW(parser.parseFileMetadataDef());
 }
 
 TEST_CASE("parseFileMetadataSection") {
@@ -377,8 +355,8 @@ TEST_CASE("parseRuleDecl") {
   Rule rule;
   REQUIRE_NOTHROW(rule = parser.parseRuleDecl());
   REQUIRE(rule.Hash.FileHashRecords.size() == 1);
-  auto root = std::static_pointer_cast<SigDefNode>(rule.Signature);
-  REQUIRE(parser.getLexemeAt(root->Value.Attr) == "name");
+  auto root = std::static_pointer_cast<PropertyNode>(rule.Signature);
+  REQUIRE(parser.getLexemeAt(root->Value.Name) == "name");
   REQUIRE(parser.getLexemeAt(root->Value.Val) == "\"Executable\"");
 }
 
@@ -747,4 +725,13 @@ TEST_CASE("getPreviousLexemeStringInvalidation") {
   parser.matchAny(LlamaTokenType::RULE);
   std::string_view sv = parser.getPreviousLexeme();
   REQUIRE(sv == std::string_view("rule"));
+}
+
+TEST_CASE("toLlamaOp") {
+  REQUIRE(toLlamaOp(LlamaTokenType::EQUAL_EQUAL) == LlamaOp::EQUAL_EQUAL);
+  REQUIRE(toLlamaOp(LlamaTokenType::NOT_EQUAL) == LlamaOp::NOT_EQUAL);
+  REQUIRE(toLlamaOp(LlamaTokenType::GREATER_THAN) == LlamaOp::GREATER_THAN);
+  REQUIRE(toLlamaOp(LlamaTokenType::GREATER_THAN_EQUAL) == LlamaOp::GREATER_THAN_EQUAL);
+  REQUIRE(toLlamaOp(LlamaTokenType::LESS_THAN) == LlamaOp::LESS_THAN);
+  REQUIRE(toLlamaOp(LlamaTokenType::LESS_THAN_EQUAL) == LlamaOp::LESS_THAN_EQUAL);
 }

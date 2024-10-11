@@ -25,7 +25,7 @@ class LlamaParser;
 struct Atom {};
 
 enum class NodeType {
-  AND, OR, FUNC, SIG, META
+  AND, OR, FUNC, SIG, META, PROP
 };
 
 // Holds information about expressions under the `file_metadata`, `signature`, and `condition`
@@ -47,38 +47,6 @@ struct BoolNode : public Node {
   std::string getSqlQuery(const LlamaParser& parser) const override;
 };
 
-/************************************ SIGNATURE SECTION *******************************************/
-
-// Holds information about expressions in the `signature` section.
-// SigDef has no Operator member (like FileMetadataDef) because expressions in the `signature`
-// section should not use any operator besides equality.
-struct SigDef : public Atom {
-  size_t Attr;
-  size_t Val;
-};
-
-// Defines a hash function for a SigDef object.
-template<>
-struct std::hash<SigDef>
-{
-    std::size_t operator()(const SigDef& sig) const noexcept {
-      std::size_t hash = 0;
-      boost::hash_combine(hash, std::hash<size_t>{}(sig.Attr));
-      boost::hash_combine(hash, std::hash<size_t>{}(sig.Val));
-      return hash;
-    }
-};
-
-// Expression node for expressions under the `signature` section.
-struct SigDefNode : public Node {
-  SigDefNode() : Node(NodeType::SIG) {}
-  SigDefNode(SigDef&& value) : Node(NodeType::SIG) { Value = value; }
-
-  std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
-
-  SigDef Value;
-};
-
 /************************************ FILE_METADATA SECTION ***************************************/
 
 const static std::unordered_map<std::string_view, std::string> FileMetadataPropertySqlLookup {
@@ -87,35 +55,6 @@ const static std::unordered_map<std::string_view, std::string> FileMetadataPrope
   {"filesize", "filesize"},
   {"filepath", "path"},
   {"filename", "name"}
-};
-
-// Holds information about expressions in the `file_metadata` section.
-struct FileMetadataDef : public Atom {
-  size_t Property;
-  size_t Operator;
-  size_t Value;
-};
-
-// Defines a hash function for a FileMetadataDef object.
-template<>
-struct std::hash<FileMetadataDef>
-{
-    std::size_t operator()(const FileMetadataDef& meta) const noexcept {
-      std::size_t hash = 0;
-      boost::hash_combine(hash, std::hash<size_t>{}(meta.Property));
-      boost::hash_combine(hash, std::hash<size_t>{}(meta.Operator));
-      boost::hash_combine(hash, std::hash<size_t>{}(meta.Value));
-      return hash;
-    }
-};
-
-// Expression node for expressions under the `file_metadata` section.
-struct FileMetadataNode : public Node {
-  FileMetadataNode() : Node(NodeType::META) {}
-  FileMetadataNode(FileMetadataDef&& value) : Node(NodeType::META) { Value = value; }
-  FileMetadataDef Value;
-
-  std::string getSqlQuery(const LlamaParser& parser) const override;
 };
 
 /*************************************** FUNCTIONS ************************************************/
@@ -219,6 +158,11 @@ struct HashSection {
 /************************************ RULE ********************************************************/
 
 struct Rule {
+  std::string getSqlQuery(const LlamaParser&) const;
+
+  // Used for unique rule ID in the database.
+  FieldHash getHash(const LlamaParser&) const;
+
   std::string Name;
   MetaSection Meta;
   HashSection Hash;
@@ -230,11 +174,102 @@ struct Rule {
   uint64_t Start = 0;
   // Relative input offset right before the rule's closing brace.
   uint64_t End = 0;
+};
 
-  std::string getSqlQuery(const LlamaParser&) const;
+enum LlamaOp {
+  EQUAL_EQUAL        = 1 << 0,
+  NOT_EQUAL          = 1 << 1,
+  GREATER_THAN       = 1 << 2,
+  GREATER_THAN_EQUAL = 1 << 3,
+  LESS_THAN          = 1 << 4,
+  LESS_THAN_EQUAL    = 1 << 5
+};
 
-  // Used for unique rule ID in the database.
-  FieldHash getHash(const LlamaParser&) const;
+constexpr uint64_t AllLlamaOps = LlamaOp::EQUAL_EQUAL
+                               | LlamaOp::NOT_EQUAL
+                               | LlamaOp::GREATER_THAN
+                               | LlamaOp::GREATER_THAN_EQUAL
+                               | LlamaOp::LESS_THAN
+                               | LlamaOp::LESS_THAN_EQUAL;
+
+enum class LlamaReturnType {
+  NONE,
+  STRING,
+  NUMBER,
+  BOOL
+};
+
+struct PropertyInfo {
+  uint64_t ValidOperators;
+  LlamaTokenType Type;
+};
+
+struct LlamaFunc {
+  size_t MinArgs;
+  size_t MaxArgs;
+  uint64_t ValidOperators;
+  LlamaReturnType ReturnType;
+};
+
+struct Section {
+  std::unordered_map<std::string_view, PropertyInfo> Props;
+  std::unordered_map<std::string_view, LlamaFunc> Funcs;
+};
+
+const std::unordered_map<LlamaTokenType, Section> SectionDefs {
+  {
+    LlamaTokenType::FILE_METADATA,
+    Section{
+      {
+        {std::string_view("created"),  PropertyInfo{AllLlamaOps, LlamaTokenType::DOUBLE_QUOTED_STRING}},
+        {std::string_view("modified"), PropertyInfo{AllLlamaOps, LlamaTokenType::DOUBLE_QUOTED_STRING}},
+        {std::string_view("filesize"), PropertyInfo{AllLlamaOps, LlamaTokenType::NUMBER}},
+        {std::string_view("filepath"), PropertyInfo{LlamaOp::EQUAL_EQUAL | LlamaOp::NOT_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}},
+        {std::string_view("filename"), PropertyInfo{LlamaOp::EQUAL_EQUAL | LlamaOp::NOT_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}}
+      },
+      {}
+    }
+  },
+  {
+    LlamaTokenType::SIGNATURE,
+    Section{
+      {
+        {std::string_view("name"), PropertyInfo{LlamaOp::EQUAL_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}},
+        {std::string_view("id"),   PropertyInfo{LlamaOp::EQUAL_EQUAL, LlamaTokenType::DOUBLE_QUOTED_STRING}}
+      },
+      {}
+    }
+  },
+  {
+    LlamaTokenType::CONDITION,
+    Section{
+      {},
+      {
+        {std::string_view("all"),            LlamaFunc{0, SIZE_MAX, 0, LlamaReturnType::BOOL}},
+        {std::string_view("any"),            LlamaFunc{0, SIZE_MAX, AllLlamaOps, LlamaReturnType::BOOL}},
+        {std::string_view("offset"),         LlamaFunc{1, 2, AllLlamaOps, LlamaReturnType::NUMBER}},
+        {std::string_view("count"),          LlamaFunc{1, 1, AllLlamaOps, LlamaReturnType::NUMBER}},
+        {std::string_view("count_has_hits"), LlamaFunc{0, SIZE_MAX, AllLlamaOps, LlamaReturnType::NUMBER}},
+        {std::string_view("length"),         LlamaFunc{1, 2, AllLlamaOps, LlamaReturnType::NUMBER}}
+      }
+    }
+  }
+};
+
+uint64_t toLlamaOp(LlamaTokenType t);
+
+struct Property {
+  size_t Name;
+  size_t Op;
+  size_t Val;
+};
+
+struct PropertyNode : public Node {
+  PropertyNode() = default;
+  PropertyNode(Property&& value) : Node(NodeType::PROP) { Value = value; }
+  Property Value;
+
+  std::string getSqlQuery(const LlamaParser& parser) const override;
 };
 
 /************************************ PARSER ******************************************************/
@@ -316,8 +351,7 @@ public:
   std::shared_ptr<Node> parseExpr(LlamaTokenType section);
 
   FuncNode         parseFuncCall();
-  SigDefNode       parseSigDef();
-  FileMetadataNode parseFileMetadataDef();
+  PropertyNode     parseProperty(LlamaTokenType);
 
   MetaSection    parseMetaSection();
   HashSection    parseHashSection();
