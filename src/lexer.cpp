@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "lexer.h"
 
 void print(std::string s) {
