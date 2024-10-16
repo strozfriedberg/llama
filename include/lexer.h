@@ -29,7 +29,6 @@ public:
   bool match(char expected);
   bool isAtEnd() const { return CurIdx >= Input.size(); }
 
-  std::string_view getLexeme(int idx) const;
   char getCurChar() const;
   char peek() const { return (isAtEnd() || CurIdx + 1 >= Input.size()) ? '\0' : Input.at(CurIdx + 1); }
   const std::vector<Token>& getTokens() const { return Tokens; }

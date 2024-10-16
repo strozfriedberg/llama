@@ -168,10 +168,6 @@ bool LlamaLexer::match(char expected) {
   return true;
 }
 
-std::string_view LlamaLexer::getLexeme(int idx) const {
-  return std::string_view(Input).substr(Tokens.at(idx).Start, Tokens.at(idx).End - Tokens.at(idx).Start);
-}
-
 char LlamaLexer::getCurChar() const {
   if (isAtEnd()) {
     return '\0';
