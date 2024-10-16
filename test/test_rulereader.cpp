@@ -37,7 +37,7 @@ LG_HFSM getLgFsmFromRules(const std::vector<Rule>& rules) {
       for (const PatternDef& pDef : patternPair.second) {
         std::string patNoQuotes = std::string(pDef.Pattern.substr(1, pDef.Pattern.size() - 2));
         lg_parse_pattern(lgPat, patNoQuotes.c_str(), &pDef.Options, &err);
-        lg_add_pattern(fsm, lgPat, pDef.Encoding.c_str(), patternIndex, &err);
+        lg_add_pattern(fsm, lgPat, std::string(pDef.Encoding).c_str(), patternIndex, &err);
         ++patternIndex;
       }
     }

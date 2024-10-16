@@ -123,11 +123,13 @@ static const std::unordered_map<std::string_view, FunctionProperties> FunctionVa
 
 /********************************** PATTERNS SECTION **********************************************/
 
+static const std::string_view ASCII("ASCII");
+
 // Holds information about each pattern defined in the `patterns` section under the `grep` section.
 struct PatternDef {
   std::string Pattern;
   LG_KeyOptions Options = {0,0,0};
-  std::string Encoding;
+  std::string_view Encoding;
 };
 
 // Holds a mapping from the user-defined name of each pattern to the rest of its information.
@@ -344,7 +346,7 @@ public:
   std::vector<PatternDef>  parsePatternDef();
   std::vector<PatternDef>  parsePatternMod();
   std::vector<PatternDef>  parseHexString();
-  std::vector<std::string> parseEncodings();
+  std::vector<std::string_view> parseEncodings();
 
   std::shared_ptr<Node> parseFactor(LlamaTokenType section);
   std::shared_ptr<Node> parseTerm(LlamaTokenType section);

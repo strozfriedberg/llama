@@ -203,7 +203,7 @@ TEST_CASE("parseEncodingsIfDanglingComma") {
 TEST_CASE("parseEncodingsDoesNotThrowIfEncodings") {
   std::string input = "=UTF-8,UTF-16LE";
   LlamaParser parser(input, getTokensFromString(input));
-  std::vector<std::string> encodings;
+  std::vector<std::string_view> encodings;
   REQUIRE_NOTHROW(encodings = parser.parseEncodings());
   REQUIRE(encodings.size() == 2);
   REQUIRE(encodings.at(0) == "UTF-8");

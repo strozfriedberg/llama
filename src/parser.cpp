@@ -167,7 +167,7 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
   std::vector<PatternDef> defs;
   PatternDef patternDef;
   patternDef.Pattern = getPreviousLexeme();
-  std::vector<std::string> encodings;
+  std::vector<std::string_view> encodings;
 
   while (matchAny(LlamaTokenType::NOCASE, LlamaTokenType::FIXED, LlamaTokenType::ENCODINGS)) {
     switch(previous().Type) {
@@ -177,11 +177,11 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
     }
   }
 
-  if (encodings.empty()) encodings.push_back("ASCII");
+  if (encodings.empty()) encodings.push_back(ASCII);
 
-  for (const std::string& encoding : encodings) {
+  for (const std::string_view& encoding : encodings) {
     PatternDef curDef = patternDef;
-    curDef.Options.UnicodeMode = (encoding != "ASCII");
+    curDef.Options.UnicodeMode = (encoding != ASCII);
     curDef.Encoding = encoding;
     defs.push_back(curDef);
   }
@@ -189,12 +189,12 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
   return defs;
 }
 
-std::vector<std::string> LlamaParser::parseEncodings() {
-  std::vector<std::string> encodings;
+std::vector<std::string_view> LlamaParser::parseEncodings() {
+  std::vector<std::string_view> encodings;
   expect(LlamaTokenType::EQUAL);
-  encodings.push_back(std::string(expect(LlamaTokenType::IDENTIFIER)));
+  encodings.push_back(expect(LlamaTokenType::IDENTIFIER));
   while (matchAny(LlamaTokenType::COMMA)) {
-    encodings.push_back(std::string(expect(LlamaTokenType::IDENTIFIER)));
+    encodings.push_back(expect(LlamaTokenType::IDENTIFIER));
   }
   return encodings;
 }
