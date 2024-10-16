@@ -434,6 +434,9 @@ Rule LlamaParser::parseRuleDecl() {
 
 std::vector<Rule> LlamaParser::parseRules() {
   std::vector<Rule> rules;
+  // Estimate final size of the rule vector to reduce array doubling.
+  // Divided by 4 because the simplest rule, `rule X {}`, has 4 tokens in one rule.
+  rules.reserve(floor(Tokens.size()/4));
   while (!isAtEnd()) {
     rules.push_back(parseRuleDecl());
   }
