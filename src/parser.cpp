@@ -403,7 +403,7 @@ Rule LlamaParser::parseRuleDecl() {
   Rule rule;
   expect(LlamaTokenType::RULE);
   expect(LlamaTokenType::IDENTIFIER);
-  rule.Name = std::string(getPreviousLexeme());
+  rule.Name = getPreviousLexeme();
   expect(LlamaTokenType::OPEN_BRACE);
 
   if (matchAny(LlamaTokenType::META)) {

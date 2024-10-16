@@ -165,12 +165,12 @@ struct Rule {
   // Used for unique rule ID in the database.
   FieldHash getHash(const LlamaParser&) const;
 
-  std::string Name;
-  MetaSection Meta;
-  HashSection Hash;
+  std::string_view      Name;
+  MetaSection           Meta;
+  HashSection           Hash;
   std::shared_ptr<Node> Signature;
   std::shared_ptr<Node> FileMetadata;
-  GrepSection Grep;
+  GrepSection           Grep;
 
   // Relative input offset where the Meta section ends and the first "real" section begins.
   uint64_t Start = 0;
