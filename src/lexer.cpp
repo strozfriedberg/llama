@@ -2,10 +2,6 @@
 
 #include "lexer.h"
 
-void print(std::string s) {
-  std::cout << s << std::endl;
-}
-
 void LlamaLexer::scanTokens() {
   // Estimate final size of the token vector to reduce array doubling.
   // Divided by 2 because the simplest rule, `rule X {}`, has a length of 9 characters with 4 tokens.
