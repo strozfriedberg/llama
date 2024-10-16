@@ -146,9 +146,9 @@ FileHashRecord LlamaParser::parseFileHashRecord() {
   return record;
 }
 
-std::string LlamaParser::parseHashValue() {
+std::string_view LlamaParser::parseHashValue() {
   expect(LlamaTokenType::EQUAL_EQUAL);
-  return std::string(expect(LlamaTokenType::DOUBLE_QUOTED_STRING));
+  return expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
 }
 
 void LlamaParser::parseOperator() {

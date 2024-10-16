@@ -150,7 +150,7 @@ struct MetaSection {
 
 /************************************ HASH SECTION ************************************************/
 
-using FileHashRecord = std::unordered_map<SFHASH_HashAlgorithm, std::string>;
+using FileHashRecord = std::unordered_map<SFHASH_HashAlgorithm, std::string_view>;
 
 struct HashSection {
   std::vector<FileHashRecord> FileHashRecords;
@@ -341,7 +341,7 @@ public:
 
   SFHASH_HashAlgorithm parseHash();
   FileHashRecord       parseFileHashRecord();
-  std::string          parseHashValue();
+  std::string_view     parseHashValue();
 
   std::vector<PatternDef>  parsePatternDef();
   std::vector<PatternDef>  parsePatternMod();
