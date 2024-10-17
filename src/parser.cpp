@@ -139,13 +139,13 @@ SFHASH_HashAlgorithm LlamaParser::parseHash() {
 FileHashRecord LlamaParser::parseFileHashRecord() {
   FileHashRecord record;
   SFHASH_HashAlgorithm alg = parseHash();
-  record.push_back(std::make_pair(alg, parseHashValue()));
+  record.emplace_back(alg, parseHashValue());
   while(matchAny(LlamaTokenType::COMMA)) {
     alg = parseHash();
     if (auto it = findKey(record, alg); it != record.end()) {
       throw ParserError("Duplicate hash type", previous().Pos);
     }
-    record.push_back(std::make_pair(alg, parseHashValue()));
+    record.emplace_back(alg, parseHashValue());
   }
   return record;
 }
