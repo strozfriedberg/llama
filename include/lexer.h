@@ -30,7 +30,7 @@ public:
   bool isAtEnd() const { return CurIdx >= Input.size(); }
 
   char getCurChar() const;
-  char peek() const { return (isAtEnd() || CurIdx + 1 >= Input.size()) ? '\0' : Input.at(CurIdx + 1); }
+  char peek() const { return (isAtEnd() || CurIdx + 1 >= Input.size()) ? '\0' : Input[CurIdx + 1]; }
   const std::vector<Token>& getTokens() const { return Tokens; }
 
   size_t getRuleCount() const { return RuleCount; }

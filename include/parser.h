@@ -281,8 +281,8 @@ public:
   LlamaParser() = default;
   LlamaParser(const std::string& input, const std::vector<Token>& tokens) : Tokens(tokens), Input(input) {}
 
-  Token previous() const { return Tokens.at(CurIdx - 1); }
-  Token peek() const { return Tokens.at(CurIdx); }
+  Token previous() const { return Tokens[CurIdx - 1]; }
+  Token peek() const { return Tokens[CurIdx]; }
   Token advance() { if (!isAtEnd()) ++CurIdx; return previous();}
 
   // Increments CurIdx if match.
@@ -304,7 +304,7 @@ public:
 
   std::string_view getPreviousLexeme() const { return previous().Lexeme; }
   std::string_view getCurrentLexeme() const { return peek().Lexeme; }
-  std::string_view getLexemeAt(size_t idx) const { return Tokens.at(idx).Lexeme; }
+  std::string_view getLexemeAt(size_t idx) const { return Tokens[idx].Lexeme; }
 
   void clear();
 

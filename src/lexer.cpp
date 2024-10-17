@@ -159,7 +159,7 @@ char LlamaLexer::advance() {
 }
 
 bool LlamaLexer::match(char expected) {
-  if (isAtEnd() || Input.at(CurIdx) != expected) {
+  if (isAtEnd() || Input[CurIdx] != expected) {
     return false;
   }
 
@@ -172,6 +172,6 @@ char LlamaLexer::getCurChar() const {
     return '\0';
   }
   else {
-    return Input.at(CurIdx);
+    return Input[CurIdx];
   }
 }
