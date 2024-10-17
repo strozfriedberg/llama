@@ -55,7 +55,7 @@ enum class LlamaTokenType {
   END_OF_FILE
 };
 
-const std::unordered_map<std::string, LlamaTokenType> LlamaKeywords = {
+const std::unordered_map<std::string_view, LlamaTokenType> LlamaKeywords = {
   {"rule", LlamaTokenType::RULE},
   {"meta", LlamaTokenType::META},
   {"file_metadata", LlamaTokenType::FILE_METADATA},

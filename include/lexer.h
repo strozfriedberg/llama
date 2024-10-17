@@ -39,6 +39,6 @@ public:
 private:
   size_t             CurIdx;
   size_t             RuleCount;
-  const std::string& Input;
+  std::string_view   Input;
   std::vector<Token> Tokens;
 };
