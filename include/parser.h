@@ -362,7 +362,7 @@ public:
 
   Rule parseRuleDecl();
 
-  std::vector<Rule> parseRules();
+  std::vector<Rule> parseRules(size_t numRules);
 
   std::unordered_map<std::string, std::string> Patterns;
   std::vector<Token> Tokens;
