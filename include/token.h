@@ -91,13 +91,12 @@ public:
 
 class Token {
 public:
-  Token(LlamaTokenType type, uint64_t start, uint64_t end, std::string_view lexeme, LineCol pos)
-       : Type(type), Start(start), End(end), Lexeme(lexeme), Pos(pos){}
+  Token(LlamaTokenType type, std::string_view lexeme, LineCol pos)
+       : Type(type), Lexeme(lexeme), Pos(pos){}
 
-  size_t length() const { return End - Start; }
+  size_t length() const { return Lexeme.length(); }
 
   LlamaTokenType Type;
-  uint64_t Start, End;
   std::string_view Lexeme;
   LineCol Pos;
 };

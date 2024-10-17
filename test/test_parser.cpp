@@ -12,7 +12,7 @@ LlamaLexer getLexer(const std::string& input) {
 }
 
 Token makeToken(LlamaTokenType type) {
-  return Token(type, 0, 0, "" ,{0, 0});
+  return Token(type, "" ,{0, 0});
 }
 
 TEST_CASE("LlamaParser") {

@@ -57,8 +57,7 @@ TEST_CASE("parseString") {
   LlamaLexer lexer(input);
   lexer.scanTokens();
   REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(lexer.getTokens().at(0).Start == 0);
-  REQUIRE(lexer.getTokens().at(0).End == input.size());
+  REQUIRE(lexer.getTokens().at(0).Lexeme == "\"some string\"");
 }
 
 TEST_CASE("parseEncodingsList") {
@@ -210,13 +209,12 @@ TEST_CASE("parseEqual") {
 }
 
 TEST_CASE("parseEqualEqual") {
-    std::string input = "==";
+  std::string input = "==";
   LlamaLexer lexer(input);
   lexer.scanToken();
   REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::EQUAL_EQUAL);
   REQUIRE(lexer.getTokens().at(0).length() == 2);
-  REQUIRE(lexer.getTokens().at(0).Start == 0);
-  REQUIRE(lexer.getTokens().at(0).End == 2);
+  REQUIRE(lexer.getTokens().at(0).Lexeme == "==");
 }
 
 TEST_CASE("parseGreaterThan") {
