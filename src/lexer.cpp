@@ -84,6 +84,7 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
 
   if (found != LlamaKeywords.end()) {
     addToken(found->second, start, end, pos);
+    if (found->second == LlamaTokenType::RULE) ++RuleCount;
   }
   else {
     addToken(LlamaTokenType::IDENTIFIER, start, end, pos);
