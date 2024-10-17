@@ -8,6 +8,7 @@
 #include "llamaduck.h"
 
 #include <duckdb.h>
+
 #include <tuple>
 
 #include <boost/pfr.hpp>
@@ -127,10 +128,11 @@ struct DBBatch {
 
   uint64_t NumRows = 0;
 
-  size_t addString(uint64_t offset, const std::string& s) {
+  void addString(size_t& offset, const std::string& s) {
     OffsetVals.push_back(offset);
     std::copy_n(s.begin(), s.size() + 1, Buf.begin() + OffsetVals.back());
-    return offset + s.size() + 1;
+    offset += s.size();
+    ++offset; // for the null terminator
   }
 
   void clear() {
@@ -140,7 +142,7 @@ struct DBBatch {
   }
 
   template<typename Cur>
-  void add(size_t offset, const Cur& cur) {
+  void add(size_t& offset, const Cur& cur) {
     if constexpr (std::is_convertible<Cur, std::string>()) {
       addString(offset, cur);
     }
@@ -221,7 +223,12 @@ TEST_CASE("testTypesFiguring") {
   batch.add(drc);
   REQUIRE(batch.size() == 1);
   REQUIRE(batch.Buf.size() == 13);
+
   REQUIRE(batch.OffsetVals.size() == 4);
+  REQUIRE(batch.OffsetVals[0] == 0); // Buf offset for "/a/path"
+  REQUIRE(batch.OffsetVals[1] == 21);
+  REQUIRE(batch.OffsetVals[2] == 17);
+  REQUIRE(batch.OffsetVals[3] == 8); // Buf offset for "File"
 
   drc = DuckRecColumns{"/another/path", 22, 18, "Deleted"};
 
@@ -250,6 +257,25 @@ TEST_CASE("testTypesFiguring") {
   CHECK(state != DuckDBError);
   CHECK(duckdb_result_error(&result) == nullptr);
   CHECK(duckdb_row_count(&result) == 2);
+  REQUIRE(duckdb_column_count(&result) == 4);
+  duckdb_destroy_result(&result);
+
+
+  state = duckdb_query(conn.get(), "CREATE TABLE tempDuck (path VARCHAR, meta_addr UBIGINT, parent_addr UBIGINT, flags VARCHAR);", nullptr);
+  CHECK(state != DuckDBError);
+  state = duckdb_query(conn.get(), "INSERT INTO tempDuck VALUES ('/a/path', 21, 17, 'File'), ('/another/path', 22, 18, 'Deleted');", nullptr);
+  CHECK(state != DuckDBError);
+
+  state = duckdb_query(conn.get(), "SELECT * FROM tempDuck;", &result);
+  CHECK(state != DuckDBError);
+  CHECK(duckdb_result_error(&result) == nullptr);
+  CHECK(duckdb_row_count(&result) == 2);
+  duckdb_destroy_result(&result);
+
+  state = duckdb_query(conn.get(), "(Select * from DuckRec Except Select * from tempDuck) UNION ALL (Select * from tempDuck Except Select * from DuckRec);", &result);
+  CHECK(state != DuckDBError);
+  CHECK(duckdb_result_error(&result) == nullptr);
+  CHECK(duckdb_row_count(&result) == 0);
   duckdb_destroy_result(&result);
 }
 
