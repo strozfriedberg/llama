@@ -150,7 +150,9 @@ struct MetaSection {
 
 /************************************ HASH SECTION ************************************************/
 
-using FileHashRecord = std::unordered_map<SFHASH_HashAlgorithm, std::string_view>;
+using FileHashRecord = std::vector<std::pair<SFHASH_HashAlgorithm, std::string_view>>;
+
+FileHashRecord::const_iterator findKey(const FileHashRecord& container, SFHASH_HashAlgorithm alg);
 
 struct HashSection {
   std::vector<FileHashRecord> FileHashRecords;

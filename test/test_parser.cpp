@@ -143,8 +143,10 @@ TEST_CASE("parseHashSectionMultipleAlg") {
   LlamaParser parser(input, getLexer(input).getTokens());
   HashSection hashSection;
   REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
-  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_MD5)->second == "\"test\"");
-  REQUIRE(hashSection.FileHashRecords.at(1).find(SFHASH_SHA_1)->second == "\"abcdef\"");
+  auto it = findKey(hashSection.FileHashRecords.at(0), SFHASH_MD5);
+  REQUIRE(it->second == "\"test\"");
+  it = findKey(hashSection.FileHashRecords.at(1), SFHASH_SHA_1);
+  REQUIRE(it->second == "\"abcdef\"");
 }
 
 TEST_CASE("parseHashSectionMultipleRecords") {
@@ -153,9 +155,9 @@ TEST_CASE("parseHashSectionMultipleRecords") {
   HashSection hashSection;
   REQUIRE_NOTHROW(hashSection = parser.parseHashSection());
   REQUIRE(hashSection.FileHashRecords.size() == 2);
-  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_MD5)->second == "\"test\"");
-  REQUIRE(hashSection.FileHashRecords.at(0).find(SFHASH_SHA_1)->second == "\"abcdef\"");
-  REQUIRE(hashSection.FileHashRecords.at(1).find(SFHASH_MD5)->second == "\"test2\"");
+  REQUIRE(findKey(hashSection.FileHashRecords.at(0), SFHASH_MD5)->second == "\"test\"");
+  REQUIRE(findKey(hashSection.FileHashRecords.at(0), SFHASH_SHA_1)->second == "\"abcdef\"");
+  REQUIRE(findKey(hashSection.FileHashRecords.at(1), SFHASH_MD5)->second == "\"test2\"");
   REQUIRE(hashSection.HashAlgs == (SFHASH_MD5 | SFHASH_SHA_1));
 }
 
@@ -555,8 +557,8 @@ TEST_CASE("parseFileHashRecord") {
   LlamaParser parser(input, getLexer(input).getTokens());
   FileHashRecord rec;
   REQUIRE_NOTHROW(rec = parser.parseFileHashRecord());
-  REQUIRE(rec.find(SFHASH_MD5)->second == "\"test\"");
-  REQUIRE(rec.find(SFHASH_SHA_1)->second == "\"test2\"");
+  REQUIRE(findKey(rec, SFHASH_MD5)->second == "\"test\"");
+  REQUIRE(findKey(rec, SFHASH_SHA_1)->second == "\"test2\"");
 }
 
 TEST_CASE("parseFileHashRecordThrowsIfDuplicateHashType") {

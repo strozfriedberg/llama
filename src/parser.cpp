@@ -1,6 +1,10 @@
 #include "parser.h"
 #include "util.h"
 
+FileHashRecord::const_iterator findKey(const FileHashRecord& container, SFHASH_HashAlgorithm alg) {
+  return std::find_if(container.begin(), container.end(), [alg](const auto& x){return x.first == alg;});
+}
+
 uint64_t toLlamaOp(LlamaTokenType t) {
     uint64_t res = 0;
     if (t > LlamaTokenType::EQUAL && t < LlamaTokenType::IDENTIFIER) {
@@ -135,13 +139,13 @@ SFHASH_HashAlgorithm LlamaParser::parseHash() {
 FileHashRecord LlamaParser::parseFileHashRecord() {
   FileHashRecord record;
   SFHASH_HashAlgorithm alg = parseHash();
-  record.insert(std::make_pair(alg, parseHashValue()));
+  record.push_back(std::make_pair(alg, parseHashValue()));
   while(matchAny(LlamaTokenType::COMMA)) {
     alg = parseHash();
-    if (record.find(alg) != record.end()) {
+    if (auto it = findKey(record, alg); it != record.end()) {
       throw ParserError("Duplicate hash type", previous().Pos);
     }
-    record.insert(std::make_pair(alg, parseHashValue()));
+    record.push_back(std::make_pair(alg, parseHashValue()));
   }
   return record;
 }
