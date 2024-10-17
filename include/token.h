@@ -104,7 +104,7 @@ public:
 class UnexpectedInputError : public std::runtime_error {
 public:
   UnexpectedInputError(const std::string_view& message, LineCol pos)
- : std::runtime_error(messageWithPos(message, pos)), Position(pos) {}
+ : std::runtime_error(messageWithPos(message, pos)) {}
 
 private:
   static std::string messageWithPos(std::string_view errMsg, LineCol pos) {
@@ -113,7 +113,5 @@ private:
     msg += pos.toString();
     return msg;
   }
-
-  LineCol Position;
 };
 
