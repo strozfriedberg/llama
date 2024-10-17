@@ -8,3 +8,12 @@ TEST_CASE("testRandomString") {
   REQUIRE(s != t);
 }
 
+TEST_CASE("testIsOdd") {
+  REQUIRE(isOdd(5));
+  REQUIRE_FALSE(isOdd(2));
+}
+
+TEST_CASE("testIsEven") {
+  REQUIRE(isEven(4));
+  REQUIRE_FALSE(isEven(3));
+}

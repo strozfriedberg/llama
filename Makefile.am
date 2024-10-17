@@ -31,6 +31,7 @@ src_llama_common = \
 	src/readseek_impl.cpp \
 	src/recordbuffer.cpp \
 	src/recordhasher.cpp \
+	src/ruleengine.cpp \
 	src/rulereader.cpp \
 	src/schema.cpp \
 	src/timestamps.cpp \
@@ -84,18 +85,22 @@ test_test_SOURCES = \
 	test/test_readseek.cpp \
 	test/test_recordbuffer.cpp \
 	test/test_recordhasher.cpp \
+	test/test_ruleengine.cpp \
 	test/test_rulereader.cpp \
 	test/test_tskconversion.cpp \
 	test/test_tskimgassembler.cpp \
 	test/test_tskreader.cpp \
 	test/test_tskreaderhelper.cpp \
 	test/test_tsktimestamps.cpp \
+	test/test_util.cpp \
 	test/test_filesignatures.cpp
 
 test_test_CPPFLAGS = -I$(srcdir)/src $(AM_CPPFLAGS) $(CATCH2_CPPFLAGS)
 test_test_LDADD = $(CATCH2_LIBS) $(LLAMA_LIBS) $(LG_LIBS) $(TSK_LIBS) $(LIBARCHIVE_LIBS) $(YARA_LIBS) $(HASHER_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_ASIO_LIB) $(DUCKDB_LIBS) $(STDCXX_LIB)
 
 test_benchmarks_benchmarks_SOURCES = \
+  $(src_llama_common) \
+  test/benchmarks/test_parser.cpp \
 	test/benchmarks/test_yara.cpp
 
 test_benchmarks_benchmarks_CPPFLAGS = -I$(srcdir)/src $(AM_CPPFLAGS) $(CATCH2_CPPFLAGS)

@@ -50,7 +50,7 @@ public:
 
   template <
     typename T,
-    std::enable_if_t<std::is_arithmetic_v<T>, bool> = true
+    std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, bool> = true
   >
   void hash_it(T t) {
     hash_it(&t, reinterpret_cast<const uint8_t*>(&t) + sizeof(t));
@@ -66,6 +66,13 @@ public:
   void hash_it(const std::string& s);
 
   void hash_it(const std::string_view& s);
+
+  template <typename IterType, typename FnType> 
+  void hash_iter(IterType beg, IterType end, FnType fn) {
+    for (auto it = beg; it != end; ++it) {
+      hash_it(fn(*it));
+    }
+  }
 
 /*
   template <

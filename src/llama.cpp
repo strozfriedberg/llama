@@ -14,6 +14,8 @@
 #include "outputtar.h"
 #include "pooloutputhandler.h"
 #include "processor.h"
+#include "ruleengine.h"
+#include "throw.h"
 #include "timer.h"
 #include "tsk.h"
 
@@ -79,8 +81,12 @@ void Llama::search() {
     Pool.join();
     std::cerr << "Hashing Time: " << scheduler->getProcessorTime() << "s\n";
 
-    writeDB(outdir.string());
     // std::cout << "All done" << std::endl;
+    RuleEngine engine;
+    engine.createTables(DbConn);
+    engine.writeRulesToDb(this->Reader, DbConn);
+
+    writeDB(outdir.string());
   }
   else {
     std::cerr << "init returned false!" << std::endl;
@@ -174,4 +180,3 @@ void Llama::writeDB(const std::string& outdir) {
   query += "' (FORMAT PARQUET);";
   duckdb_query(DbConn.get(), query.c_str(), nullptr);
 }
-
