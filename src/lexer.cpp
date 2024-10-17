@@ -80,7 +80,7 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
   }
 
   uint64_t end = CurIdx;
-  auto found = LlamaKeywords.find(Input.substr(start, end - start));
+  auto found = LlamaKeywords.find(std::string_view(Input).substr(start, end - start));
 
   if (found != LlamaKeywords.end()) {
     addToken(found->second, start, end, pos);
@@ -148,7 +148,7 @@ void LlamaLexer::parseMultiLineComment(LineCol pos) {
 }
 
 void LlamaLexer::addToken(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos) {
-  Tokens.push_back(Token(type, Input.substr(start, end - start), pos));
+  Tokens.push_back(Token(type, std::string_view(Input).substr(start, end - start), pos));
 }
 
 char LlamaLexer::advance() {
