@@ -33,7 +33,7 @@ public:
   char peek() const { return (isAtEnd() || CurIdx + 1 >= Input.size()) ? '\0' : Input.at(CurIdx + 1); }
   const std::vector<Token>& getTokens() const { return Tokens; }
 
-  size_t getRuleCount() { return RuleCount; }
+  size_t getRuleCount() const { return RuleCount; }
 
   LineCol Pos = {1, 1};
 private:
