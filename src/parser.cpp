@@ -354,39 +354,31 @@ GrepSection LlamaParser::parseGrepSection() {
 
 PropertyNode LlamaParser::parseProperty(LlamaTokenType section) {
   Property prop;
-  Section sectionInfo;
-  if (auto sectionSearch = SectionDefs.find(section); sectionSearch != SectionDefs.end()) {
-    sectionInfo = sectionSearch->second;
-  }
-  else {
+  auto sectionSearch = SectionDefs.find(section);
+  if (sectionSearch == SectionDefs.end()) {
     throw ParserError("Unexpected section name", peek().Pos);
   }
+  const Section& sectionInfo = sectionSearch->second;
+  auto propertySearch = sectionInfo.Props.find(getCurrentLexeme());
 
-  PropertyInfo PropertyInfo;
-  if (auto propertySearch = sectionInfo.Props.find(getCurrentLexeme()); propertySearch != sectionInfo.Props.end()) {
-    prop.Name = CurIdx;
-    PropertyInfo = propertySearch->second;
-    advance();
-  }
-  else {
+  if (propertySearch == sectionInfo.Props.end()) {
     throw ParserError("Unexpected property name in section", peek().Pos);
   }
+  prop.Name = CurIdx;
+  const PropertyInfo& propertyInfo = propertySearch->second;
+  advance();
 
-  if ((toLlamaOp(peek().Type) & PropertyInfo.ValidOperators) > 0) {
-    prop.Op = CurIdx;
-    advance();
-  }
-  else {
+  if ((toLlamaOp(peek().Type) & propertyInfo.ValidOperators) == 0) {
     throw ParserError("Unsupported operator for property", peek().Pos);
   }
+  prop.Op = CurIdx;
+  advance();
 
-  if (peek().Type == PropertyInfo.Type) {
-    prop.Val = CurIdx;
-    advance();
-  }
-  else {
+  if (peek().Type != propertyInfo.Type) {
     throw ParserError("Unsupported type for right operand", peek().Pos);
   }
+  prop.Val = CurIdx;
+  advance();
 
   return PropertyNode(std::move(prop));
 }
