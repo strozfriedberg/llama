@@ -110,7 +110,7 @@ HashSection LlamaParser::parseHashSection() {
     for (const auto& key : rec) {
       hashSection.HashAlgs |= key.first;
     }
-    hashSection.FileHashRecords.push_back(rec);
+    hashSection.FileHashRecords.emplace_back(rec);
   }
   if (!hashSection.HashAlgs) {
     throw ParserError("No hash algorithms specified", peek().Pos);
@@ -181,13 +181,19 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
     }
   }
 
-  if (encodings.empty()) encodings.push_back(ASCII);
+  if (encodings.empty()) encodings.emplace_back(ASCII);
 
   for (const std::string_view& encoding : encodings) {
-    PatternDef curDef = patternDef;
-    curDef.Options.UnicodeMode = (encoding != ASCII);
-    curDef.Encoding = encoding;
-    defs.push_back(curDef);
+    defs.emplace_back(PatternDef{
+      patternDef.Pattern,
+      LG_KeyOptions{
+        patternDef.Options.FixedString,
+        patternDef.Options.CaseInsensitive,
+        /*UnicodeMode=*/(encoding != ASCII)
+      },
+      encoding
+    }
+    );
   }
 
   return defs;
@@ -196,9 +202,9 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
 std::vector<std::string_view> LlamaParser::parseEncodings() {
   std::vector<std::string_view> encodings;
   expect(LlamaTokenType::EQUAL);
-  encodings.push_back(expect(LlamaTokenType::IDENTIFIER));
+  encodings.emplace_back(expect(LlamaTokenType::IDENTIFIER));
   while (matchAny(LlamaTokenType::COMMA)) {
-    encodings.push_back(expect(LlamaTokenType::IDENTIFIER));
+    encodings.emplace_back(expect(LlamaTokenType::IDENTIFIER));
   }
   return encodings;
 }
@@ -233,11 +239,10 @@ PatternSection LlamaParser::parsePatternsSection() {
 
 std::vector<PatternDef> LlamaParser::parseHexString() {
   std::vector<PatternDef> defs;
-  PatternDef patternDef;
   std::string hexDigit, hexString;
   while (!checkAny(LlamaTokenType::CLOSE_BRACE) && !isAtEnd()) {
     if (matchAny(LlamaTokenType::IDENTIFIER, LlamaTokenType::NUMBER)) {
-      if (isEven(hexString.size())) { // check if hexString is even
+      if (isEven(hexString.size())) {
         hexString += "\\z";
       }
       hexDigit = getPreviousLexeme();
@@ -255,15 +260,14 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
   if (isAtEnd()) {
     throw ParserError("Unterminated hex string", peek().Pos);
   }
-  if (isOdd(hexString.size())) {  // check if hexString is odd
+  if (isOdd(hexString.size())) {
     throw ParserError("Odd number of hex digits", peek().Pos);
   }
   if (hexString.size() == 0) {
     throw ParserError("Empty hex string", peek().Pos);
   }
   expect(LlamaTokenType::CLOSE_BRACE);
-  patternDef.Pattern = hexString;
-  defs.push_back(patternDef);
+  defs.emplace_back(PatternDef{hexString,{0,0,0},""});
   return defs;
 }
 
@@ -323,11 +327,11 @@ FuncNode LlamaParser::parseFuncCall() {
   size_t op = SIZE_MAX, val = SIZE_MAX;
   expect(LlamaTokenType::OPEN_PAREN);
   if (matchAny(LlamaTokenType::IDENTIFIER)) {
-    args.push_back(getPreviousLexeme());
+    args.emplace_back(getPreviousLexeme());
   }
   while (matchAny(LlamaTokenType::COMMA)) {
     mustParse("Expected identifier or number", LlamaTokenType::IDENTIFIER, LlamaTokenType::NUMBER);
-    args.push_back(getPreviousLexeme());
+    args.emplace_back(getPreviousLexeme());
   }
   expect(LlamaTokenType::CLOSE_PAREN);
   if (matchAny(LlamaTokenType::EQUAL, LlamaTokenType::EQUAL_EQUAL, LlamaTokenType::NOT_EQUAL, LlamaTokenType::GREATER_THAN, LlamaTokenType::GREATER_THAN_EQUAL, LlamaTokenType::LESS_THAN, LlamaTokenType::LESS_THAN_EQUAL)) {
@@ -430,7 +434,7 @@ std::vector<Rule> LlamaParser::parseRules(size_t numRules) {
   std::vector<Rule> rules;
   rules.reserve(numRules);
   while (!isAtEnd()) {
-    rules.push_back(parseRuleDecl());
+    rules.emplace_back(parseRuleDecl());
   }
   return rules;
 }
