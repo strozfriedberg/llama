@@ -199,33 +199,6 @@ size_t totalStringSize(const std::tuple<Args...>& tup) {
   return totalSize;
 }
 
-template<typename BaseStruct, typename... Args>
-struct SchemaType : public BaseStruct {
-  using TupleType = std::tuple<Args...>;
-
-  static constexpr auto NumCols = std::tuple_size_v<TupleType>;
-
-  static bool createTable(duckdb_connection& dbconn, const std::string& table) {
-    duckdb_state state = duckdb_query(dbconn, createQuery<SchemaType>(table.c_str()).c_str(), nullptr);
-    return state != DuckDBError;
-  }
-
-  static constexpr auto colIndex(const char* col) {
-    unsigned int i = 0;
-    const auto nameLen = std::char_traits<char>::length(col);
-    for (auto name : BaseStruct::ColNames) {
-      if (std::char_traits<char>::length(col) == nameLen && std::char_traits<char>::compare(col, name, nameLen) == 0) {
-        break;
-      }
-      ++i;
-    }
-    return i;
-  }
-
-  SchemaType(): BaseStruct() {}
-  SchemaType(const BaseStruct& base): BaseStruct(base) {}
-};
-
 template<size_t CurIndex, size_t N>
 static constexpr auto findIndex(const char* col, const std::initializer_list<const char*>& colNames) {
   auto curCol = std::data(colNames)[CurIndex];
