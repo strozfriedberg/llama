@@ -69,7 +69,7 @@ public:
   std::string flags;
 };
 
-typedef DBType<DuckRecColumns> DuckRec;
+using DuckRec = DBType<DuckRecColumns>;
 
 TEST_CASE("testTypesFiguring") {
   REQUIRE(DuckRec::colIndex("meta_addr") == 1);
