@@ -274,13 +274,11 @@ std::shared_ptr<Node> LlamaParser::parseFactor(LlamaTokenType section) {
     expect(LlamaTokenType::CLOSE_PAREN);
   }
   else if (section == LlamaTokenType::FILE_METADATA || section == LlamaTokenType::SIGNATURE) {
-    auto propNode = std::make_shared<PropertyNode>(parseProperty(section));
-    node = propNode;
+    node = std::make_shared<PropertyNode>(parseProperty(section));;
   }
   else if (checkFunctionName()) {
     if (section != LlamaTokenType::CONDITION) throw ParserError("Invalid property in section", previous().Pos);
-    auto funcNode = std::make_shared<FuncNode>(parseFuncCall());
-    node = funcNode;
+    node = std::make_shared<FuncNode>(parseFuncCall());
   }
   else {
     throw ParserError("Expected function call or signature definition", peek().Pos);
