@@ -35,6 +35,30 @@ rule WebShell {
     condition:
       all(p1)
 }
+
+rule BetterRule {
+  meta:
+    description = "Another rule to find sedexp malware"
+    source = "https://www.aon.com/en/insights/cyber-labs/unveiling-sedexp"
+    author = "me"
+
+  hash:
+    sha256 == "43f72f4cdab8ed40b2f913be4a55b17e7fd8a1236a636adb4452f685c1ffea02"
+
+  file_metadata:
+    filesize > 1000
+
+  signature:
+    name == "Executable"
+
+  grep:
+    patterns:
+      p1 = "crypto.h" fixed
+      p2 = { 12 34 56 78 90 AB CD EF }
+      p3 = "whoami" encodings=utf8,utf16,windows-1252
+    condition:
+      all(p1) or any(p1, p2, p3) or (count(p3) > 5 and offset(p2, 3) > 60)
+}
 )");
 
 TEST_CASE("LlamaParserBenchmark") {
@@ -44,6 +68,6 @@ TEST_CASE("LlamaParserBenchmark") {
     res = r.read(rules);
     r.clear();
   };
-  CHECK(res == 3);
+  CHECK(res == 4);
   CHECK(r.getLastError() == "");
 }
