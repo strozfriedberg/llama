@@ -1,6 +1,10 @@
 #include "parser.h"
 #include "util.h"
 
+FileHashRecord::const_iterator findKey(const FileHashRecord& container, SFHASH_HashAlgorithm alg) {
+  return std::find_if(container.begin(), container.end(), [alg](const auto& x){return x.first == alg;});
+}
+
 uint64_t toLlamaOp(LlamaTokenType t) {
     uint64_t res = 0;
     if (t > LlamaTokenType::EQUAL && t < LlamaTokenType::IDENTIFIER) {
@@ -135,20 +139,20 @@ SFHASH_HashAlgorithm LlamaParser::parseHash() {
 FileHashRecord LlamaParser::parseFileHashRecord() {
   FileHashRecord record;
   SFHASH_HashAlgorithm alg = parseHash();
-  record[alg] = parseHashValue();
+  record.emplace_back(alg, parseHashValue());
   while(matchAny(LlamaTokenType::COMMA)) {
     alg = parseHash();
-    if (record.find(alg) != record.end()) {
+    if (auto it = findKey(record, alg); it != record.end()) {
       throw ParserError("Duplicate hash type", previous().Pos);
     }
-    record[alg] = parseHashValue();
+    record.emplace_back(alg, parseHashValue());
   }
   return record;
 }
 
-std::string LlamaParser::parseHashValue() {
+std::string_view LlamaParser::parseHashValue() {
   expect(LlamaTokenType::EQUAL_EQUAL);
-  return std::string(expect(LlamaTokenType::DOUBLE_QUOTED_STRING));
+  return expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
 }
 
 void LlamaParser::parseOperator() {
@@ -167,7 +171,7 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
   std::vector<PatternDef> defs;
   PatternDef patternDef;
   patternDef.Pattern = getPreviousLexeme();
-  std::vector<std::string> encodings;
+  std::vector<std::string_view> encodings;
 
   while (matchAny(LlamaTokenType::NOCASE, LlamaTokenType::FIXED, LlamaTokenType::ENCODINGS)) {
     switch(previous().Type) {
@@ -177,11 +181,11 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
     }
   }
 
-  if (encodings.empty()) encodings.push_back("ASCII");
+  if (encodings.empty()) encodings.push_back(ASCII);
 
-  for (const std::string& encoding : encodings) {
+  for (const std::string_view& encoding : encodings) {
     PatternDef curDef = patternDef;
-    curDef.Options.UnicodeMode = (encoding != "ASCII");
+    curDef.Options.UnicodeMode = (encoding != ASCII);
     curDef.Encoding = encoding;
     defs.push_back(curDef);
   }
@@ -189,12 +193,12 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
   return defs;
 }
 
-std::vector<std::string> LlamaParser::parseEncodings() {
-  std::vector<std::string> encodings;
+std::vector<std::string_view> LlamaParser::parseEncodings() {
+  std::vector<std::string_view> encodings;
   expect(LlamaTokenType::EQUAL);
-  encodings.push_back(std::string(expect(LlamaTokenType::IDENTIFIER)));
+  encodings.push_back(expect(LlamaTokenType::IDENTIFIER));
   while (matchAny(LlamaTokenType::COMMA)) {
-    encodings.push_back(std::string(expect(LlamaTokenType::IDENTIFIER)));
+    encodings.push_back(expect(LlamaTokenType::IDENTIFIER));
   }
   return encodings;
 }
@@ -350,39 +354,31 @@ GrepSection LlamaParser::parseGrepSection() {
 
 PropertyNode LlamaParser::parseProperty(LlamaTokenType section) {
   Property prop;
-  Section sectionInfo;
-  if (auto sectionSearch = SectionDefs.find(section); sectionSearch != SectionDefs.end()) {
-    sectionInfo = sectionSearch->second;
-  }
-  else {
+  auto sectionSearch = SectionDefs.find(section);
+  if (sectionSearch == SectionDefs.end()) {
     throw ParserError("Unexpected section name", peek().Pos);
   }
+  const Section& sectionInfo = sectionSearch->second;
+  auto propertySearch = sectionInfo.Props.find(getCurrentLexeme());
 
-  PropertyInfo PropertyInfo;
-  if (auto propertySearch = sectionInfo.Props.find(getCurrentLexeme()); propertySearch != sectionInfo.Props.end()) {
-    prop.Name = CurIdx;
-    PropertyInfo = propertySearch->second;
-    advance();
-  }
-  else {
+  if (propertySearch == sectionInfo.Props.end()) {
     throw ParserError("Unexpected property name in section", peek().Pos);
   }
+  prop.Name = CurIdx;
+  const PropertyInfo& propertyInfo = propertySearch->second;
+  advance();
 
-  if ((toLlamaOp(peek().Type) & PropertyInfo.ValidOperators) > 0) {
-    prop.Op = CurIdx;
-    advance();
-  }
-  else {
+  if ((toLlamaOp(peek().Type) & propertyInfo.ValidOperators) == 0) {
     throw ParserError("Unsupported operator for property", peek().Pos);
   }
+  prop.Op = CurIdx;
+  advance();
 
-  if (peek().Type == PropertyInfo.Type) {
-    prop.Val = CurIdx;
-    advance();
-  }
-  else {
+  if (peek().Type != propertyInfo.Type) {
     throw ParserError("Unsupported type for right operand", peek().Pos);
   }
+  prop.Val = CurIdx;
+  advance();
 
   return PropertyNode(std::move(prop));
 }
@@ -403,7 +399,7 @@ Rule LlamaParser::parseRuleDecl() {
   Rule rule;
   expect(LlamaTokenType::RULE);
   expect(LlamaTokenType::IDENTIFIER);
-  rule.Name = std::string(getPreviousLexeme());
+  rule.Name = getPreviousLexeme();
   expect(LlamaTokenType::OPEN_BRACE);
 
   if (matchAny(LlamaTokenType::META)) {
@@ -432,8 +428,9 @@ Rule LlamaParser::parseRuleDecl() {
   return rule;
 }
 
-std::vector<Rule> LlamaParser::parseRules() {
+std::vector<Rule> LlamaParser::parseRules(size_t numRules) {
   std::vector<Rule> rules;
+  rules.reserve(numRules);
   while (!isAtEnd()) {
     rules.push_back(parseRuleDecl());
   }

@@ -55,7 +55,7 @@ enum class LlamaTokenType {
   END_OF_FILE
 };
 
-const std::unordered_map<std::string, LlamaTokenType> LlamaKeywords = {
+const std::unordered_map<std::string_view, LlamaTokenType> LlamaKeywords = {
   {"rule", LlamaTokenType::RULE},
   {"meta", LlamaTokenType::META},
   {"file_metadata", LlamaTokenType::FILE_METADATA},
@@ -91,13 +91,13 @@ public:
 
 class Token {
 public:
-  Token(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos)
-       : Type(type), Start(start), End(end), Pos(pos){}
+  Token(LlamaTokenType type, std::string_view lexeme, LineCol pos)
+       : Type(type), Lexeme(lexeme), Pos(pos){}
 
-  size_t length() const { return End - Start; }
+  size_t length() const { return Lexeme.length(); }
 
   LlamaTokenType Type;
-  uint64_t Start, End;
+  std::string_view Lexeme;
   LineCol Pos;
 };
 

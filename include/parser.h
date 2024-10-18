@@ -123,11 +123,13 @@ static const std::unordered_map<std::string_view, FunctionProperties> FunctionVa
 
 /********************************** PATTERNS SECTION **********************************************/
 
+static const std::string_view ASCII("ASCII");
+
 // Holds information about each pattern defined in the `patterns` section under the `grep` section.
 struct PatternDef {
   std::string Pattern;
   LG_KeyOptions Options = {0,0,0};
-  std::string Encoding;
+  std::string_view Encoding;
 };
 
 // Holds a mapping from the user-defined name of each pattern to the rest of its information.
@@ -148,7 +150,9 @@ struct MetaSection {
 
 /************************************ HASH SECTION ************************************************/
 
-using FileHashRecord = std::unordered_map<SFHASH_HashAlgorithm, std::string>;
+using FileHashRecord = std::vector<std::pair<SFHASH_HashAlgorithm, std::string_view>>;
+
+FileHashRecord::const_iterator findKey(const FileHashRecord& container, SFHASH_HashAlgorithm alg);
 
 struct HashSection {
   std::vector<FileHashRecord> FileHashRecords;
@@ -163,12 +167,12 @@ struct Rule {
   // Used for unique rule ID in the database.
   FieldHash getHash(const LlamaParser&) const;
 
-  std::string Name;
-  MetaSection Meta;
-  HashSection Hash;
+  std::string_view      Name;
+  MetaSection           Meta;
+  HashSection           Hash;
   std::shared_ptr<Node> Signature;
   std::shared_ptr<Node> FileMetadata;
-  GrepSection Grep;
+  GrepSection           Grep;
 
   // Relative input offset where the Meta section ends and the first "real" section begins.
   uint64_t Start = 0;
@@ -279,8 +283,8 @@ public:
   LlamaParser() = default;
   LlamaParser(const std::string& input, const std::vector<Token>& tokens) : Tokens(tokens), Input(input) {}
 
-  Token previous() const { return Tokens.at(CurIdx - 1); }
-  Token peek() const { return Tokens.at(CurIdx); }
+  Token previous() const { return Tokens[CurIdx - 1]; }
+  Token peek() const { return Tokens[CurIdx]; }
   Token advance() { if (!isAtEnd()) ++CurIdx; return previous();}
 
   // Increments CurIdx if match.
@@ -300,9 +304,9 @@ public:
   template <class... LlamaTokenTypes>
   void mustParse(const std::string_view& errMsg, LlamaTokenTypes... types);
 
-  std::string_view getPreviousLexeme() const { return std::string_view(Input).substr(previous().Start, previous().length()); }
-  std::string_view getCurrentLexeme() const { return std::string_view(Input).substr(peek().Start, peek().length()); }
-  std::string_view getLexemeAt(size_t idx) const { return std::string_view(Input).substr(Tokens.at(idx).Start, Tokens.at(idx).length()); }
+  std::string_view getPreviousLexeme() const { return previous().Lexeme; }
+  std::string_view getCurrentLexeme() const { return peek().Lexeme; }
+  std::string_view getLexemeAt(size_t idx) const { return Tokens[idx].Lexeme; }
 
   void clear();
 
@@ -339,12 +343,12 @@ public:
 
   SFHASH_HashAlgorithm parseHash();
   FileHashRecord       parseFileHashRecord();
-  std::string          parseHashValue();
+  std::string_view     parseHashValue();
 
   std::vector<PatternDef>  parsePatternDef();
   std::vector<PatternDef>  parsePatternMod();
   std::vector<PatternDef>  parseHexString();
-  std::vector<std::string> parseEncodings();
+  std::vector<std::string_view> parseEncodings();
 
   std::shared_ptr<Node> parseFactor(LlamaTokenType section);
   std::shared_ptr<Node> parseTerm(LlamaTokenType section);
@@ -360,7 +364,7 @@ public:
 
   Rule parseRuleDecl();
 
-  std::vector<Rule> parseRules();
+  std::vector<Rule> parseRules(size_t numRules);
 
   std::unordered_map<std::string, std::string> Patterns;
   std::vector<Token> Tokens;

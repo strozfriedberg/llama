@@ -9,7 +9,7 @@ void RuleEngine::writeRulesToDb(const RuleReader& reader, LlamaDBConnection& dbC
   const std::string sqlUnion(" UNION ");
 
   for (const Rule& rule : reader.getRules()) {
-    rule_query += "('" + rule.getHash(reader.getParser()).to_string() + "', '" + rule.Name + "'),";
+    rule_query += "('" + rule.getHash(reader.getParser()).to_string() + "', '" + std::string(rule.Name) + "'),";
     matches_query += "(" + rule.getSqlQuery(reader.getParser()) + ")";
     matches_query += sqlUnion;
   }

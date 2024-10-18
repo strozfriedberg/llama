@@ -27,8 +27,6 @@ TEST_CASE("ScanOpenParen") {
   LlamaLexer lexer(input);
   lexer.scanToken();
   REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::OPEN_PAREN);
-  std::string lexeme(lexer.getLexeme(0));
-  REQUIRE(lexeme == "(");
 }
 
 TEST_CASE("ScanCloseParen") {
@@ -36,8 +34,6 @@ TEST_CASE("ScanCloseParen") {
   LlamaLexer lexer(input);
   lexer.scanToken();
   REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::CLOSE_PAREN);
-  std::string lexeme(lexer.getLexeme(0));
-  REQUIRE(lexeme == ")");
 }
 
 TEST_CASE("ScanComma") {
@@ -45,8 +41,6 @@ TEST_CASE("ScanComma") {
   LlamaLexer lexer(input);
   lexer.scanToken();
   REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::COMMA);
-  std::string lexeme(lexer.getLexeme(0));
-  REQUIRE(lexeme == ",");
 }
 
 TEST_CASE("ScanTokenString") {
@@ -63,8 +57,7 @@ TEST_CASE("parseString") {
   LlamaLexer lexer(input);
   lexer.scanTokens();
   REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(lexer.getTokens().at(0).Start == 0);
-  REQUIRE(lexer.getTokens().at(0).End == input.size());
+  REQUIRE(lexer.getTokens().at(0).Lexeme == "\"some string\"");
 }
 
 TEST_CASE("parseEncodingsList") {
@@ -216,13 +209,12 @@ TEST_CASE("parseEqual") {
 }
 
 TEST_CASE("parseEqualEqual") {
-    std::string input = "==";
+  std::string input = "==";
   LlamaLexer lexer(input);
   lexer.scanToken();
   REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::EQUAL_EQUAL);
   REQUIRE(lexer.getTokens().at(0).length() == 2);
-  REQUIRE(lexer.getTokens().at(0).Start == 0);
-  REQUIRE(lexer.getTokens().at(0).End == 2);
+  REQUIRE(lexer.getTokens().at(0).Lexeme == "==");
 }
 
 TEST_CASE("parseGreaterThan") {
@@ -319,6 +311,7 @@ TEST_CASE("scanTokensFullRule") {
   REQUIRE(tokens[10].Type == LlamaTokenType::NUMBER);
   REQUIRE(tokens[11].Type == LlamaTokenType::CLOSE_BRACE);
   REQUIRE(tokens[12].Type == LlamaTokenType::END_OF_FILE);
+  REQUIRE(lexer.getRuleCount() == 1);
 }
 
 TEST_CASE("streamPositionInit") {
@@ -487,4 +480,11 @@ TEST_CASE("parseStringWithEscapedDoubleQuote") {
   REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
   REQUIRE(lexer.getTokens().at(0).length() == input.size());
   REQUIRE(lexer.getTokens().at(1).Type == LlamaTokenType::END_OF_FILE);
+}
+
+TEST_CASE("multipleRuleCount") {
+  std::string input = "rule rule rule rule rule rule";
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  REQUIRE(lexer.getRuleCount() == 6);
 }

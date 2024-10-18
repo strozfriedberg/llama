@@ -1,10 +1,9 @@
 #include "lexer.h"
 
-void print(std::string s) {
-  std::cout << s << std::endl;
-}
-
 void LlamaLexer::scanTokens() {
+  // Estimate final size of the token vector to eliminate array doubling.
+  // Set to length of input since there can't possibly be more tokens than characters.
+  Tokens.reserve(Input.length());
   while (!isAtEnd()) {
     scanToken();
   }
@@ -85,6 +84,7 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
 
   if (found != LlamaKeywords.end()) {
     addToken(found->second, start, end, pos);
+    if (found->second == LlamaTokenType::RULE) ++RuleCount;
   }
   else {
     addToken(LlamaTokenType::IDENTIFIER, start, end, pos);
@@ -148,7 +148,7 @@ void LlamaLexer::parseMultiLineComment(LineCol pos) {
 }
 
 void LlamaLexer::addToken(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos) {
-  Tokens.push_back(Token(type, start, end, pos));
+  Tokens.push_back(Token(type, Input.substr(start, end - start), pos));
 }
 
 char LlamaLexer::advance() {
@@ -159,7 +159,7 @@ char LlamaLexer::advance() {
 }
 
 bool LlamaLexer::match(char expected) {
-  if (isAtEnd() || Input.at(CurIdx) != expected) {
+  if (isAtEnd() || Input[CurIdx] != expected) {
     return false;
   }
 
@@ -167,15 +167,11 @@ bool LlamaLexer::match(char expected) {
   return true;
 }
 
-std::string_view LlamaLexer::getLexeme(int idx) const {
-  return std::string_view(Input).substr(Tokens.at(idx).Start, Tokens.at(idx).End - Tokens.at(idx).Start);
-}
-
 char LlamaLexer::getCurChar() const {
   if (isAtEnd()) {
     return '\0';
   }
   else {
-    return Input.at(CurIdx);
+    return Input[CurIdx];
   }
 }
