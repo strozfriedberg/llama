@@ -5,7 +5,9 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
-#pragma GCC diagnostic ignored "-Wdeprecated-builtins"
+#if defined(__clang__)
+  #pragma GCC diagnostic ignored "-Wdeprecated-builtins"
+#endif
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <boost/program_options.hpp>
 #pragma GCC diagnostic pop
