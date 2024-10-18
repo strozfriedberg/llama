@@ -11,8 +11,6 @@
 
 #include <tuple>
 
-#include <boost/pfr.hpp>
-
 TEST_CASE("testDuckDBVersion") {
   REQUIRE(std::string("v1.0.0") == duckdb_library_version());
 }

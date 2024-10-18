@@ -9,6 +9,8 @@
 #include <tuple>
 #include <vector>
 
+#include <boost/pfr.hpp>
+
 class LlamaDB {
 public:
   LlamaDB(const char* path = nullptr) {
