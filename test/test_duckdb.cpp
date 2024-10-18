@@ -89,15 +89,7 @@ struct DBType {
   static_assert(ColNames.size() == NumCols, "The list of column names must match the number of fields in the tuple.");
 
   static constexpr auto colIndex(const char* col) {
-    unsigned int i = 0;
-    const auto nameLen = std::char_traits<char>::length(col);
-    for (auto name : T::ColNames) {
-      if (std::char_traits<char>::length(col) == nameLen && std::char_traits<char>::compare(col, name, nameLen) == 0) {
-        break;
-      }
-      ++i;
-    }
-    return i;
+    return findIndex<0, T::ColNames.size()>(col, T::ColNames);
   }
 
   static bool createTable(duckdb_connection& dbconn, const std::string& table) {
