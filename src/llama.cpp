@@ -131,7 +131,7 @@ bool Llama::openInput(const std::string& input) {
 }
 
 bool Llama::dbInit() {
-  DuckDirent::createTable(DbConn.get(), "dirent");
+  DBType<Dirent>::createTable(DbConn.get(), "dirent");
   DuckInode::createTable(DbConn.get(), "inode");
   DuckHashRec::createTable(DbConn.get(), "hash");
   return true;

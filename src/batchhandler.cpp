@@ -1,6 +1,5 @@
 #include "batchhandler.h"
 
-#include "direntbatch.h"
 #include "filescheduler.h"
 #include "duckinode.h"
 

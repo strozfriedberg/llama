@@ -9,6 +9,7 @@
 #include "boost_asio.h"
 
 #include "llamaduck.h"
+#include "direntbatch.h"
 #include "readseek.h"
 
 struct FileRecord;
@@ -16,7 +17,6 @@ struct Options;
 class OutputHandler;
 class Processor;
 
-class DirentBatch;
 class InodeBatch;
 
 class FileScheduler {

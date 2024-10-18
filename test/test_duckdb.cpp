@@ -19,12 +19,12 @@ TEST_CASE("TestMakeDuckDB") {
   LlamaDB db;
   LlamaDBConnection conn(db);
 
-  REQUIRE(DuckDirent::createTable(conn.get(), "dirent"));
+  REQUIRE(DBType<Dirent>::createTable(conn.get(), "dirent"));
 
   std::vector<Dirent> dirents = {
-    {"/tmp/", "foo", "f~1", "File", "Allocated", 3, 2, 0, 0},
-    {"/tmp/", "bar", "b~1", "File", "Deleted", 4, 2, 0, 0},
-    {"/temp/", "bar", "b~2", "File", "Allocated", 6, 5, 0, 0}
+    {"", "/tmp/", "foo", "f~1", "File", "Allocated", 3, 2, 0, 0},
+    {"", "/tmp/", "bar", "b~1", "File", "Deleted", 4, 2, 0, 0},
+    {"", "/temp/", "bar", "b~2", "File", "Allocated", 6, 5, 0, 0}
   };
 
   DirentBatch batch;
