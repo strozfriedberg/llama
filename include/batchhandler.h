@@ -4,11 +4,10 @@
 #include <vector>
 
 #include "direntbatch.h"
+#include "duckinode.h"
 #include "readseek.h"
 
 class FileScheduler;
-
-class InodeBatch;
 
 class BatchHandler: public InputHandler {
 public:

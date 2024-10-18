@@ -10,14 +10,13 @@
 
 #include "llamaduck.h"
 #include "direntbatch.h"
+#include "duckinode.h"
 #include "readseek.h"
 
 struct FileRecord;
 struct Options;
 class OutputHandler;
 class Processor;
-
-class InodeBatch;
 
 class FileScheduler {
 public:

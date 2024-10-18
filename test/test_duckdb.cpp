@@ -162,6 +162,8 @@ TEST_CASE("inodeWriting") {
   LlamaDB db;
   LlamaDBConnection conn(db);
 
+  using DuckInode = DBType<Inode>;
+
   static_assert(DuckInode::ColNames.size() == 15);
   static_assert(DuckInode::colIndex("Id") == 0);
   static_assert(DuckInode::colIndex("Modified") == 13);
