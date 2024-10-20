@@ -2,6 +2,12 @@
 
 #include "util.h"
 
+TEST_CASE("testRandomString") {
+  auto s = randomNumString();
+  auto t = randomNumString();
+  REQUIRE(s != t);
+}
+
 TEST_CASE("testIsOdd") {
   REQUIRE(isOdd(5));
   REQUIRE_FALSE(isOdd(2));
