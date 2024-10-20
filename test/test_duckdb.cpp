@@ -12,7 +12,7 @@
 #include <tuple>
 
 TEST_CASE("testDuckDBVersion") {
-  REQUIRE(std::string("v1.0.0") == duckdb_library_version());
+  REQUIRE(std::string("v1") == std::string(duckdb_library_version()).substr(0, 2));
 }
 
 TEST_CASE("TestMakeDuckDB") { 

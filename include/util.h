@@ -65,3 +65,5 @@ private:
 
 std::string randomNumString();
 
+inline bool isOdd(int x) { return x & 1; }
+inline bool isEven(int x) { return !isOdd(x); }

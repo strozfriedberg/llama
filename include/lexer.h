@@ -11,7 +11,7 @@
 
 class LlamaLexer {
 public:
-  LlamaLexer(const std::string& input) : Input(input), CurIdx(0) {};
+  LlamaLexer(const std::string& input) : CurIdx(0), RuleCount(0), Input(input) {};
 
   void scanTokens();
   void scanToken();
@@ -29,14 +29,16 @@ public:
   bool match(char expected);
   bool isAtEnd() const { return CurIdx >= Input.size(); }
 
-  std::string_view getLexeme(int idx) const;
   char getCurChar() const;
-  char peek() const { return (isAtEnd() || CurIdx + 1 >= Input.size()) ? '\0' : Input.at(CurIdx + 1); }
+  char peek() const { return (isAtEnd() || CurIdx + 1 >= Input.size()) ? '\0' : Input[CurIdx + 1]; }
   const std::vector<Token>& getTokens() const { return Tokens; }
+
+  size_t getRuleCount() const { return RuleCount; }
 
   LineCol Pos = {1, 1};
 private:
-  const std::string& Input;
-  size_t CurIdx;
+  size_t             CurIdx;
+  size_t             RuleCount;
+  std::string_view   Input;
   std::vector<Token> Tokens;
 };

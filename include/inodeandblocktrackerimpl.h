@@ -4,6 +4,9 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#if defined(__clang__)
+  #pragma GCC diagnostic ignored "-Wdeprecated-builtins"
+#endif
 #include <boost/icl/interval_map.hpp>
 #include <boost/icl/interval_set.hpp>
 #pragma GCC diagnostic pop

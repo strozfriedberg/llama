@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <vector>
 
 
 enum class LlamaTokenType {
@@ -19,19 +20,6 @@ enum class LlamaTokenType {
   PATTERNS,
   HASH,
   CONDITION,
-  CREATED,
-  MODIFIED,
-  FILESIZE,
-  FILENAME,
-  FILEPATH,
-  ID,
-  NAME,
-  ALL,
-  ANY,
-  OFFSET,
-  COUNT,
-  COUNT_HAS_HITS,
-  LENGTH,
   MD5,
   SHA1,
   SHA256,
@@ -67,7 +55,7 @@ enum class LlamaTokenType {
   END_OF_FILE
 };
 
-const std::unordered_map<std::string, LlamaTokenType> LlamaKeywords = {
+const std::unordered_map<std::string_view, LlamaTokenType> LlamaKeywords = {
   {"rule", LlamaTokenType::RULE},
   {"meta", LlamaTokenType::META},
   {"file_metadata", LlamaTokenType::FILE_METADATA},
@@ -76,19 +64,6 @@ const std::unordered_map<std::string, LlamaTokenType> LlamaKeywords = {
   {"patterns", LlamaTokenType::PATTERNS},
   {"hash", LlamaTokenType::HASH},
   {"condition", LlamaTokenType::CONDITION},
-  {"created", LlamaTokenType::CREATED},
-  {"modified", LlamaTokenType::MODIFIED},
-  {"filesize", LlamaTokenType::FILESIZE},
-  {"filename", LlamaTokenType::FILENAME},
-  {"filepath", LlamaTokenType::FILEPATH},
-  {"id", LlamaTokenType::ID},
-  {"name", LlamaTokenType::NAME},
-  {"all", LlamaTokenType::ALL},
-  {"any", LlamaTokenType::ANY},
-  {"offset", LlamaTokenType::OFFSET},
-  {"count", LlamaTokenType::COUNT},
-  {"count_has_hits", LlamaTokenType::COUNT_HAS_HITS},
-  {"length", LlamaTokenType::LENGTH},
   {"md5", LlamaTokenType::MD5},
   {"sha1", LlamaTokenType::SHA1},
   {"sha256", LlamaTokenType::SHA256},
@@ -99,7 +74,6 @@ const std::unordered_map<std::string, LlamaTokenType> LlamaKeywords = {
   {"and", LlamaTokenType::AND},
   {"or", LlamaTokenType::OR}
 };
-
 
 class LineCol {
 public:
@@ -117,28 +91,27 @@ public:
 
 class Token {
 public:
-  Token(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos)
-       : Type(type), Start(start), End(end), Pos(pos){}
+  Token(LlamaTokenType type, std::string_view lexeme, LineCol pos)
+       : Type(type), Lexeme(lexeme), Pos(pos){}
 
-  size_t length() const { return End - Start; }
+  size_t length() const { return Lexeme.length(); }
 
   LlamaTokenType Type;
-  uint64_t Start, End;
+  std::string_view Lexeme;
   LineCol Pos;
 };
 
 class UnexpectedInputError : public std::runtime_error {
 public:
-  UnexpectedInputError(const std::string& message, LineCol pos)
-  : std::runtime_error(message), Position(pos) {}
+  UnexpectedInputError(const std::string_view& message, LineCol pos)
+ : std::runtime_error(messageWithPos(message, pos)) {}
 
-  std::string messageWithPos() const {
-    std::string msg(what());
+private:
+  static std::string messageWithPos(std::string_view errMsg, LineCol pos) {
+    std::string msg(errMsg);
     msg += " at ";
-    msg += Position.toString();
+    msg += pos.toString();
     return msg;
   }
-
-  LineCol Position;
 };
 

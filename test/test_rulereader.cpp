@@ -22,7 +22,7 @@ TEST_CASE("RuleReader") {
   REQUIRE(result == 2);
   result = reader.read(input2);
   REQUIRE(result == -1);
-  REQUIRE(reader.getLastError() == "Expected rule name at line 1 column 6");
+  REQUIRE(reader.getLastError() == "Expected identifier at line 1 column 6");
   result = reader.read(input3);
   REQUIRE(result == 3);
 }
@@ -35,9 +35,9 @@ LG_HFSM getLgFsmFromRules(const std::vector<Rule>& rules) {
   for (const Rule& rule : rules) {
     for (const auto& patternPair : rule.Grep.Patterns.Patterns) {
       for (const PatternDef& pDef : patternPair.second) {
-        std::string patNoQuotes = pDef.Pattern.substr(1, pDef.Pattern.size() - 2);
+        std::string patNoQuotes = std::string(pDef.Pattern.substr(1, pDef.Pattern.size() - 2));
         lg_parse_pattern(lgPat, patNoQuotes.c_str(), &pDef.Options, &err);
-        lg_add_pattern(fsm, lgPat, pDef.Encoding.c_str(), patternIndex, &err);
+        lg_add_pattern(fsm, lgPat, std::string(pDef.Encoding).c_str(), patternIndex, &err);
         ++patternIndex;
       }
     }
