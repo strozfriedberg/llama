@@ -43,7 +43,7 @@ rule BetterRule {
     author = "me"
 
   hash:
-    sha256 == "43f72f4cdab8ed40b2f913be4a55b17e7fd8a1236a636adb4452f685c1ffea02"
+    sha256 == "43f72f4cdab8ed40b2f913be4a55b17e7fd8a1236a636adb4452f685c1ffea02", md5 == "098f6bcd4621d373cade4e832627b4f6"
 
   file_metadata:
     filesize > 1000
