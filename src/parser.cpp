@@ -178,6 +178,7 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
       case LlamaTokenType::NOCASE: patternDef.Options.CaseInsensitive = true; break;
       case LlamaTokenType::FIXED: patternDef.Options.FixedString = true; break;
       case LlamaTokenType::ENCODINGS: encodings = parseEncodings(); break;
+      default: throw ParserError("This shouldn't happen.", previous().Pos);
     }
   }
 

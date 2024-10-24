@@ -9,7 +9,7 @@
 #include "inodeandblocktracker.h"
 
 namespace TskReaderHelper {
-  void handleRuns(
+/*  void handleRuns(
     const TSK_FS_ATTR& a,
     uint64_t fsOffset,
     uint64_t blockSize,
@@ -28,5 +28,5 @@ namespace TskReaderHelper {
     TskFacade& tsk,
     InodeAndBlockTracker& tracker,
     jsoncons::json& jattrs
-  );
+  );*/
 }

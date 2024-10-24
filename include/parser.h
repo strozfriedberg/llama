@@ -100,7 +100,7 @@ struct FuncNode : public Node {
   FuncNode(Function&& value) : Node(NodeType::FUNC) { Value = value; }
   Function Value;
 
-  std::string getSqlQuery(const LlamaParser& parser) const override { return ""; };
+  std::string getSqlQuery(const LlamaParser&) const override { return ""; };
 };
 
 // Holds information about minimum and maximum number of arguments in a function and whether

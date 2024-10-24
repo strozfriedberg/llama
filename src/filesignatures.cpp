@@ -10,8 +10,14 @@
 #include <string>
 #include <string_view>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#if defined(__clang__)
+  #pragma GCC diagnostic ignored "-Wdeprecated-builtins"
+#endif
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
+#pragma GCC diagnostic pop
 
 #include "filesignatures.h"
 #include "jsoncons_wrapper.h"
@@ -391,7 +397,7 @@ expected<Binary> FileSigAnalyzer::getBuf(std::ifstream &ifs,
     auto streamData = ifs.read((char *)check_buf.data(), check_buf.size()).gcount();
     if (streamData != (std::streamsize)size) {
       return makeUnexpected(("read(" + std::to_string(size) + ") at " +
-                             std::to_string(offset.count) + ", ",
+                             std::to_string(offset.count) + ", " +
                              std::to_string(offset.from_start) + " failed."));
     }
 

@@ -55,7 +55,7 @@ private:
 
 //*******************************************************************
 
-class TSK_FS_ATTR;
+struct TSK_FS_ATTR;
 
 class ReadSeekTSK: public ReadSeek {
 public:
