@@ -22,12 +22,12 @@ public:
   void parseSingleLineComment();
   void parseMultiLineComment(LineCol pos);
 
-  void addToken(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos);
+  inline void addToken(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos);
 
   char advance();
 
   bool match(char expected);
-  bool isAtEnd() const { return CurIdx >= InputSize; }
+  bool isAtEnd() const { return CurIdx == InputSize; }
 
   char getCurChar() const { return Input[CurIdx]; };
   char peek() const { return (isAtEnd() || CurIdx + 1 >= InputSize) ? '\0' : Input[CurIdx + 1]; }
