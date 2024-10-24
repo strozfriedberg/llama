@@ -51,8 +51,8 @@ void FileScheduler::performScheduling(DirentBatch& dirents,
   std::string tmpInodes = "_temp_inode";
   //std::string batchTbl = "_temp_batch_" + randomNumString();
 
-  DuckDirent::createTable(DBConn.get(), tmpDents);
-  DuckInode::createTable(DBConn.get(), tmpInodes);
+  DBType<Dirent>::createTable(DBConn.get(), tmpDents);
+  DBType<Inode>::createTable(DBConn.get(), tmpInodes);
 
   LlamaDBAppender dAppender(DBConn.get(), tmpDents);
   LlamaDBAppender iAppender(DBConn.get(), tmpInodes);

@@ -10,21 +10,14 @@
 #include "inputhandler.h"
 #include "inputreader.h"
 #include "llamaduck.h"
-#include "outputhandler.h"
-#include "outputtar.h"
-#include "pooloutputhandler.h"
 #include "processor.h"
 #include "ruleengine.h"
 #include "throw.h"
 #include "timer.h"
-#include "tsk.h"
 
 #include <filesystem>
 #include <fstream>
-#include <functional>
 #include <iostream>
-#include <streambuf>
-#include <unordered_map>
 
 #include <hasher/api.h>
 
@@ -144,9 +137,9 @@ bool Llama::openInput(const std::string& input) {
 }
 
 bool Llama::dbInit() {
-  DuckDirent::createTable(DbConn.get(), "dirent");
-  DuckInode::createTable(DbConn.get(), "inode");
-  DuckHashRec::createTable(DbConn.get(), "hash");
+  DBType<Dirent>::createTable(DbConn.get(), "dirent");
+  DBType<Inode>::createTable(DbConn.get(), "inode");
+  DBType<HashRec>::createTable(DbConn.get(), "hash");
   return true;
 }
 

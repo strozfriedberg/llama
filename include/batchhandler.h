@@ -3,12 +3,11 @@
 #include <memory>
 #include <vector>
 
+#include "direntbatch.h"
+#include "duckinode.h"
 #include "readseek.h"
 
 class FileScheduler;
-
-class DirentBatch;
-class InodeBatch;
 
 class BatchHandler: public InputHandler {
 public:

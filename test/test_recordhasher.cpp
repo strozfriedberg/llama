@@ -224,7 +224,8 @@ TEST_CASE("testHashDirent") {
 }
 
 TEST_CASE("testHashDirentClass") {
-  Dirent d1(
+  Dirent d1{
+    "",
     "/foo/bar",
     "baz",
     "b",
@@ -234,8 +235,9 @@ TEST_CASE("testHashDirentClass") {
     0x87654321,
     0x87654321,
     0x12345678
-  );
-  Dirent d2(
+  };
+  Dirent d2{
+    "",
     "/foo/bar",
     "baz",
     "b",
@@ -245,7 +247,7 @@ TEST_CASE("testHashDirentClass") {
     0x87654321,
     0x87654321,
     0x12345678
-  );
+  };
 
   RecordHasher hasher;
   REQUIRE(hasher.hashDirent(d1) != hasher.hashDirent(d2));

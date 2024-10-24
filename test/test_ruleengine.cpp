@@ -3,7 +3,7 @@
 #include "ruleengine.h"
 #include "llamaduck.h"
 #include "rulereader.h"
-#include "duckinode.h"
+#include "inode.h"
 #include "direntbatch.h"
 
 TEST_CASE("TestCreateTables") {
@@ -25,8 +25,8 @@ TEST_CASE("TestWriteRuleToDb") {
   RuleEngine engine;
   LlamaDB db;
   LlamaDBConnection conn(db);
-  REQUIRE(DuckDirent::createTable(conn.get(), "dirent"));
-  REQUIRE(DuckInode::createTable(conn.get(), "inode"));
+  REQUIRE(DBType<Dirent>::createTable(conn.get(), "dirent"));
+  REQUIRE(DBType<Inode>::createTable(conn.get(), "inode"));
   engine.createTables(conn);
   engine.writeRulesToDb(reader, conn);
   duckdb_result result;
@@ -38,3 +38,4 @@ TEST_CASE("TestWriteRuleToDb") {
   REQUIRE(state == DuckDBSuccess);
   REQUIRE(duckdb_row_count(&result) == 0);
 }
+
