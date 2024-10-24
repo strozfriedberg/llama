@@ -3,7 +3,7 @@
 void LlamaLexer::scanTokens() {
   // Estimate final size of the token vector to eliminate array doubling.
   // Set to length of input since there can't possibly be more tokens than characters.
-  Tokens.reserve(Input.length());
+  Tokens.reserve(InputSize);
   while (!isAtEnd()) {
     scanToken();
   }
