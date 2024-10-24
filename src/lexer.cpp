@@ -152,7 +152,7 @@ void LlamaLexer::addToken(LlamaTokenType type, uint64_t start, uint64_t end, Lin
 }
 
 char LlamaLexer::advance() {
-  char curChar = getCurChar();
+  char curChar = Input[CurIdx];
   ++CurIdx;
   ++Pos.ColNum;
   return curChar;
@@ -165,13 +165,4 @@ bool LlamaLexer::match(char expected) {
 
   advance();
   return true;
-}
-
-char LlamaLexer::getCurChar() const {
-  if (isAtEnd()) {
-    return '\0';
-  }
-  else {
-    return Input[CurIdx];
-  }
 }

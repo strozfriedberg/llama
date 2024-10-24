@@ -29,7 +29,7 @@ public:
   bool match(char expected);
   bool isAtEnd() const { return CurIdx >= InputSize; }
 
-  char getCurChar() const;
+  char getCurChar() const { return Input[CurIdx]; };
   char peek() const { return (isAtEnd() || CurIdx + 1 >= InputSize) ? '\0' : Input[CurIdx + 1]; }
   const std::vector<Token>& getTokens() const { return Tokens; }
 
