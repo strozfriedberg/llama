@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bitset>
 #include <cctype>
 #include <cstdint>
 #include <iostream>
@@ -22,15 +23,17 @@ public:
   void parseSingleLineComment();
   void parseMultiLineComment(LineCol pos);
 
-  inline void addToken(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos);
+  inline void addToken(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos) {
+    Tokens.emplace_back(type, Input.substr(start, end - start), pos);
+  }
 
-  char advance();
+  char advance() { ++Pos.ColNum; return Input[CurIdx++]; }
 
   bool match(char expected);
   bool isAtEnd() const { return CurIdx == InputSize; }
 
   char getCurChar() const { return Input[CurIdx]; };
-  char peek() const { return (isAtEnd() || CurIdx + 1 >= InputSize) ? '\0' : Input[CurIdx + 1]; }
+  char peek() const { return isAtEnd() ? '\0' : Input[CurIdx + 1]; }
   const std::vector<Token>& getTokens() const { return Tokens; }
 
   size_t getRuleCount() const { return RuleCount; }

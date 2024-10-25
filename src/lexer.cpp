@@ -1,5 +1,19 @@
 #include "lexer.h"
 
+namespace {
+  std::bitset<256> initIdentifierChars() {
+    std::bitset<256> b;
+    b.reset();
+    for (int c = 0; c < 256; ++c) {
+      if (isalnum(c) || c == '_' || c == '-') {
+        b.set(c);
+      }
+    }
+    return b;
+  }
+  static const std::bitset<256> IdentifierChars = initIdentifierChars();
+}
+
 void LlamaLexer::scanTokens() {
   // Estimate final size of the token vector to eliminate array doubling.
   // Set to length of input since there can't possibly be more tokens than characters.
@@ -11,9 +25,9 @@ void LlamaLexer::scanTokens() {
 }
 
 void LlamaLexer::scanToken() {
-  uint64_t start = CurIdx;
-  LineCol pos(Pos);
-  char c = advance();
+  const uint64_t start = CurIdx;
+  const LineCol pos(Pos);
+  const char c = advance();
   LlamaTokenType op;
   switch(c) {
     case '\t': break;
@@ -61,7 +75,7 @@ void LlamaLexer::scanToken() {
       if (isdigit(c)) {
         parseNumber(pos);
       }
-      else if (isalnum(c)) {
+      else if (isalpha(c)) {
         parseIdentifier(pos);
       }
       else {
@@ -75,8 +89,10 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
   if (CurIdx > 0) {
     start--;
   }
-  while (isalnum(getCurChar()) || getCurChar() == '_' || getCurChar() == '-') {
+  char c = getCurChar();
+  while (IdentifierChars[c]) {
     advance();
+    c = getCurChar();
   }
 
   uint64_t end = CurIdx;
@@ -147,16 +163,14 @@ void LlamaLexer::parseMultiLineComment(LineCol pos) {
   }
 }
 
-void LlamaLexer::addToken(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos) {
-  Tokens.emplace_back(type, Input.substr(start, end - start), pos);
-}
+// void LlamaLexer::addToken(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos) {
+//   Tokens.emplace_back(type, Input.substr(start, end - start), pos);
+// }
 
-char LlamaLexer::advance() {
-  char curChar = Input[CurIdx];
-  ++CurIdx;
-  ++Pos.ColNum;
-  return curChar;
-}
+// char LlamaLexer::advance() {
+//   ++Pos.ColNum;
+//   return Input[CurIdx++];
+// }
 
 bool LlamaLexer::match(char expected) {
   if (isAtEnd() || Input[CurIdx] != expected) {
