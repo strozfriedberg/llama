@@ -39,3 +39,13 @@ TEST_CASE("TestWriteRuleToDb") {
   REQUIRE(duckdb_row_count(&result) == 0);
 }
 
+TEST_CASE("TestZeroRulesToDb") {
+  RuleReader reader;
+  RuleEngine engine;
+  LlamaDB    db;
+  LlamaDBConnection conn(db);
+
+  REQUIRE_NOTHROW(engine.createTables(conn));
+  REQUIRE_NOTHROW(engine.writeRulesToDb(reader, conn));
+}
+
