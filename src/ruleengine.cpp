@@ -3,6 +3,9 @@
 #include "rulereader.h"
 
 void RuleEngine::writeRulesToDb(const RuleReader& reader, LlamaDBConnection& dbConn) {
+  if (reader.getRules().empty()) {
+    return;
+  }
   duckdb_result result;
   std::string rule_query("INSERT INTO rules VALUES ");
   std::string matches_query("INSERT INTO rule_matches ");
