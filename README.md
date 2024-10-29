@@ -175,7 +175,7 @@ By default, patterns defined in Llama rules are evaluated as case-sensitive. To 
 rule myRule {
   grep:
     patterns:
-      s1 = "foo.bar" fixed nocase
+      s1 = "foo.bar" nocase
 }
 ```
 
@@ -194,6 +194,14 @@ rule myRule {
 ```
 
 For a list of all supported encodings, run `lightgrep --list-encodings`.
+
+##### Multiple pattern modifiers
+
+To define multiple modifiers for a pattern, you must provide them in the following order:
+
+```
+fixed nocase encodings
+```
 
 #### Condition section
 

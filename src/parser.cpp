@@ -173,16 +173,14 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
   std::string pat = std::string(getPreviousLexeme());
   std::vector<std::string_view> encodings;
 
-  while (matchAny(LlamaTokenType::NOCASE, LlamaTokenType::FIXED, LlamaTokenType::ENCODINGS)) {
-    switch(previous().Type) {
-      case LlamaTokenType::NOCASE: opts.CaseInsensitive = true; break;
-      case LlamaTokenType::FIXED: opts.FixedString = true; break;
-      case LlamaTokenType::ENCODINGS: encodings = parseEncodings(); break;
-      default: throw ParserError("This shouldn't happen.", previous().Pos);
-    }
+  opts.FixedString = matchAny(LlamaTokenType::FIXED);
+  opts.CaseInsensitive = matchAny(LlamaTokenType::NOCASE);
+  if (matchAny(LlamaTokenType::ENCODINGS)) {
+    encodings = parseEncodings();
   }
-
-  if (encodings.empty()) encodings.emplace_back(ASCII);
+  else {
+    encodings.emplace_back(ASCII);
+  }
 
   for (const std::string_view& encoding : encodings) {
     defs.emplace_back(

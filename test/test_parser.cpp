@@ -219,10 +219,10 @@ TEST_CASE("parseStringDefThrowsIfNotStringDef") {
   REQUIRE_THROWS_AS(parser.parsePatternDef(), ParserError);
 }
 
-TEST_CASE("parseStringDefDoesNotThrowIfStringDef") {
-  std::string input = "= \"test\" encodings=UTF-8 nocase fixed";
+TEST_CASE("parseRuleThrowsIfWrongOrderPatternMods") {
+  std::string input = "rule { patterns: a = \"test\" encodings=UTF-8 fixed nocase }";
   LlamaParser parser(input, getLexer(input).getTokens());
-  REQUIRE_NOTHROW(parser.parsePatternDef());
+  REQUIRE_THROWS(parser.parseRuleDecl());
 }
 
 TEST_CASE("parsePatternsSectionThrowsIfNotIdentifier") {
@@ -233,8 +233,8 @@ TEST_CASE("parsePatternsSectionThrowsIfNotIdentifier") {
 
 TEST_CASE("parsePatternsSectionDoesNotThrowIfPatterns") {
   std::string input = R"(
-  a = "test" encodings=UTF-8 nocase fixed
-  b = "test2" encodings=UTF-8 nocase fixed
+  a = "test" fixed nocase encodings=UTF-8
+  b = "test2" fixed nocase encodings=UTF-8
   c = { 12 34 56 78 9a bc de f0 }
   )";
   LlamaParser parser(input, getLexer(input).getTokens());
@@ -306,8 +306,8 @@ TEST_CASE("parseSignatureSection") {
 TEST_CASE("parseGrepSection") {
   std::string input = R"(
     patterns:
-      a = "test" encodings=UTF-8 nocase fixed
-      b = "test2" encodings=UTF-8 nocase fixed
+      a = "test" fixed nocase encodings=UTF-8
+      b = "test2" fixed nocase encodings=UTF-8
     condition:
       any(a, b) and offset(a, 5) == 5
 )";
@@ -368,8 +368,8 @@ TEST_CASE("parseRuleDeclThrowsIfSectionsAreOutOfOrder") {
   rule MyRule {
     grep:
       patterns:
-        a = "test" encodings=UTF-8 nocase fixed
-        b = "test2" encodings=UTF-8 nocase fixed
+        a = "test" fixed nocase encodings=UTF-8
+        b = "test2" fixed nocase encodings=UTF-8
       condition:
         any(a, b) and offset(a, 5) == 5
     hash: md5 == "test"
@@ -392,8 +392,8 @@ TEST_CASE("startRule") {
       description = "test"
     grep:
       patterns:
-        a = "test" encodings=UTF-8 nocase fixed
-        b = "test2" encodings=UTF-8 nocase fixed
+        a = "test" fixed nocase encodings=UTF-8
+        b = "test2" fixed nocase encodings=UTF-8
         c = { 34 56 78 ab cd EF }
       condition:
         any(a, b) and count(a) == 5
