@@ -163,15 +163,6 @@ void LlamaLexer::parseMultiLineComment(LineCol pos) {
   }
 }
 
-// void LlamaLexer::addToken(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos) {
-//   Tokens.emplace_back(type, Input.substr(start, end - start), pos);
-// }
-
-// char LlamaLexer::advance() {
-//   ++Pos.ColNum;
-//   return Input[CurIdx++];
-// }
-
 bool LlamaLexer::match(char expected) {
   if (isAtEnd() || Input[CurIdx] != expected) {
     return false;
