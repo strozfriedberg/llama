@@ -176,13 +176,12 @@ TEST_CASE("parseOperatorDoesNotThrowIfOperator") {
 TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
   std::string input = "= \"test\" nocase";
   LlamaParser parser(input, getLexer(input).getTokens());
-  std::vector<PatternDef> defs;
-  REQUIRE_NOTHROW(defs = parser.parsePatternDef());
-  REQUIRE(defs.size() == 1);
-  REQUIRE(defs.at(0).Pattern == "\"test\"");
-  REQUIRE(defs.at(0).Enc == Encodings{0,0});
-  REQUIRE(defs.at(0).Options.CaseInsensitive);
-  REQUIRE(!defs.at(0).Options.FixedString);
+  PatternDef def;
+  REQUIRE_NOTHROW(def = parser.parsePatternDef());
+  REQUIRE(def.Pattern == "\"test\"");
+  REQUIRE(def.Enc == Encodings{0,0});
+  REQUIRE(def.Options.CaseInsensitive);
+  REQUIRE(!def.Options.FixedString);
 }
 
 TEST_CASE("parseEncodingsThrowsIfNotEqualSign") {
@@ -252,9 +251,9 @@ TEST_CASE("parsePatternsSectionDoesNotThrowIfPatterns") {
   PatternSection patternSection;
   REQUIRE_NOTHROW(patternSection = parser.parsePatternsSection());
   REQUIRE(patternSection.Patterns.size() == 3);
-  REQUIRE(patternSection.Patterns.find("a")->second.at(0).Pattern == "\"test\"");
-  REQUIRE(patternSection.Patterns.find("b")->second.at(0).Pattern == "\"test2\"");
-  REQUIRE(patternSection.Patterns.find("c")->second.at(0).Pattern == "\\z12\\z34\\z56\\z78\\z9a\\zbc\\zde\\zf0");
+  REQUIRE(patternSection.Patterns.find("a")->second.Pattern == "\"test\"");
+  REQUIRE(patternSection.Patterns.find("b")->second.Pattern == "\"test2\"");
+  REQUIRE(patternSection.Patterns.find("c")->second.Pattern == "\\z12\\z34\\z56\\z78\\z9a\\zbc\\zde\\zf0");
 }
 
 TEST_CASE("parseTermWithAnd") {
@@ -326,7 +325,7 @@ TEST_CASE("parseGrepSection") {
   GrepSection section;
   REQUIRE_NOTHROW(section = parser.parseGrepSection());
   REQUIRE(section.Patterns.Patterns.size() == 2);
-  auto patDef = section.Patterns.Patterns.find("a")->second.at(0);
+  auto patDef = section.Patterns.Patterns.find("a")->second;
   REQUIRE(patDef.Pattern == "\"test\"");
   REQUIRE(patDef.Enc.first == 9);
   REQUIRE(patDef.Enc.second == 10);
@@ -420,15 +419,15 @@ TEST_CASE("startRule") {
   REQUIRE(rules.at(0).Name == "MyRule");
   REQUIRE(rules.at(0).Meta.Fields.find("description")->second == "\"test\"");
   REQUIRE(rules.at(1).Name == "AnotherRule");
-  REQUIRE(rules.at(1).Grep.Patterns.Patterns.find("c")->second.at(0).Pattern == "\\z34\\z56\\z78\\zab\\zcd\\zEF");
+  REQUIRE(rules.at(1).Grep.Patterns.Patterns.find("c")->second.Pattern == "\\z34\\z56\\z78\\zab\\zcd\\zEF");
 }
 
 TEST_CASE("parseHexString") {
   std::string input = "34 56 78 9f }";
   LlamaParser parser(input, getLexer(input).getTokens());
-  std::vector<PatternDef> defs;
-  REQUIRE_NOTHROW(defs = parser.parseHexString());
-  REQUIRE(defs.at(0).Pattern == "\\z34\\z56\\z78\\z9f");
+  PatternDef def;
+  REQUIRE_NOTHROW(def = parser.parseHexString());
+  REQUIRE(def.Pattern == "\\z34\\z56\\z78\\z9f");
 }
 
 TEST_CASE("parseHexStringThrowsIfUnterminated") {

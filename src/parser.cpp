@@ -167,8 +167,7 @@ void LlamaParser::parseOperator() {
   );
 }
 
-std::vector<PatternDef> LlamaParser::parsePatternMod() {
-  std::vector<PatternDef> defs;
+PatternDef LlamaParser::parsePatternMod() {
   LG_KeyOptions opts{0,0,0};
   std::string pat = std::string(getPreviousLexeme());
   Encodings enc{0, 0};
@@ -179,7 +178,7 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
     enc = parseEncodings();
   }
 
-  defs.emplace_back(
+  return PatternDef{
     LG_KeyOptions{
       opts.FixedString,
       opts.CaseInsensitive,
@@ -187,9 +186,7 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
     },
     enc,
     pat
-  );
-
-  return defs;
+  };
 }
 
 Encodings LlamaParser::parseEncodings() {
@@ -206,20 +203,17 @@ Encodings LlamaParser::parseEncodings() {
   return enc;
 }
 
-std::vector<PatternDef> LlamaParser::parsePatternDef() {
+PatternDef LlamaParser::parsePatternDef() {
   expect(LlamaTokenType::EQUAL);
-
-  std::vector<PatternDef> defs;
   if (matchAny(LlamaTokenType::DOUBLE_QUOTED_STRING)) {
-    defs = parsePatternMod();
+    return parsePatternMod();
   }
   else if (matchAny(LlamaTokenType::OPEN_BRACE)) {
-    defs = parseHexString();
+    return parseHexString();
   }
   else {
     throw ParserError("Expected double quoted string or hex string", peek().Pos);
   }
-  return defs;
 }
 
 PatternSection LlamaParser::parsePatternsSection() {
@@ -234,8 +228,7 @@ PatternSection LlamaParser::parsePatternsSection() {
   return patternSection;
 }
 
-std::vector<PatternDef> LlamaParser::parseHexString() {
-  std::vector<PatternDef> defs;
+PatternDef LlamaParser::parseHexString() {
   std::string hexDigit, hexString;
   while (!checkAny(LlamaTokenType::CLOSE_BRACE) && !isAtEnd()) {
     if (matchAny(LlamaTokenType::IDENTIFIER, LlamaTokenType::NUMBER)) {
@@ -264,8 +257,7 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
     throw ParserError("Empty hex string", peek().Pos);
   }
   expect(LlamaTokenType::CLOSE_BRACE);
-  defs.emplace_back(LG_KeyOptions{0,0,0}, Encodings{0,0}, hexString);
-  return defs;
+  return {LG_KeyOptions{0,0,0}, Encodings{0,0}, hexString};
 }
 
 std::shared_ptr<Node> LlamaParser::parseFactor(LlamaTokenType section) {

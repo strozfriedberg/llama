@@ -129,9 +129,6 @@ using Encodings = std::pair<size_t, size_t>;
 
 // Holds information about each pattern defined in the `patterns` section under the `grep` section.
 struct PatternDef {
-  PatternDef(LG_KeyOptions opts, Encodings enc, std::string pat)
-            : Options(opts), Enc(enc), Pattern(pat) {}
-
   LG_KeyOptions Options = {0,0,0};
   Encodings Enc;
   std::string Pattern;
@@ -139,7 +136,7 @@ struct PatternDef {
 
 // Holds a mapping from the user-defined name of each pattern to the rest of its information.
 struct PatternSection {
-  std::map<std::string_view, std::vector<PatternDef>> Patterns;
+  std::map<std::string_view, PatternDef> Patterns;
 };
 
 struct GrepSection {
@@ -350,10 +347,10 @@ public:
   FileHashRecord       parseFileHashRecord();
   std::string_view     parseHashValue();
 
-  std::vector<PatternDef>  parsePatternDef();
-  std::vector<PatternDef>  parsePatternMod();
-  std::vector<PatternDef>  parseHexString();
-  Encodings                parseEncodings();
+  PatternDef parsePatternDef();
+  PatternDef parsePatternMod();
+  PatternDef parseHexString();
+  Encodings  parseEncodings();
 
   std::shared_ptr<Node> parseFactor(LlamaTokenType section);
   std::shared_ptr<Node> parseTerm(LlamaTokenType section);

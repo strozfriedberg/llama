@@ -34,20 +34,19 @@ LG_HFSM getLgFsmFromRules(const std::vector<Rule>& rules, const RuleReader& read
   uint64_t patternIndex = 0;
   for (const Rule& rule : rules) {
     for (const auto& patternPair : rule.Grep.Patterns.Patterns) {
-      for (const PatternDef& pDef : patternPair.second) {
-        std::string patNoQuotes(pDef.Pattern.substr(1, pDef.Pattern.size() - 2));
-        if (pDef.Enc.first == pDef.Enc.second) {
-          // No encodings were defined for the pattern, so parse with ASCII only
+      auto pDef = patternPair.second;
+      std::string patNoQuotes(pDef.Pattern.substr(1, pDef.Pattern.size() - 2));
+      if (pDef.Enc.first == pDef.Enc.second) {
+        // No encodings were defined for the pattern, so parse with ASCII only
+        lg_parse_pattern(lgPat, patNoQuotes.c_str(), &pDef.Options, &err);
+        lg_add_pattern(fsm, lgPat, "ASCII", patternIndex, &err);
+        ++patternIndex;
+      }
+      else {
+        for (uint64_t i = pDef.Enc.first; i < pDef.Enc.second; i += 2) {
           lg_parse_pattern(lgPat, patNoQuotes.c_str(), &pDef.Options, &err);
-          lg_add_pattern(fsm, lgPat, "ASCII", patternIndex, &err);
+          lg_add_pattern(fsm, lgPat, std::string(reader.getParser().Tokens[i].Lexeme).c_str(), patternIndex, &err);
           ++patternIndex;
-        }
-        else {
-          for (uint64_t i = pDef.Enc.first; i < pDef.Enc.second; i += 2) {
-            lg_parse_pattern(lgPat, patNoQuotes.c_str(), &pDef.Options, &err);
-            lg_add_pattern(fsm, lgPat, std::string(reader.getParser().Tokens[i].Lexeme).c_str(), patternIndex, &err);
-            ++patternIndex;
-          }
         }
       }
     }
