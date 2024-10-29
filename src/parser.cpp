@@ -169,14 +169,14 @@ void LlamaParser::parseOperator() {
 
 std::vector<PatternDef> LlamaParser::parsePatternMod() {
   std::vector<PatternDef> defs;
-  PatternDef patternDef;
-  patternDef.Pattern = getPreviousLexeme();
+  LG_KeyOptions opts{0,0,0};
+  std::string pat = std::string(getPreviousLexeme());
   std::vector<std::string_view> encodings;
 
   while (matchAny(LlamaTokenType::NOCASE, LlamaTokenType::FIXED, LlamaTokenType::ENCODINGS)) {
     switch(previous().Type) {
-      case LlamaTokenType::NOCASE: patternDef.Options.CaseInsensitive = true; break;
-      case LlamaTokenType::FIXED: patternDef.Options.FixedString = true; break;
+      case LlamaTokenType::NOCASE: opts.CaseInsensitive = true; break;
+      case LlamaTokenType::FIXED: opts.FixedString = true; break;
       case LlamaTokenType::ENCODINGS: encodings = parseEncodings(); break;
       default: throw ParserError("This shouldn't happen.", previous().Pos);
     }
@@ -185,15 +185,14 @@ std::vector<PatternDef> LlamaParser::parsePatternMod() {
   if (encodings.empty()) encodings.emplace_back(ASCII);
 
   for (const std::string_view& encoding : encodings) {
-    defs.emplace_back(PatternDef{
-      patternDef.Pattern,
+    defs.emplace_back(
       LG_KeyOptions{
-        patternDef.Options.FixedString,
-        patternDef.Options.CaseInsensitive,
+        opts.FixedString,
+        opts.CaseInsensitive,
         /*UnicodeMode=*/(encoding != ASCII)
       },
-      encoding
-    }
+      encoding,
+      pat
     );
   }
 
@@ -268,7 +267,7 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
     throw ParserError("Empty hex string", peek().Pos);
   }
   expect(LlamaTokenType::CLOSE_BRACE);
-  defs.emplace_back(PatternDef{hexString,{0,0,0},""});
+  defs.emplace_back(LG_KeyOptions{0,0,0}, std::string_view(""), hexString);
   return defs;
 }
 

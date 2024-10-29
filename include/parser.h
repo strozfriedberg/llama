@@ -127,9 +127,12 @@ static const std::string_view ASCII("ASCII");
 
 // Holds information about each pattern defined in the `patterns` section under the `grep` section.
 struct PatternDef {
-  std::string Pattern;
+  PatternDef(LG_KeyOptions opts, std::string_view enc, std::string pat)
+            : Options(opts), Encoding(enc), Pattern(pat) {}
+
   LG_KeyOptions Options = {0,0,0};
   std::string_view Encoding;
+  std::string Pattern;
 };
 
 // Holds a mapping from the user-defined name of each pattern to the rest of its information.
