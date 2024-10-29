@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bitset>
 #include <cctype>
 #include <cstdint>
 #include <iostream>
@@ -11,7 +12,7 @@
 
 class LlamaLexer {
 public:
-  LlamaLexer(const std::string& input) : CurIdx(0), RuleCount(0), Input(input) {};
+  LlamaLexer(const std::string& input) : CurIdx(0), RuleCount(0), InputSize(input.size()), Input(input) {};
 
   void scanTokens();
   void scanToken();
@@ -22,15 +23,17 @@ public:
   void parseSingleLineComment();
   void parseMultiLineComment(LineCol pos);
 
-  void addToken(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos);
+  void addToken(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos) {
+    Tokens.emplace_back(type, Input.substr(start, end - start), pos);
+  }
 
-  char advance();
+  char advance() { ++Pos.ColNum; return Input[CurIdx++]; }
 
   bool match(char expected);
-  bool isAtEnd() const { return CurIdx >= Input.size(); }
+  bool isAtEnd() const { return CurIdx == InputSize; }
 
-  char getCurChar() const;
-  char peek() const { return (isAtEnd() || CurIdx + 1 >= Input.size()) ? '\0' : Input[CurIdx + 1]; }
+  char getCurChar() const { return Input[CurIdx]; };
+  char peek() const { return isAtEnd() ? '\0' : Input[CurIdx + 1]; }
   const std::vector<Token>& getTokens() const { return Tokens; }
 
   size_t getRuleCount() const { return RuleCount; }
@@ -39,6 +42,7 @@ public:
 private:
   size_t             CurIdx;
   size_t             RuleCount;
+  size_t             InputSize;
   std::string_view   Input;
   std::vector<Token> Tokens;
 };
