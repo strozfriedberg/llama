@@ -180,7 +180,7 @@ TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
   REQUIRE_NOTHROW(defs = parser.parsePatternDef());
   REQUIRE(defs.size() == 1);
   REQUIRE(defs.at(0).Pattern == "\"test\"");
-  REQUIRE(defs.at(0).Encoding == "ASCII");
+  REQUIRE(defs.at(0).Enc == Encodings{0,0});
   REQUIRE(defs.at(0).Options.CaseInsensitive);
   REQUIRE(!defs.at(0).Options.FixedString);
 }
@@ -203,14 +203,25 @@ TEST_CASE("parseEncodingsIfDanglingComma") {
   REQUIRE_THROWS_AS(parser.parseEncodings(), ParserError);
 }
 
+TEST_CASE("parseEncodingsThrowsIfNonIdentifierBetweenCommas") {
+  std::string input = "encodings=UTF-8,=,UTF-16";
+  LlamaParser parser(input, getLexer(input).getTokens());
+  REQUIRE_THROWS_AS(parser.parseEncodings(), ParserError);
+}
+
+TEST_CASE("parseEncodingsThrowsIfNonIdentifierIsLastElement") {
+  std::string input = "encodings=UTF-8,UTF-16,=";
+  LlamaParser parser(input, getLexer(input).getTokens());
+  REQUIRE_THROWS_AS(parser.parseEncodings(), ParserError);
+}
+
 TEST_CASE("parseEncodingsDoesNotThrowIfEncodings") {
   std::string input = "=UTF-8,UTF-16LE";
   LlamaParser parser(input, getLexer(input).getTokens());
-  std::vector<std::string_view> encodings;
+  Encodings encodings;
   REQUIRE_NOTHROW(encodings = parser.parseEncodings());
-  REQUIRE(encodings.size() == 2);
-  REQUIRE(encodings.at(0) == "UTF-8");
-  REQUIRE(encodings.at(1) == "UTF-16LE");
+  REQUIRE(encodings.first == 1);
+  REQUIRE(encodings.second == 4);
 }
 
 TEST_CASE("parseStringDefThrowsIfNotStringDef") {
@@ -315,8 +326,10 @@ TEST_CASE("parseGrepSection") {
   GrepSection section;
   REQUIRE_NOTHROW(section = parser.parseGrepSection());
   REQUIRE(section.Patterns.Patterns.size() == 2);
-  REQUIRE(section.Patterns.Patterns.find("a")->second.at(0).Pattern == "\"test\"");
-  REQUIRE(section.Patterns.Patterns.find("a")->second.at(0).Encoding == "UTF-8");
+  auto patDef = section.Patterns.Patterns.find("a")->second.at(0);
+  REQUIRE(patDef.Pattern == "\"test\"");
+  REQUIRE(patDef.Enc.first == 9);
+  REQUIRE(patDef.Enc.second == 10);
   REQUIRE(section.Condition->Type == NodeType::AND);
   REQUIRE(section.Condition->Left->Type == NodeType::FUNC);
   REQUIRE(section.Condition->Right->Type == NodeType::FUNC);

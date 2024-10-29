@@ -125,13 +125,15 @@ static const std::unordered_map<std::string_view, FunctionProperties> FunctionVa
 
 static const std::string_view ASCII("ASCII");
 
+using Encodings = std::pair<size_t, size_t>;
+
 // Holds information about each pattern defined in the `patterns` section under the `grep` section.
 struct PatternDef {
-  PatternDef(LG_KeyOptions opts, std::string_view enc, std::string pat)
-            : Options(opts), Encoding(enc), Pattern(pat) {}
+  PatternDef(LG_KeyOptions opts, Encodings enc, std::string pat)
+            : Options(opts), Enc(enc), Pattern(pat) {}
 
   LG_KeyOptions Options = {0,0,0};
-  std::string_view Encoding;
+  Encodings Enc;
   std::string Pattern;
 };
 
@@ -351,7 +353,7 @@ public:
   std::vector<PatternDef>  parsePatternDef();
   std::vector<PatternDef>  parsePatternMod();
   std::vector<PatternDef>  parseHexString();
-  std::vector<std::string_view> parseEncodings();
+  Encodings                parseEncodings();
 
   std::shared_ptr<Node> parseFactor(LlamaTokenType section);
   std::shared_ptr<Node> parseTerm(LlamaTokenType section);
