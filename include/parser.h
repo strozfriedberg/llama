@@ -125,6 +125,7 @@ static const std::unordered_map<std::string_view, FunctionProperties> FunctionVa
 
 static const std::string_view ASCII("ASCII");
 
+// a range into Tokens vector, holds encodings separated by comma tokens
 using Encodings = std::pair<size_t, size_t>;
 
 // Holds information about each pattern defined in the `patterns` section under the `grep` section.
