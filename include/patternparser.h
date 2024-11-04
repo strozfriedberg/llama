@@ -14,7 +14,7 @@ public:
   void parse(PatternDef pDef) {
     lg_parse_pattern(Pat, pDef.Pattern.c_str(), &pDef.Options, &Err);
   }
-private:
+
   LG_HPATTERN Pat;
   LG_Error* Err;
 };

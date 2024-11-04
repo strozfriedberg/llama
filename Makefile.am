@@ -76,6 +76,7 @@ test_test_SOURCES = \
 	test/test_fieldhasher.cpp \
 	test/test_fileproxy.cpp \
 	test/test_filerecord.cpp \
+	test/test_fsm.cpp \
 	test/test_hex.cpp \
 	test/test_inodeandblocktrackerimpl.cpp \
 	test/test_lexer.cpp \
