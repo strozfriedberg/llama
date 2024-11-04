@@ -29,9 +29,9 @@ TEST_CASE("RuleReader") {
   REQUIRE(result == 3);
 }
 
-LlamaLgFsm getLgFsmFromRules(const std::vector<Rule>& rules) {
+LgFsmHolder getLgFsmFromRules(const std::vector<Rule>& rules) {
   PatternParser patParser;
-  LlamaLgFsm fsm;
+  LgFsmHolder fsm;
   uint64_t patternIndex = 0;
   for (const Rule& rule : rules) {
     for (const auto& patternPair : rule.Grep.Patterns.Patterns) {
@@ -65,7 +65,7 @@ TEST_CASE("PopulateLgFSM") {
   RuleReader reader;
   REQUIRE(reader.read(input) == 2);
   std::vector<Rule> rules = reader.getRules();
-  LlamaLgFsm lFsm = getLgFsmFromRules(rules);
+  LgFsmHolder lFsm = getLgFsmFromRules(rules);
   LG_HFSM fsm = lFsm.getFsm();
   REQUIRE(lg_fsm_pattern_count(fsm) == 5);
   REQUIRE(std::string(lg_fsm_pattern_info(fsm, 0)->Pattern) == "foobar");
