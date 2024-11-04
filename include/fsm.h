@@ -12,6 +12,9 @@ public:
     lg_add_pattern(Fsm, pat, std::string(enc).c_str(), patIdx, &Err);
   }
 
+  LG_HFSM getFsm() const { return Fsm; }
+
+private:
   LG_HFSM Fsm;
   LG_Error* Err;
 };

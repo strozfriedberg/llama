@@ -66,7 +66,7 @@ TEST_CASE("PopulateLgFSM") {
   REQUIRE(reader.read(input) == 2);
   std::vector<Rule> rules = reader.getRules();
   LlamaLgFsm lFsm = getLgFsmFromRules(rules);
-  LG_HFSM fsm = lFsm.Fsm;
+  LG_HFSM fsm = lFsm.getFsm();
   REQUIRE(lg_fsm_pattern_count(fsm) == 5);
   REQUIRE(std::string(lg_fsm_pattern_info(fsm, 0)->Pattern) == "foobar");
   REQUIRE(std::string(lg_fsm_pattern_info(fsm, 0)->EncodingChain) == "UTF-8");
