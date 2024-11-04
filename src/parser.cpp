@@ -45,8 +45,14 @@ std::string PropertyNode::getSqlQuery(const LlamaParser& parser) const {
   query += parser.getLexemeAt(Value.Op);
   query += " ";
   std::string val = std::string(parser.getLexemeAt(Value.Val));
-  std::replace(val.begin(), val.end(), '"', '\'');
-  query += val;
+  if (SectionDefs.find(LlamaTokenType::FILE_METADATA)->second.Props.find(curLex)->second.Type == LlamaTokenType::DOUBLE_QUOTED_STRING) {
+    query += "'";
+    query += val;
+    query += "'";
+  }
+  else {
+    query += val;
+  }
   return query;
 }
 
