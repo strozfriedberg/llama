@@ -11,8 +11,9 @@ public:
     lg_free_error(Err);
   }
 
-  void parse(PatternDef pDef) {
+  LG_HPATTERN parse(PatternDef pDef) {
     lg_parse_pattern(Pat, pDef.Pattern.c_str(), &pDef.Options, &Err);
+    return Pat;
   }
 
   LG_HPATTERN Pat;

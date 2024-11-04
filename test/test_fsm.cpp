@@ -7,8 +7,6 @@
 TEST_CASE("initLlamaLgFsm") {
   PatternParser p;
   PatternDef pDef{LG_KeyOptions{0,0,0}, "ASCII", "test"};
-  p.parse(pDef);
-
   LlamaLgFsm fsm;
-  REQUIRE_NOTHROW(fsm.addPattern(p.Pat, pDef.Encoding, 0));
+  REQUIRE_NOTHROW(fsm.addPattern(p.parse(pDef), pDef.Encoding, 0));
 }
