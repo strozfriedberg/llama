@@ -776,3 +776,13 @@ TEST_CASE("badRuleSkippedTwo") {
   REQUIRE(rules.size() == 1);
   REQUIRE(rules[0].Name == "myGoodRule");
 }
+
+TEST_CASE("badRuleSkippedTwoOfThree") {
+  std::string input = "rule myBadRule } rule myOtherBadRule { rule myGoodRule {} rule anotherBadRule {";
+  LlamaLexer lexer = getLexer(input);
+  REQUIRE(lexer.getRuleIndices() == std::vector<size_t>{0, 3, 6, 10});
+  LlamaParser parser(input, lexer.getTokens());
+  std::vector<Rule> rules = parser.parseRules(lexer.getRuleCount(), lexer.getRuleIndices());
+  REQUIRE(rules.size() == 1);
+  REQUIRE(rules[0].Name == "myGoodRule");
+}

@@ -373,6 +373,7 @@ public:
   std::vector<Token> Tokens;
   std::string Input;
   uint64_t CurIdx = 0;
+  uint64_t CurRuleIdx = 0;
 };
 
 template <class... TokenTypes>

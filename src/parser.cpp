@@ -427,15 +427,17 @@ std::vector<Rule> LlamaParser::parseRules(size_t numRules, const std::vector<siz
   while (!isAtEnd()) {
     try {
       rules.emplace_back(parseRuleDecl());
+      ++CurRuleIdx;
     }
     catch (ParserError& e) {
       std::cout << e.what() << std::endl;
       std::cout << "Skipping rule..." << std::endl;
-      if (ruleIndices.size() <= (rules.size() + 1)) {
+      if (CurRuleIdx >= numRules) {
         // this means we're at the last rule
         break;
       }
-      CurIdx = ruleIndices[rules.size() + 1];
+      ++CurRuleIdx;
+      CurIdx = ruleIndices[CurRuleIdx];
     }
   }
   return rules;
