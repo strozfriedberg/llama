@@ -25,10 +25,8 @@ condition_section   = CONDITION COLON expr+;
 file_metadata_def   = file_metadata EQUAL DOUBLE_QUOTED_STRING
                     | FILESIZE EQUAL NUMBER;
 
-pattern_def          = IDENTIFIER EQUAL DOUBLE_QUOTED_STRING pattern_mod+
+pattern_def          = IDENTIFIER EQUAL DOUBLE_QUOTED_STRING FIXED? NOCASE? encodings?
                     | IDENTIFIER EQUAL hex_string;
-
-pattern_mod          = encodings | FIXED | NOCASE;
 
 encodings           = ENCODINGS EQUAL ENCODINGS_LIST;
 

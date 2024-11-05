@@ -7,9 +7,9 @@
 TEST_CASE("initLlamaLgFsm")
 {
   PatternParser p;
-  PatternDef pDef{LG_KeyOptions{0, 0, 0}, "ASCII", "test"};
+  PatternDef pDef{LG_KeyOptions{0, 0, 0}, Encodings{0,0}, "test"};
   LgFsmHolder lFsm;
-  REQUIRE_NOTHROW(lFsm.addPattern(p.parse(pDef), pDef.Encoding, 0));
+  REQUIRE_NOTHROW(lFsm.addPattern(p.parse(pDef), "ASCII", 0));
   LG_HFSM fsm = lFsm.getFsm();
   REQUIRE(lg_fsm_pattern_count(fsm) == 1);
   REQUIRE(std::string(lg_fsm_pattern_info(fsm, 0)->Pattern) == "test");
