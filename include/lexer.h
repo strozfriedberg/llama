@@ -35,14 +35,16 @@ public:
   char getCurChar() const { return Input[CurIdx]; };
   char peek() const { return isAtEnd() ? '\0' : Input[CurIdx + 1]; }
   const std::vector<Token>& getTokens() const { return Tokens; }
+  const std::vector<size_t>& getRuleIndices() const { return RuleIndices; }
 
   size_t getRuleCount() const { return RuleCount; }
 
   LineCol Pos = {1, 1};
 private:
-  size_t             CurIdx;
-  size_t             RuleCount;
-  size_t             InputSize;
-  std::string_view   Input;
-  std::vector<Token> Tokens;
+  size_t              CurIdx;
+  size_t              RuleCount;
+  size_t              InputSize;
+  std::string_view    Input;
+  std::vector<Token>  Tokens;
+  std::vector<size_t> RuleIndices;
 };

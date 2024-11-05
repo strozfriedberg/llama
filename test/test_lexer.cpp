@@ -487,4 +487,5 @@ TEST_CASE("multipleRuleCount") {
   LlamaLexer lexer(input);
   lexer.scanTokens();
   REQUIRE(lexer.getRuleCount() == 6);
+  REQUIRE(lexer.getRuleIndices() == std::vector<size_t>{0, 1, 2, 3, 4, 5});
 }
