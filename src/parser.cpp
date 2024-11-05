@@ -167,62 +167,53 @@ void LlamaParser::parseOperator() {
   );
 }
 
-std::vector<PatternDef> LlamaParser::parsePatternMod() {
-  std::vector<PatternDef> defs;
+PatternDef LlamaParser::parsePatternMod() {
   LG_KeyOptions opts{0,0,0};
   std::string pat = std::string(getPreviousLexeme());
-  std::vector<std::string_view> encodings;
+  Encodings enc{0, 0};
 
-  while (matchAny(LlamaTokenType::NOCASE, LlamaTokenType::FIXED, LlamaTokenType::ENCODINGS)) {
-    switch(previous().Type) {
-      case LlamaTokenType::NOCASE: opts.CaseInsensitive = true; break;
-      case LlamaTokenType::FIXED: opts.FixedString = true; break;
-      case LlamaTokenType::ENCODINGS: encodings = parseEncodings(); break;
-      default: throw ParserError("This shouldn't happen.", previous().Pos);
-    }
+  opts.FixedString = matchAny(LlamaTokenType::FIXED);
+  opts.CaseInsensitive = matchAny(LlamaTokenType::NOCASE);
+  if (matchAny(LlamaTokenType::ENCODINGS)) {
+    enc = parseEncodings();
   }
 
-  if (encodings.empty()) encodings.emplace_back(ASCII);
-
-  for (const std::string_view& encoding : encodings) {
-    defs.emplace_back(
-      LG_KeyOptions{
-        opts.FixedString,
-        opts.CaseInsensitive,
-        /*UnicodeMode=*/(encoding != ASCII)
-      },
-      encoding,
-      pat
-    );
-  }
-
-  return defs;
+  return PatternDef{
+    LG_KeyOptions{
+      opts.FixedString,
+      opts.CaseInsensitive,
+      /*UnicodeMode=*/true
+    },
+    enc,
+    pat
+  };
 }
 
-std::vector<std::string_view> LlamaParser::parseEncodings() {
-  std::vector<std::string_view> encodings;
+Encodings LlamaParser::parseEncodings() {
+  Encodings enc{0,0};
   expect(LlamaTokenType::EQUAL);
-  encodings.emplace_back(expect(LlamaTokenType::IDENTIFIER));
-  while (matchAny(LlamaTokenType::COMMA)) {
-    encodings.emplace_back(expect(LlamaTokenType::IDENTIFIER));
+  enc.first = CurIdx;
+
+  do {
+    expect(LlamaTokenType::IDENTIFIER);
   }
-  return encodings;
+  while (matchAny(LlamaTokenType::COMMA));
+
+  enc.second = CurIdx;
+  return enc;
 }
 
-std::vector<PatternDef> LlamaParser::parsePatternDef() {
+PatternDef LlamaParser::parsePatternDef() {
   expect(LlamaTokenType::EQUAL);
-
-  std::vector<PatternDef> defs;
   if (matchAny(LlamaTokenType::DOUBLE_QUOTED_STRING)) {
-    defs = parsePatternMod();
+    return parsePatternMod();
   }
   else if (matchAny(LlamaTokenType::OPEN_BRACE)) {
-    defs = parseHexString();
+    return parseHexString();
   }
   else {
     throw ParserError("Expected double quoted string or hex string", peek().Pos);
   }
-  return defs;
 }
 
 PatternSection LlamaParser::parsePatternsSection() {
@@ -237,8 +228,7 @@ PatternSection LlamaParser::parsePatternsSection() {
   return patternSection;
 }
 
-std::vector<PatternDef> LlamaParser::parseHexString() {
-  std::vector<PatternDef> defs;
+PatternDef LlamaParser::parseHexString() {
   std::string hexDigit, hexString;
   while (!checkAny(LlamaTokenType::CLOSE_BRACE) && !isAtEnd()) {
     if (matchAny(LlamaTokenType::IDENTIFIER, LlamaTokenType::NUMBER)) {
@@ -267,8 +257,7 @@ std::vector<PatternDef> LlamaParser::parseHexString() {
     throw ParserError("Empty hex string", peek().Pos);
   }
   expect(LlamaTokenType::CLOSE_BRACE);
-  defs.emplace_back(LG_KeyOptions{0,0,0}, std::string_view(""), hexString);
-  return defs;
+  return {LG_KeyOptions{0,0,0}, Encodings{0,0}, hexString};
 }
 
 std::shared_ptr<Node> LlamaParser::parseFactor(LlamaTokenType section) {
