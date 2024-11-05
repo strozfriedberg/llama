@@ -414,7 +414,7 @@ TEST_CASE("startRule") {
   LlamaLexer lexer = getLexer(input);
   LlamaParser parser(input, lexer.getTokens());
   std::vector<Rule> rules;
-  REQUIRE_NOTHROW(rules = parser.parseRules(lexer.getRuleCount(), lexer.getRuleIndices()));
+  REQUIRE_NOTHROW(rules = parser.parseRules(lexer.getRuleIndices()));
   REQUIRE(rules.size() == 2);
   REQUIRE(rules.at(0).Name == "MyRule");
   REQUIRE(rules.at(0).Meta.Fields.find("description")->second == "\"test\"");
@@ -694,14 +694,14 @@ TEST_CASE("EmptyStringNoRules") {
   std::string input = "";
   LlamaLexer lexer = getLexer(input);
   LlamaParser parser(input, lexer.getTokens());
-  REQUIRE(parser.parseRules(lexer.getRuleCount(), lexer.getRuleIndices()).size() == 0);
+  REQUIRE(parser.parseRules(lexer.getRuleIndices()).size() == 0);
 }
 
 TEST_CASE("GetSqlQueryFromRule") {
   std::string input = "rule MyRule { }";
   LlamaLexer lexer = getLexer(input);
   LlamaParser parser(input, lexer.getTokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.getRuleCount(), lexer.getRuleIndices());
+  std::vector<Rule> rules = parser.parseRules(lexer.getRuleIndices());
   REQUIRE(rules.at(0).Name == "MyRule");
   REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', path, name, addr FROM dirent, inode WHERE dirent.metaaddr == inode.addr");
 }
@@ -710,7 +710,7 @@ TEST_CASE("GetSqlQueryFromRuleWithOneNumberFileMetadataCondition") {
   std::string input = "rule MyRule { file_metadata: filesize == 30000 }";
   LlamaLexer lexer = getLexer(input);
   LlamaParser parser(input, lexer.getTokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.getRuleCount(), lexer.getRuleIndices());
+  std::vector<Rule> rules = parser.parseRules(lexer.getRuleIndices());
   REQUIRE(rules.at(0).Name == "MyRule");
   REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', path, name, addr FROM dirent, inode WHERE dirent.metaaddr == inode.addr AND filesize == 30000");
 }
@@ -719,7 +719,7 @@ TEST_CASE("GetSqlQueryFromRuleWithOneStringFileMetadataCondition") {
   std::string input = "rule MyRule { file_metadata: created > \"2023-05-04\" }";
   LlamaLexer lexer = getLexer(input);
   LlamaParser parser(input, lexer.getTokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.getRuleCount(), lexer.getRuleIndices());
+  std::vector<Rule> rules = parser.parseRules(lexer.getRuleIndices());
   REQUIRE(rules.at(0).Name == "MyRule");
   REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', path, name, addr FROM dirent, inode WHERE dirent.metaaddr == inode.addr AND created > '2023-05-04'");
 }
@@ -728,7 +728,7 @@ TEST_CASE("GetSqlQueryFromRuleWithCompoundFileMetadataDef") {
   std::string input = "rule MyRule { file_metadata: filesize == 123456 or created > \"2023-05-04\" and modified < \"2023-05-06\" and filename == \"test\" and filepath == \"test\" }";
   LlamaLexer lexer = getLexer(input);
   LlamaParser parser(input, lexer.getTokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.getRuleCount(), lexer.getRuleIndices());
+  std::vector<Rule> rules = parser.parseRules(lexer.getRuleIndices());
   REQUIRE(rules.at(0).Name == "MyRule");
   REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', path, name, addr FROM dirent, inode WHERE dirent.metaaddr == inode.addr AND (filesize == 123456 OR (((created > '2023-05-04' AND modified < '2023-05-06') AND name == 'test') AND path == 'test'))");
 }
@@ -737,7 +737,7 @@ TEST_CASE("GetRuleHashWithNoSections") {
   std::string input = "rule MyRule { } rule MyOtherRule { file_metadata: filesize > 30000 }";
   LlamaLexer lexer = getLexer(input);
   LlamaParser parser(input, lexer.getTokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.getRuleCount(), lexer.getRuleIndices());
+  std::vector<Rule> rules = parser.parseRules(lexer.getRuleIndices());
   REQUIRE(rules.at(0).getHash(parser) != rules.at(1).getHash(parser));
 }
 
@@ -763,7 +763,7 @@ TEST_CASE("badRuleSkippedOne") {
   LlamaLexer lexer = getLexer(input);
   REQUIRE(lexer.getRuleIndices() == std::vector<size_t>{0});
   LlamaParser parser(input, lexer.getTokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.getRuleCount(), lexer.getRuleIndices());
+  std::vector<Rule> rules = parser.parseRules(lexer.getRuleIndices());
   REQUIRE(rules.size() == 0);
 }
 
@@ -772,7 +772,7 @@ TEST_CASE("badRuleSkippedTwo") {
   LlamaLexer lexer = getLexer(input);
   REQUIRE(lexer.getRuleIndices() == std::vector<size_t>{0, 3});
   LlamaParser parser(input, lexer.getTokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.getRuleCount(), lexer.getRuleIndices());
+  std::vector<Rule> rules = parser.parseRules(lexer.getRuleIndices());
   REQUIRE(rules.size() == 1);
   REQUIRE(rules[0].Name == "myGoodRule");
 }
@@ -782,7 +782,7 @@ TEST_CASE("badRuleSkippedTwoOfThree") {
   LlamaLexer lexer = getLexer(input);
   REQUIRE(lexer.getRuleIndices() == std::vector<size_t>{0, 3, 6, 10});
   LlamaParser parser(input, lexer.getTokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.getRuleCount(), lexer.getRuleIndices());
+  std::vector<Rule> rules = parser.parseRules(lexer.getRuleIndices());
   REQUIRE(rules.size() == 1);
   REQUIRE(rules[0].Name == "myGoodRule");
 }

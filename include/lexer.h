@@ -12,7 +12,7 @@
 
 class LlamaLexer {
 public:
-  LlamaLexer(const std::string& input) : CurIdx(0), RuleCount(0), InputSize(input.size()), Input(input) {};
+  LlamaLexer(const std::string& input) : CurIdx(0), InputSize(input.size()), Input(input) {};
 
   void scanTokens();
   void scanToken();
@@ -37,12 +37,9 @@ public:
   const std::vector<Token>& getTokens() const { return Tokens; }
   const std::vector<size_t>& getRuleIndices() const { return RuleIndices; }
 
-  size_t getRuleCount() const { return RuleCount; }
-
   LineCol Pos = {1, 1};
 private:
   size_t              CurIdx;
-  size_t              RuleCount;
   size_t              InputSize;
   std::string_view    Input;
   std::vector<Token>  Tokens;

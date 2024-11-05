@@ -101,7 +101,6 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
   if (found != LlamaKeywords.end()) {
     addToken(found->second, start, end, pos);
     if (found->second == LlamaTokenType::RULE) {
-      ++RuleCount;
       RuleIndices.push_back(Tokens.size() - 1);
     }
   }
