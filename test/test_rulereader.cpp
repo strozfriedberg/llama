@@ -21,8 +21,8 @@ TEST_CASE("RuleReader") {
   int result = reader.read(input);
   REQUIRE(result == 2);
   result = reader.read(input2);
-  REQUIRE(result == -1);
-  REQUIRE(reader.getLastError() == "Expected identifier at line 1 column 6");
+  REQUIRE(result == 2);
+  REQUIRE(reader.getLastError() == "");
   result = reader.read(input3);
   REQUIRE(result == 3);
 }

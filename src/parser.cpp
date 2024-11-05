@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "parser.h"
 #include "util.h"
 
@@ -419,11 +421,22 @@ Rule LlamaParser::parseRuleDecl() {
   return rule;
 }
 
-std::vector<Rule> LlamaParser::parseRules(size_t numRules) {
+std::vector<Rule> LlamaParser::parseRules(size_t numRules, const std::vector<size_t>& ruleIndices) {
   std::vector<Rule> rules;
   rules.reserve(numRules);
   while (!isAtEnd()) {
-    rules.emplace_back(parseRuleDecl());
+    try {
+      rules.emplace_back(parseRuleDecl());
+    }
+    catch (ParserError& e) {
+      std::cout << e.what() << std::endl;
+      std::cout << "Skipping rule..." << std::endl;
+      if (ruleIndices.size() <= (rules.size() + 1)) {
+        // this means we're at the last rule
+        break;
+      }
+      CurIdx = ruleIndices[rules.size() + 1];
+    }
   }
   return rules;
 }
