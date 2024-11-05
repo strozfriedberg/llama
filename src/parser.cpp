@@ -70,6 +70,7 @@ void LlamaParser::clear() {
   Tokens.clear();
   Input.clear();
   CurIdx = 0;
+  CurRuleIdx = 0;
 }
 
 std::string_view LlamaParser::expect(LlamaTokenType token) {
