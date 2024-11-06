@@ -433,11 +433,12 @@ std::vector<Rule> LlamaParser::parseRules(const std::vector<size_t>& ruleIndices
     catch (ParserError& e) {
       std::cout << e.what() << std::endl;
       std::cout << "Skipping rule..." << std::endl;
+      ++CurRuleIdx;
       if (CurRuleIdx >= ruleIndices.size()) {
         // this means we're at the last rule
         break;
       }
-      CurIdx = ruleIndices[++CurRuleIdx];
+      CurIdx = ruleIndices[CurRuleIdx];
     }
   }
   return rules;
