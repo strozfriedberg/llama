@@ -438,7 +438,7 @@ std::vector<Rule> LlamaParser::parseRules(const std::vector<size_t>& ruleIndices
         // this means we're at the last rule
         break;
       }
-      CurIdx = ruleIndices[CurRuleIdx];
+      CurIdx = ruleIndices.at(CurRuleIdx);
     }
   }
   return rules;

@@ -23,6 +23,9 @@ public:
   void parseSingleLineComment();
   void parseMultiLineComment(LineCol pos);
 
+  void clearCurRule();
+  void jumpToNextRule();
+
   void addToken(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos) {
     Tokens.emplace_back(type, Input.substr(start, end - start), pos);
   }

@@ -19,7 +19,13 @@ void LlamaLexer::scanTokens() {
   // Set to length of input since there can't possibly be more tokens than characters.
   Tokens.reserve(InputSize);
   while (!isAtEnd()) {
-    scanToken();
+    try {
+      scanToken();
+    }
+    catch (const UnexpectedInputError&) {
+      clearCurRule();
+      jumpToNextRule();
+    }
   }
   addToken(LlamaTokenType::END_OF_FILE, CurIdx, CurIdx+1, Pos);
 }
@@ -162,6 +168,30 @@ void LlamaLexer::parseMultiLineComment(LineCol pos) {
   else {
     advance();
     parseMultiLineComment(pos);
+  }
+}
+
+void LlamaLexer::clearCurRule() {
+  if (RuleIndices.empty()) {
+    // Clear all tokens if we've seen no rule tokens at this point
+    Tokens.clear();
+  } else {
+    // Otherwise, erase the tokens after and including the last rule token
+    Tokens.erase(Tokens.begin() + RuleIndices.at(RuleIndices.size() - 1), Tokens.end());
+  }
+}
+
+void LlamaLexer::jumpToNextRule() {
+  // Find the next instance of "rule" starting from our CurIdx
+  // This index is relative to the substring
+  auto found = Input.substr(CurIdx, Input.size() - CurIdx).find("rule");
+  if (found == std::string_view::npos) {
+    // Set to end if no more rules
+    CurIdx = InputSize;
+  }
+  else {
+    // Otherwise, jump by the index of our found rule from our substring
+    CurIdx = CurIdx + found;
   }
 }
 

@@ -446,7 +446,9 @@ TEST_CASE("parseMultiLineCommentWithManyAsterisks") {
 TEST_CASE("parseMultiLineCommentUnterminatedComplex") {
   std::string input = "/* /// ***** /*  //";
   LlamaLexer lexer(input);
-  REQUIRE_THROWS_AS(lexer.scanTokens(), UnexpectedInputError);
+  lexer.scanTokens();
+  REQUIRE(lexer.getTokens().size() == 1);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::END_OF_FILE);
 }
 
 TEST_CASE("parseSingleLineCommentWithMultiLineCommentIsIgnored") {
@@ -456,10 +458,12 @@ TEST_CASE("parseSingleLineCommentWithMultiLineCommentIsIgnored") {
   REQUIRE(lexer.getTokens().size() == 1);
 }
 
-TEST_CASE("parseSingleLineCommentWithMultiLineCommentWithNewlineThrows") {
+TEST_CASE("parseSingleLineCommentWithMultiLineCommentWithNewlineIsIgnored") {
   std::string input = "// this is a single line comment /* this is a multi-line comment with a newline \n*/";
   LlamaLexer lexer(input);
-  REQUIRE_THROWS_AS(lexer.scanTokens(), UnexpectedInputError);
+  lexer.scanTokens();
+  REQUIRE(lexer.getTokens().size() == 1);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::END_OF_FILE);
 }
 
 TEST_CASE("parseMultiLineCommentIncreasesLineNumAndResetsColumnNum") {
@@ -486,4 +490,18 @@ TEST_CASE("multipleRuleCount") {
   LlamaLexer lexer(input);
   lexer.scanTokens();
   REQUIRE(lexer.getRuleIndices() == std::vector<size_t>{0, 1, 2, 3, 4, 5});
+}
+
+TEST_CASE("clearCurRule") {
+  std::vector<int> f{1, 2, 3, 4, 5, 6};
+  f.erase(f.begin() + 2, f.end());
+  REQUIRE(f == std::vector<int>{1, 2});
+}
+
+TEST_CASE("badRuleErasedAndSkipped") {
+  std::string input = "rule { . }";
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  REQUIRE(lexer.getTokens().size() == 1);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::END_OF_FILE);
 }
