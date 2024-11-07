@@ -572,3 +572,27 @@ TEST_CASE("badCharacterByItselfSkipped") {
   REQUIRE(tokens.size() == 1);
   REQUIRE(tokens.at(0).Type == LlamaTokenType::END_OF_FILE);
 }
+
+TEST_CASE("multipleBadCharactersInARowOutsideOfRuleIgnoresPreviousRule") {
+  std::string input = "rule MyRule {} *.*.* rule {}";
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  auto tokens = lexer.getTokens();
+  REQUIRE(tokens.size() == 4);
+  REQUIRE(tokens.at(0).Type == LlamaTokenType::RULE);
+  REQUIRE(tokens.at(1).Type == LlamaTokenType::OPEN_BRACE);
+  REQUIRE(tokens.at(2).Type == LlamaTokenType::CLOSE_BRACE);
+  REQUIRE(tokens.at(3).Type == LlamaTokenType::END_OF_FILE);
+}
+
+TEST_CASE("multipleBadCharactersInARowOutsideOfRuleIgnoresPreviousRuleAndEverythingFollowingIfNoMoreRules") {
+  // Not sure if this is the behavior we want but there's no way to ensure that we only erase up to
+  // the end of the last rule because we would need to assume that there is a closing brace.
+  // The lexer should be dumb and not concern itself with parsing errors.
+  std::string input = "rule MyRule {} *.*.* {/**/}";
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  auto tokens = lexer.getTokens();
+  REQUIRE(tokens.size() == 1);
+  REQUIRE(tokens.at(0).Type == LlamaTokenType::END_OF_FILE);
+}
