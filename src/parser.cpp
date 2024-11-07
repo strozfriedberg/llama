@@ -39,13 +39,13 @@ std::string BoolNode::getSqlQuery(const LlamaParser& parser) const {
 
 std::string PropertyNode::getSqlQuery(const LlamaParser& parser) const {
   std::string query = "";
-  std::string_view curLex = parser.getLexemeAt(Value.Name);
-  query += FileMetadataPropertySqlLookup.find(curLex)->second;
+  std::string_view propertyName = parser.getLexemeAt(Value.Name);
+  query += FileMetadataPropertySqlLookup.find(propertyName)->second;
   query += " ";
   query += parser.getLexemeAt(Value.Op);
   query += " ";
   std::string val = std::string(parser.getLexemeAt(Value.Val));
-  if (SectionDefs.find(LlamaTokenType::FILE_METADATA)->second.Props.find(curLex)->second.Type == LlamaTokenType::DOUBLE_QUOTED_STRING) {
+  if (parser.Tokens[Value.Val].Type == LlamaTokenType::DOUBLE_QUOTED_STRING) {
     query += "'";
     query += val;
     query += "'";
