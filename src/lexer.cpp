@@ -175,7 +175,8 @@ void LlamaLexer::clearCurRule() {
   if (RuleIndices.empty()) {
     // Clear all tokens if we've seen no rule tokens at this point
     Tokens.clear();
-  } else {
+  }
+  else {
     // Otherwise, erase the tokens after and including the last rule token
     Tokens.erase(Tokens.begin() + RuleIndices.at(RuleIndices.size() - 1), Tokens.end());
   }
