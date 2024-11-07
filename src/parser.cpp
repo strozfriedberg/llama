@@ -44,7 +44,7 @@ std::string PropertyNode::getSqlQuery(const LlamaParser& parser) const {
   query += " ";
   query += parser.getLexemeAt(Value.Op);
   query += " ";
-  std::string val = std::string(parser.getLexemeAt(Value.Val));
+  std::string_view val = parser.getLexemeAt(Value.Val);
   if (parser.Tokens[Value.Val].Type == LlamaTokenType::DOUBLE_QUOTED_STRING) {
     query += "'";
     query += val;
