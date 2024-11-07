@@ -435,9 +435,10 @@ std::vector<Rule> LlamaParser::parseRules(const std::vector<size_t>& ruleIndices
       std::cout << "Skipping rule..." << std::endl;
       ++CurRuleIdx;
       if (CurRuleIdx >= ruleIndices.size()) {
-        // this means we're at the last rule
+        // We're at the last rule, so stop processing
         break;
       }
+      // Skip to the next rule
       CurIdx = ruleIndices.at(CurRuleIdx);
     }
   }
