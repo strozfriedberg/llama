@@ -31,6 +31,9 @@ void LlamaLexer::scanTokens() {
 }
 
 void LlamaLexer::scanToken() {
+  if (isAtEnd()) {
+    throw std::out_of_range("Lexer attempted to scan past the end of input stream.");
+  }
   const uint64_t start = CurIdx;
   const LineCol pos(Pos);
   const char c = advance();
@@ -85,7 +88,7 @@ void LlamaLexer::scanToken() {
         parseIdentifier(pos);
       }
       else {
-        throw UnexpectedInputError("Unexpected input character at ", pos);
+        addToken(LlamaTokenType::UNRECOGNIZED, start, CurIdx, pos);
       }
   }
 }

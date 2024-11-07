@@ -9,7 +9,7 @@
 
 
 enum class LlamaTokenType {
-  NONE,
+  UNRECOGNIZED,
 
   // reserved keywords
   RULE,

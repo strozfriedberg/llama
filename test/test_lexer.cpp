@@ -19,7 +19,7 @@ TEST_CASE("ScanToken") {
   lexer.scanToken();
   REQUIRE(lexer.getTokens().size() == 4);
   REQUIRE(lexer.isAtEnd());
-  REQUIRE_THROWS_AS(lexer.scanToken(), UnexpectedInputError);
+  REQUIRE_THROWS_AS(lexer.scanToken(), std::out_of_range);
 }
 
 TEST_CASE("ScanOpenParen") {
@@ -492,107 +492,10 @@ TEST_CASE("multipleRuleCount") {
   REQUIRE(lexer.getRuleIndices() == std::vector<size_t>{0, 1, 2, 3, 4, 5});
 }
 
-TEST_CASE("clearCurRule") {
-  std::vector<int> f{1, 2, 3, 4, 5, 6};
-  f.erase(f.begin() + 2, f.end());
-  REQUIRE(f == std::vector<int>{1, 2});
-}
-
-TEST_CASE("badRuleSingleErasedAndSkipped") {
+TEST_CASE("ruleWithSingleUnexpectedToken") {
   std::string input = "rule { . }";
   LlamaLexer lexer(input);
   lexer.scanTokens();
-  REQUIRE(lexer.getTokens().size() == 1);
-  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::END_OF_FILE);
-}
-
-TEST_CASE("badRuleInTheMiddleErasedAndSkipped") {
-  std::string input = "rule myRule {} rule {.} rule {}";
-  LlamaLexer lexer(input);
-  lexer.scanTokens();
-  auto tokens = lexer.getTokens();
-  REQUIRE(tokens.size() == 8);
-  REQUIRE(tokens[0].Type == LlamaTokenType::RULE);
-  REQUIRE(tokens[1].Type == LlamaTokenType::IDENTIFIER);
-  REQUIRE(tokens[2].Type == LlamaTokenType::OPEN_BRACE);
-  REQUIRE(tokens[3].Type == LlamaTokenType::CLOSE_BRACE);
-  REQUIRE(tokens[4].Type == LlamaTokenType::RULE);
-  REQUIRE(tokens[5].Type == LlamaTokenType::OPEN_BRACE);
-  REQUIRE(tokens[6].Type == LlamaTokenType::CLOSE_BRACE);
-  REQUIRE(tokens[7].Type == LlamaTokenType::END_OF_FILE);
-}
-
-TEST_CASE("badRuleAtTheBeginningErasedAndSkipped") {
-  std::string input = "rule {^} rule {} rule {}";
-  LlamaLexer lexer(input);
-  lexer.scanTokens();
-  auto tokens = lexer.getTokens();
-  REQUIRE(tokens.size() == 7);
-  REQUIRE(tokens[0].Type == LlamaTokenType::RULE);
-  REQUIRE(tokens[1].Type == LlamaTokenType::OPEN_BRACE);
-  REQUIRE(tokens[2].Type == LlamaTokenType::CLOSE_BRACE);
-  REQUIRE(tokens[3].Type == LlamaTokenType::RULE);
-  REQUIRE(tokens[4].Type == LlamaTokenType::OPEN_BRACE);
-  REQUIRE(tokens[5].Type == LlamaTokenType::CLOSE_BRACE);
-  REQUIRE(tokens[6].Type == LlamaTokenType::END_OF_FILE);
-}
-
-TEST_CASE("badRuleAtTheEndErasedAndSkipped") {
-  std::string input = "rule {} rule {} rule {^}";
-  LlamaLexer lexer(input);
-  lexer.scanTokens();
-  auto tokens = lexer.getTokens();
-  REQUIRE(tokens.size() == 7);
-  REQUIRE(tokens[0].Type == LlamaTokenType::RULE);
-  REQUIRE(tokens[1].Type == LlamaTokenType::OPEN_BRACE);
-  REQUIRE(tokens[2].Type == LlamaTokenType::CLOSE_BRACE);
-  REQUIRE(tokens[3].Type == LlamaTokenType::RULE);
-  REQUIRE(tokens[4].Type == LlamaTokenType::OPEN_BRACE);
-  REQUIRE(tokens[5].Type == LlamaTokenType::CLOSE_BRACE);
-  REQUIRE(tokens[6].Type == LlamaTokenType::END_OF_FILE);
-}
-
-TEST_CASE("multipleBadRulesErasedAndSkipped") {
-  std::string input = "rule {} rule {.} rule {*}";
-  LlamaLexer lexer(input);
-  lexer.scanTokens();
-  auto tokens = lexer.getTokens();
-  REQUIRE(tokens.size() == 4);
-  REQUIRE(tokens[0].Type == LlamaTokenType::RULE);
-  REQUIRE(tokens[1].Type == LlamaTokenType::OPEN_BRACE);
-  REQUIRE(tokens[2].Type == LlamaTokenType::CLOSE_BRACE);
-  REQUIRE(tokens[3].Type == LlamaTokenType::END_OF_FILE);
-}
-
-TEST_CASE("badCharacterByItselfSkipped") {
-  std::string input = "*";
-  LlamaLexer lexer(input);
-  lexer.scanTokens();
-  auto tokens = lexer.getTokens();
-  REQUIRE(tokens.size() == 1);
-  REQUIRE(tokens.at(0).Type == LlamaTokenType::END_OF_FILE);
-}
-
-TEST_CASE("multipleBadCharactersInARowOutsideOfRuleIgnoresPreviousRule") {
-  std::string input = "rule MyRule {} *.*.* rule {}";
-  LlamaLexer lexer(input);
-  lexer.scanTokens();
-  auto tokens = lexer.getTokens();
-  REQUIRE(tokens.size() == 4);
-  REQUIRE(tokens.at(0).Type == LlamaTokenType::RULE);
-  REQUIRE(tokens.at(1).Type == LlamaTokenType::OPEN_BRACE);
-  REQUIRE(tokens.at(2).Type == LlamaTokenType::CLOSE_BRACE);
-  REQUIRE(tokens.at(3).Type == LlamaTokenType::END_OF_FILE);
-}
-
-TEST_CASE("multipleBadCharactersInARowOutsideOfRuleIgnoresPreviousRuleAndEverythingFollowingIfNoMoreRules") {
-  // Not sure if this is the behavior we want but there's no way to ensure that we only erase up to
-  // the end of the last rule because we would need to assume that there is a closing brace.
-  // The lexer should be dumb and not concern itself with parsing errors.
-  std::string input = "rule MyRule {} *.*.* {/**/}";
-  LlamaLexer lexer(input);
-  lexer.scanTokens();
-  auto tokens = lexer.getTokens();
-  REQUIRE(tokens.size() == 1);
-  REQUIRE(tokens.at(0).Type == LlamaTokenType::END_OF_FILE);
-}
+  REQUIRE(lexer.getTokens().size() == 5);
+  REQUIRE(lexer.getTokens().at(2).Type == LlamaTokenType::UNRECOGNIZED);
+ }
