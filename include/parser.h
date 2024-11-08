@@ -311,7 +311,11 @@ public:
   std::string_view getCurrentLexeme() const { return peek().Lexeme; }
   std::string_view getLexemeAt(size_t idx) const { return Tokens[idx].Lexeme; }
 
+  // Clear Input and Tokens, and reset CurIdx and CurRuleIdx counters.
   void clear();
+
+  // Reset CurIdx and CurRuleIdx counters.
+  void resetCounters();
 
   bool checkFunctionName() {
     std::string_view curLex = getCurrentLexeme();

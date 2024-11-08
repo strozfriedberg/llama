@@ -68,7 +68,11 @@ std::string Rule::getSqlQuery(const LlamaParser& parser) const {
 void LlamaParser::clear() {
   Tokens.clear();
   Input.clear();
-  CurIdx = 0;
+  resetCounters();
+}
+
+void LlamaParser::resetCounters() {
+  CurIdx     = 0;
   CurRuleIdx = 0;
 }
 
@@ -425,9 +429,8 @@ std::vector<Rule> LlamaParser::parseRules(const std::vector<size_t>& ruleIndices
   std::vector<Rule> rules;
   rules.reserve(ruleIndices.size());
 
-  // Reset our counters (in case parseRules is called twice)
-  CurIdx = 0;
-  CurRuleIdx = 0;
+  // Reset our counters in case parseRules is called twice
+  resetCounters();
 
   while (!isAtEnd()) {
     if (!checkAny(LlamaTokenType::RULE)) {
