@@ -4,7 +4,9 @@
 
 #include <lightgrep/api.h>
 
-#include <rulereader.h>
+#include "fsm.h"
+#include "patternparser.h"
+#include "rulereader.h"
 
 TEST_CASE("RuleReader") {
   std::string input(R"(
@@ -27,25 +29,21 @@ TEST_CASE("RuleReader") {
   REQUIRE(result == 3);
 }
 
-LG_HFSM getLgFsmFromRules(const std::vector<Rule>& rules, const RuleReader& reader) {
-  LG_HPATTERN lgPat = lg_create_pattern();
-  LG_HFSM fsm = lg_create_fsm(0, 0);
-  LG_Error* err = nullptr;
+LgFsmHolder getLgFsmFromRules(const std::vector<Rule>& rules, const RuleReader& reader) {
+  PatternParser patParser;
+  LgFsmHolder fsm;
   uint64_t patternIndex = 0;
   for (const Rule& rule : rules) {
     for (const auto& patternPair : rule.Grep.Patterns.Patterns) {
       auto pDef = patternPair.second;
-      std::string patNoQuotes(pDef.Pattern.substr(1, pDef.Pattern.size() - 2));
       if (pDef.Enc.first == pDef.Enc.second) {
         // No encodings were defined for the pattern, so parse with ASCII only
-        lg_parse_pattern(lgPat, patNoQuotes.c_str(), &pDef.Options, &err);
-        lg_add_pattern(fsm, lgPat, "ASCII", patternIndex, &err);
+        fsm.addPattern(patParser.parse(pDef), "ASCII", patternIndex);
         ++patternIndex;
       }
       else {
         for (uint64_t i = pDef.Enc.first; i < pDef.Enc.second; i += 2) {
-          lg_parse_pattern(lgPat, patNoQuotes.c_str(), &pDef.Options, &err);
-          lg_add_pattern(fsm, lgPat, std::string(reader.getParser().Tokens[i].Lexeme).c_str(), patternIndex, &err);
+          fsm.addPattern(patParser.parse(pDef), std::string(reader.getParser().Tokens[i].Lexeme).c_str(), patternIndex);
           ++patternIndex;
         }
       }
@@ -76,7 +74,8 @@ TEST_CASE("PopulateLgFSM") {
   RuleReader reader;
   REQUIRE(reader.read(input) == 2);
   std::vector<Rule> rules = reader.getRules();
-  LG_HFSM fsm = getLgFsmFromRules(rules, reader);
+  LgFsmHolder lFsm = getLgFsmFromRules(rules, reader);
+  LG_HFSM fsm = lFsm.getFsm();
   REQUIRE(lg_fsm_pattern_count(fsm) == 5);
   REQUIRE(std::string(lg_fsm_pattern_info(fsm, 0)->Pattern) == "foobar");
   REQUIRE(std::string(lg_fsm_pattern_info(fsm, 0)->EncodingChain) == "UTF-8");
