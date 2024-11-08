@@ -831,3 +831,18 @@ TEST_CASE("inputWithUnrecognizedCharBetweenRulesIsIgnored") {
   REQUIRE(rules[0].Name == "myGoodRule");
   REQUIRE(rules[1].Name == "myOtherGoodRule");
 }
+
+TEST_CASE("inputWithUnterminatedMultiLineCommentInRule") {
+  std::string input = "rule myBadRule {/*} rule myGoodRule {}";
+  LlamaLexer lexer = getLexer(input);
+  REQUIRE(lexer.getRuleIndices() == std::vector<size_t>{0});
+  auto lErrors = lexer.getErrors();
+  REQUIRE(lErrors.size() == 1);
+  REQUIRE(std::string(lErrors[0].what()) == "Unterminated multi-line comment at line 1 column 17");
+  LlamaParser parser(input, lexer.getTokens());
+  std::vector<Rule> rules = parser.parseRules(lexer.getRuleIndices());
+  REQUIRE(rules.size() == 0);
+  auto pErrors = parser.getErrors();
+  REQUIRE(pErrors.size() == 1);
+  REQUIRE(std::string(pErrors[0].what()) == "Expected close brace at line 1 column 39");
+}

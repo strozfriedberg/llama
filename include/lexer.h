@@ -23,9 +23,6 @@ public:
   void parseSingleLineComment();
   void parseMultiLineComment(LineCol pos);
 
-  void clearCurRule();
-  void jumpToNextRule();
-
   void addToken(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos) {
     Tokens.emplace_back(type, Input.substr(start, end - start), pos);
   }
@@ -39,12 +36,14 @@ public:
   char peek() const { return isAtEnd() ? '\0' : Input[CurIdx + 1]; }
   const std::vector<Token>& getTokens() const { return Tokens; }
   const std::vector<size_t>& getRuleIndices() const { return RuleIndices; }
+  const std::vector<UnexpectedInputError>& getErrors() const { return Errors; }
 
   LineCol Pos = {1, 1};
 private:
-  size_t              CurIdx;
-  size_t              InputSize;
-  std::string_view    Input;
-  std::vector<Token>  Tokens;
-  std::vector<size_t> RuleIndices;
+  size_t                            CurIdx;
+  size_t                            InputSize;
+  std::string_view                  Input;
+  std::vector<Token>                Tokens;
+  std::vector<UnexpectedInputError> Errors;
+  std::vector<size_t>               RuleIndices;
 };

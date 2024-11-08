@@ -462,8 +462,9 @@ TEST_CASE("parseSingleLineCommentWithMultiLineCommentWithNewlineIsIgnored") {
   std::string input = "// this is a single line comment /* this is a multi-line comment with a newline \n*/";
   LlamaLexer lexer(input);
   lexer.scanTokens();
-  REQUIRE(lexer.getTokens().size() == 1);
-  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::END_OF_FILE);
+  REQUIRE(lexer.getTokens().size() == 2);
+  REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::UNRECOGNIZED);
+  REQUIRE(lexer.getTokens().at(1).Type == LlamaTokenType::END_OF_FILE);
 }
 
 TEST_CASE("parseMultiLineCommentIncreasesLineNumAndResetsColumnNum") {
