@@ -422,9 +422,9 @@ Rule LlamaParser::parseRuleDecl() {
   return rule;
 }
 
-std::vector<Rule> LlamaParser::parseRules(size_t numRules) {
+std::vector<Rule> LlamaParser::parseRules(const std::vector<size_t>& ruleIndices) {
   std::vector<Rule> rules;
-  rules.reserve(numRules);
+  rules.reserve(ruleIndices.size());
   while (!isAtEnd()) {
     try {
       rules.emplace_back(parseRuleDecl());
