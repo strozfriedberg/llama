@@ -425,24 +425,33 @@ Rule LlamaParser::parseRuleDecl() {
 std::vector<Rule> LlamaParser::parseRules(const std::vector<size_t>& ruleIndices) {
   std::vector<Rule> rules;
   rules.reserve(ruleIndices.size());
+
+  // Reset our counters (in case parseRules is called twice)
   CurIdx = 0;
   CurRuleIdx = 0;
+
   while (!isAtEnd()) {
     if (!checkAny(LlamaTokenType::RULE)) {
-      // Append to errors that there are unrecognized chars between rules
+      // We should be at the beginning of a rule here
+      Errors.emplace_back("Unexpected token " + std::string(peek().Lexeme), peek().Pos);
     }
     if (CurRuleIdx >= ruleIndices.size()) {
       // There are no more rules to process
       break;
     }
+    // Skip to the next rule index.
+    // We do this after the last two checks because we want to report to the user if there are
+    // unrecognized characters between known rule boundaries.
     CurIdx = ruleIndices.at(CurRuleIdx);
+
     try {
       rules.emplace_back(parseRuleDecl());
     }
     catch (ParserError& e) {
-      std::cout << e.what() << std::endl;
-      std::cout << "Skipping rule..." << std::endl;
+      Errors.push_back(e);
     }
+
+    // Move to next rule context.
     ++CurRuleIdx;
   }
   return rules;

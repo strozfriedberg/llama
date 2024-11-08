@@ -785,16 +785,40 @@ TEST_CASE("badRuleSkippedTwoOfThree") {
   std::vector<Rule> rules = parser.parseRules(lexer.getRuleIndices());
   REQUIRE(rules.size() == 1);
   REQUIRE(rules[0].Name == "myGoodRule");
+  auto errors = parser.getErrors();
+  REQUIRE(parser.getErrors().size() == 4);
+  REQUIRE(std::string(errors[0].what()) == "Expected open brace at line 1 column 16");
+  REQUIRE(std::string(errors[1].what()) == "Unexpected token } at line 1 column 16");
+  REQUIRE(std::string(errors[2].what()) == "Expected close brace at line 1 column 40");
+  REQUIRE(std::string(errors[3].what()) == "Expected close brace at line 1 column 80");
 }
 
 TEST_CASE("ruleWithUnexpectedInputIsSkipped") {
-  std::string input = "rule myBadRule { *,*. } rule myGoodRule {}";
+  std::string input = "rule myBadRule { *,*. } * rule myGoodRule {}";
   LlamaLexer lexer = getLexer(input);
-  REQUIRE(lexer.getRuleIndices() == std::vector<size_t>{0, 8});
+  REQUIRE(lexer.getRuleIndices() == std::vector<size_t>{0, 9});
   LlamaParser parser(input, lexer.getTokens());
   std::vector<Rule> rules = parser.parseRules(lexer.getRuleIndices());
   REQUIRE(rules.size() == 1);
   REQUIRE(rules[0].Name == "myGoodRule");
+  auto errors = parser.getErrors();
+  REQUIRE(errors.size() == 2);
+  REQUIRE(std::string(errors[0].what()) == "Expected close brace at line 1 column 18");
+  REQUIRE(std::string(errors[1].what()) == "Unexpected token * at line 1 column 18");
+}
+
+TEST_CASE("ruleWithMisspelledFunctionName") {
+  std::string input = "rule myBadRule { grep: patterns: condition: all() } rule myGoodRule { grep: patterns: a = \"test\" condition: all() }";
+  LlamaLexer lexer = getLexer(input);
+  REQUIRE(lexer.getRuleIndices() == std::vector<size_t>{0, 13});
+  LlamaParser parser(input, lexer.getTokens());
+  std::vector<Rule> rules = parser.parseRules(lexer.getRuleIndices());
+  REQUIRE(rules.size() == 1);
+  REQUIRE(rules[0].Name == "myGoodRule");
+  auto errors = parser.getErrors();
+  REQUIRE(errors.size() == 2);
+  REQUIRE(std::string(errors[0].what()) == "No patterns specified at line 1 column 34");
+  REQUIRE(std::string(errors[1].what()) == "Unexpected token condition at line 1 column 34");
 }
 
 TEST_CASE("inputWithUnrecognizedCharBetweenRulesIsIgnored") {
