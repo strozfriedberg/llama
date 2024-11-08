@@ -425,22 +425,25 @@ Rule LlamaParser::parseRuleDecl() {
 std::vector<Rule> LlamaParser::parseRules(const std::vector<size_t>& ruleIndices) {
   std::vector<Rule> rules;
   rules.reserve(ruleIndices.size());
+  CurIdx = 0;
+  CurRuleIdx = 0;
   while (!isAtEnd()) {
+    if (!checkAny(LlamaTokenType::RULE)) {
+      // Append to errors that there are unrecognized chars between rules
+    }
+    if (CurRuleIdx >= ruleIndices.size()) {
+      // There are no more rules to process
+      break;
+    }
+    CurIdx = ruleIndices.at(CurRuleIdx);
     try {
       rules.emplace_back(parseRuleDecl());
-      ++CurRuleIdx;
     }
     catch (ParserError& e) {
       std::cout << e.what() << std::endl;
       std::cout << "Skipping rule..." << std::endl;
-      ++CurRuleIdx;
-      if (CurRuleIdx >= ruleIndices.size()) {
-        // We're at the last rule, so stop processing
-        break;
-      }
-      // Skip to the next rule
-      CurIdx = ruleIndices.at(CurRuleIdx);
     }
+    ++CurRuleIdx;
   }
   return rules;
 }
