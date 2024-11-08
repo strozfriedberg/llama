@@ -287,6 +287,8 @@ public:
   LlamaParser(const std::string& input, const std::vector<Token>& tokens) : Tokens(tokens), Input(input) {}
 
   Token previous() const { return Tokens[CurIdx - 1]; }
+
+  // Peek at the current Token without consuming it.
   Token peek() const { return Tokens[CurIdx]; }
   Token advance() { if (!isAtEnd()) ++CurIdx; return previous();}
 
