@@ -66,7 +66,6 @@ std::string Rule::getSqlQuery(const LlamaParser& parser) const {
 }
 
 void LlamaParser::clear() {
-  Patterns.clear();
   Tokens.clear();
   Input.clear();
   CurIdx = 0;
