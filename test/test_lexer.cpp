@@ -57,7 +57,7 @@ TEST_CASE("parseString") {
   LlamaLexer lexer(input);
   lexer.scanTokens();
   REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(lexer.getTokens().at(0).Lexeme == "\"some string\"");
+  REQUIRE(lexer.getTokens().at(0).Lexeme == "some string");
 }
 
 TEST_CASE("parseEncodingsList") {
@@ -482,7 +482,7 @@ TEST_CASE("parseStringWithEscapedDoubleQuote") {
   lexer.scanTokens();
   REQUIRE(lexer.getTokens().size() == 2);
   REQUIRE(lexer.getTokens().at(0).Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(lexer.getTokens().at(0).length() == input.size());
+  REQUIRE(lexer.getTokens().at(0).length() == input.size() - 2);
   REQUIRE(lexer.getTokens().at(1).Type == LlamaTokenType::END_OF_FILE);
 }
 
