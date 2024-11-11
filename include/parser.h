@@ -137,7 +137,7 @@ struct PatternDef {
 
 // Holds a mapping from the user-defined name of each pattern to the rest of its information.
 struct PatternSection {
-  std::map<std::string_view, PatternDef> Patterns;
+  std::unordered_map<std::string_view, PatternDef> Patterns;
 };
 
 struct GrepSection {

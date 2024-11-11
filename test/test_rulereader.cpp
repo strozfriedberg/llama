@@ -77,19 +77,15 @@ TEST_CASE("PopulateLgFSM") {
   LgFsmHolder lFsm = getLgFsmFromRules(rules, reader);
   LG_HFSM fsm = lFsm.getFsm();
   REQUIRE(lg_fsm_pattern_count(fsm) == 5);
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 0)->Pattern) == "foobar");
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 0)->EncodingChain) == "UTF-8");
-  REQUIRE(lg_fsm_pattern_info(fsm, 0)->UserIndex == 0);
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 1)->Pattern) == "\\d{4,8}");
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 1)->EncodingChain) == "UTF-8");
-  REQUIRE(lg_fsm_pattern_info(fsm, 1)->UserIndex == 1);
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 2)->Pattern) == "\\d{4,8}");
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 2)->EncodingChain) == "UTF-16LE");
-  REQUIRE(lg_fsm_pattern_info(fsm, 2)->UserIndex == 2);
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 3)->Pattern) == "bad-domain.com");
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 3)->EncodingChain) == "ASCII");
-  REQUIRE(lg_fsm_pattern_info(fsm, 3)->UserIndex == 3);
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 4)->Pattern) == "1.1.1.1");
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 4)->EncodingChain) == "Windows-1252");
-  REQUIRE(lg_fsm_pattern_info(fsm, 4)->UserIndex == 4);
+  bool a = false, b = false, c = false, d = false, e = false;
+  for (int i = 0; i < lg_fsm_pattern_count(fsm); ++i) {
+    REQUIRE(lg_fsm_pattern_info(fsm, i)->UserIndex == i);
+    a = std::string(lg_fsm_pattern_info(fsm, i)->Pattern) == "foobar" && std::string(lg_fsm_pattern_info(fsm, i)->EncodingChain) == "UTF-8" || a;
+    b = std::string(lg_fsm_pattern_info(fsm, i)->Pattern) == "\\d{4,8}" && std::string(lg_fsm_pattern_info(fsm, i)->EncodingChain) == "UTF-8" || b;
+    c = std::string(lg_fsm_pattern_info(fsm, i)->Pattern) == "\\d{4,8}" && std::string(lg_fsm_pattern_info(fsm, i)->EncodingChain) == "UTF-16LE" || c;
+    d = std::string(lg_fsm_pattern_info(fsm, i)->Pattern) == "bad-domain.com" && std::string(lg_fsm_pattern_info(fsm, i)->EncodingChain) == "ASCII" || d;
+    e = std::string(lg_fsm_pattern_info(fsm, i)->Pattern) == "1.1.1.1" && std::string(lg_fsm_pattern_info(fsm, i)->EncodingChain) == "Windows-1252" || e;
+  }
+  bool passed = a && b && c && d && e;
+  REQUIRE(passed);
 }
