@@ -78,13 +78,13 @@ TEST_CASE("PopulateLgFSM") {
   LG_HFSM fsm = lFsm.getFsm();
   REQUIRE(lg_fsm_pattern_count(fsm) == 5);
   bool a = false, b = false, c = false, d = false, e = false;
-  for (int i = 0; i < lg_fsm_pattern_count(fsm); ++i) {
+  for (unsigned int i = 0; i < lg_fsm_pattern_count(fsm); ++i) {
     REQUIRE(lg_fsm_pattern_info(fsm, i)->UserIndex == i);
-    a = std::string(lg_fsm_pattern_info(fsm, i)->Pattern) == "foobar" && std::string(lg_fsm_pattern_info(fsm, i)->EncodingChain) == "UTF-8" || a;
-    b = std::string(lg_fsm_pattern_info(fsm, i)->Pattern) == "\\d{4,8}" && std::string(lg_fsm_pattern_info(fsm, i)->EncodingChain) == "UTF-8" || b;
-    c = std::string(lg_fsm_pattern_info(fsm, i)->Pattern) == "\\d{4,8}" && std::string(lg_fsm_pattern_info(fsm, i)->EncodingChain) == "UTF-16LE" || c;
-    d = std::string(lg_fsm_pattern_info(fsm, i)->Pattern) == "bad-domain.com" && std::string(lg_fsm_pattern_info(fsm, i)->EncodingChain) == "ASCII" || d;
-    e = std::string(lg_fsm_pattern_info(fsm, i)->Pattern) == "1.1.1.1" && std::string(lg_fsm_pattern_info(fsm, i)->EncodingChain) == "Windows-1252" || e;
+    a = (std::string(lg_fsm_pattern_info(fsm, i)->Pattern) == "foobar" && std::string(lg_fsm_pattern_info(fsm, i)->EncodingChain) == "UTF-8") || a;
+    b = (std::string(lg_fsm_pattern_info(fsm, i)->Pattern) == "\\d{4,8}" && std::string(lg_fsm_pattern_info(fsm, i)->EncodingChain) == "UTF-8") || b;
+    c = (std::string(lg_fsm_pattern_info(fsm, i)->Pattern) == "\\d{4,8}" && std::string(lg_fsm_pattern_info(fsm, i)->EncodingChain) == "UTF-16LE") || c;
+    d = (std::string(lg_fsm_pattern_info(fsm, i)->Pattern) == "bad-domain.com" && std::string(lg_fsm_pattern_info(fsm, i)->EncodingChain) == "ASCII") || d;
+    e = (std::string(lg_fsm_pattern_info(fsm, i)->Pattern) == "1.1.1.1" && std::string(lg_fsm_pattern_info(fsm, i)->EncodingChain) == "Windows-1252") || e;
   }
   bool passed = a && b && c && d && e;
   REQUIRE(passed);
