@@ -369,7 +369,6 @@ public:
 
   std::vector<Rule> parseRules(size_t numRules);
 
-  std::unordered_map<std::string, std::string> Patterns;
   std::vector<Token> Tokens;
   std::string Input;
   uint64_t CurIdx = 0;
