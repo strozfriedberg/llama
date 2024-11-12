@@ -375,7 +375,7 @@ public:
 
   std::vector<Rule> parseRules(const std::vector<size_t>& ruleIndices);
 
-  std::vector<ParserError> getErrors() { return Errors; }
+  const std::vector<ParserError>& getErrors() const { return Errors; }
 
   std::vector<Token>       Tokens;
   std::vector<ParserError> Errors;

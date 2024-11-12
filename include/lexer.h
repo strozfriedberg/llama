@@ -12,6 +12,7 @@
 
 class LlamaLexer {
 public:
+  LlamaLexer() = default;
   LlamaLexer(const std::string& input) : CurIdx(0), InputSize(input.size()), Input(input) {};
 
   void scanTokens();
