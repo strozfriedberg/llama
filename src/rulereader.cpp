@@ -2,7 +2,7 @@
 #include "rulereader.h"
 
 bool RuleReader::read(const std::string& input) {
-  Lexer = LlamaLexer(input);
+  Lexer.setInput(input);
   Lexer.scanTokens();
   Parser = LlamaParser(input, Lexer.getTokens());
   std::vector<Rule> rules = Parser.parseRules(Lexer.getRuleIndices());

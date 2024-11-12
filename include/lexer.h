@@ -15,6 +15,16 @@ public:
   LlamaLexer() = default;
   LlamaLexer(const std::string& input) : CurIdx(0), InputSize(input.size()), Input(input) {};
 
+  void setInput(std::string_view input) { clear(); Input = input; InputSize = input.size(); }
+
+  void clear() {
+    CurIdx = 0;
+    InputSize = 0;
+    Tokens.clear();
+    Errors.clear();
+    RuleIndices.clear();
+  }
+
   void scanTokens();
   void scanToken();
 
