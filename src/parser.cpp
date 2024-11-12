@@ -438,19 +438,16 @@ std::vector<Rule> LlamaParser::parseRules(const std::vector<size_t>& ruleIndices
   // Reset our counters in case parseRules is called twice
   resetCounters();
 
-  while (!isAtEnd()) {
+  while (!isAtEnd() && CurRuleIdx < ruleIndices.size()) {
     if (!checkAny(LlamaTokenType::RULE)) {
       // We should be at the beginning of a rule here
       Errors.emplace_back("Unexpected token " + std::string(peek().Lexeme), peek().Pos);
     }
-    if (CurRuleIdx >= ruleIndices.size()) {
-      // There are no more rules to process
-      break;
-    }
+
     // Skip to the next rule index.
     // We do this after the last two checks because we want to report to the user if there are
     // unrecognized characters between known rule boundaries.
-    CurIdx = ruleIndices.at(CurRuleIdx);
+    CurIdx = ruleIndices[CurRuleIdx];
 
     try {
       rules.emplace_back(parseRuleDecl());
