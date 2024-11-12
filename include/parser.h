@@ -309,9 +309,9 @@ public:
   template <class... LlamaTokenTypes>
   void mustParse(const std::string_view& errMsg, LlamaTokenTypes... types);
 
-  std::string_view getPreviousLexeme() const { return previous().Lexeme; }
-  std::string_view getCurrentLexeme() const { return peek().Lexeme; }
-  std::string_view getLexemeAt(size_t idx) const { return Tokens[idx].Lexeme; }
+  std::string_view previousLexeme() const { return previous().Lexeme; }
+  std::string_view currentLexeme() const { return peek().Lexeme; }
+  std::string_view lexemeAt(size_t idx) const { return Tokens[idx].Lexeme; }
 
   // Clear Input and Tokens, and reset CurIdx and CurRuleIdx counters.
   void clear();
@@ -320,7 +320,7 @@ public:
   void resetCounters();
 
   bool checkFunctionName() {
-    std::string_view curLex = getCurrentLexeme();
+    std::string_view curLex = currentLexeme();
     return (
       curLex == "any"            ||
       curLex == "all"            ||
@@ -332,12 +332,12 @@ public:
   }
 
   bool checkSignatureProperty() {
-    std::string_view curLex = getCurrentLexeme();
+    std::string_view curLex = currentLexeme();
     return (curLex == "name" || curLex == "id");
   }
 
   bool checkFileMetadataProperty() {
-    std::string_view curLex = getCurrentLexeme();
+    std::string_view curLex = currentLexeme();
     return (
       curLex == "created"  ||
       curLex == "modified" ||
@@ -375,7 +375,7 @@ public:
 
   std::vector<Rule> parseRules(const std::vector<size_t>& ruleIndices);
 
-  const std::vector<ParserError>& getErrors() const { return Errors; }
+  const std::vector<ParserError>& errors() const { return Errors; }
 
   std::vector<Token>       Tokens;
   std::vector<ParserError> Errors;

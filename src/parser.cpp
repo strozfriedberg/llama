@@ -41,12 +41,12 @@ std::string BoolNode::getSqlQuery(const LlamaParser& parser) const {
 
 std::string PropertyNode::getSqlQuery(const LlamaParser& parser) const {
   std::string query = "";
-  std::string_view propertyName = parser.getLexemeAt(Value.Name);
+  std::string_view propertyName = parser.lexemeAt(Value.Name);
   query += FileMetadataPropertySqlLookup.find(propertyName)->second;
   query += " ";
-  query += parser.getLexemeAt(Value.Op);
+  query += parser.lexemeAt(Value.Op);
   query += " ";
-  std::string_view val = parser.getLexemeAt(Value.Val);
+  std::string_view val = parser.lexemeAt(Value.Val);
   if (parser.Tokens[Value.Val].Type == LlamaTokenType::DOUBLE_QUOTED_STRING) {
     query += "'";
     query += val;
@@ -105,7 +105,7 @@ std::string_view LlamaParser::expect(LlamaTokenType token) {
     default:
       throw ParserError("Invalid token type", peek().Pos);
   }
-  return getPreviousLexeme();
+  return previousLexeme();
 }
 
 FieldHash Rule::getHash(const LlamaParser& parser) const {
@@ -181,7 +181,7 @@ void LlamaParser::parseOperator() {
 
 PatternDef LlamaParser::parsePatternMod() {
   LG_KeyOptions opts{0,0,0};
-  std::string pat = std::string(getPreviousLexeme());
+  std::string pat = std::string(previousLexeme());
   Encodings enc{0, 0};
 
   opts.FixedString = matchAny(LlamaTokenType::FIXED);
@@ -231,7 +231,7 @@ PatternDef LlamaParser::parsePatternDef() {
 PatternSection LlamaParser::parsePatternsSection() {
   PatternSection patternSection;
   while (matchAny(LlamaTokenType::IDENTIFIER)) {
-    std::string_view key = getPreviousLexeme();
+    std::string_view key = previousLexeme();
     patternSection.Patterns.insert(std::make_pair(key, parsePatternDef()));
   }
   if (patternSection.Patterns.empty()) {
@@ -247,7 +247,7 @@ PatternDef LlamaParser::parseHexString() {
       if (isEven(hexString.size())) {
         hexString += "\\z";
       }
-      hexDigit = getPreviousLexeme();
+      hexDigit = previousLexeme();
       for (char c : hexDigit) {
         if (!isxdigit(c)) {
           throw ParserError("Invalid hex digit", previous().Pos);
@@ -323,16 +323,16 @@ FuncNode LlamaParser::parseFuncCall() {
   }
   advance();
   LineCol pos = peek().Pos;
-  std::string_view name = getPreviousLexeme();
+  std::string_view name = previousLexeme();
   std::vector<std::string_view> args;
   size_t op = SIZE_MAX, val = SIZE_MAX;
   expect(LlamaTokenType::OPEN_PAREN);
   if (matchAny(LlamaTokenType::IDENTIFIER)) {
-    args.emplace_back(getPreviousLexeme());
+    args.emplace_back(previousLexeme());
   }
   while (matchAny(LlamaTokenType::COMMA)) {
     mustParse("Expected identifier or number", LlamaTokenType::IDENTIFIER, LlamaTokenType::NUMBER);
-    args.emplace_back(getPreviousLexeme());
+    args.emplace_back(previousLexeme());
   }
   expect(LlamaTokenType::CLOSE_PAREN);
   if (matchAny(LlamaTokenType::EQUAL, LlamaTokenType::EQUAL_EQUAL, LlamaTokenType::NOT_EQUAL, LlamaTokenType::GREATER_THAN, LlamaTokenType::GREATER_THAN_EQUAL, LlamaTokenType::LESS_THAN, LlamaTokenType::LESS_THAN_EQUAL)) {
@@ -362,7 +362,7 @@ PropertyNode LlamaParser::parseProperty(LlamaTokenType section) {
     throw ParserError("Unexpected section name", peek().Pos);
   }
   const Section& sectionInfo = sectionSearch->second;
-  auto propertySearch = sectionInfo.Props.find(getCurrentLexeme());
+  auto propertySearch = sectionInfo.Props.find(currentLexeme());
 
   if (propertySearch == sectionInfo.Props.end()) {
     throw ParserError("Unexpected property name in section", peek().Pos);
@@ -389,10 +389,10 @@ PropertyNode LlamaParser::parseProperty(LlamaTokenType section) {
 MetaSection LlamaParser::parseMetaSection() {
   MetaSection meta;
   while (matchAny(LlamaTokenType::IDENTIFIER)) {
-    std::string_view key = getPreviousLexeme();
+    std::string_view key = previousLexeme();
     expect(LlamaTokenType::EQUAL);
     expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
-    std::string_view value = getPreviousLexeme();
+    std::string_view value = previousLexeme();
     meta.Fields.insert(std::make_pair(key, value));
   }
   return meta;
@@ -402,7 +402,7 @@ Rule LlamaParser::parseRuleDecl() {
   Rule rule;
   expect(LlamaTokenType::RULE);
   expect(LlamaTokenType::IDENTIFIER);
-  rule.Name = getPreviousLexeme();
+  rule.Name = previousLexeme();
   expect(LlamaTokenType::OPEN_BRACE);
 
   if (matchAny(LlamaTokenType::META)) {

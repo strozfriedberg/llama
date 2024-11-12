@@ -97,10 +97,10 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
   if (CurIdx > 0) {
     start--;
   }
-  char c = getCurChar();
+  char c = curChar();
   while (IdentifierChars[c]) {
     advance();
-    c = getCurChar();
+    c = curChar();
   }
 
   uint64_t end = CurIdx;
@@ -119,8 +119,8 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
 
 void LlamaLexer::parseString(LineCol pos) {
   uint64_t start = CurIdx;
-  while(getCurChar() != '"' && !isAtEnd()) {
-    if (getCurChar() == '\\') {
+  while(curChar() != '"' && !isAtEnd()) {
+    if (curChar() == '\\') {
       advance();
     }
     advance();
@@ -138,7 +138,7 @@ void LlamaLexer::parseNumber(LineCol pos) {
   if (CurIdx > 0) {
     start--;
   }
-  while (isdigit(getCurChar())) {
+  while (isdigit(curChar())) {
     advance();
   }
 
@@ -147,14 +147,14 @@ void LlamaLexer::parseNumber(LineCol pos) {
 }
 
 void LlamaLexer::parseSingleLineComment() {
-  while (getCurChar() != '\n' && !isAtEnd()) {
+  while (curChar() != '\n' && !isAtEnd()) {
     advance();
   }
 }
 
 void LlamaLexer::parseMultiLineComment(LineCol pos) {
-  while (getCurChar() != '*' && !isAtEnd()) {
-    if (getCurChar() == '\n') {
+  while (curChar() != '*' && !isAtEnd()) {
+    if (curChar() == '\n') {
       Pos.LineNum++;
       Pos.ColNum = 0;
     }

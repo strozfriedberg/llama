@@ -44,14 +44,14 @@ public:
   bool match(char expected);
   bool isAtEnd() const { return CurIdx == InputSize; }
 
-  char getCurChar() const { return Input[CurIdx]; };
+  char curChar() const { return Input[CurIdx]; };
 
   // Peek at the next char without consuming the current one.
   char peek() const { return isAtEnd() ? '\0' : Input[CurIdx + 1]; }
 
-  const std::vector<Token>& getTokens() const { return Tokens; }
-  const std::vector<size_t>& getRuleIndices() const { return RuleIndices; }
-  const std::vector<UnexpectedInputError>& getErrors() const { return Errors; }
+  const std::vector<Token>& tokens() const { return Tokens; }
+  const std::vector<size_t>& ruleIndices() const { return RuleIndices; }
+  const std::vector<UnexpectedInputError>& errors() const { return Errors; }
 
   LineCol Pos = {1, 1};
 private:
