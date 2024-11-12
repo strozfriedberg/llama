@@ -489,3 +489,27 @@ TEST_CASE("multipleRuleCount") {
   REQUIRE(lexer.getRuleCount() == 6);
   REQUIRE(lexer.getRuleIndices() == std::vector<size_t>{0, 1, 2, 3, 4, 5});
 }
+
+TEST_CASE("unicodeRuleName") {
+  std::string input = "rule привет {}";
+  LlamaLexer lexer(input);
+  REQUIRE_NOTHROW(lexer.scanTokens());
+  auto tokens = lexer.getTokens();
+  REQUIRE(tokens.size() == 5);
+  REQUIRE(std::string(tokens[1].Lexeme) == "привет");
+}
+
+TEST_CASE("unicodeRuleNameEmojis") {
+  std::string input = "rule 💀🔥💯 {}";
+  LlamaLexer lexer(input);
+  REQUIRE_NOTHROW(lexer.scanTokens());
+  auto tokens = lexer.getTokens();
+  REQUIRE(tokens.size() == 5);
+  REQUIRE(std::string(tokens[1].Lexeme) == "💀🔥💯");
+}
+
+TEST_CASE("ruleNameNotAlphaThrowsError") {
+  std::string input = "rule _BadRuleName  {}";
+  LlamaLexer lexer(input);
+  REQUIRE_THROWS(lexer.scanTokens());
+}
