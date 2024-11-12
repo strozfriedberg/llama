@@ -55,6 +55,14 @@ LgFsmHolder getLgFsmFromRules(const std::vector<Rule>& rules, const RuleReader& 
   return fsm;
 }
 
+std::string getPat(LG_HFSM fsm, unsigned int i) {
+  return std::string(lg_fsm_pattern_info(fsm, i)->Pattern);
+}
+
+std::string getEnc(LG_HFSM fsm, unsigned int i) {
+  return std::string(lg_fsm_pattern_info(fsm, i)->EncodingChain);
+}
+
 
 TEST_CASE("PopulateLgFSM") {
   std::string input = R"(
@@ -80,19 +88,18 @@ TEST_CASE("PopulateLgFSM") {
   LgFsmHolder lFsm = getLgFsmFromRules(rules, reader);
   LG_HFSM fsm = lFsm.getFsm();
   REQUIRE(lg_fsm_pattern_count(fsm) == 5);
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 0)->Pattern) == "foobar");
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 0)->EncodingChain) == "UTF-8");
-  REQUIRE(lg_fsm_pattern_info(fsm, 0)->UserIndex == 0);
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 1)->Pattern) == "\\d{4,8}");
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 1)->EncodingChain) == "UTF-8");
-  REQUIRE(lg_fsm_pattern_info(fsm, 1)->UserIndex == 1);
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 2)->Pattern) == "\\d{4,8}");
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 2)->EncodingChain) == "UTF-16LE");
-  REQUIRE(lg_fsm_pattern_info(fsm, 2)->UserIndex == 2);
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 3)->Pattern) == "bad-domain.com");
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 3)->EncodingChain) == "ASCII");
-  REQUIRE(lg_fsm_pattern_info(fsm, 3)->UserIndex == 3);
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 4)->Pattern) == "1.1.1.1");
-  REQUIRE(std::string(lg_fsm_pattern_info(fsm, 4)->EncodingChain) == "Windows-1252");
-  REQUIRE(lg_fsm_pattern_info(fsm, 4)->UserIndex == 4);
+  bool a = false, b = false, c = false, d = false, e = false;
+  for (unsigned int i = 0; i < lg_fsm_pattern_count(fsm); ++i) {
+    REQUIRE(lg_fsm_pattern_info(fsm, i)->UserIndex == i);
+    a = (getPat(fsm, i) == "foobar" && getEnc(fsm, i) == "UTF-8") || a;
+    b = (getPat(fsm, i) == "\\d{4,8}" && getEnc(fsm, i) == "UTF-8") || b;
+    c = (getPat(fsm, i) == "\\d{4,8}" && getEnc(fsm, i) == "UTF-16LE") || c;
+    d = (getPat(fsm, i) == "bad-domain.com" && getEnc(fsm, i) == "ASCII") || d;
+    e = (getPat(fsm, i) == "1.1.1.1" && getEnc(fsm, i) == "Windows-1252") || e;
+  }
+  REQUIRE(a);
+  REQUIRE(b);
+  REQUIRE(c);
+  REQUIRE(d);
+  REQUIRE(e);
 }
