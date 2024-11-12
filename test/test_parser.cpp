@@ -855,5 +855,29 @@ TEST_CASE("garbageTokensNoRules") {
   REQUIRE(parser.parseRules(lexer.getRuleIndices()).size() == 0);
   auto errors = parser.getErrors();
   REQUIRE(errors.size() == 1);
-  REQUIRE(std::string(errors[0].what()) == "Unexpected input at line 1 column 1");
+  REQUIRE(std::string(errors[0].what()) == "Unexpected token * at line 1 column 1");
+}
+
+TEST_CASE("goodRuleWithGarbageAtEnd") {
+  std::string input = "rule GoodRule {} *&% ^$@ () condition";
+  LlamaLexer lexer = getLexer(input);
+  REQUIRE(lexer.getTokens().size() == 14);
+  LlamaParser parser(input, lexer.getTokens());
+  REQUIRE(parser.parseRules(lexer.getRuleIndices()).size() == 1);
+  auto errors = parser.getErrors();
+  REQUIRE(errors.size() == 1);
+  REQUIRE(std::string(errors[0].what()) == "Unexpected token * at line 1 column 18");
+}
+
+TEST_CASE("goodRuleWithGarbageBefore") {
+  std::string input = "*&% ^$@ () condition rule GoodRule {}";
+  LlamaLexer lexer = getLexer(input);
+  REQUIRE(lexer.getTokens().size() == 14);
+  LlamaParser parser(input, lexer.getTokens());
+  auto rules = parser.parseRules(lexer.getRuleIndices());
+  REQUIRE(rules.size() == 1);
+  REQUIRE(rules[0].Name == "GoodRule");
+  auto errors = parser.getErrors();
+  REQUIRE(errors.size() == 1);
+  REQUIRE(std::string(errors[0].what()) == "Unexpected token * at line 1 column 1");
 }

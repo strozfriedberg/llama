@@ -461,7 +461,7 @@ std::vector<Rule> LlamaParser::parseRules(const std::vector<size_t>& ruleIndices
   }
 
   if (!isAtEnd()) {
-    Errors.emplace_back("Unexpected input", peek().Pos);
+    Errors.emplace_back("Unexpected token " + std::string(peek().Lexeme), peek().Pos);
   }
   return rules;
 }
