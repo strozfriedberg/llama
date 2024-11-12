@@ -522,3 +522,12 @@ TEST_CASE("ruleNameNotAlphaThrowsError") {
   LlamaLexer lexer(input);
   REQUIRE_THROWS(lexer.scanTokens());
 }
+
+TEST_CASE("unicodeInDoubleQuotedString") {
+  std::string input = "rule Rule { grep: patterns: \"菠萝💀🔥💯привет\"}";
+  LlamaLexer lexer(input);
+  REQUIRE_NOTHROW(lexer.scanTokens());
+  auto tokens = lexer.getTokens();
+  REQUIRE(tokens.size() == 10);
+  REQUIRE(std::string(tokens[7].Lexeme) == "菠萝💀🔥💯привет");
+}
