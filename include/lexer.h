@@ -23,6 +23,7 @@ public:
     Tokens.clear();
     Errors.clear();
     RuleIndices.clear();
+    Pos.reset();
   }
 
   void scanTokens();

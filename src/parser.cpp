@@ -459,6 +459,10 @@ std::vector<Rule> LlamaParser::parseRules(const std::vector<size_t>& ruleIndices
     // Move to next rule context.
     ++CurRuleIdx;
   }
+
+  if (!isAtEnd()) {
+    Errors.emplace_back("Unexpected input", peek().Pos);
+  }
   return rules;
 }
 

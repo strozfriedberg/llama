@@ -85,6 +85,8 @@ public:
     return str;
   }
 
+  void reset() { LineNum = 1; ColNum = 1;}
+
   uint32_t LineNum,
            ColNum;
 };

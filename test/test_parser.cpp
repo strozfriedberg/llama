@@ -846,3 +846,14 @@ TEST_CASE("inputWithUnterminatedMultiLineCommentInRule") {
   REQUIRE(pErrors.size() == 1);
   REQUIRE(std::string(pErrors[0].what()) == "Expected close brace at line 1 column 39");
 }
+
+TEST_CASE("garbageTokensNoRules") {
+  std::string input = "*&% ^$@ () condition";
+  LlamaLexer lexer = getLexer(input);
+  REQUIRE(lexer.getTokens().size() == 10);
+  LlamaParser parser(input, lexer.getTokens());
+  REQUIRE(parser.parseRules(lexer.getRuleIndices()).size() == 0);
+  auto errors = parser.getErrors();
+  REQUIRE(errors.size() == 1);
+  REQUIRE(std::string(errors[0].what()) == "Unexpected input at line 1 column 1");
+}
