@@ -158,12 +158,11 @@ bool Llama::init() {
     return dbInit();
   });
 
-  if (!this->Opts->RuleFile.empty()) {
-    std::string ruleStr = readfile(this->Opts->RuleFile);
-    Reader.read(ruleStr);
-  }
+  auto rules = make_future(Pool, [this](){
+    return this->Opts->RuleFile.empty() || Reader.read(readfile(this->Opts->RuleFile));
+  });
 
-  return readPats.get() && open.get() && db.get();
+  return readPats.get() && open.get() && db.get() && rules.get();
 }
 
 void Llama::writeDB(const std::string& outdir) {
