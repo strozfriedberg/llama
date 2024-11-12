@@ -94,6 +94,9 @@ TEST_CASE("PopulateLgFSM") {
     d = (getPat(fsm, i) == "bad-domain.com" && getEnc(fsm, i) == "ASCII") || d;
     e = (getPat(fsm, i) == "1.1.1.1" && getEnc(fsm, i) == "Windows-1252") || e;
   }
-  bool passed = a && b && c && d && e;
-  REQUIRE(passed);
+  REQUIRE(a);
+  REQUIRE(b);
+  REQUIRE(c);
+  REQUIRE(d);
+  REQUIRE(e);
 }
