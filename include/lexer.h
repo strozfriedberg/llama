@@ -32,7 +32,7 @@ public:
   bool match(char expected);
   bool isAtEnd() const { return CurIdx == InputSize; }
 
-  char getCurChar() const { return Input[CurIdx]; };
+  unsigned char getCurChar() const { return Input[CurIdx]; };
   char peek() const { return isAtEnd() ? '\0' : Input[CurIdx + 1]; }
   const std::vector<Token>& getTokens() const { return Tokens; }
   const std::vector<size_t>& getRuleIndices() const { return RuleIndices; }

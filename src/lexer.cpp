@@ -89,8 +89,8 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
   if (CurIdx > 0) {
     start--;
   }
-  char c = getCurChar();
-  while (IdentifierChars[c] || (unsigned char)(c) >= 0x80) {
+  unsigned char c = getCurChar();
+  while (IdentifierChars[c] || c >= 0x80) {
     advance();
     c = getCurChar();
   }
