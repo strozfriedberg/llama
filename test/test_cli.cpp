@@ -146,8 +146,7 @@ TEST_CASE("testPrintVersion") {
   std::stringstream output;
   cli.printVersion(output);
   auto outStr = output.str();
-  std::regex re("pre-alpha.+20\\d\\d");
-  // REQUIRE("20191019" == outStr);
+  std::regex re("pre-alpha\\s\\w{3}\\s\\d{2}\\s20\\d{2}");
   REQUIRE(std::regex_search(outStr, re));
 }
 
