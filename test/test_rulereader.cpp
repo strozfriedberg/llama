@@ -21,12 +21,15 @@ TEST_CASE("RuleReader") {
   })");
   RuleReader reader;
   int result = reader.read(input);
-  REQUIRE(result == 2);
+  REQUIRE(result == true);
   result = reader.read(input2);
-  REQUIRE(result == -1);
-  REQUIRE(reader.getLastError() == "Expected identifier at line 1 column 6");
+  auto pErrors = reader.getParser().errors();
+  REQUIRE(pErrors.size() == 2);
+  REQUIRE(std::string(pErrors[0].what()) == "Expected identifier at line 1 column 6");
+  REQUIRE(result == false);
+  REQUIRE(reader.getLastError() == "");
   result = reader.read(input3);
-  REQUIRE(result == 3);
+  REQUIRE(result == true);
 }
 
 LgFsmHolder getLgFsmFromRules(const std::vector<Rule>& rules, const RuleReader& reader) {
@@ -80,7 +83,7 @@ TEST_CASE("PopulateLgFSM") {
         all()
   })";
   RuleReader reader;
-  REQUIRE(reader.read(input) == 2);
+  REQUIRE(reader.read(input) == true);
   std::vector<Rule> rules = reader.getRules();
   LgFsmHolder lFsm = getLgFsmFromRules(rules, reader);
   LG_HFSM fsm = lFsm.getFsm();

@@ -307,3 +307,7 @@ rule Phishing {
 ```
 
 The call to `count_has_hits` in the rule above will evaluate to true if at least two of the patterns in the `patterns` section has a hit.
+
+## Rule error handling
+
+If Llama encounters an unsupported character or invalid syntax in a rule, it will ignore all of the content since the last `rule` keyword and will skip to the next `rule` keyword.
