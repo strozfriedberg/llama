@@ -53,6 +53,13 @@ public:
   const std::vector<size_t>& ruleIndices() const { return RuleIndices; }
   const std::vector<UnexpectedInputError>& errors() const { return Errors; }
 
+  // convenience function for unit test purposes
+  static std::vector<Token> getTokens(const std::string& input) {
+    LlamaLexer lexer(input);
+    lexer.scanTokens();
+    return lexer.tokens();
+  }
+
   LineCol Pos = {1, 1};
 private:
   size_t                            CurIdx;
