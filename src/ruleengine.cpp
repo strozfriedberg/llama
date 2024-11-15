@@ -36,3 +36,15 @@ void RuleEngine::createTables(LlamaDBConnection& dbConn) {
   state = duckdb_query(dbConn.get(), matches_query.c_str(), &result);
   THROW_IF(state == DuckDBError, "Error creating rule matches table");
 }
+
+LgFsmHolder RuleEngine::getFsm(const RuleReader& reader) {
+  LgFsmHolder fsm;
+  FieldHash h;
+  for (const Rule& rule : reader.getRules()) {
+    h = rule.getHash(reader.getParser());
+    for (const auto& pPair : rule.Grep.Patterns.Patterns) {
+      fsm.addPatterns(pPair, reader.getParser());
+    }
+  }
+  return fsm;
+}

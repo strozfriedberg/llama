@@ -49,3 +49,11 @@ TEST_CASE("TestZeroRulesToDb") {
   REQUIRE_NOTHROW(engine.writeRulesToDb(reader, conn));
 }
 
+TEST_CASE("getFsm") {
+  std::string input = "rule myRule { grep: patterns: a = \"test\" encodings=UTF-8,UTF-16LE condition: any()}";
+  RuleReader reader;
+  reader.read(input);
+  RuleEngine engine;
+  LgFsmHolder fsmHolder = engine.getFsm(reader);
+  REQUIRE(lg_fsm_pattern_count(fsmHolder.getFsm()) == 2);
+}
