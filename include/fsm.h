@@ -25,6 +25,7 @@ public:
   void addPatterns(const PatternPair& pair, const LlamaParser& parser);
 
   LG_HFSM getFsm() const { return Fsm; }
+  LG_Error* Error() const { return Err; }
 
 private:
   PatternParser PatParser;

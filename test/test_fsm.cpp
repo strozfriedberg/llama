@@ -28,6 +28,7 @@ TEST_CASE("parseWithPatternDef") {
     lFsm.addPatterns(pPair, parser);
   }
   LG_HFSM fsm = lFsm.getFsm();
+  REQUIRE(lFsm.Error() == nullptr);
   REQUIRE(lg_fsm_pattern_count(fsm) == 2);
   REQUIRE(std::string(lg_fsm_pattern_info(fsm, 0)->EncodingChain) == "UTF-8");
   REQUIRE(std::string(lg_fsm_pattern_info(fsm, 0)->Pattern) == "test");
