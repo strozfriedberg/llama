@@ -5,7 +5,6 @@
 #include <lightgrep/api.h>
 
 #include "fsm.h"
-#include "patternparser.h"
 #include "rulereader.h"
 
 TEST_CASE("RuleReader") {
