@@ -10,5 +10,10 @@ public:
   void writeRulesToDb(const RuleReader& reader, LlamaDBConnection& dbConn);
   void createTables(LlamaDBConnection& dbConn);
   void createSearchHitTable(LlamaDBConnection& dbConn);
+
   LgFsmHolder getFsm(const RuleReader& reader);
+
+  std::vector<std::string> patternToRuleId() { return PatternToRuleId; }
+private:
+  std::vector<std::string> PatternToRuleId;
 };

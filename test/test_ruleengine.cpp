@@ -63,10 +63,28 @@ TEST_CASE("TestZeroRulesToDb") {
 }
 
 TEST_CASE("getFsm") {
-  std::string input = "rule myRule { grep: patterns: a = \"test\" encodings=UTF-8,UTF-16LE condition: any()}";
+  std::string input = R"(
+  rule myRule {
+    grep:
+      patterns:
+        a = "test" encodings=UTF-8,UTF-16LE
+      condition:
+        any()
+    }
+  rule MyOtherRule {
+    grep:
+      patterns:
+        a = "foobar" fixed
+      condition:
+        any()
+  })";
   RuleReader reader;
   reader.read(input);
   RuleEngine engine;
   LgFsmHolder fsmHolder = engine.getFsm(reader);
-  REQUIRE(lg_fsm_pattern_count(fsmHolder.getFsm()) == 2);
+  REQUIRE(lg_fsm_pattern_count(fsmHolder.getFsm()) == 3);
+  auto patToRuleId = engine.patternToRuleId();
+  REQUIRE(patToRuleId.size() == 3);
+  REQUIRE(patToRuleId[0] == patToRuleId[1]);
+  REQUIRE(patToRuleId[1] != patToRuleId[2]);
 }

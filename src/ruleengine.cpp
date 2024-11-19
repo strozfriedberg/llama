@@ -50,7 +50,7 @@ LgFsmHolder RuleEngine::getFsm(const RuleReader& reader) {
   for (const Rule& rule : reader.getRules()) {
     h = rule.getHash(reader.getParser());
     for (const auto& pPair : rule.Grep.Patterns.Patterns) {
-      fsm.addPatterns(pPair, reader.getParser());
+      fsm.addPatterns(pPair, reader.getParser(), h.to_string(), PatternToRuleId);
     }
   }
   return fsm;

@@ -24,8 +24,9 @@ TEST_CASE("parseWithPatternDef") {
   LlamaParser parser(input, LlamaLexer::getTokens(input));
   auto rules = parser.parseRules({0});
   LgFsmHolder lFsm;
+  std::vector<std::string> patToRuleId;
   for (const auto& pPair : rules[0].Grep.Patterns.Patterns) {
-    lFsm.addPatterns(pPair, parser);
+    lFsm.addPatterns(pPair, parser, "", patToRuleId);
   }
   LG_HFSM fsm = lFsm.getFsm();
   REQUIRE(lFsm.Error() == nullptr);
