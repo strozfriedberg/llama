@@ -37,6 +37,13 @@ void RuleEngine::createTables(LlamaDBConnection& dbConn) {
   THROW_IF(state == DuckDBError, "Error creating rule matches table");
 }
 
+void RuleEngine::createSearchHitTable(LlamaDBConnection& dbConn) {
+  duckdb_result result;
+  std::string searchHitQuery("CREATE TABLE search_hits (pattern VARCHAR, start_offset UBIGINT, end_offset UBIGINT, rule_id VARCHAR, file_hash VARCHAR, length UBIGINT);");
+  auto state = duckdb_query(dbConn.get(), searchHitQuery.c_str(), &result);
+  THROW_IF(state == DuckDBError, "Error creating search hit table");
+}
+
 LgFsmHolder RuleEngine::getFsm(const RuleReader& reader) {
   LgFsmHolder fsm;
   FieldHash h;

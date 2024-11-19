@@ -9,5 +9,6 @@ class RuleEngine {
 public:
   void writeRulesToDb(const RuleReader& reader, LlamaDBConnection& dbConn);
   void createTables(LlamaDBConnection& dbConn);
+  void createSearchHitTable(LlamaDBConnection& dbConn);
   LgFsmHolder getFsm(const RuleReader& reader);
 };

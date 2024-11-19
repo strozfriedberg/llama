@@ -11,7 +11,6 @@ void LgFsmHolder::addPatterns(const PatternPair& pair, const LlamaParser& parser
   }
   else {
     for (uint64_t i = pair.second.Enc.first; i < pair.second.Enc.second; i += 2) {
-      std::cout << std::string(parser.Tokens[i].Lexeme).c_str() << "\n";
       addPattern(PatParser.parse(pair.second), std::string(parser.Tokens[i].Lexeme).c_str(), patternIndex);
       ++patternIndex;
     }
