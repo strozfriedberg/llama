@@ -83,7 +83,7 @@ void LlamaLexer::scanToken() {
       if (isdigit(c)) {
         parseNumber(pos);
       }
-      else if (isalpha(c) || (unsigned char)(c) >= 0xC0) {
+      else if (isalpha(c)) {
         parseIdentifier(pos);
       }
       else {
@@ -97,8 +97,8 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
   if (CurIdx > 0) {
     start--;
   }
-  unsigned char c = curChar();
-  while (IdentifierChars[c] || c >= 0x80) {
+  char c = curChar();
+  while (IdentifierChars[c]) {
     advance();
     c = curChar();
   }

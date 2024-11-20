@@ -44,7 +44,7 @@ public:
   bool match(char expected);
   bool isAtEnd() const { return CurIdx == InputSize; }
 
-  unsigned char curChar() const { return Input[CurIdx]; };
+  char curChar() const { return Input[CurIdx]; };
 
   // Peek at the next char without consuming the current one.
   char peek() const { return isAtEnd() ? '\0' : Input[CurIdx + 1]; }
