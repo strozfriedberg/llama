@@ -9,7 +9,7 @@
 
 
 enum class LlamaTokenType {
-  NONE,
+  UNRECOGNIZED,
 
   // reserved keywords
   RULE,
@@ -84,6 +84,8 @@ public:
     str += std::to_string(ColNum);
     return str;
   }
+
+  void reset() { LineNum = 1; ColNum = 1;}
 
   uint32_t LineNum,
            ColNum;

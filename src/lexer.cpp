@@ -19,12 +19,20 @@ void LlamaLexer::scanTokens() {
   // Set to length of input since there can't possibly be more tokens than characters.
   Tokens.reserve(InputSize);
   while (!isAtEnd()) {
-    scanToken();
+    try {
+      scanToken();
+    }
+    catch (const UnexpectedInputError& e) {
+      Errors.push_back(e);
+    }
   }
   addToken(LlamaTokenType::END_OF_FILE, CurIdx, CurIdx+1, Pos);
 }
 
 void LlamaLexer::scanToken() {
+  if (isAtEnd()) {
+    throw std::out_of_range("Lexer attempted to scan past the end of input stream.");
+  }
   const uint64_t start = CurIdx;
   const LineCol pos(Pos);
   const char c = advance();
@@ -40,7 +48,7 @@ void LlamaLexer::scanToken() {
         addToken(LlamaTokenType::NOT_EQUAL, start, CurIdx, pos);
       }
       else {
-        throw UnexpectedInputError("Unexpected input character: ! at ", pos);
+        throw UnexpectedInputError("Unexpected input character: !", pos);
       }
       break;
     }
@@ -79,7 +87,7 @@ void LlamaLexer::scanToken() {
         parseIdentifier(pos);
       }
       else {
-        throw UnexpectedInputError("Unexpected input character at ", pos);
+        addToken(LlamaTokenType::UNRECOGNIZED, start, CurIdx, pos);
       }
   }
 }
@@ -89,10 +97,10 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
   if (CurIdx > 0) {
     start--;
   }
-  unsigned char c = getCurChar();
+  unsigned char c = curChar();
   while (IdentifierChars[c] || c >= 0x80) {
     advance();
-    c = getCurChar();
+    c = curChar();
   }
 
   uint64_t end = CurIdx;
@@ -101,7 +109,6 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
   if (found != LlamaKeywords.end()) {
     addToken(found->second, start, end, pos);
     if (found->second == LlamaTokenType::RULE) {
-      ++RuleCount;
       RuleIndices.push_back(Tokens.size() - 1);
     }
   }
@@ -112,14 +119,14 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
 
 void LlamaLexer::parseString(LineCol pos) {
   uint64_t start = CurIdx;
-  while(getCurChar() != '"' && !isAtEnd()) {
-    if (getCurChar() == '\\') {
+  while(curChar() != '"' && !isAtEnd()) {
+    if (curChar() == '\\') {
       advance();
     }
     advance();
   }
   if (isAtEnd()) {
-    throw UnexpectedInputError("Unterminated string at ", pos);
+    throw UnexpectedInputError("Unterminated string", pos);
   }
   advance(); // consume closing quote
   uint64_t end = CurIdx - 1;
@@ -131,7 +138,7 @@ void LlamaLexer::parseNumber(LineCol pos) {
   if (CurIdx > 0) {
     start--;
   }
-  while (isdigit(getCurChar())) {
+  while (isdigit(curChar())) {
     advance();
   }
 
@@ -140,21 +147,21 @@ void LlamaLexer::parseNumber(LineCol pos) {
 }
 
 void LlamaLexer::parseSingleLineComment() {
-  while (getCurChar() != '\n' && !isAtEnd()) {
+  while (curChar() != '\n' && !isAtEnd()) {
     advance();
   }
 }
 
 void LlamaLexer::parseMultiLineComment(LineCol pos) {
-  while (getCurChar() != '*' && !isAtEnd()) {
-    if (getCurChar() == '\n') {
+  while (curChar() != '*' && !isAtEnd()) {
+    if (curChar() == '\n') {
       Pos.LineNum++;
       Pos.ColNum = 0;
     }
     advance();
   }
   if (isAtEnd()) {
-    throw UnexpectedInputError("Unterminated multi-line comment at ", pos);
+    throw UnexpectedInputError("Unterminated multi-line comment", pos);
   }
   if (peek() == '/') {
     advance(); // consume *

@@ -8,7 +8,6 @@
 
 #include <boost/functional/hash.hpp>
 
-#include <map>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -137,7 +136,7 @@ struct PatternDef {
 
 // Holds a mapping from the user-defined name of each pattern to the rest of its information.
 struct PatternSection {
-  std::map<std::string_view, PatternDef> Patterns;
+  std::unordered_map<std::string_view, PatternDef> Patterns;
 };
 
 struct GrepSection {
@@ -287,6 +286,8 @@ public:
   LlamaParser(const std::string& input, const std::vector<Token>& tokens) : Tokens(tokens), Input(input) {}
 
   Token previous() const { return Tokens[CurIdx - 1]; }
+
+  // Peek at the current Token without consuming it.
   Token peek() const { return Tokens[CurIdx]; }
   Token advance() { if (!isAtEnd()) ++CurIdx; return previous();}
 
@@ -307,14 +308,18 @@ public:
   template <class... LlamaTokenTypes>
   void mustParse(const std::string_view& errMsg, LlamaTokenTypes... types);
 
-  std::string_view getPreviousLexeme() const { return previous().Lexeme; }
-  std::string_view getCurrentLexeme() const { return peek().Lexeme; }
-  std::string_view getLexemeAt(size_t idx) const { return Tokens[idx].Lexeme; }
+  std::string_view previousLexeme() const { return previous().Lexeme; }
+  std::string_view currentLexeme() const { return peek().Lexeme; }
+  std::string_view lexemeAt(size_t idx) const { return Tokens[idx].Lexeme; }
 
+  // Clear Input and Tokens, and reset CurIdx and CurRuleIdx counters.
   void clear();
 
+  // Reset CurIdx and CurRuleIdx counters.
+  void resetCounters();
+
   bool checkFunctionName() {
-    std::string_view curLex = getCurrentLexeme();
+    std::string_view curLex = currentLexeme();
     return (
       curLex == "any"            ||
       curLex == "all"            ||
@@ -326,12 +331,12 @@ public:
   }
 
   bool checkSignatureProperty() {
-    std::string_view curLex = getCurrentLexeme();
+    std::string_view curLex = currentLexeme();
     return (curLex == "name" || curLex == "id");
   }
 
   bool checkFileMetadataProperty() {
-    std::string_view curLex = getCurrentLexeme();
+    std::string_view curLex = currentLexeme();
     return (
       curLex == "created"  ||
       curLex == "modified" ||
@@ -367,12 +372,15 @@ public:
 
   Rule parseRuleDecl();
 
-  std::vector<Rule> parseRules(size_t numRules);
+  std::vector<Rule> parseRules(const std::vector<size_t>& ruleIndices);
 
-  std::unordered_map<std::string, std::string> Patterns;
-  std::vector<Token> Tokens;
-  std::string Input;
-  uint64_t CurIdx = 0;
+  const std::vector<ParserError>& errors() const { return Errors; }
+
+  std::vector<Token>       Tokens;
+  std::vector<ParserError> Errors;
+  std::string              Input;
+  uint64_t                 CurIdx     = 0;
+  uint64_t                 CurRuleIdx = 0;
 };
 
 template <class... TokenTypes>

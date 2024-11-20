@@ -12,7 +12,19 @@
 
 class LlamaLexer {
 public:
-  LlamaLexer(const std::string& input) : CurIdx(0), RuleCount(0), InputSize(input.size()), Input(input) {};
+  LlamaLexer() = default;
+  LlamaLexer(const std::string& input) : CurIdx(0), InputSize(input.size()), Input(input) {};
+
+  void setInput(std::string_view input) { clear(); Input = input; InputSize = input.size(); }
+
+  void clear() {
+    CurIdx = 0;
+    InputSize = 0;
+    Tokens.clear();
+    Errors.clear();
+    RuleIndices.clear();
+    Pos.reset();
+  }
 
   void scanTokens();
   void scanToken();
@@ -32,19 +44,21 @@ public:
   bool match(char expected);
   bool isAtEnd() const { return CurIdx == InputSize; }
 
-  unsigned char getCurChar() const { return Input[CurIdx]; };
-  char peek() const { return isAtEnd() ? '\0' : Input[CurIdx + 1]; }
-  const std::vector<Token>& getTokens() const { return Tokens; }
-  const std::vector<size_t>& getRuleIndices() const { return RuleIndices; }
+  unsigned char curChar() const { return Input[CurIdx]; };
 
-  size_t getRuleCount() const { return RuleCount; }
+  // Peek at the next char without consuming the current one.
+  char peek() const { return isAtEnd() ? '\0' : Input[CurIdx + 1]; }
+
+  const std::vector<Token>& tokens() const { return Tokens; }
+  const std::vector<size_t>& ruleIndices() const { return RuleIndices; }
+  const std::vector<UnexpectedInputError>& errors() const { return Errors; }
 
   LineCol Pos = {1, 1};
 private:
-  size_t              CurIdx;
-  size_t              RuleCount;
-  size_t              InputSize;
-  std::string_view    Input;
-  std::vector<Token>  Tokens;
-  std::vector<size_t> RuleIndices;
+  size_t                            CurIdx;
+  size_t                            InputSize;
+  std::string_view                  Input;
+  std::vector<Token>                Tokens;
+  std::vector<UnexpectedInputError> Errors;
+  std::vector<size_t>               RuleIndices;
 };
