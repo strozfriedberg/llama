@@ -47,7 +47,7 @@ TEST_CASE("TestWriteRuleToDb") {
   CHECK(state == DuckDBSuccess);
   CHECK(duckdb_result_error(&result) == nullptr);
   REQUIRE(duckdb_row_count(&result) == 2);
-  state = duckdb_query(conn.get(), "select * from rule_matches;", &result);
+  state = duckdb_query(conn.get(), "select * from rule_hits;", &result);
   REQUIRE(state == DuckDBSuccess);
   REQUIRE(duckdb_row_count(&result) == 0);
 }

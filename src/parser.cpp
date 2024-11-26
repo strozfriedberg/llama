@@ -61,7 +61,7 @@ std::string PropertyNode::getSqlQuery(const LlamaParser& parser) const {
 std::string Rule::getSqlQuery(const LlamaParser& parser) const {
   std::string query = "SELECT '";
   query += this->getHash(parser).to_string();
-  query += "', path, name, addr FROM dirent, inode WHERE dirent.metaaddr == inode.addr";
+  query += "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr";
 
   if (FileMetadata) {
     query += " AND ";

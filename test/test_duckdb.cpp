@@ -6,6 +6,7 @@
 #include "duckinode.h"
 #include "inode.h"
 #include "llamaduck.h"
+#include "llamabatch.h"
 
 #include <duckdb.h>
 
@@ -265,3 +266,15 @@ TEST_CASE("testDuckHash") {
   duckdb_destroy_result(&result);
 }
 
+TEST_CASE("ruleBatchDbType") {
+  using RuleRecType = DBType<RuleRec>;
+  REQUIRE(RuleRecType::colIndex("id") == 0);
+  REQUIRE(RuleRecType::colIndex("name") == 1);
+
+  REQUIRE(createQuery<RuleRecType>("rules") == "CREATE TABLE rules (id VARCHAR, name VARCHAR);");
+  REQUIRE(2 == RuleRecType::ColNames.size());
+  REQUIRE(2 == RuleRecType::NumCols);
+
+  RuleRec r{"MyRule", "1234abcd"};
+  static_assert(std::is_same<decltype(boost::pfr::structure_to_tuple(r)), std::tuple<std::string, std::string>>::value);
+}

@@ -1,6 +1,7 @@
 #include "ruleengine.h"
 #include "llamaduck.h"
 #include "rulereader.h"
+#include "llamabatch.h"
 
 void RuleEngine::writeRulesToDb(const RuleReader& reader, LlamaDBConnection& dbConn) {
   if (reader.getRules().empty()) {
@@ -8,40 +9,36 @@ void RuleEngine::writeRulesToDb(const RuleReader& reader, LlamaDBConnection& dbC
   }
   duckdb_result result;
   std::string rule_query("INSERT INTO rules VALUES ");
-  std::string matches_query("INSERT INTO rule_matches ");
+  std::string hits_query("INSERT INTO rule_hits ");
   const std::string sqlUnion(" UNION ");
 
   for (const Rule& rule : reader.getRules()) {
     rule_query += "('" + rule.getHash(reader.getParser()).to_string() + "', '" + std::string(rule.Name) + "'),";
-    matches_query += "(" + rule.getSqlQuery(reader.getParser()) + ")";
-    matches_query += sqlUnion;
+    hits_query += "(" + rule.getSqlQuery(reader.getParser()) + ")";
+    hits_query += sqlUnion;
   }
-  matches_query.erase(matches_query.size() - sqlUnion.size()); // remove last UNION
-  matches_query += ";";
+  hits_query.erase(hits_query.size() - sqlUnion.size()); // remove last UNION
+  hits_query += ";";
   rule_query.pop_back(); // remove last comma
   rule_query += ";";
-
+  
+  std::cout << hits_query << '\n';
   auto state = duckdb_query(dbConn.get(), rule_query.c_str(), &result);
   THROW_IF(state == DuckDBError, "Error inserting into rule table");
-  state = duckdb_query(dbConn.get(), matches_query.c_str(), &result);
+  state = duckdb_query(dbConn.get(), hits_query.c_str(), &result);
   THROW_IF(state == DuckDBError, "Error inserting into rule matches table");
 }
 
 void RuleEngine::createTables(LlamaDBConnection& dbConn) {
-  duckdb_result result;
-  std::string rule_query("CREATE TABLE rules (id VARCHAR, name VARCHAR);");
-  std::string matches_query("CREATE TABLE rule_matches (id VARCHAR, path VARCHAR, name VARCHAR, addr UBIGINT);");
-  auto state = duckdb_query(dbConn.get(), rule_query.c_str(), &result);
-  THROW_IF(state == DuckDBError, "Error creating rule table");
-  state = duckdb_query(dbConn.get(), matches_query.c_str(), &result);
-  THROW_IF(state == DuckDBError, "Error creating rule matches table");
+  DBType<RuleRec> ruleRec;
+  THROW_IF(!ruleRec.createTable(dbConn.get(), "rules"), "Error creating rule table");
+  DBType<RuleMatch> ruleMatch;
+  THROW_IF(!ruleMatch.createTable(dbConn.get(), "rule_hits"), "Error creating rule hits table");
 }
 
 void RuleEngine::createSearchHitTable(LlamaDBConnection& dbConn) {
-  duckdb_result result;
-  std::string searchHitQuery("CREATE TABLE search_hits (pattern VARCHAR, start_offset UBIGINT, end_offset UBIGINT, rule_id VARCHAR, file_hash VARCHAR, length UBIGINT);");
-  auto state = duckdb_query(dbConn.get(), searchHitQuery.c_str(), &result);
-  THROW_IF(state == DuckDBError, "Error creating search hit table");
+  DBType<SearchHit> searchHit;
+  THROW_IF(!searchHit.createTable(dbConn.get(), "search_hits"), "Error creating search hit table");
 }
 
 LgFsmHolder RuleEngine::getFsm(const RuleReader& reader) {
