@@ -8,24 +8,22 @@ void RuleEngine::writeRulesToDb(const RuleReader& reader, LlamaDBConnection& dbC
     return;
   }
   duckdb_result result;
-  std::string rule_query("INSERT INTO rules VALUES ");
+  DBBatch<RuleRec> ruleRecBatch;
   std::string hits_query("INSERT INTO rule_hits ");
   const std::string sqlUnion(" UNION ");
 
   for (const Rule& rule : reader.getRules()) {
-    rule_query += "('" + rule.getHash(reader.getParser()).to_string() + "', '" + std::string(rule.Name) + "'),";
+    ruleRecBatch.add(RuleRec{rule.getHash(reader.getParser()).to_string(), std::string(rule.Name)});
     hits_query += "(" + rule.getSqlQuery(reader.getParser()) + ")";
     hits_query += sqlUnion;
   }
   hits_query.erase(hits_query.size() - sqlUnion.size()); // remove last UNION
   hits_query += ";";
-  rule_query.pop_back(); // remove last comma
-  rule_query += ";";
+
+  LlamaDBAppender appender(dbConn.get(), "rules");
+  ruleRecBatch.copyToDB(appender.get());
   
-  std::cout << hits_query << '\n';
-  auto state = duckdb_query(dbConn.get(), rule_query.c_str(), &result);
-  THROW_IF(state == DuckDBError, "Error inserting into rule table");
-  state = duckdb_query(dbConn.get(), hits_query.c_str(), &result);
+  auto state = duckdb_query(dbConn.get(), hits_query.c_str(), &result);
   THROW_IF(state == DuckDBError, "Error inserting into rule matches table");
 }
 
