@@ -22,6 +22,7 @@ void RuleEngine::writeRulesToDb(const RuleReader& reader, LlamaDBConnection& dbC
 
   LlamaDBAppender appender(dbConn.get(), "rules");
   ruleRecBatch.copyToDB(appender.get());
+  appender.flush();
   
   auto state = duckdb_query(dbConn.get(), hits_query.c_str(), &result);
   THROW_IF(state == DuckDBError, "Error inserting into rule matches table");
