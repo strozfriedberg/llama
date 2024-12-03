@@ -34,9 +34,6 @@ void RuleEngine::createTables(LlamaDBConnection& dbConn) {
   THROW_IF(!ruleRec.createTable(dbConn.get(), "rules"), "Error creating rule table");
   DBType<RuleMatch> ruleMatch;
   THROW_IF(!ruleMatch.createTable(dbConn.get(), "rule_hits"), "Error creating rule hits table");
-}
-
-void RuleEngine::createSearchHitTable(LlamaDBConnection& dbConn) {
   DBType<SearchHit> searchHit;
   THROW_IF(!searchHit.createTable(dbConn.get(), "search_hits"), "Error creating search hit table");
 }

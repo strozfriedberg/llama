@@ -15,20 +15,13 @@ TEST_CASE("TestCreateTables") {
   auto state = duckdb_query(conn.get(), "select * from rules;", &result);
   REQUIRE(state == DuckDBSuccess);
   REQUIRE(duckdb_row_count(&result) == 0);
-  REQUIRE_THROWS(engine.createTables(conn));
-}
-
-TEST_CASE("TestCreateSearchHitTables") {
-  RuleEngine engine;
-  LlamaDB db;
-  LlamaDBConnection conn(db);
-  engine.createSearchHitTable(conn);
-  duckdb_result result;
-  auto state = duckdb_query(conn.get(), "select * from search_hits;", &result);
+  state = duckdb_query(conn.get(), "select * from rule_hits;", &result);
   REQUIRE(state == DuckDBSuccess);
   REQUIRE(duckdb_row_count(&result) == 0);
-  REQUIRE_THROWS(engine.createSearchHitTable(conn));
-
+  state = duckdb_query(conn.get(), "select * from search_hits;", &result);
+  REQUIRE(state == DuckDBSuccess);
+  REQUIRE(duckdb_row_count(&result) == 0);
+  REQUIRE_THROWS(engine.createTables(conn));
 }
 
 TEST_CASE("TestWriteRuleToDb") {
