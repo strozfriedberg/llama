@@ -146,7 +146,7 @@ TEST_CASE("testPrintVersion") {
   std::stringstream output;
   cli.printVersion(output);
   auto outStr = output.str();
-  std::regex re("pre-alpha\\s\\w{3}\\s\\d{2}\\s20\\d{2}");
+  std::regex re("pre-alpha\\s\\w{3}\\s\\s?\\d{1,2}\\s20\\d{2}");
   REQUIRE(std::regex_search(outStr, re));
 }
 
