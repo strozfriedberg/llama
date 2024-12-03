@@ -61,6 +61,9 @@ void Llama::search() {
 //    auto out = std::shared_ptr<OutputWriter>(new OutputTar((outdir / "llama").string(), Opts->OutputCodec));
 //    auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, DbConn, out));
 
+    RuleEngine engine;
+    LG_ProgramOptions opts{10};
+    LgProg.reset(lg_create_program(engine.getFsm(Reader).getFsm(), &opts), lg_destroy_program);
     auto protoProc = std::make_shared<Processor>(&Db, LgProg);
     auto scheduler = std::make_shared<FileScheduler>(Db, Pool, protoProc, Opts);
     auto inh = std::shared_ptr<InputHandler>(new BatchHandler(scheduler));
