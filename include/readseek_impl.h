@@ -8,6 +8,7 @@
 class ReadSeekBuf: public ReadSeek {
 public:
   ReadSeekBuf(const std::vector<uint8_t>& buf): Buf(buf), Pos(0) {}
+  ReadSeekBuf(const std::string& str) : Buf(str.begin(), str.end()), Pos(0) {}
   virtual ~ReadSeekBuf() {}
 
   virtual bool open(void) override { return true; }
