@@ -17,7 +17,7 @@ class ReadSeek;
 
 class Processor {
 public:
-  Processor(LlamaDB* db, const std::shared_ptr<ProgramHandle>& prog);
+  Processor(LlamaDB* db, const std::shared_ptr<ProgramHandle>& prog, const std::vector<std::string>& patternToRuleId);
 
   std::shared_ptr<Processor> clone() const;
 
@@ -30,6 +30,8 @@ public:
   double getProcessorTime() const { return ProcTimeTotal; }
 
 private:
+  const std::vector<std::string>& PatternToRuleId;
+
   std::vector<unsigned char> Buf; // to avoid reallocations
 
   LlamaDB* const Db; // weak pointer, allows for clone()

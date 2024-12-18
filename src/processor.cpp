@@ -32,7 +32,8 @@ namespace {
   }
 }
 
-Processor::Processor(LlamaDB* db, const std::shared_ptr<ProgramHandle>& prog):
+Processor::Processor(LlamaDB* db, const std::shared_ptr<ProgramHandle>& prog, const std::vector<std::string>& patternToRuleId):
+  PatternToRuleId(patternToRuleId),
   Db(db),
   DbConn(*db),
   Appender(DbConn.get(), "hash"),
@@ -45,7 +46,7 @@ Processor::Processor(LlamaDB* db, const std::shared_ptr<ProgramHandle>& prog):
 }
 
 std::shared_ptr<Processor> Processor::clone() const {
-  return std::make_shared<Processor>(Db, LgProg);
+  return std::make_shared<Processor>(Db, LgProg, PatternToRuleId);
 }
 
 void Processor::process(ReadSeek& stream) {
