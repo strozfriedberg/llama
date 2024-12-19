@@ -466,6 +466,13 @@ TEST_CASE("parserExpectNumber") {
   REQUIRE_NOTHROW(parser.expect(LlamaTokenType::NUMBER));
 }
 
+TEST_CASE("parseFuncCallThrowsIfArgsStartWithComma") {
+  std::string input = "any(,s1, s2, s3)";
+  LlamaParser parser(input, getLexer(input).tokens());
+  FuncNode node;
+  REQUIRE_THROWS(node = parser.parseFuncCall());
+}
+
 TEST_CASE("parseFuncCallAny") {
   std::string input = "any(s1, s2, s3)";
   LlamaParser parser(input, getLexer(input).tokens());
