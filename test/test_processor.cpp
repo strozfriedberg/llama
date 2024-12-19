@@ -43,6 +43,7 @@ TEST_CASE("testSearch") {
   ReadSeekBuf rsBuf(haystack);
 
   // lg setup
+  // we're not using PatternParser
   LG_HPATTERN pat(lg_create_pattern());
   LG_KeyOptions opts{0,0,0};
   LG_Error* err(nullptr);
@@ -63,6 +64,8 @@ TEST_CASE("testSearch") {
 
   // search
   proc.search(rsBuf);
+
+  // put search hits in table
   THROW_IF(!DBType<SearchHit>::createTable(dbConn.get(), "search_hits"), "Error creating search hit table");
   LlamaDBAppender appender(dbConn.get(), "search_hits");
   CHECK(1 == proc.searchHits()->copyToDB(appender.get()));

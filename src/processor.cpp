@@ -15,7 +15,6 @@ namespace {
   const LG_ContextOptions ctxOpts{0, 0};
 
   bool hashFile(SFHASH_Hasher* hasher, ReadSeek& stream, std::vector<unsigned char>& buf, SFHASH_HashValues& hashes) {
-    buf.reserve(1 << 20);
     stream.seek(0);
     sfhash_reset_hasher(hasher);
     size_t bytesRead = 0;
@@ -42,6 +41,7 @@ Processor::Processor(LlamaDB* db, const std::shared_ptr<ProgramHandle>& prog, co
   SearchHits(std::make_unique<DBBatch<SearchHit>>()),
   ProcTimeTotal(0)
 {
+  Buf.reserve(1 << 20);
 }
 
 std::shared_ptr<Processor> Processor::clone() const {
@@ -94,14 +94,12 @@ void Processor::addToSearchHitBatch(const LG_SearchHit* const hit) {
 
 void Processor::search(ReadSeek& rs) {
   lg_reset_context(Ctx.get());
-  std::vector<uint8_t> buf;
-  buf.reserve(1 << 20);
   size_t bytesRead = 0;
   uint64_t offset = 0;
   do {
-      bytesRead = rs.read(1 << 20, buf);
+      bytesRead = rs.read(1 << 20, Buf);
       if (bytesRead > 0) {
-        lg_search(Ctx.get(), (char*)buf.data(), (char*)buf.data() + bytesRead, offset, (void*)this, handleSearchHit);
+        lg_search(Ctx.get(), (char*)Buf.data(), (char*)Buf.data() + bytesRead, offset, (void*)this, handleSearchHit);
       }
     } while (bytesRead > 0);
 }
