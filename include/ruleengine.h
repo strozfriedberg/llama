@@ -12,7 +12,7 @@ public:
 
   LgFsmHolder getFsm(const RuleReader& reader);
 
-  std::vector<std::string> patternToRuleId() { return PatternToRuleId; }
+  const std::vector<std::string>& patternToRuleId() const { return PatternToRuleId; }
 private:
   std::vector<std::string> PatternToRuleId;
 };
