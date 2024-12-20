@@ -14,7 +14,9 @@ void RuleEngine::writeRulesToDb(const RuleReader& reader, LlamaDBConnection& dbC
 
   for (const Rule& rule : reader.getRules()) {
     ruleRecBatch.add(RuleRec{rule.getHash(reader.getParser()).to_string(), std::string(rule.Name)});
-    hits_query += "(" + rule.getSqlQuery(reader.getParser()) + ")";
+    hits_query += "(";
+    hits_query += rule.getSqlQuery(reader.getParser());
+    hits_query += ")";
     hits_query += sqlUnion;
   }
   hits_query.erase(hits_query.size() - sqlUnion.size()); // remove last UNION
