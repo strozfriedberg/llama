@@ -490,7 +490,40 @@ TEST_CASE("multipleRuleCount") {
   std::string input = "rule rule rule rule rule rule";
   LlamaLexer lexer(input);
   lexer.scanTokens();
+  REQUIRE(lexer.ruleIndices().size() == 6);
   REQUIRE(lexer.ruleIndices() == std::vector<size_t>{0, 1, 2, 3, 4, 5});
+}
+
+TEST_CASE("unicodeRuleNameEmojis") {
+  std::string input = "rule 💀🔥💯 {}";
+  LlamaLexer lexer(input);
+  REQUIRE_NOTHROW(lexer.scanTokens());
+  auto tokens = lexer.tokens();
+  REQUIRE(tokens.size() > 5);
+  REQUIRE(tokens[1].Type == LlamaTokenType::UNRECOGNIZED);
+}
+
+TEST_CASE("ruleNameNotAlphaIsUnrecognized") {
+  std::string input = "rule _BadRuleName {}";
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  auto tokens = lexer.tokens();
+  REQUIRE(tokens.size() == 6);
+  REQUIRE(tokens[0].Type == LlamaTokenType::RULE);
+  REQUIRE(tokens[1].Type == LlamaTokenType::UNRECOGNIZED);
+  REQUIRE(tokens[2].Type == LlamaTokenType::IDENTIFIER);
+  REQUIRE(tokens[3].Type == LlamaTokenType::OPEN_BRACE);
+  REQUIRE(tokens[4].Type == LlamaTokenType::CLOSE_BRACE);
+  REQUIRE(tokens[5].Type == LlamaTokenType::END_OF_FILE);
+}
+
+TEST_CASE("unicodeInDoubleQuotedString") {
+  std::string input = "rule Rule { grep: patterns: \"菠萝💀🔥💯привет\"}";
+  LlamaLexer lexer(input);
+  REQUIRE_NOTHROW(lexer.scanTokens());
+  auto tokens = lexer.tokens();
+  REQUIRE(tokens.size() == 10);
+  REQUIRE(std::string(tokens[7].Lexeme) == "菠萝💀🔥💯привет");
 }
 
 TEST_CASE("ruleWithSingleUnexpectedToken") {
