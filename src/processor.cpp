@@ -101,4 +101,6 @@ void Processor::search(ReadSeek& rs) {
         lg_search(Ctx.get(), (char*)Buf.data(), (char*)Buf.data() + bytesRead, offset, (void*)this, handleSearchHit);
       }
     } while (bytesRead > 0);
+
+  lg_closeout_search(Ctx.get(), (void*)this, handleSearchHit);
 }
