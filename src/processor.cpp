@@ -88,8 +88,7 @@ void handleSearchHit(void* userData, const LG_SearchHit* const hit) {
 void Processor::addToSearchHitBatch(const LG_SearchHit* const hit) {
   LG_PatternInfo* info = lg_prog_pattern_info(LgProg.get(), hit->KeywordIndex);
   std::string pat(info->Pattern);
-  SearchHit sh = SearchHit{pat, hit->Start, hit->End, PatternToRuleId[hit->KeywordIndex], CurrentHash, pat.length()};
-  SearchHits->add(sh);
+  SearchHits->add(SearchHit{pat, hit->Start, hit->End, PatternToRuleId[hit->KeywordIndex], CurrentHash, pat.length()});
 }
 
 void Processor::search(ReadSeek& rs) {
