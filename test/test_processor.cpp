@@ -28,61 +28,73 @@ TEST_CASE("testBoostThreadPool") {
   REQUIRE(2u == count);
 }
 
-bool numDiffsBetweenTables(duckdb_connection dbConn, std::string table1, std::string table2) {
-  duckdb_result result;
-  std::string diffUnionQuery = "(Select * from " + table1 + " Except Select * from " + table2 + " ) UNION ALL (Select * from " + table1 + " Except Select * from " + table2 + " )";
-  duckdb_query(dbConn, (diffUnionQuery + ";").c_str(), &result);
-  auto diffs = duckdb_row_count(&result);
-  duckdb_destroy_result(&result);
-  return diffs;
-}
+class ProcessorSearchTester {
+public:
+  ProcessorSearchTester(std::string needle, std::string haystack, uint64_t numExpectedHits) 
+  : PatternToRuleId(numExpectedHits, "rule_id"), RsBuf(haystack), Db(), DbConn(Db), Proc(createProcessor(needle)) {
+    Proc.currentHash("file_hash");
+  }
 
-TEST_CASE("testSearch") {
-  std::string sPat = "foobar";
-  std::string haystack = "this is soooo foobar";
-  ReadSeekBuf rsBuf(haystack);
+  void search() { Proc.search(RsBuf); }
+  uint64_t putSearchHitsInDb() {
+    DBType<SearchHit>::createTable(DbConn.get(), "search_hits");
+    LlamaDBAppender appender(DbConn.get(), "search_hits");
+    uint64_t recordsInserted = Proc.searchHits()->copyToDB(appender.get());
+    appender.flush();
+    return recordsInserted;
+  }
 
-  // lg setup
-  // we're not using PatternParser
-  LG_HPATTERN pat(lg_create_pattern());
-  LG_KeyOptions opts{0,0,0};
-  LG_Error* err(nullptr);
-  lg_parse_pattern(pat, sPat.c_str(), &opts, &err);
-  LG_HFSM fsm(lg_create_fsm(0, 0));
-  lg_add_pattern(fsm, pat, "ASCII", 0, &err);
-  LG_ProgramOptions pOpts{10};
-  LG_HPROGRAM prog(lg_create_program(fsm, &pOpts));
-  std::shared_ptr<ProgramHandle> pHandle(prog, lg_destroy_program);
+  uint64_t createTempTableAndPopulate(const std::vector<SearchHit>& expectedSearchHits) {
+    DBType<SearchHit>::createTable(DbConn.get(), "temp_search_hits");
+    LlamaDBAppender tempAppender(DbConn.get(), "temp_search_hits");
+    DBBatch<SearchHit> tempSearchHits;
+    for (const SearchHit& sh : expectedSearchHits) {
+      tempSearchHits.add(sh);
+    }
+    uint64_t recordsInserted = tempSearchHits.copyToDB(tempAppender.get());
+    tempAppender.flush();
+    return recordsInserted;
+  }
 
-  // duckdb setup
-  LlamaDB db;
-  LlamaDBConnection dbConn(db);
-  DBType<HashRec>::createTable(dbConn.get(), "hash");
-  std::vector<std::string> patToRuleId{"rule_id"};
-  Processor proc(&db, pHandle, patToRuleId);
-  proc.currentHash("file_hash");
+  uint64_t numDiffsBetweenTables() {
+    duckdb_result result;
+    std::string diffUnionQuery = "(Select * from search_hits Except Select * from temp_search_hits ) UNION ALL (Select * from search_hits Except Select * from temp_search_hits)";
+    duckdb_query(DbConn.get(), (diffUnionQuery + ";").c_str(), &result);
+    auto diffs = duckdb_row_count(&result);
+    duckdb_destroy_result(&result);
+    return diffs;
+  }
 
-  // search
-  proc.search(rsBuf);
+private:
+  Processor createProcessor(std::string needle) {
+    std::shared_ptr<PatternHandle> pat(lg_create_pattern(), lg_destroy_pattern);
+    LG_KeyOptions opts{0,0,0};
+    LG_Error* err(nullptr);
+    lg_parse_pattern(pat.get(), needle.c_str(), &opts, &err);
+    std::shared_ptr<FSMHandle> fsm(lg_create_fsm(0, 0), lg_destroy_fsm);
+    lg_add_pattern(fsm.get(), pat.get(), "ASCII", 0, &err);
+    LG_ProgramOptions pOpts{10};
+    LG_HPROGRAM prog(lg_create_program(fsm.get(), &pOpts));
+    std::shared_ptr<ProgramHandle> pHandle(prog, lg_destroy_program);
 
-  // put search hits in table
-  THROW_IF(!DBType<SearchHit>::createTable(dbConn.get(), "search_hits"), "Error creating search hit table");
-  LlamaDBAppender appender(dbConn.get(), "search_hits");
-  CHECK(1 == proc.searchHits()->copyToDB(appender.get()));
-  appender.flush();
+    // duckdb setup
+    DBType<HashRec>::createTable(DbConn.get(), "hash");
+    return Processor{&Db, pHandle, PatternToRuleId};
+  }
+  std::vector<std::string> PatternToRuleId;
+  ReadSeekBuf RsBuf;
+  LlamaDB Db;
+  LlamaDBConnection DbConn;
+  Processor Proc;
+};
 
-  // temp table for insert validation
-  DBBatch<SearchHit> tempSearchHits;
-  DBType<SearchHit>::createTable(dbConn.get(), "temp_search_hits");
-  tempSearchHits.add(SearchHit{"foobar", 14, 20, "rule_id", "file_hash", 6});
-  LlamaDBAppender tempAppender(dbConn.get(), "temp_search_hits");
-  CHECK(1 == tempSearchHits.copyToDB(tempAppender.get()));
-  tempAppender.flush();
-
-  // validate that diff with temp table is 0
-  CHECK(0 == numDiffsBetweenTables(dbConn.get(), "search_hits", "temp_search_hits"));
-
-  // cleanup
-  lg_destroy_pattern(pat);
-  lg_destroy_fsm(fsm);
+TEST_CASE("testBasicOneHitSearch") {
+  ProcessorSearchTester pst{"foobar", "this is so foobar", 1};
+  pst.search();
+  REQUIRE(1 == pst.putSearchHitsInDb());
+  std::vector<SearchHit> expectedSearchHits = {
+    SearchHit{"foobar", 11, 17, "rule_id", "file_hash", 6}
+  };
+  pst.createTempTableAndPopulate(expectedSearchHits);
+  REQUIRE(0 == pst.numDiffsBetweenTables());
 }
