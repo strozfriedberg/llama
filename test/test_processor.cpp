@@ -119,3 +119,22 @@ TEST_CASE("testSearchThatSpansMultipleBuffers") {
   pst.createTempTableAndPopulate(expectedSearchHits);
   REQUIRE(0 == pst.numDiffsBetweenTables());
 }
+
+TEST_CASE("testSearchWithMultipleHits") {
+  std::string needle = "foo";
+  std::string haystack = "foo is foobar is foobaz";
+
+  std::vector<SearchHit> expectedHits{
+    SearchHit{"foo", 0, 3, "rule_id", "file_hash", 3},
+    SearchHit{"foo", 7, 10, "rule_id", "file_hash", 3},
+    SearchHit{"foo", 17, 20, "rule_id", "file_hash", 3},
+  };
+
+  ProcessorSearchTester pst{needle, haystack, expectedHits.size()};
+  pst.search();
+
+  REQUIRE(expectedHits.size() == pst.putSearchHitsInDb());
+  pst.createTempTableAndPopulate(expectedHits);
+  REQUIRE(0 == pst.numDiffsBetweenTables());
+
+}
