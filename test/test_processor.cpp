@@ -89,13 +89,18 @@ private:
 };
 
 TEST_CASE("testBasicOneHitSearch") {
-  ProcessorSearchTester pst{"foobar", "this is so foobar", 1};
-  pst.search();
-  REQUIRE(1 == pst.putSearchHitsInDb());
-  std::vector<SearchHit> expectedSearchHits = {
+  std::string needle = "foobar";
+  std::string haystack = "this is so foobar";
+
+  std::vector<SearchHit> expectedHits = {
     SearchHit{"foobar", 11, 17, "rule_id", "file_hash", 6}
   };
-  pst.createTempTableAndPopulate(expectedSearchHits);
+
+  ProcessorSearchTester pst{needle, haystack, expectedHits.size()};
+  pst.search();
+
+  REQUIRE(expectedHits.size() == pst.putSearchHitsInDb());
+  pst.createTempTableAndPopulate(expectedHits);
   REQUIRE(0 == pst.numDiffsBetweenTables());
 }
 
@@ -108,15 +113,16 @@ TEST_CASE("testSearchThatSpansMultipleBuffers") {
   std::vector<char> v(hitLength, 'a');
   std::string haystack(v.begin(), v.end());
   CHECK(hitLength == haystack.size());
-  uint64_t numExpectedHits = 1;
 
-  ProcessorSearchTester pst{needle, haystack, numExpectedHits};
-  pst.search();
-  REQUIRE(numExpectedHits == pst.putSearchHitsInDb());
-  std::vector<SearchHit> expectedSearchHits = {
+  std::vector<SearchHit> expectedHits = {
     SearchHit{needle, 0, hitLength, "rule_id", "file_hash", hitLength}
   };
-  pst.createTempTableAndPopulate(expectedSearchHits);
+
+  ProcessorSearchTester pst{needle, haystack, expectedHits.size()};
+  pst.search();
+
+  REQUIRE(expectedHits.size() == pst.putSearchHitsInDb());
+  pst.createTempTableAndPopulate(expectedHits);
   REQUIRE(0 == pst.numDiffsBetweenTables());
 }
 
