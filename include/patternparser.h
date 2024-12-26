@@ -1,3 +1,5 @@
+#pragma once
+
 #include "lightgrep/api.h"
 
 #include "parser.h"

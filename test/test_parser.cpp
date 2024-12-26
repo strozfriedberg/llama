@@ -466,6 +466,13 @@ TEST_CASE("parserExpectNumber") {
   REQUIRE_NOTHROW(parser.expect(LlamaTokenType::NUMBER));
 }
 
+TEST_CASE("parseFuncCallThrowsIfArgsStartWithComma") {
+  std::string input = "any(,s1, s2, s3)";
+  LlamaParser parser(input, getLexer(input).tokens());
+  FuncNode node;
+  REQUIRE_THROWS(node = parser.parseFuncCall());
+}
+
 TEST_CASE("parseFuncCallAny") {
   std::string input = "any(s1, s2, s3)";
   LlamaParser parser(input, getLexer(input).tokens());
@@ -703,7 +710,7 @@ TEST_CASE("GetSqlQueryFromRule") {
   LlamaParser parser(input, lexer.tokens());
   std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', path, name, addr FROM dirent, inode WHERE dirent.metaaddr == inode.addr");
+  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr");
 }
 
 TEST_CASE("GetSqlQueryFromRuleWithOneNumberFileMetadataCondition") {
@@ -712,7 +719,7 @@ TEST_CASE("GetSqlQueryFromRuleWithOneNumberFileMetadataCondition") {
   LlamaParser parser(input, lexer.tokens());
   std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', path, name, addr FROM dirent, inode WHERE dirent.metaaddr == inode.addr AND filesize == 30000");
+  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr AND Filesize == 30000");
 }
 
 TEST_CASE("GetSqlQueryFromRuleWithOneStringFileMetadataCondition") {
@@ -721,7 +728,7 @@ TEST_CASE("GetSqlQueryFromRuleWithOneStringFileMetadataCondition") {
   LlamaParser parser(input, lexer.tokens());
   std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', path, name, addr FROM dirent, inode WHERE dirent.metaaddr == inode.addr AND created > '2023-05-04'");
+  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr AND Created > '2023-05-04'");
 }
 
 TEST_CASE("GetSqlQueryFromRuleWithCompoundFileMetadataDef") {
@@ -730,7 +737,7 @@ TEST_CASE("GetSqlQueryFromRuleWithCompoundFileMetadataDef") {
   LlamaParser parser(input, lexer.tokens());
   std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', path, name, addr FROM dirent, inode WHERE dirent.metaaddr == inode.addr AND (filesize == 123456 OR (((created > '2023-05-04' AND modified < '2023-05-06') AND name == 'test') AND path == 'test'))");
+  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr AND (Filesize == 123456 OR (((Created > '2023-05-04' AND Modified < '2023-05-06') AND Name == 'test') AND Path == 'test'))");
 }
 
 TEST_CASE("GetRuleHashWithNoSections") {

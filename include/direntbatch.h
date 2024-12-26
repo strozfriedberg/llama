@@ -31,19 +31,6 @@ struct Dirent
   uint64_t ParentAddr;
   uint64_t MetaSeq;
   uint64_t ParentSeq;
-
-  bool operator==(const Dirent& other) const {
-    return Id == other.Id &&
-           Path == other.Path &&
-           Name == other.Name &&
-           ShortName == other.ShortName &&
-           Type == other.Type &&
-           Flags == other.Flags &&
-           MetaAddr == other.MetaAddr &&
-           ParentAddr == other.ParentAddr &&
-           MetaSeq == other.MetaSeq &&
-           ParentSeq == other.ParentSeq;
-  }
 };
 
 using DirentBatch = DBBatch<Dirent>;

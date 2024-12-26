@@ -15,6 +15,12 @@ TEST_CASE("TestCreateTables") {
   auto state = duckdb_query(conn.get(), "select * from rules;", &result);
   REQUIRE(state == DuckDBSuccess);
   REQUIRE(duckdb_row_count(&result) == 0);
+  state = duckdb_query(conn.get(), "select * from rule_hits;", &result);
+  REQUIRE(state == DuckDBSuccess);
+  REQUIRE(duckdb_row_count(&result) == 0);
+  state = duckdb_query(conn.get(), "select * from search_hits;", &result);
+  REQUIRE(state == DuckDBSuccess);
+  REQUIRE(duckdb_row_count(&result) == 0);
   REQUIRE_THROWS(engine.createTables(conn));
 }
 
@@ -34,7 +40,7 @@ TEST_CASE("TestWriteRuleToDb") {
   CHECK(state == DuckDBSuccess);
   CHECK(duckdb_result_error(&result) == nullptr);
   REQUIRE(duckdb_row_count(&result) == 2);
-  state = duckdb_query(conn.get(), "select * from rule_matches;", &result);
+  state = duckdb_query(conn.get(), "select * from rule_hits;", &result);
   REQUIRE(state == DuckDBSuccess);
   REQUIRE(duckdb_row_count(&result) == 0);
 }
@@ -49,3 +55,29 @@ TEST_CASE("TestZeroRulesToDb") {
   REQUIRE_NOTHROW(engine.writeRulesToDb(reader, conn));
 }
 
+TEST_CASE("getFsm") {
+  std::string input = R"(
+  rule myRule {
+    grep:
+      patterns:
+        a = "test" encodings=UTF-8,UTF-16LE
+      condition:
+        any()
+    }
+  rule MyOtherRule {
+    grep:
+      patterns:
+        a = "foobar" fixed
+      condition:
+        any()
+  })";
+  RuleReader reader;
+  reader.read(input);
+  RuleEngine engine;
+  LgFsmHolder fsmHolder = engine.getFsm(reader);
+  REQUIRE(lg_fsm_pattern_count(fsmHolder.getFsm()) == 3);
+  auto patToRuleId = engine.patternToRuleId();
+  REQUIRE(patToRuleId.size() == 3);
+  REQUIRE(patToRuleId[0] == patToRuleId[1]);
+  REQUIRE(patToRuleId[1] != patToRuleId[2]);
+}

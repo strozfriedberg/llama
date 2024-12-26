@@ -61,7 +61,7 @@ std::string PropertyNode::getSqlQuery(const LlamaParser& parser) const {
 std::string Rule::getSqlQuery(const LlamaParser& parser) const {
   std::string query = "SELECT '";
   query += this->getHash(parser).to_string();
-  query += "', path, name, addr FROM dirent, inode WHERE dirent.metaaddr == inode.addr";
+  query += "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr";
 
   if (FileMetadata) {
     query += " AND ";
@@ -326,15 +326,17 @@ FuncNode LlamaParser::parseFuncCall() {
   std::string_view name = previousLexeme();
   std::vector<std::string_view> args;
   size_t op = SIZE_MAX, val = SIZE_MAX;
+
   expect(LlamaTokenType::OPEN_PAREN);
   if (matchAny(LlamaTokenType::IDENTIFIER)) {
     args.emplace_back(previousLexeme());
-  }
-  while (matchAny(LlamaTokenType::COMMA)) {
-    mustParse("Expected identifier or number", LlamaTokenType::IDENTIFIER, LlamaTokenType::NUMBER);
-    args.emplace_back(previousLexeme());
+    while (matchAny(LlamaTokenType::COMMA)) {
+      mustParse("Expected identifier or number", LlamaTokenType::IDENTIFIER, LlamaTokenType::NUMBER);
+      args.emplace_back(previousLexeme());
+    }
   }
   expect(LlamaTokenType::CLOSE_PAREN);
+
   if (matchAny(LlamaTokenType::EQUAL, LlamaTokenType::EQUAL_EQUAL, LlamaTokenType::NOT_EQUAL, LlamaTokenType::GREATER_THAN, LlamaTokenType::GREATER_THAN_EQUAL, LlamaTokenType::LESS_THAN, LlamaTokenType::LESS_THAN_EQUAL)) {
     op = CurIdx - 1;
     expect(LlamaTokenType::NUMBER);

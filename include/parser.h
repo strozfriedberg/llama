@@ -49,11 +49,11 @@ struct BoolNode : public Node {
 /************************************ FILE_METADATA SECTION ***************************************/
 
 const static std::unordered_map<std::string_view, std::string> FileMetadataPropertySqlLookup {
-  {"created", "created"},
-  {"modified", "modified"},
-  {"filesize", "filesize"},
-  {"filepath", "path"},
-  {"filename", "name"}
+  {"created", "Created"},
+  {"modified", "Modified"},
+  {"filesize", "Filesize"},
+  {"filepath", "Path"},
+  {"filename", "Name"}
 };
 
 /*************************************** FUNCTIONS ************************************************/

@@ -11,6 +11,19 @@ std::ostream& operator<<(std::ostream& os, const Dirent& dirent) {
   return os;
 }
 
+bool operator==(const Dirent& l, const Dirent& r) {
+  return l.Id == r.Id &&
+         l.Path == r.Path &&
+         l.Name == r.Name &&
+         l.ShortName == r.ShortName &&
+         l.Type == r.Type &&
+         l.Flags == r.Flags &&
+         l.MetaAddr == r.MetaAddr &&
+         l.ParentAddr == r.ParentAddr &&
+         l.MetaSeq == r.MetaSeq &&
+         l.ParentSeq == r.ParentSeq;
+}
+
 TEST_CASE("testDirentStackStartsEmpty") {
   RecordHasher rh;
   DirentStack dirents(rh);

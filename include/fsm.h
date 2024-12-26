@@ -1,7 +1,16 @@
+#pragma once
+
+#include <iostream>
 #include <string>
 #include <string_view>
 
 #include "lightgrep/api.h"
+#include "patternparser.h"
+
+class LlamaParser;
+struct PatternDef;
+
+using PatternPair = std::pair<std::string_view, PatternDef>;
 
 class LgFsmHolder
 {
@@ -13,9 +22,13 @@ public:
     lg_add_pattern(Fsm, pat, std::string(enc).c_str(), patIdx, &Err);
   }
 
+  void addPatterns(const PatternPair& pair, const LlamaParser& parser, const std::string& ruleId, std::vector<std::string>& patToRuleId);
+
   LG_HFSM getFsm() const { return Fsm; }
+  LG_Error* Error() const { return Err; }
 
 private:
+  PatternParser PatParser;
   LG_HFSM Fsm;
   LG_Error* Err;
 };

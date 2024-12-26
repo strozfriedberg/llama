@@ -54,19 +54,17 @@ int Llama::run(int argc, const char* const argv[]) {
 void Llama::search() {
   if (init()) {
     Timer searchTime(&std::cerr, "Search time: ");
-    // std::cout << "Number of patterns: " << lg_pattern_count(LgProg.get())
-    //           << std::endl;
     std::filesystem::path outdir(Opts->Output);
     std::filesystem::create_directories(outdir);
-//    auto out = std::shared_ptr<OutputWriter>(new OutputTar((outdir / "llama").string(), Opts->OutputCodec));
-//    auto outh = std::shared_ptr<OutputHandler>(new PoolOutputHandler(Pool, DbConn, out));
 
-    auto protoProc = std::make_shared<Processor>(&Db, LgProg);
+    RuleEngine engine;
+    LG_ProgramOptions opts{10};
+    LgProg.reset(lg_create_program(engine.getFsm(Reader).getFsm(), &opts), lg_destroy_program);
+    auto protoProc = std::make_shared<Processor>(&Db, LgProg, engine.patternToRuleId());
     auto scheduler = std::make_shared<FileScheduler>(Db, Pool, protoProc, Opts);
     auto inh = std::shared_ptr<InputHandler>(new BatchHandler(scheduler));
 
     Input->setInputHandler(inh);
-    //Input->setOutputHandler(outh);
 
     if (!Input->startReading()) {
       std::cerr << "startReading returned an error" << std::endl;
@@ -74,8 +72,6 @@ void Llama::search() {
     Pool.join();
     std::cerr << "Hashing Time: " << scheduler->getProcessorTime() << "s\n";
 
-    // std::cout << "All done" << std::endl;
-    RuleEngine engine;
     engine.createTables(DbConn);
     engine.writeRulesToDb(this->Reader, DbConn);
 
@@ -105,10 +101,7 @@ bool Llama::readpatterns(const std::vector<std::string>& keyFiles) {
   LG_Error *errs = nullptr;
 
   for (auto keyf : keyFiles) {
-    // std::cerr << "add patterns from " << keyf << std::endl;
-
     std::string patterns = readfile(keyf);
-    // std::cerr << "Patterns are:\n" << patterns << std::endl;
     int result = lg_add_pattern_list(fsm.get(), patterns.c_str(),
                                      keyf.c_str(), defaultEncodings, 2,
                                      &defaultKeyOpts, &errs);
@@ -158,12 +151,11 @@ bool Llama::init() {
     return dbInit();
   });
 
-  if (!this->Opts->RuleFile.empty()) {
-    std::string ruleStr = readfile(this->Opts->RuleFile);
-    Reader.read(ruleStr);
-  }
+  auto rules = make_future(Pool, [this](){
+    return this->Opts->RuleFile.empty() || Reader.read(readfile(this->Opts->RuleFile));
+  });
 
-  return readPats.get() && open.get() && db.get();
+  return readPats.get() && open.get() && db.get() && rules.get();
 }
 
 void Llama::writeDB(const std::string& outdir) {
