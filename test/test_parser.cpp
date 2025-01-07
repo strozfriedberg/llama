@@ -278,7 +278,17 @@ TEST_CASE("parseTermWithoutAnd") {
   REQUIRE_NOTHROW(parser.parseTerm(LlamaTokenType::CONDITION));
 }
 
-TEST_CASE("parseExpr") {
+// (A and B) or C
+/*
+     or
+    /  \
+  and   C
+  /  \
+ A   B
+
+*/
+
+TEST_CASE("parseExpr1") {
   std::string input = "(any(s1, s2, s3) and length(s1, 5) == 5) or all()";
   LlamaParser parser(input, getLexer(input).tokens());
   std::shared_ptr<Node> node = std::make_shared<BoolNode>();
@@ -293,6 +303,85 @@ TEST_CASE("parseExpr") {
   REQUIRE(boolNode->Right);
   REQUIRE(boolNode->Right->Type == NodeType::FUNC);
 }
+
+// A and B or C
+/*
+     or
+    /  \
+  and   C
+  /  \
+ A   B
+
+*/
+
+TEST_CASE("parseExpr2") {
+  std::string input = "any(s1, s2, s3) and length(s1, 5) == 5 or all()";
+  LlamaParser parser(input, getLexer(input).tokens());
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
+  REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
+  REQUIRE(boolNode->Type == NodeType::BOOL);
+  REQUIRE(boolNode->Operation == BoolNode::Op::OR);
+  REQUIRE(boolNode->Left);
+  auto boolNodeLeft = std::static_pointer_cast<BoolNode>(boolNode->Left);
+  REQUIRE(boolNodeLeft->Type == NodeType::BOOL);
+  REQUIRE(boolNodeLeft->Operation == BoolNode::Op::AND);
+  REQUIRE(boolNode->Right);
+  REQUIRE(boolNode->Right->Type == NodeType::FUNC);
+}
+
+// (A or B) and C
+/*
+     and
+    /  \
+   or   C
+  /  \
+ A   B
+
+*/
+
+TEST_CASE("parseExpr3") {
+  std::string input = "(any(s1, s2, s3) or length(s1, 5) == 5) and all()";
+  LlamaParser parser(input, getLexer(input).tokens());
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
+  REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
+  REQUIRE(boolNode->Type == NodeType::BOOL);
+  REQUIRE(boolNode->Operation == BoolNode::Op::AND);
+  REQUIRE(boolNode->Left);
+  auto boolNodeLeft = std::static_pointer_cast<BoolNode>(boolNode->Left);
+  REQUIRE(boolNodeLeft->Type == NodeType::BOOL);
+  REQUIRE(boolNodeLeft->Operation == BoolNode::Op::OR);
+  REQUIRE(boolNode->Right);
+  REQUIRE(boolNode->Right->Type == NodeType::FUNC);
+}
+
+// A or B and C
+/*
+     or
+    /  \
+   A  and
+      /  \
+     B   C
+
+*/
+
+TEST_CASE("parseExpr4") {
+  std::string input = "any(s1, s2, s3) or length(s1, 5) == 5 and all()";
+  LlamaParser parser(input, getLexer(input).tokens());
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
+  REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
+  REQUIRE(boolNode->Type == NodeType::BOOL);
+  REQUIRE(boolNode->Operation == BoolNode::Op::OR);
+  REQUIRE(boolNode->Right);
+  auto boolNodeRight = std::static_pointer_cast<BoolNode>(boolNode->Right);
+  REQUIRE(boolNodeRight->Type == NodeType::BOOL);
+  REQUIRE(boolNodeRight->Operation == BoolNode::Op::AND);
+  REQUIRE(boolNode->Left);
+  REQUIRE(boolNode->Left->Type == NodeType::FUNC);
+}
+
 
 TEST_CASE("parseConditionSection") {
   std::string input = "(any(s1, s2, s3) and count(s1) == 5) or all(s1, s2, s3)";
