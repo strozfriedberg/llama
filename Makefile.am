@@ -84,6 +84,7 @@ test_test_SOURCES = \
 	test/test_parser.cpp \
 	test/test_patternparser.cpp \
 	test/test_processor.cpp \
+	test/test_querygenerator.cpp \
 	test/test_readseek.cpp \
 	test/test_recordbuffer.cpp \
 	test/test_recordhasher.cpp \
