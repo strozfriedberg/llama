@@ -3,7 +3,7 @@
 #include "lexer.h"
 #include "querygenerator.h"
 
-TEST_CASE("getPropertyNodeSqlClause) {
+TEST_CASE("getPropertyNodeSqlClause") {
   std::string input("rule MyRule { file_metadata: filesize == 123456 }");
   LlamaParser parser(input, LlamaLexer::getTokens(input));
   QueryGenerator qg(parser);

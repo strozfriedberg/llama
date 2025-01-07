@@ -33,7 +33,7 @@ void Function::validate() {
 std::string BoolNode::getSqlQuery(const LlamaParser& parser) const {
   std::string query = "(";
   query += Left->getSqlQuery(parser);
-  query += Type == NodeType::AND ? " AND " : " OR ";
+  query += Operation == BoolNode::Op::AND ? " AND " : " OR ";
   query += Right->getSqlQuery(parser);
   query += ")";
   return query;
@@ -295,8 +295,9 @@ std::shared_ptr<Node> LlamaParser::parseTerm(LlamaTokenType section) {
   std::shared_ptr<Node> left = parseFactor(section);
 
   while (matchAny(LlamaTokenType::AND)) {
-    std::shared_ptr<Node> node = std::make_shared<BoolNode>();
-    node->Type = NodeType::AND;
+    std::shared_ptr<BoolNode> node = std::make_shared<BoolNode>();
+    node->Operation = BoolNode::Op::AND;
+    node->Type = NodeType::BOOL;
     node->Left = left;
     node->Right = parseFactor(section);
     left = node;
@@ -308,8 +309,9 @@ std::shared_ptr<Node> LlamaParser::parseExpr(LlamaTokenType section) {
   std::shared_ptr<Node> left = parseTerm(section);
 
   while (matchAny(LlamaTokenType::OR)) {
-    std::shared_ptr<Node> node = std::make_shared<BoolNode>();
-    node->Type = NodeType::OR;
+    std::shared_ptr<BoolNode> node = std::make_shared<BoolNode>();
+    node->Operation = BoolNode::Op::OR;
+    node->Type = NodeType::BOOL;
     node->Left = left;
     node->Right = parseTerm(section);
     left = node;

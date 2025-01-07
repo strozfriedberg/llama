@@ -261,7 +261,9 @@ TEST_CASE("parseTermWithAnd") {
   LlamaParser parser(input, getLexer(input).tokens());
   std::shared_ptr<Node> node = std::make_shared<BoolNode>();
   REQUIRE_NOTHROW(node = parser.parseTerm(LlamaTokenType::CONDITION));
-  REQUIRE(node->Type == NodeType::AND);
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
+  REQUIRE(boolNode->Type == NodeType::BOOL);
+  REQUIRE(boolNode->Operation == BoolNode::Op::AND);
   auto left = std::static_pointer_cast<FuncNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::FUNC);
   REQUIRE(left->Value.Name == "any");
@@ -281,11 +283,15 @@ TEST_CASE("parseExpr") {
   LlamaParser parser(input, getLexer(input).tokens());
   std::shared_ptr<Node> node = std::make_shared<BoolNode>();
   REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
-  REQUIRE(node->Type == NodeType::OR);
-  REQUIRE(node->Left);
-  REQUIRE(node->Left->Type == NodeType::AND);
-  REQUIRE(node->Right);
-  REQUIRE(node->Right->Type == NodeType::FUNC);
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
+  REQUIRE(boolNode->Type == NodeType::BOOL);
+  REQUIRE(boolNode->Operation == BoolNode::Op::OR);
+  REQUIRE(boolNode->Left);
+  auto boolNodeLeft = std::static_pointer_cast<BoolNode>(boolNode->Left);
+  REQUIRE(boolNodeLeft->Type == NodeType::BOOL);
+  REQUIRE(boolNodeLeft->Operation == BoolNode::Op::AND);
+  REQUIRE(boolNode->Right);
+  REQUIRE(boolNode->Right->Type == NodeType::FUNC);
 }
 
 TEST_CASE("parseConditionSection") {
@@ -294,7 +300,7 @@ TEST_CASE("parseConditionSection") {
   std::shared_ptr<Node> node;
   REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
   REQUIRE(parser.CurIdx == parser.Tokens.size() - 1);
-  REQUIRE(node->Type == NodeType::OR);
+  REQUIRE(node->Type == NodeType::BOOL);
 }
 
 TEST_CASE("parseSignatureSection") {
@@ -302,7 +308,7 @@ TEST_CASE("parseSignatureSection") {
   LlamaParser parser(input, getLexer(input).tokens());
   std::shared_ptr<Node> node;
   REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::SIGNATURE));
-  REQUIRE(node->Type == NodeType::OR);
+  REQUIRE(node->Type == NodeType::BOOL);
   auto propNodeLeft = std::static_pointer_cast<PropertyNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::PROP);
   REQUIRE(parser.lexemeAt(propNodeLeft->Value.Name) == "name");
@@ -329,7 +335,7 @@ TEST_CASE("parseGrepSection") {
   REQUIRE(patDef.Pattern == "test");
   REQUIRE(patDef.Enc.first == 9);
   REQUIRE(patDef.Enc.second == 10);
-  REQUIRE(section.Condition->Type == NodeType::AND);
+  REQUIRE(section.Condition->Type == NodeType::BOOL);
   REQUIRE(section.Condition->Left->Type == NodeType::FUNC);
   REQUIRE(section.Condition->Right->Type == NodeType::FUNC);
 }

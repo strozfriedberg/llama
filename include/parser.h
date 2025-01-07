@@ -24,7 +24,7 @@ class LlamaParser;
 struct Atom {};
 
 enum class NodeType {
-  AND, OR, FUNC, SIG, META, PROP
+  BOOL, FUNC, SIG, META, PROP
 };
 
 // Holds information about expressions under the `file_metadata`, `signature`, and `condition`
@@ -44,6 +44,13 @@ struct Node {
 // Reserved for AND and OR nodes.
 struct BoolNode : public Node {
   std::string getSqlQuery(const LlamaParser& parser) const override;
+
+  enum Op {
+    AND,
+    OR
+  };
+
+  Op Operation;
 };
 
 /************************************ FILE_METADATA SECTION ***************************************/

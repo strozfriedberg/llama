@@ -4,6 +4,10 @@ class QueryGenerator {
 public:
   QueryGenerator(const LlamaParser& parser) : Parser(parser) {}
 
+  // std::string getSqlClause(const Node* n) {
+
+  // }
+
   std::string getSqlClause(const PropertyNode& pn) {
     std::string query = "";
     std::string_view propertyName = Parser.lexemeAt(pn.Value.Name);
@@ -22,6 +26,15 @@ public:
     }
     return query;
   }
+
+  // std::string getSqlClause(const BoolNode& bn) {
+  //   std::string query = "(";
+  //   query += getSqlClause(*bn.Left);
+  //   query += Type == NodeType::AND ? " AND " : " OR ";
+  //   query += Right->getSqlQuery(parser);
+  //   query += ")";
+  //   return query;
+  // }
 
 private:
   const LlamaParser& Parser;
