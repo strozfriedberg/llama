@@ -23,9 +23,7 @@ class LlamaParser;
 
 struct Atom {};
 
-enum class NodeType {
-  BOOL, FUNC, SIG, META, PROP
-};
+enum class NodeType { BOOL, FUNC, PROP };
 
 // Holds information about expressions under the `file_metadata`, `signature`, and `condition`
 // sections.
@@ -42,11 +40,7 @@ struct Node {
 
 // Reserved for AND and OR nodes.
 struct BoolNode : public Node {
-  enum Op {
-    AND,
-    OR
-  };
-
+  enum Op { AND, OR };
   Op Operation;
 };
 
