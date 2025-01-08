@@ -1,11 +1,11 @@
 #include "querybuilder.h"
 
-std::string QueryBuilder::getSqlClause(std::shared_ptr<Node> n) {
+std::string QueryBuilder::buildSqlClause(std::shared_ptr<Node> n) {
   std::string clause = "";
     switch (n->Type) {
       case NodeType::PROP: {
         auto pn = std::static_pointer_cast<PropertyNode>(n);
-        clause = getSqlClause(pn); 
+        clause = buildSqlClause(pn);
         break;
       }
       case NodeType::BOOL: {
@@ -15,7 +15,7 @@ std::string QueryBuilder::getSqlClause(std::shared_ptr<Node> n) {
     return clause;
 }
 
-std::string QueryBuilder::getSqlClause(std::shared_ptr<PropertyNode> pn) {
+std::string QueryBuilder::buildSqlClause(std::shared_ptr<PropertyNode> pn) {
   std::string clause = "";
   std::string_view propertyName = Parser.lexemeAt(pn->Value.Name);
   clause += FileMetadataPropertySqlLookup.find(propertyName)->second;
@@ -34,11 +34,11 @@ std::string QueryBuilder::getSqlClause(std::shared_ptr<PropertyNode> pn) {
   return clause;
 }
 
-std::string QueryBuilder::getSqlClause(std::shared_ptr<BoolNode> bn) {
+std::string QueryBuilder::buildSqlClause(std::shared_ptr<BoolNode> bn) {
   std::string clause = "(";
-  clause += getSqlClause(bn->Left);
+  clause += buildSqlClause(bn->Left);
   clause += bn->Operation == BoolNode::Op::AND ? " AND " : " OR ";
-  clause += getSqlClause(bn->Right);
+  clause += buildSqlClause(bn->Right);
   clause += ")";
   return clause;
 }
