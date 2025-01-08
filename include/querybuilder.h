@@ -8,6 +8,8 @@ public:
   std::string buildSqlClause(std::shared_ptr<PropertyNode> pn);
   std::string buildSqlClause(std::shared_ptr<BoolNode> bn);
 
+  std::string buildSqlQuery(const Rule& rule);
+
 private:
   const LlamaParser& Parser;
 };

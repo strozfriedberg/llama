@@ -42,3 +42,16 @@ std::string QueryBuilder::buildSqlClause(std::shared_ptr<BoolNode> bn) {
   clause += ")";
   return clause;
 }
+
+std::string QueryBuilder::buildSqlQuery(const Rule& rule) {
+  std::string query = "SELECT '";
+  query += rule.getHash(Parser).to_string();
+  query += "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr";
+
+  if (rule.FileMetadata) {
+    query += " AND ";
+    query += rule.FileMetadata->getSqlQuery(Parser);
+  }
+
+  return query;
+}
