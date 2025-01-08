@@ -19,7 +19,7 @@ TEST_CASE("buildSqlQueryFromRule") {
   QueryBuilder qb(parser);
   std::vector<Rule> rules = parser.parseRules({0});
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr");
+  REQUIRE(qb.buildSqlQuery(rules.at(0)) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr");
 }
 
 TEST_CASE("buildSqlQueryFromRuleWithOneNumberFileMetadataCondition") {
@@ -28,7 +28,7 @@ TEST_CASE("buildSqlQueryFromRuleWithOneNumberFileMetadataCondition") {
   QueryBuilder qb(parser);
   std::vector<Rule> rules = parser.parseRules({0});
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr AND Filesize == 30000");
+  REQUIRE(qb.buildSqlQuery(rules.at(0)) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr AND Filesize == 30000");
 }
 
 TEST_CASE("buildSqlQueryFromRuleWithOneStringFileMetadataCondition") {
@@ -37,7 +37,7 @@ TEST_CASE("buildSqlQueryFromRuleWithOneStringFileMetadataCondition") {
   QueryBuilder qb(parser);
   std::vector<Rule> rules = parser.parseRules({0});
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr AND Created > '2023-05-04'");
+  REQUIRE(qb.buildSqlQuery(rules.at(0)) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr AND Created > '2023-05-04'");
 }
 
 TEST_CASE("buildSqlQueryFromRuleWithCompoundFileMetadataDef") {
@@ -46,5 +46,5 @@ TEST_CASE("buildSqlQueryFromRuleWithCompoundFileMetadataDef") {
   QueryBuilder qb(parser);
   std::vector<Rule> rules = parser.parseRules({0});
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr AND (Filesize == 123456 OR (((Created > '2023-05-04' AND Modified < '2023-05-06') AND Name == 'test') AND Path == 'test'))");
+  REQUIRE(qb.buildSqlQuery(rules.at(0)) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr AND (Filesize == 123456 OR (((Created > '2023-05-04' AND Modified < '2023-05-06') AND Name == 'test') AND Path == 'test'))");
 }

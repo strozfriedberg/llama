@@ -1,5 +1,13 @@
 #include "querybuilder.h"
 
+const static std::unordered_map<std::string_view, std::string> FileMetadataPropertySqlLookup {
+  {"created", "Created"},
+  {"modified", "Modified"},
+  {"filesize", "Filesize"},
+  {"filepath", "Path"},
+  {"filename", "Name"}
+};
+
 std::string QueryBuilder::buildSqlClause(std::shared_ptr<Node> n) {
   std::string clause = "";
     switch (n->Type) {
@@ -10,6 +18,8 @@ std::string QueryBuilder::buildSqlClause(std::shared_ptr<Node> n) {
       }
       case NodeType::BOOL: {
         auto bn = std::static_pointer_cast<BoolNode>(n);
+        clause = buildSqlClause(bn);
+        break;
       }
     }
     return clause;
@@ -50,7 +60,7 @@ std::string QueryBuilder::buildSqlQuery(const Rule& rule) {
 
   if (rule.FileMetadata) {
     query += " AND ";
-    query += rule.FileMetadata->getSqlQuery(Parser);
+    query += buildSqlClause(rule.FileMetadata);
   }
 
   return query;

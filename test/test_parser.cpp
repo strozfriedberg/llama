@@ -928,42 +928,6 @@ TEST_CASE("EmptyStringNoRules") {
   REQUIRE(parser.parseRules(lexer.ruleIndices()).size() == 0);
 }
 
-TEST_CASE("GetSqlQueryFromRule") {
-  std::string input = "rule MyRule { }";
-  LlamaLexer lexer = getLexer(input);
-  LlamaParser parser(input, lexer.tokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
-  REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr");
-}
-
-TEST_CASE("GetSqlQueryFromRuleWithOneNumberFileMetadataCondition") {
-  std::string input = "rule MyRule { file_metadata: filesize == 30000 }";
-  LlamaLexer lexer = getLexer(input);
-  LlamaParser parser(input, lexer.tokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
-  REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr AND Filesize == 30000");
-}
-
-TEST_CASE("GetSqlQueryFromRuleWithOneStringFileMetadataCondition") {
-  std::string input = "rule MyRule { file_metadata: created > \"2023-05-04\" }";
-  LlamaLexer lexer = getLexer(input);
-  LlamaParser parser(input, lexer.tokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
-  REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr AND Created > '2023-05-04'");
-}
-
-TEST_CASE("GetSqlQueryFromRuleWithCompoundFileMetadataDef") {
-  std::string input = "rule MyRule { file_metadata: filesize == 123456 or created > \"2023-05-04\" and modified < \"2023-05-06\" and filename == \"test\" and filepath == \"test\" }";
-  LlamaLexer lexer = getLexer(input);
-  LlamaParser parser(input, lexer.tokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
-  REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr AND (Filesize == 123456 OR (((Created > '2023-05-04' AND Modified < '2023-05-06') AND Name == 'test') AND Path == 'test'))");
-}
-
 TEST_CASE("GetRuleHashWithNoSections") {
   std::string input = "rule MyRule { } rule MyOtherRule { file_metadata: filesize > 30000 }";
   LlamaLexer lexer = getLexer(input);

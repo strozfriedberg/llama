@@ -30,47 +30,6 @@ void Function::validate() {
   }
 }
 
-std::string BoolNode::getSqlQuery(const LlamaParser& parser) const {
-  std::string query = "(";
-  query += Left->getSqlQuery(parser);
-  query += Operation == BoolNode::Op::AND ? " AND " : " OR ";
-  query += Right->getSqlQuery(parser);
-  query += ")";
-  return query;
-}
-
-std::string PropertyNode::getSqlQuery(const LlamaParser& parser) const {
-  std::string query = "";
-  std::string_view propertyName = parser.lexemeAt(Value.Name);
-  query += FileMetadataPropertySqlLookup.find(propertyName)->second;
-  query += " ";
-  query += parser.lexemeAt(Value.Op);
-  query += " ";
-  std::string_view val = parser.lexemeAt(Value.Val);
-  if (parser.Tokens[Value.Val].Type == LlamaTokenType::DOUBLE_QUOTED_STRING) {
-    query += "'";
-    query += val;
-    query += "'";
-  }
-  else {
-    query += val;
-  }
-  return query;
-}
-
-std::string Rule::getSqlQuery(const LlamaParser& parser) const {
-  std::string query = "SELECT '";
-  query += this->getHash(parser).to_string();
-  query += "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr";
-
-  if (FileMetadata) {
-    query += " AND ";
-    query += FileMetadata->getSqlQuery(parser);
-  }
-
-  return query;
-}
-
 void LlamaParser::clear() {
   Tokens.clear();
   Input.clear();

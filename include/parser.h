@@ -31,7 +31,6 @@ enum class NodeType {
 // sections.
 struct Node {
   virtual ~Node() = default;
-  virtual std::string getSqlQuery(const LlamaParser& parser) const = 0;
 
   Node(NodeType type) : Type(type) {}
   Node() = default;
@@ -43,24 +42,12 @@ struct Node {
 
 // Reserved for AND and OR nodes.
 struct BoolNode : public Node {
-  std::string getSqlQuery(const LlamaParser& parser) const override;
-
   enum Op {
     AND,
     OR
   };
 
   Op Operation;
-};
-
-/************************************ FILE_METADATA SECTION ***************************************/
-
-const static std::unordered_map<std::string_view, std::string> FileMetadataPropertySqlLookup {
-  {"created", "Created"},
-  {"modified", "Modified"},
-  {"filesize", "Filesize"},
-  {"filepath", "Path"},
-  {"filename", "Name"}
 };
 
 /*************************************** FUNCTIONS ************************************************/
@@ -105,8 +92,6 @@ struct FuncNode : public Node {
   FuncNode() : Node(NodeType::FUNC) {}
   FuncNode(Function&& value) : Node(NodeType::FUNC) { Value = value; }
   Function Value;
-
-  std::string getSqlQuery(const LlamaParser&) const override { return ""; };
 };
 
 // Holds information about minimum and maximum number of arguments in a function and whether
@@ -171,8 +156,6 @@ struct HashSection {
 /************************************ RULE ********************************************************/
 
 struct Rule {
-  std::string getSqlQuery(const LlamaParser&) const;
-
   // Used for unique rule ID in the database.
   FieldHash getHash(const LlamaParser&) const;
 
@@ -281,8 +264,6 @@ struct PropertyNode : public Node {
   PropertyNode() = default;
   PropertyNode(Property&& value) : Node(NodeType::PROP) { Value = value; }
   Property Value;
-
-  std::string getSqlQuery(const LlamaParser& parser) const override;
 };
 
 /************************************ PARSER ******************************************************/

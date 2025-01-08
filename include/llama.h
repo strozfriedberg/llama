@@ -4,12 +4,14 @@
 #include "llamaduck.h"
 #include "options.h"
 #include "rulereader.h"
+#include "ruleengine.h"
 
 struct ProgramHandle;
 
 class Cli;
 class InputReader;
 class OutputWriter;
+class LlamaRuleEngine;
 
 class Llama {
 public:
@@ -37,7 +39,7 @@ private:
   std::shared_ptr<ProgramHandle> LgProg;
   std::shared_ptr<InputReader> Input;
 
-  RuleReader Reader;
+  LlamaRuleEngine RuleEngine;
   LlamaDB Db;
   LlamaDBConnection DbConn;
 };

@@ -7,7 +7,7 @@
 #include "direntbatch.h"
 
 TEST_CASE("TestCreateTables") {
-  RuleEngine engine;
+  LlamaRuleEngine engine;
   LlamaDB db;
   LlamaDBConnection conn(db);
   engine.createTables(conn);
@@ -26,15 +26,14 @@ TEST_CASE("TestCreateTables") {
 
 TEST_CASE("TestWriteRuleToDb") {
   std::string input = "rule MyRule { file_metadata: created > \"2021-01-01\" } rule MyRule2 { file_metadata: filesize > 100 }";
-  RuleReader reader;
-  reader.read(input);
-  RuleEngine engine;
+  LlamaRuleEngine engine;
+  engine.read(input);
   LlamaDB db;
   LlamaDBConnection conn(db);
   REQUIRE(DBType<Dirent>::createTable(conn.get(), "dirent"));
   REQUIRE(DBType<Inode>::createTable(conn.get(), "inode"));
   engine.createTables(conn);
-  engine.writeRulesToDb(reader, conn);
+  engine.writeRulesToDb(conn);
   duckdb_result result;
   auto state = duckdb_query(conn.get(), "select * from rules;", &result);
   CHECK(state == DuckDBSuccess);
@@ -47,12 +46,12 @@ TEST_CASE("TestWriteRuleToDb") {
 
 TEST_CASE("TestZeroRulesToDb") {
   RuleReader reader;
-  RuleEngine engine;
+  LlamaRuleEngine engine;
   LlamaDB    db;
   LlamaDBConnection conn(db);
 
   REQUIRE_NOTHROW(engine.createTables(conn));
-  REQUIRE_NOTHROW(engine.writeRulesToDb(reader, conn));
+  REQUIRE_NOTHROW(engine.writeRulesToDb(conn));
 }
 
 TEST_CASE("getFsm") {
@@ -71,10 +70,9 @@ TEST_CASE("getFsm") {
       condition:
         any()
   })";
-  RuleReader reader;
-  reader.read(input);
-  RuleEngine engine;
-  LgFsmHolder fsmHolder = engine.getFsm(reader);
+  LlamaRuleEngine engine;
+  engine.read(input);
+  LgFsmHolder fsmHolder = engine.buildFsm();
   REQUIRE(lg_fsm_pattern_count(fsmHolder.getFsm()) == 3);
   auto patToRuleId = engine.patternToRuleId();
   REQUIRE(patToRuleId.size() == 3);

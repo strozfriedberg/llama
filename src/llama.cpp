@@ -28,7 +28,7 @@ namespace fs = std::filesystem;
 Llama::Llama()
     : CliParser(std::make_shared<Cli>()), Pool(),
       LgProg(nullptr, lg_destroy_program),
-      Reader(), Db(), DbConn(Db) {}
+      RuleEngine(), Db(), DbConn(Db) {}
 
 int Llama::run(int argc, const char* const argv[]) {
   try {
@@ -57,10 +57,9 @@ void Llama::search() {
     std::filesystem::path outdir(Opts->Output);
     std::filesystem::create_directories(outdir);
 
-    RuleEngine engine;
     LG_ProgramOptions opts{10};
-    LgProg.reset(lg_create_program(engine.getFsm(Reader).getFsm(), &opts), lg_destroy_program);
-    auto protoProc = std::make_shared<Processor>(&Db, LgProg, engine.patternToRuleId());
+    LgProg.reset(lg_create_program(RuleEngine.buildFsm().getFsm(), &opts), lg_destroy_program);
+    auto protoProc = std::make_shared<Processor>(&Db, LgProg, RuleEngine.patternToRuleId());
     auto scheduler = std::make_shared<FileScheduler>(Db, Pool, protoProc, Opts);
     auto inh = std::shared_ptr<InputHandler>(new BatchHandler(scheduler));
 
@@ -72,8 +71,8 @@ void Llama::search() {
     Pool.join();
     std::cerr << "Hashing Time: " << scheduler->getProcessorTime() << "s\n";
 
-    engine.createTables(DbConn);
-    engine.writeRulesToDb(this->Reader, DbConn);
+    RuleEngine.createTables(DbConn);
+    RuleEngine.writeRulesToDb(DbConn);
 
     writeDB(outdir.string());
   }
@@ -152,7 +151,7 @@ bool Llama::init() {
   });
 
   auto rules = make_future(Pool, [this](){
-    return this->Opts->RuleFile.empty() || Reader.read(readfile(this->Opts->RuleFile));
+    return this->Opts->RuleFile.empty() || RuleEngine.read(readfile(this->Opts->RuleFile));
   });
 
   return readPats.get() && open.get() && db.get() && rules.get();
