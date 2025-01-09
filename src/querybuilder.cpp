@@ -10,19 +10,19 @@ const static std::unordered_map<std::string_view, std::string> FileMetadataPrope
 
 std::string QueryBuilder::buildSqlClause(std::shared_ptr<Node> n) {
   std::string clause = "";
-    switch (n->Type) {
-      case NodeType::PROP: {
-        auto pn = std::static_pointer_cast<PropertyNode>(n);
-        clause = buildSqlClause(pn);
-        break;
-      }
-      case NodeType::BOOL: {
-        auto bn = std::static_pointer_cast<BoolNode>(n);
-        clause = buildSqlClause(bn);
-        break;
-      }
+  switch (n->Type) {
+    case NodeType::PROP: {
+      auto pn = std::static_pointer_cast<PropertyNode>(n);
+      clause = buildSqlClause(pn);
+      break;
     }
-    return clause;
+    case NodeType::BOOL: {
+      auto bn = std::static_pointer_cast<BoolNode>(n);
+      clause = buildSqlClause(bn);
+      break;
+    }
+  }
+  return clause;
 }
 
 std::string QueryBuilder::buildSqlClause(std::shared_ptr<PropertyNode> pn) {

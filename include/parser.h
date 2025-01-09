@@ -152,6 +152,7 @@ struct HashSection {
 struct Rule {
   // Used for unique rule ID in the database.
   FieldHash getHash(const LlamaParser&) const;
+  const std::unordered_map<std::string_view, PatternDef>& getPatternMap() const { return Grep.Patterns.Patterns; }
 
   std::string_view      Name;
   MetaSection           Meta;
