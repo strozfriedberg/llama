@@ -153,7 +153,7 @@ rule MyRule {
 }
 ```
 
-In the rule above, `s1` and `s2` are _pattern identifiers_ for `"foobar"` and `"baroo"`. The next three sections describe pattern modifiers that you may use to specify attributes for your patterns. These modifiers may be combined for each pattern in any order.
+In the rule above, `s1` and `s2` are _pattern identifiers_ for `"foobar"` and `"barfoo"`. The next three sections describe pattern modifiers that you may use to specify attributes for your patterns. These modifiers may be combined for each pattern in any order.
 
 ##### Fixed strings
 
