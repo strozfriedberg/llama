@@ -19,6 +19,7 @@ public:
   const std::vector<std::string>& patternToRuleId() const { return PatternToRuleId; }
 private:
   std::vector<std::string> PatternToRuleId;
+  std::string Input;
   RuleReader Reader;
   QueryBuilder Qb;
 };

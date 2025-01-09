@@ -54,5 +54,8 @@ LgFsmHolder LlamaRuleEngine::buildFsm() {
 }
 
 bool LlamaRuleEngine::read(const std::string& input) {
-  Reader.read(input);
+  // Make a copy of the input and save as member to ensure input string lifetime
+  // (since we're passing around `string_view`s)
+  Input = input;
+  Reader.read(Input);
 }
