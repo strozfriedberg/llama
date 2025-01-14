@@ -33,7 +33,8 @@ Processor::Processor(LlamaDB* db, const std::shared_ptr<ProgramHandle>& prog, co
   PatternToRuleId(patternToRuleId),
   Db(db),
   DbConn(*db),
-  Appender(DbConn.get(), "hash"),
+  HashAppender(DbConn.get(), "hash"),
+  SearchHitAppender(DbConn.get(), "search_hits"),
   LgProg(prog),
   Ctx(prog.get() ? lg_create_context(prog.get(), &ctxOpts) : nullptr, lg_destroy_context),
   Hasher(sfhash_create_hasher(SFHASH_MD5 | SFHASH_SHA_1 | SFHASH_SHA_2_256 | SFHASH_BLAKE3 | SFHASH_FUZZY), sfhash_destroy_hasher),
@@ -75,9 +76,10 @@ void Processor::process(ReadSeek& stream) {
 
 void Processor::flush(void) {
   if (Hashes->size()) {
-    Hashes->copyToDB(Appender.get());
-    SearchHits->copyToDB(Appender.get());
-    Appender.flush();
+    Hashes->copyToDB(HashAppender.get());
+    SearchHits->copyToDB(SearchHitAppender.get());
+    HashAppender.flush();
+    SearchHitAppender.flush();
   }
 }
 
@@ -95,6 +97,7 @@ void Processor::search(ReadSeek& rs) {
   lg_reset_context(Ctx.get());
   size_t bytesRead = 0;
   uint64_t offset = 0;
+  rs.seek(0);
   do {
       bytesRead = rs.read(1 << 20, Buf);
       if (bytesRead > 0) {

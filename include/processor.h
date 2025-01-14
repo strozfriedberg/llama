@@ -48,7 +48,8 @@ private:
 
   LlamaDB* const Db; // weak pointer, allows for clone()
   LlamaDBConnection DbConn;
-  LlamaDBAppender   Appender;
+  LlamaDBAppender   HashAppender;
+  LlamaDBAppender   SearchHitAppender;
 
   std::shared_ptr<ProgramHandle> LgProg; // shared
   std::shared_ptr<ContextHandle> Ctx; // not shared, could be unique_ptr

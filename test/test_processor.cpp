@@ -35,9 +35,11 @@ public:
     Proc.currentHash("file_hash");
   }
 
-  void search() { Proc.search(RsBuf); }
+  void search() {
+    Proc.search(RsBuf);
+  }
+
   uint64_t putSearchHitsInDb() {
-    DBType<SearchHit>::createTable(DbConn.get(), "search_hits");
     LlamaDBAppender appender(DbConn.get(), "search_hits");
     uint64_t recordsInserted = Proc.searchHits()->copyToDB(appender.get());
     appender.flush();
@@ -78,6 +80,7 @@ private:
     std::shared_ptr<ProgramHandle> pHandle(prog, lg_destroy_program);
 
     // duckdb setup
+    DBType<SearchHit>::createTable(DbConn.get(), "search_hits");
     DBType<HashRec>::createTable(DbConn.get(), "hash");
     return Processor{&Db, pHandle, PatternToRuleId};
   }
@@ -136,7 +139,7 @@ TEST_CASE("testSearchWithMultipleHits") {
     SearchHit{"foo", 17, 20, "rule_id", "file_hash", 3},
   };
 
-  ProcessorSearchTester pst{needle, haystack, expectedHits.size()};
+  ProcessorSearchTester pst(needle, haystack, expectedHits.size());
   pst.search();
 
   REQUIRE(expectedHits.size() == pst.putSearchHitsInDb());

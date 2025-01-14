@@ -29,7 +29,6 @@ private:
   bool dbInit();
 
   void writeDB(const std::string& outdir);
-  void makeRuleTable();
 
   std::shared_ptr<Cli> CliParser;
 
