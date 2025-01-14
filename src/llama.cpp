@@ -58,7 +58,6 @@ void Llama::search() {
     std::filesystem::create_directories(outdir);
 
     RuleEngine.createTables(DbConn);
-    RuleEngine.writeRulesToDb(DbConn);
 
     LG_ProgramOptions opts{10};
     LgProg.reset(lg_create_program(RuleEngine.buildFsm().getFsm(), &opts), lg_destroy_program);
@@ -74,6 +73,7 @@ void Llama::search() {
     Pool.join();
     std::cerr << "Hashing Time: " << scheduler->getProcessorTime() << "s\n";
 
+    RuleEngine.writeRulesToDb(DbConn);
     writeDB(outdir.string());
   }
   else {
