@@ -69,7 +69,7 @@ std::string_view LlamaParser::expect(LlamaTokenType token) {
 
 FieldHash Rule::getHash(const LlamaParser& parser) const {
   FieldHasher hasher;
-  hasher.hash_iter(parser.Tokens.begin() + Start, parser.Tokens.begin() + End, [](const Token& token) { return token.Type; });
+  hasher.hash_iter(parser.Tokens.begin() + Start, parser.Tokens.begin() + End, [](const Token& token) { return token.Lexeme; });
   return hasher.get_hash();
 }
 
