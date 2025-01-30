@@ -79,7 +79,6 @@ void FileScheduler::performScheduling(DirentBatch& dirents,
     for (auto& stream : *streams) {
       if (stream->open()) {
         proc->process(*stream);
-        proc->search(*stream);
         stream->close();
       }
     }

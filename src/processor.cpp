@@ -6,7 +6,6 @@
 
 #include "blocksequence.h"
 #include "filerecord.h"
-#include "hex.h"
 #include "outputhandler.h"
 #include "readseek.h"
 #include "timer.h"
@@ -14,7 +13,7 @@
 namespace {
   const LG_ContextOptions ctxOpts{0, 0};
 
-  bool hashFile(SFHASH_Hasher* hasher, ReadSeek& stream, std::vector<unsigned char>& buf, SFHASH_HashValues& hashes) {
+  void hashFile(SFHASH_Hasher* hasher, ReadSeek& stream, std::vector<unsigned char>& buf, SFHASH_HashValues& hashes) {
     stream.seek(0);
     sfhash_reset_hasher(hasher);
     size_t bytesRead = 0;
@@ -25,7 +24,6 @@ namespace {
       }
     } while (bytesRead > 0);
     sfhash_get_hashes(hasher, &hashes);
-    return true;
   }
 }
 
@@ -50,27 +48,23 @@ std::shared_ptr<Processor> Processor::clone() const {
 }
 
 void Processor::process(ReadSeek& stream) {
-  // std::cerr << "hashing..." << std::endl;
-  // hash 'em if ya got 'em
-  bool hashSuccess = false;
   SFHASH_HashValues h;
   {
     Timer procTime;
-    hashSuccess = hashFile(Hasher.get(), stream, Buf, h);
+    hashFile(Hasher.get(), stream, Buf, h);
     ProcTimeTotal += procTime.elapsed();
   }
-  if (hashSuccess) {
-    HashRec hashes;
-    hashes.MetaAddr = stream.getID();
-    hashes.MD5 = hexEncode(h.Md5, h.Md5 + sizeof(h.Md5));
-    hashes.SHA1 = hexEncode(h.Sha1, h.Sha1 + sizeof(h.Sha1));
-    hashes.SHA256 = hexEncode(h.Sha2_256, h.Sha2_256 + sizeof(h.Sha2_256));
-    hashes.Blake3 = hexEncode(h.Blake3, h.Blake3 + sizeof(h.Blake3));
-    hashes.Ssdeep = hexEncode(h.Fuzzy, h.Fuzzy + sizeof(h.Fuzzy));
+  HashRec hashes;
+  hashes.set(h, stream.getID());
 
-    currentHash(hashes.Blake3);
+  // write hash record to database
+  Hashes->add(hashes);
 
-    Hashes->add(hashes);
+  currentHash(hashes.Blake3);
+  {
+    Timer procTime;
+    search(stream);
+    ProcTimeTotal += procTime.elapsed();
   }
 }
 
