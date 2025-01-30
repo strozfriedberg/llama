@@ -11,7 +11,6 @@ struct ProgramHandle;
 class Cli;
 class InputReader;
 class OutputWriter;
-class LlamaRuleEngine;
 
 class Llama {
 public:
