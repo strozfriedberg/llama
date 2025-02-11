@@ -32,7 +32,7 @@ class ProcessorSearchTester {
 public:
   ProcessorSearchTester(std::string needle, std::string haystack, uint64_t numExpectedHits) 
   : PatternToRuleId(numExpectedHits, "rule_id"), RsBuf(haystack), Db(), DbConn(Db), Proc(createProcessor(needle)) {
-    Proc.currentHash("file_hash");
+    Proc.setBlake3("file_hash");
   }
 
   void search() {

@@ -36,6 +36,7 @@ Processor::Processor(LlamaDB* db, const std::shared_ptr<ProgramHandle>& prog, co
   LgProg(prog),
   Ctx(prog.get() ? lg_create_context(prog.get(), &ctxOpts) : nullptr, lg_destroy_context),
   Hasher(sfhash_create_hasher(SFHASH_MD5 | SFHASH_SHA_1 | SFHASH_SHA_2_256 | SFHASH_BLAKE3 | SFHASH_FUZZY), sfhash_destroy_hasher),
+  HashRecord(),
   Hashes(std::make_unique<HashBatch>()),
   SearchHits(std::make_unique<DBBatch<SearchHit>>()),
   ProcTimeTotal(0)
@@ -54,13 +55,11 @@ void Processor::process(ReadSeek& stream) {
     hashFile(Hasher.get(), stream, Buf, h);
     ProcTimeTotal += procTime.elapsed();
   }
-  HashRec hashes;
-  hashes.set(h, stream.getID());
+  HashRecord.set(h, stream.getID());
 
   // write hash record to database
-  Hashes->add(hashes);
+  Hashes->add(HashRecord);
 
-  currentHash(hashes.Blake3);
   {
     Timer procTime;
     search(stream);
@@ -84,7 +83,7 @@ void handleSearchHit(void* userData, const LG_SearchHit* const hit) {
 void Processor::addToSearchHitBatch(const LG_SearchHit* const hit) {
   LG_PatternInfo* info = lg_prog_pattern_info(LgProg.get(), hit->KeywordIndex);
   std::string pat(info->Pattern);
-  SearchHits->add(SearchHit{pat, hit->Start, hit->End, PatternToRuleId[hit->KeywordIndex], CurrentHash, hit->End - hit->Start});
+  SearchHits->add(SearchHit{pat, hit->Start, hit->End, PatternToRuleId[hit->KeywordIndex], HashRecord.Blake3, hit->End - hit->Start});
 }
 
 void Processor::search(ReadSeek& rs) {
