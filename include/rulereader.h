@@ -16,8 +16,9 @@ public:
   const LlamaParser& getParser() const { return Parser; }
   const LlamaLexer& getLexer() const { return Lexer; }
 
-private:
   std::vector<Rule> Rules;
+
+private:
   std::string LastError;
   LlamaParser Parser;
   LlamaLexer Lexer;
