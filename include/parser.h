@@ -38,8 +38,8 @@ struct Node {
   Node() = default;
 
   NodeType Type;
-  std::unique_ptr<Node> Left;
-  std::unique_ptr<Node> Right;
+  std::shared_ptr<Node> Left;
+  std::shared_ptr<Node> Right;
 };
 
 // Reserved for AND and OR nodes.
@@ -91,7 +91,6 @@ struct std::hash<Function>
 // Expression node for expressions under the `condition` section under the `grep` section.
 struct FuncNode : public Node {
   FuncNode() : Node(NodeType::FUNC) {}
-  FuncNode(FuncNode&& fn) : Value(std::move(fn.Value)) {}
   FuncNode(Function&& value) : Node(NodeType::FUNC) { Value = value; }
   Function Value;
 };
@@ -135,7 +134,7 @@ struct PatternSection {
 
 struct GrepSection {
   PatternSection Patterns;
-  std::unique_ptr<Node> Condition;
+  std::shared_ptr<Node> Condition;
 };
 
 /************************************ META SECTION ************************************************/
@@ -165,8 +164,8 @@ struct Rule {
   std::string_view      Name;
   MetaSection           Meta;
   HashSection           Hash;
-  std::unique_ptr<Node> Signature;
-  std::unique_ptr<Node> FileMetadata;
+  std::shared_ptr<Node> Signature;
+  std::shared_ptr<Node> FileMetadata;
   GrepSection           Grep;
 
   // Relative input offset where the Meta section ends and the first "real" section begins.
@@ -264,8 +263,7 @@ struct Property {
 };
 
 struct PropertyNode : public Node {
-  PropertyNode() : Node(NodeType::PROP) {}
-  PropertyNode(PropertyNode&& pn) : Value(std::move(pn.Value)) {}
+  PropertyNode() = default;
   PropertyNode(Property&& value) : Node(NodeType::PROP) { Value = value; }
   Property Value;
 };
@@ -350,9 +348,9 @@ public:
   PatternDef parseHexString();
   Encodings  parseEncodings();
 
-  std::unique_ptr<Node> parseFactor(LlamaTokenType section);
-  std::unique_ptr<Node> parseTerm(LlamaTokenType section);
-  std::unique_ptr<Node> parseExpr(LlamaTokenType section);
+  std::shared_ptr<Node> parseFactor(LlamaTokenType section);
+  std::shared_ptr<Node> parseTerm(LlamaTokenType section);
+  std::shared_ptr<Node> parseExpr(LlamaTokenType section);
 
   FuncNode         parseFuncCall();
   PropertyNode     parseProperty(LlamaTokenType);

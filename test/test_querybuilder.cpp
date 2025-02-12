@@ -8,9 +8,9 @@ TEST_CASE("buildPropertyNodeSqlClause") {
   LlamaParser parser(input, LlamaLexer::getTokens(input));
   QueryBuilder qb(parser);
   PropertyNode n({Property{5, 6, 7}});
-  std::unique_ptr<PropertyNode> pn = std::make_unique<PropertyNode>(Property{5, 6, 7});
+  std::shared_ptr<PropertyNode> pn = std::make_shared<PropertyNode>(n);
   std::string expected = "Filesize == 123456"; 
-  REQUIRE(qb.buildSqlClause(pn.get()) == expected);
+  REQUIRE(qb.buildSqlClause(pn) == expected);
 }
 
 TEST_CASE("buildSqlQueryFromRule") {

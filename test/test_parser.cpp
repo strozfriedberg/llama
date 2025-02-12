@@ -259,15 +259,15 @@ TEST_CASE("parsePatternsSectionDoesNotThrowIfPatterns") {
 TEST_CASE("parseTermWithAnd") {
   std::string input = "any(s1, s2, s3) and count(s1) == 5";
   LlamaParser parser(input, getLexer(input).tokens());
-  std::unique_ptr<Node> node = std::make_unique<BoolNode>();
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
   REQUIRE_NOTHROW(node = parser.parseTerm(LlamaTokenType::CONDITION));
-  auto boolNode = static_cast<BoolNode*>(node.get());
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
   REQUIRE(boolNode->Type == NodeType::BOOL);
   REQUIRE(boolNode->Operation == BoolNode::Op::AND);
-  auto left = static_cast<FuncNode*>(node->Left.get());
+  auto left = std::static_pointer_cast<FuncNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::FUNC);
   REQUIRE(left->Value.Name == "any");
-  auto right = static_cast<FuncNode*>(node->Right.get());
+  auto right = std::static_pointer_cast<FuncNode>(node->Right);
   REQUIRE(node->Right->Type == NodeType::FUNC);
   REQUIRE(right->Value.Name == "count");
 }
@@ -291,13 +291,13 @@ TEST_CASE("parseTermWithoutAnd") {
 TEST_CASE("parseExpr1") {
   std::string input = "(any(s1, s2, s3) and length(s1, 5) == 5) or all()";
   LlamaParser parser(input, getLexer(input).tokens());
-  std::unique_ptr<Node> node = std::make_unique<BoolNode>();
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
   REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
-  auto boolNode = static_cast<BoolNode*>(node.get());
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
   REQUIRE(boolNode->Type == NodeType::BOOL);
   REQUIRE(boolNode->Operation == BoolNode::Op::OR);
   REQUIRE(boolNode->Left);
-  auto boolNodeLeft = static_cast<BoolNode*>(boolNode->Left.get());
+  auto boolNodeLeft = std::static_pointer_cast<BoolNode>(boolNode->Left);
   REQUIRE(boolNodeLeft->Type == NodeType::BOOL);
   REQUIRE(boolNodeLeft->Operation == BoolNode::Op::AND);
   REQUIRE(boolNode->Right);
@@ -317,13 +317,13 @@ TEST_CASE("parseExpr1") {
 TEST_CASE("parseExpr2") {
   std::string input = "any(s1, s2, s3) and length(s1, 5) == 5 or all()";
   LlamaParser parser(input, getLexer(input).tokens());
-  std::unique_ptr<Node> node = std::make_unique<BoolNode>();
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
   REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
-  auto boolNode = static_cast<BoolNode*>(node.get());
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
   REQUIRE(boolNode->Type == NodeType::BOOL);
   REQUIRE(boolNode->Operation == BoolNode::Op::OR);
   REQUIRE(boolNode->Left);
-  auto boolNodeLeft = static_cast<BoolNode*>(boolNode->Left.get());
+  auto boolNodeLeft = std::static_pointer_cast<BoolNode>(boolNode->Left);
   REQUIRE(boolNodeLeft->Type == NodeType::BOOL);
   REQUIRE(boolNodeLeft->Operation == BoolNode::Op::AND);
   REQUIRE(boolNode->Right);
@@ -343,13 +343,13 @@ TEST_CASE("parseExpr2") {
 TEST_CASE("parseExpr3") {
   std::string input = "(any(s1, s2, s3) or length(s1, 5) == 5) and all()";
   LlamaParser parser(input, getLexer(input).tokens());
-  std::unique_ptr<Node> node = std::make_unique<BoolNode>();
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
   REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
-  auto boolNode = static_cast<BoolNode*>(node.get());
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
   REQUIRE(boolNode->Type == NodeType::BOOL);
   REQUIRE(boolNode->Operation == BoolNode::Op::AND);
   REQUIRE(boolNode->Left);
-  auto boolNodeLeft = static_cast<BoolNode*>(boolNode->Left.get());
+  auto boolNodeLeft = std::static_pointer_cast<BoolNode>(boolNode->Left);
   REQUIRE(boolNodeLeft->Type == NodeType::BOOL);
   REQUIRE(boolNodeLeft->Operation == BoolNode::Op::OR);
   REQUIRE(boolNode->Right);
@@ -369,13 +369,13 @@ TEST_CASE("parseExpr3") {
 TEST_CASE("parseExpr4") {
   std::string input = "any(s1, s2, s3) or length(s1, 5) == 5 and all()";
   LlamaParser parser(input, getLexer(input).tokens());
-  std::unique_ptr<Node> node = std::make_unique<BoolNode>();
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
   REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
-  auto boolNode = static_cast<BoolNode*>(node.get());
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
   REQUIRE(boolNode->Type == NodeType::BOOL);
   REQUIRE(boolNode->Operation == BoolNode::Op::OR);
   REQUIRE(boolNode->Right);
-  auto boolNodeRight = static_cast<BoolNode*>(boolNode->Right.get());
+  auto boolNodeRight = std::static_pointer_cast<BoolNode>(boolNode->Right);
   REQUIRE(boolNodeRight->Type == NodeType::BOOL);
   REQUIRE(boolNodeRight->Operation == BoolNode::Op::AND);
   REQUIRE(boolNode->Left);
@@ -395,15 +395,15 @@ TEST_CASE("parseExpr4") {
 TEST_CASE("parseExpr5") {
   std::string input = "any(s1, s2, s3) and length(s1, 5) == 5 or all() and any()";
   LlamaParser parser(input, getLexer(input).tokens());
-  std::unique_ptr<Node> node = std::make_unique<BoolNode>();
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
   REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
-  auto boolNode = static_cast<BoolNode*>(node.get());
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
   REQUIRE(boolNode->Type == NodeType::BOOL);
   REQUIRE(boolNode->Operation == BoolNode::Op::OR);
   REQUIRE(boolNode->Left);
   REQUIRE(boolNode->Right);
-  auto boolNodeLeft = static_cast<BoolNode*>(boolNode->Left.get());
-  auto boolNodeRight = static_cast<BoolNode*>(boolNode->Right.get());
+  auto boolNodeLeft = std::static_pointer_cast<BoolNode>(boolNode->Left);
+  auto boolNodeRight = std::static_pointer_cast<BoolNode>(boolNode->Right);
   REQUIRE(boolNodeLeft->Type == NodeType::BOOL);
   REQUIRE(boolNodeLeft->Operation == BoolNode::Op::AND);
   REQUIRE(boolNodeRight->Type == NodeType::BOOL);
@@ -425,23 +425,23 @@ TEST_CASE("parseExpr5") {
 TEST_CASE("parseExpr6") {
   std::string input = "any(s1, s2, s3) or length(s1, 5) == 5 and all() or count(s1) == 3";
   LlamaParser parser(input, getLexer(input).tokens());
-  std::unique_ptr<Node> node = std::make_unique<BoolNode>();
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
   REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
-  auto boolNode = static_cast<BoolNode*>(node.get());
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
   REQUIRE(boolNode->Type == NodeType::BOOL);
   REQUIRE(boolNode->Operation == BoolNode::Op::OR);
   REQUIRE(boolNode->Right);
   REQUIRE(boolNode->Left);
-  auto funcNodeRight = static_cast<FuncNode*>(boolNode->Right.get());
-  auto boolNodeLeft = static_cast<BoolNode*>(boolNode->Left.get());
+  auto funcNodeRight = std::static_pointer_cast<FuncNode>(boolNode->Right);
+  auto boolNodeLeft = std::static_pointer_cast<BoolNode>(boolNode->Left);
   REQUIRE(boolNodeLeft->Type == NodeType::BOOL);
   REQUIRE(funcNodeRight->Type == NodeType::FUNC);
   REQUIRE(funcNodeRight->Value.Name == "count");
   REQUIRE(boolNodeLeft->Operation == BoolNode::Op::OR);
-  auto boolNodeLeftRight = static_cast<BoolNode*>(boolNodeLeft->Right.get());
+  auto boolNodeLeftRight = std::static_pointer_cast<BoolNode>(boolNodeLeft->Right);
   REQUIRE(boolNodeLeftRight->Type == NodeType::BOOL);
   REQUIRE(boolNodeLeftRight->Operation == BoolNode::Op::AND);
-  auto funcNodeLeftLeft = static_cast<FuncNode*>(boolNode->Left->Left.get());
+  auto funcNodeLeftLeft = std::static_pointer_cast<FuncNode>(boolNode->Left->Left);
   REQUIRE(funcNodeLeftLeft->Value.Name == "any");
 }
 
@@ -460,23 +460,23 @@ TEST_CASE("parseExpr6") {
 TEST_CASE("parseExpr7") {
   std::string input = "any(s1, s2, s3) or (length(s1, 5) == 5 and all()) or count(s1) == 3";
   LlamaParser parser(input, getLexer(input).tokens());
-  std::unique_ptr<Node> node = std::make_unique<BoolNode>();
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
   REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
-  auto boolNode = static_cast<BoolNode*>(node.get());
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
   REQUIRE(boolNode->Type == NodeType::BOOL);
   REQUIRE(boolNode->Operation == BoolNode::Op::OR);
   REQUIRE(boolNode->Right);
   REQUIRE(boolNode->Left);
-  auto funcNodeRight = static_cast<FuncNode*>(boolNode->Right.get());
-  auto boolNodeLeft = static_cast<BoolNode*>(boolNode->Left.get());
+  auto funcNodeRight = std::static_pointer_cast<FuncNode>(boolNode->Right);
+  auto boolNodeLeft = std::static_pointer_cast<BoolNode>(boolNode->Left);
   REQUIRE(boolNodeLeft->Type == NodeType::BOOL);
   REQUIRE(funcNodeRight->Type == NodeType::FUNC);
   REQUIRE(funcNodeRight->Value.Name == "count");
   REQUIRE(boolNodeLeft->Operation == BoolNode::Op::OR);
-  auto boolNodeLeftRight = static_cast<BoolNode*>(boolNodeLeft->Right.get());
+  auto boolNodeLeftRight = std::static_pointer_cast<BoolNode>(boolNodeLeft->Right);
   REQUIRE(boolNodeLeftRight->Type == NodeType::BOOL);
   REQUIRE(boolNodeLeftRight->Operation == BoolNode::Op::AND);
-  auto funcNodeLeftLeft = static_cast<FuncNode*>(boolNode->Left->Left.get());
+  auto funcNodeLeftLeft = std::static_pointer_cast<FuncNode>(boolNode->Left->Left);
   REQUIRE(funcNodeLeftLeft->Value.Name == "any");
 }
 
@@ -493,20 +493,20 @@ TEST_CASE("parseExpr7") {
 TEST_CASE("parseExpr8") {
   std::string input = "(any(s1, s2, s3) or length(s1, 5) == 5) and (all() or count(s1) == 3)";
   LlamaParser parser(input, getLexer(input).tokens());
-  std::unique_ptr<Node> node = std::make_unique<BoolNode>();
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
   REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
-  auto boolNode = static_cast<BoolNode*>(node.get());
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
   REQUIRE(boolNode->Type == NodeType::BOOL);
   REQUIRE(boolNode->Operation == BoolNode::Op::AND);
   REQUIRE(boolNode->Right);
   REQUIRE(boolNode->Left);
-  auto boolNodeRight = static_cast<BoolNode*>(boolNode->Right.get());
-  auto boolNodeLeft = static_cast<BoolNode*>(boolNode->Left.get());
+  auto boolNodeRight = std::static_pointer_cast<BoolNode>(boolNode->Right);
+  auto boolNodeLeft = std::static_pointer_cast<BoolNode>(boolNode->Left);
   REQUIRE(boolNodeLeft->Type == NodeType::BOOL);
   REQUIRE(boolNodeLeft->Operation == BoolNode::Op::OR);
   REQUIRE(boolNodeRight->Type == NodeType::BOOL);
   REQUIRE(boolNodeRight->Operation == BoolNode::Op::OR);
-  auto funcNodeLeftLeft = static_cast<FuncNode*>(boolNodeLeft->Left.get());
+  auto funcNodeLeftLeft = std::static_pointer_cast<FuncNode>(boolNodeLeft->Left);
   REQUIRE(funcNodeLeftLeft->Type == NodeType::FUNC);
   REQUIRE(funcNodeLeftLeft->Value.Name == "any");
 }
@@ -515,7 +515,7 @@ TEST_CASE("parseExpr8") {
 TEST_CASE("parseConditionSection") {
   std::string input = "(any(s1, s2, s3) and count(s1) == 5) or all(s1, s2, s3)";
   LlamaParser parser(input, getLexer(input).tokens());
-  std::unique_ptr<Node> node;
+  std::shared_ptr<Node> node;
   REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
   REQUIRE(parser.CurIdx == parser.Tokens.size() - 1);
   REQUIRE(node->Type == NodeType::BOOL);
@@ -524,14 +524,14 @@ TEST_CASE("parseConditionSection") {
 TEST_CASE("parseSignatureSection") {
   std::string input = "name == \"Executable\" or id == \"123456789\"";
   LlamaParser parser(input, getLexer(input).tokens());
-  std::unique_ptr<Node> node;
+  std::shared_ptr<Node> node;
   REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::SIGNATURE));
   REQUIRE(node->Type == NodeType::BOOL);
-  auto propNodeLeft = static_cast<PropertyNode*>(node->Left.get());
+  auto propNodeLeft = std::static_pointer_cast<PropertyNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::PROP);
   REQUIRE(parser.lexemeAt(propNodeLeft->Value.Name) == "name");
   REQUIRE(parser.lexemeAt(propNodeLeft->Value.Val) == "Executable");
-  auto propNodeRight = static_cast<PropertyNode*>(node->Right.get());
+  auto propNodeRight = std::static_pointer_cast<PropertyNode>(node->Right);
   REQUIRE(node->Right->Type == NodeType::PROP);
   REQUIRE(parser.lexemeAt(propNodeRight->Value.Name) == "id");
   REQUIRE(parser.lexemeAt(propNodeRight->Value.Val) == "123456789");
@@ -594,7 +594,7 @@ TEST_CASE("parseRuleDecl") {
   Rule rule;
   REQUIRE_NOTHROW(rule = parser.parseRuleDecl());
   REQUIRE(rule.Hash.FileHashRecords.size() == 1);
-  auto root = static_cast<PropertyNode*>(rule.Signature.get());
+  auto root = std::static_pointer_cast<PropertyNode>(rule.Signature);
   REQUIRE(parser.lexemeAt(root->Value.Name) == "name");
   REQUIRE(parser.lexemeAt(root->Value.Val) == "Executable");
 }
@@ -693,13 +693,15 @@ TEST_CASE("parserExpectNumber") {
 TEST_CASE("parseFuncCallThrowsIfArgsStartWithComma") {
   std::string input = "any(,s1, s2, s3)";
   LlamaParser parser(input, getLexer(input).tokens());
-  REQUIRE_THROWS(parser.parseFuncCall());
+  FuncNode node;
+  REQUIRE_THROWS(node = parser.parseFuncCall());
 }
 
 TEST_CASE("parseFuncCallAny") {
   std::string input = "any(s1, s2, s3)";
   LlamaParser parser(input, getLexer(input).tokens());
-  FuncNode node(parser.parseFuncCall());
+  FuncNode node;
+  REQUIRE_NOTHROW(node = parser.parseFuncCall());
   REQUIRE(node.Value.Name == "any");
   REQUIRE(node.Value.Args.size() == 3);
   REQUIRE(node.Value.Args.at(0) == "s1");
@@ -710,7 +712,8 @@ TEST_CASE("parseFuncCallAny") {
 TEST_CASE("parseFuncCallAll") {
   std::string input = "all()";
   LlamaParser parser(input, getLexer(input).tokens());
-  FuncNode node(parser.parseFuncCall());
+  FuncNode node;
+  REQUIRE_NOTHROW(node = parser.parseFuncCall());
   REQUIRE(node.Value.Name == "all");
   REQUIRE(node.Value.Args.size() == 0);
 }
@@ -718,7 +721,8 @@ TEST_CASE("parseFuncCallAll") {
 TEST_CASE("parseFuncCallWithNumber") {
   std::string input = "count(s1) == 5";
   LlamaParser parser(input, getLexer(input).tokens());
-  FuncNode node(parser.parseFuncCall());
+  FuncNode node;
+  REQUIRE_NOTHROW(node = parser.parseFuncCall());
   REQUIRE(node.Value.Name == "count");
   REQUIRE(node.Value.Args.size() == 1);
   REQUIRE(node.Value.Args.at(0) == "s1");
@@ -729,7 +733,8 @@ TEST_CASE("parseFuncCallWithNumber") {
 TEST_CASE("parseFuncCallWithOperator") {
   std::string input = "offset(s1, 5) == 5";
   LlamaParser parser(input, getLexer(input).tokens());
-  FuncNode node(parser.parseFuncCall());
+  FuncNode node;
+  REQUIRE_NOTHROW(node = parser.parseFuncCall());
   REQUIRE(node.Value.Name == "offset");
   REQUIRE(node.Value.Args.size() == 2);
   REQUIRE(node.Value.Args.at(0) == "s1");
@@ -740,9 +745,10 @@ TEST_CASE("parseFuncCallWithOperator") {
 TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
   std::string input = "any(s1, s2, s3)";
   LlamaParser parser(input, getLexer(input).tokens());
-  std::unique_ptr<Node> node = parser.parseFactor(LlamaTokenType::CONDITION);
+  std::shared_ptr<Node> node = std::make_shared<FuncNode>();
+  REQUIRE_NOTHROW(node = parser.parseFactor(LlamaTokenType::CONDITION));
   REQUIRE(node->Type == NodeType::FUNC);
-  auto root = static_cast<FuncNode*>(node.get());
+  auto root = std::static_pointer_cast<FuncNode>(node);
   REQUIRE(root->Value.Name == "any");
   REQUIRE(root->Value.Args.size() == 3);
 }
@@ -750,37 +756,43 @@ TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
 TEST_CASE("parseFactorSignatureSection") {
   std::string input = "name == \"Executable\"";
   LlamaParser parser(input, getLexer(input).tokens());
-  REQUIRE_NOTHROW(parser.parseFactor(LlamaTokenType::SIGNATURE));
+  std::shared_ptr<Node> node = std::make_shared<FuncNode>();
+  REQUIRE_NOTHROW(node = parser.parseFactor(LlamaTokenType::SIGNATURE));
 }
 
 TEST_CASE("parseFactorFileMetadataSection") {
   std::string input = "created == \"2023-04-05\"";
   LlamaParser parser(input, getLexer(input).tokens());
-  REQUIRE_NOTHROW(parser.parseFactor(LlamaTokenType::FILE_METADATA));
+  std::shared_ptr<Node> node = std::make_shared<FuncNode>();
+  REQUIRE_NOTHROW(node = parser.parseFactor(LlamaTokenType::FILE_METADATA));
 }
 
 TEST_CASE("parseFactorConditionSection") {
   std::string input = "any(s1, s2, s3)";
   LlamaParser parser(input, getLexer(input).tokens());
-  REQUIRE_NOTHROW(parser.parseFactor(LlamaTokenType::CONDITION));
+  std::shared_ptr<Node> node = std::make_shared<FuncNode>();
+  REQUIRE_NOTHROW(node = parser.parseFactor(LlamaTokenType::CONDITION));
 }
 
 TEST_CASE("parseFactorFileMetadataSectionWrongProperty") {
   std::string input = "name == \"Executable\"";
   LlamaParser parser(input, getLexer(input).tokens());
-  REQUIRE_THROWS(parser.parseFactor(LlamaTokenType::FILE_METADATA));
+  std::shared_ptr<Node> node = std::make_shared<FuncNode>();
+  REQUIRE_THROWS(node = parser.parseFactor(LlamaTokenType::FILE_METADATA));
 }
 
 TEST_CASE("parseFactorSignatureSectionWrongProperty") {
   std::string input = "created > \"2023-04-05\"";
   LlamaParser parser(input, getLexer(input).tokens());
-  REQUIRE_THROWS(parser.parseFactor(LlamaTokenType::SIGNATURE));
+  std::shared_ptr<Node> node = std::make_shared<FuncNode>();
+  REQUIRE_THROWS(node = parser.parseFactor(LlamaTokenType::SIGNATURE));
 }
 
 TEST_CASE("parseFactorConditionSectionWrongProperty") {
   std::string input = "created > \"2023-04-05\"";
   LlamaParser parser(input, getLexer(input).tokens());
-  REQUIRE_THROWS(parser.parseFactor(LlamaTokenType::CONDITION));
+  std::shared_ptr<Node> node = std::make_shared<FuncNode>();
+  REQUIRE_THROWS(node = parser.parseFactor(LlamaTokenType::CONDITION));
 }
 
 TEST_CASE("parseFileHashRecord") {
@@ -834,67 +846,78 @@ TEST_CASE("parseConditionFunctionValid") {
   SECTION("all with zero args") {
     std::string input = "all()";
     LlamaParser parser(input, getLexer(input).tokens());
-    REQUIRE_NOTHROW(parser.parseFuncCall());
+    FuncNode func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("all with many args") {
     std::string input = "all(arg1, arg2, arg3)";
     LlamaParser parser(input, getLexer(input).tokens());
-    REQUIRE_NOTHROW(parser.parseFuncCall());
+    FuncNode func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("any with zero args") {
     std::string input = "any()";
     LlamaParser parser(input, getLexer(input).tokens());
-    REQUIRE_NOTHROW(parser.parseFuncCall());
+    FuncNode func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("any with many args") {
     std::string input = "any(arg1, arg2, arg3)";
     LlamaParser parser(input, getLexer(input).tokens());
-    REQUIRE_NOTHROW(parser.parseFuncCall());
+    FuncNode func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("count with one arg and comparison") {
     std::string input = "count(arg1) == 5";
     LlamaParser parser(input, getLexer(input).tokens());
-    REQUIRE_NOTHROW(parser.parseFuncCall());
+    FuncNode func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("length with one arg and comparison") {
     std::string input = "length(arg1) == 5";
     LlamaParser parser(input, getLexer(input).tokens());
-    REQUIRE_NOTHROW(parser.parseFuncCall());
+    FuncNode func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("length with two args and comparison") {
     std::string input = "length(arg1, 4) == 5";
     LlamaParser parser(input, getLexer(input).tokens());
-    REQUIRE_NOTHROW(parser.parseFuncCall());
+    FuncNode func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("offset with one arg and comparison") {
     std::string input = "offset(arg1) == 5";
     LlamaParser parser(input, getLexer(input).tokens());
-    REQUIRE_NOTHROW(parser.parseFuncCall());
+    FuncNode func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("offset with two args and comparison") {
     std::string input = "offset(arg1, 4) == 5";
     LlamaParser parser(input, getLexer(input).tokens());
-    REQUIRE_NOTHROW(parser.parseFuncCall());
+    FuncNode func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("count_has_hits with zero args and comparison") {
     std::string input = "count_has_hits() > 6";
     LlamaParser parser(input, getLexer(input).tokens());
-    REQUIRE_NOTHROW(parser.parseFuncCall());
+    FuncNode func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 
   SECTION("count_has_hits with many args and comparison") {
     std::string input = "count_has_hits(arg1, arg2, arg3) == 3";
     LlamaParser parser(input, getLexer(input).tokens());
-    REQUIRE_NOTHROW(parser.parseFuncCall());
+    FuncNode func;
+    REQUIRE_NOTHROW(func = parser.parseFuncCall());
   }
 }
 
