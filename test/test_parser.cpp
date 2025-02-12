@@ -261,7 +261,9 @@ TEST_CASE("parseTermWithAnd") {
   LlamaParser parser(input, getLexer(input).tokens());
   std::shared_ptr<Node> node = std::make_shared<BoolNode>();
   REQUIRE_NOTHROW(node = parser.parseTerm(LlamaTokenType::CONDITION));
-  REQUIRE(node->Type == NodeType::AND);
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
+  REQUIRE(boolNode->Type == NodeType::BOOL);
+  REQUIRE(boolNode->Operation == BoolNode::Op::AND);
   auto left = std::static_pointer_cast<FuncNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::FUNC);
   REQUIRE(left->Value.Name == "any");
@@ -276,17 +278,239 @@ TEST_CASE("parseTermWithoutAnd") {
   REQUIRE_NOTHROW(parser.parseTerm(LlamaTokenType::CONDITION));
 }
 
-TEST_CASE("parseExpr") {
+// (A and B) or C
+/*
+     or
+    /  \
+  and   C
+  /  \
+ A   B
+
+*/
+
+TEST_CASE("parseExpr1") {
   std::string input = "(any(s1, s2, s3) and length(s1, 5) == 5) or all()";
   LlamaParser parser(input, getLexer(input).tokens());
   std::shared_ptr<Node> node = std::make_shared<BoolNode>();
   REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
-  REQUIRE(node->Type == NodeType::OR);
-  REQUIRE(node->Left);
-  REQUIRE(node->Left->Type == NodeType::AND);
-  REQUIRE(node->Right);
-  REQUIRE(node->Right->Type == NodeType::FUNC);
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
+  REQUIRE(boolNode->Type == NodeType::BOOL);
+  REQUIRE(boolNode->Operation == BoolNode::Op::OR);
+  REQUIRE(boolNode->Left);
+  auto boolNodeLeft = std::static_pointer_cast<BoolNode>(boolNode->Left);
+  REQUIRE(boolNodeLeft->Type == NodeType::BOOL);
+  REQUIRE(boolNodeLeft->Operation == BoolNode::Op::AND);
+  REQUIRE(boolNode->Right);
+  REQUIRE(boolNode->Right->Type == NodeType::FUNC);
 }
+
+// A and B or C
+/*
+     or
+    /  \
+  and   C
+  /  \
+ A   B
+
+*/
+
+TEST_CASE("parseExpr2") {
+  std::string input = "any(s1, s2, s3) and length(s1, 5) == 5 or all()";
+  LlamaParser parser(input, getLexer(input).tokens());
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
+  REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
+  REQUIRE(boolNode->Type == NodeType::BOOL);
+  REQUIRE(boolNode->Operation == BoolNode::Op::OR);
+  REQUIRE(boolNode->Left);
+  auto boolNodeLeft = std::static_pointer_cast<BoolNode>(boolNode->Left);
+  REQUIRE(boolNodeLeft->Type == NodeType::BOOL);
+  REQUIRE(boolNodeLeft->Operation == BoolNode::Op::AND);
+  REQUIRE(boolNode->Right);
+  REQUIRE(boolNode->Right->Type == NodeType::FUNC);
+}
+
+// (A or B) and C
+/*
+     and
+    /  \
+   or   C
+  /  \
+ A   B
+
+*/
+
+TEST_CASE("parseExpr3") {
+  std::string input = "(any(s1, s2, s3) or length(s1, 5) == 5) and all()";
+  LlamaParser parser(input, getLexer(input).tokens());
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
+  REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
+  REQUIRE(boolNode->Type == NodeType::BOOL);
+  REQUIRE(boolNode->Operation == BoolNode::Op::AND);
+  REQUIRE(boolNode->Left);
+  auto boolNodeLeft = std::static_pointer_cast<BoolNode>(boolNode->Left);
+  REQUIRE(boolNodeLeft->Type == NodeType::BOOL);
+  REQUIRE(boolNodeLeft->Operation == BoolNode::Op::OR);
+  REQUIRE(boolNode->Right);
+  REQUIRE(boolNode->Right->Type == NodeType::FUNC);
+}
+
+// A or B and C
+/*
+     or
+    /  \
+   A  and
+      /  \
+     B   C
+
+*/
+
+TEST_CASE("parseExpr4") {
+  std::string input = "any(s1, s2, s3) or length(s1, 5) == 5 and all()";
+  LlamaParser parser(input, getLexer(input).tokens());
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
+  REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
+  REQUIRE(boolNode->Type == NodeType::BOOL);
+  REQUIRE(boolNode->Operation == BoolNode::Op::OR);
+  REQUIRE(boolNode->Right);
+  auto boolNodeRight = std::static_pointer_cast<BoolNode>(boolNode->Right);
+  REQUIRE(boolNodeRight->Type == NodeType::BOOL);
+  REQUIRE(boolNodeRight->Operation == BoolNode::Op::AND);
+  REQUIRE(boolNode->Left);
+  REQUIRE(boolNode->Left->Type == NodeType::FUNC);
+}
+
+// A and B or C and D
+/*
+           or
+          /  \
+       and    and
+      /  \   /  \
+     A   B  C   D
+
+*/
+
+TEST_CASE("parseExpr5") {
+  std::string input = "any(s1, s2, s3) and length(s1, 5) == 5 or all() and any()";
+  LlamaParser parser(input, getLexer(input).tokens());
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
+  REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
+  REQUIRE(boolNode->Type == NodeType::BOOL);
+  REQUIRE(boolNode->Operation == BoolNode::Op::OR);
+  REQUIRE(boolNode->Left);
+  REQUIRE(boolNode->Right);
+  auto boolNodeLeft = std::static_pointer_cast<BoolNode>(boolNode->Left);
+  auto boolNodeRight = std::static_pointer_cast<BoolNode>(boolNode->Right);
+  REQUIRE(boolNodeLeft->Type == NodeType::BOOL);
+  REQUIRE(boolNodeLeft->Operation == BoolNode::Op::AND);
+  REQUIRE(boolNodeRight->Type == NodeType::BOOL);
+  REQUIRE(boolNodeRight->Operation == BoolNode::Op::AND);
+}
+
+// A or B and C or D
+/*
+           or
+          /  \
+        or    D
+       /  \
+      A   and
+         /  \
+        B    C
+
+*/
+
+TEST_CASE("parseExpr6") {
+  std::string input = "any(s1, s2, s3) or length(s1, 5) == 5 and all() or count(s1) == 3";
+  LlamaParser parser(input, getLexer(input).tokens());
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
+  REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
+  REQUIRE(boolNode->Type == NodeType::BOOL);
+  REQUIRE(boolNode->Operation == BoolNode::Op::OR);
+  REQUIRE(boolNode->Right);
+  REQUIRE(boolNode->Left);
+  auto funcNodeRight = std::static_pointer_cast<FuncNode>(boolNode->Right);
+  auto boolNodeLeft = std::static_pointer_cast<BoolNode>(boolNode->Left);
+  REQUIRE(boolNodeLeft->Type == NodeType::BOOL);
+  REQUIRE(funcNodeRight->Type == NodeType::FUNC);
+  REQUIRE(funcNodeRight->Value.Name == "count");
+  REQUIRE(boolNodeLeft->Operation == BoolNode::Op::OR);
+  auto boolNodeLeftRight = std::static_pointer_cast<BoolNode>(boolNodeLeft->Right);
+  REQUIRE(boolNodeLeftRight->Type == NodeType::BOOL);
+  REQUIRE(boolNodeLeftRight->Operation == BoolNode::Op::AND);
+  auto funcNodeLeftLeft = std::static_pointer_cast<FuncNode>(boolNode->Left->Left);
+  REQUIRE(funcNodeLeftLeft->Value.Name == "any");
+}
+
+// A or (B and C) or D
+/*
+           or
+          /  \
+        or   D
+       /  \
+      A   and
+         /  \
+        B    C
+
+*/
+
+TEST_CASE("parseExpr7") {
+  std::string input = "any(s1, s2, s3) or (length(s1, 5) == 5 and all()) or count(s1) == 3";
+  LlamaParser parser(input, getLexer(input).tokens());
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
+  REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
+  REQUIRE(boolNode->Type == NodeType::BOOL);
+  REQUIRE(boolNode->Operation == BoolNode::Op::OR);
+  REQUIRE(boolNode->Right);
+  REQUIRE(boolNode->Left);
+  auto funcNodeRight = std::static_pointer_cast<FuncNode>(boolNode->Right);
+  auto boolNodeLeft = std::static_pointer_cast<BoolNode>(boolNode->Left);
+  REQUIRE(boolNodeLeft->Type == NodeType::BOOL);
+  REQUIRE(funcNodeRight->Type == NodeType::FUNC);
+  REQUIRE(funcNodeRight->Value.Name == "count");
+  REQUIRE(boolNodeLeft->Operation == BoolNode::Op::OR);
+  auto boolNodeLeftRight = std::static_pointer_cast<BoolNode>(boolNodeLeft->Right);
+  REQUIRE(boolNodeLeftRight->Type == NodeType::BOOL);
+  REQUIRE(boolNodeLeftRight->Operation == BoolNode::Op::AND);
+  auto funcNodeLeftLeft = std::static_pointer_cast<FuncNode>(boolNode->Left->Left);
+  REQUIRE(funcNodeLeftLeft->Value.Name == "any");
+}
+
+// (A or B) and (C or D)
+/*
+           and
+          /  \
+       or     or
+      /  \   /  \
+     A   B  C   D
+
+*/
+
+TEST_CASE("parseExpr8") {
+  std::string input = "(any(s1, s2, s3) or length(s1, 5) == 5) and (all() or count(s1) == 3)";
+  LlamaParser parser(input, getLexer(input).tokens());
+  std::shared_ptr<Node> node = std::make_shared<BoolNode>();
+  REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
+  auto boolNode = std::static_pointer_cast<BoolNode>(node);
+  REQUIRE(boolNode->Type == NodeType::BOOL);
+  REQUIRE(boolNode->Operation == BoolNode::Op::AND);
+  REQUIRE(boolNode->Right);
+  REQUIRE(boolNode->Left);
+  auto boolNodeRight = std::static_pointer_cast<BoolNode>(boolNode->Right);
+  auto boolNodeLeft = std::static_pointer_cast<BoolNode>(boolNode->Left);
+  REQUIRE(boolNodeLeft->Type == NodeType::BOOL);
+  REQUIRE(boolNodeLeft->Operation == BoolNode::Op::OR);
+  REQUIRE(boolNodeRight->Type == NodeType::BOOL);
+  REQUIRE(boolNodeRight->Operation == BoolNode::Op::OR);
+  auto funcNodeLeftLeft = std::static_pointer_cast<FuncNode>(boolNodeLeft->Left);
+  REQUIRE(funcNodeLeftLeft->Type == NodeType::FUNC);
+  REQUIRE(funcNodeLeftLeft->Value.Name == "any");
+}
+
 
 TEST_CASE("parseConditionSection") {
   std::string input = "(any(s1, s2, s3) and count(s1) == 5) or all(s1, s2, s3)";
@@ -294,7 +518,7 @@ TEST_CASE("parseConditionSection") {
   std::shared_ptr<Node> node;
   REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::CONDITION));
   REQUIRE(parser.CurIdx == parser.Tokens.size() - 1);
-  REQUIRE(node->Type == NodeType::OR);
+  REQUIRE(node->Type == NodeType::BOOL);
 }
 
 TEST_CASE("parseSignatureSection") {
@@ -302,7 +526,7 @@ TEST_CASE("parseSignatureSection") {
   LlamaParser parser(input, getLexer(input).tokens());
   std::shared_ptr<Node> node;
   REQUIRE_NOTHROW(node = parser.parseExpr(LlamaTokenType::SIGNATURE));
-  REQUIRE(node->Type == NodeType::OR);
+  REQUIRE(node->Type == NodeType::BOOL);
   auto propNodeLeft = std::static_pointer_cast<PropertyNode>(node->Left);
   REQUIRE(node->Left->Type == NodeType::PROP);
   REQUIRE(parser.lexemeAt(propNodeLeft->Value.Name) == "name");
@@ -329,7 +553,7 @@ TEST_CASE("parseGrepSection") {
   REQUIRE(patDef.Pattern == "test");
   REQUIRE(patDef.Enc.first == 9);
   REQUIRE(patDef.Enc.second == 10);
-  REQUIRE(section.Condition->Type == NodeType::AND);
+  REQUIRE(section.Condition->Type == NodeType::BOOL);
   REQUIRE(section.Condition->Left->Type == NodeType::FUNC);
   REQUIRE(section.Condition->Right->Type == NodeType::FUNC);
 }
@@ -702,42 +926,6 @@ TEST_CASE("EmptyStringNoRules") {
   LlamaLexer lexer = getLexer(input);
   LlamaParser parser(input, lexer.tokens());
   REQUIRE(parser.parseRules(lexer.ruleIndices()).size() == 0);
-}
-
-TEST_CASE("GetSqlQueryFromRule") {
-  std::string input = "rule MyRule { }";
-  LlamaLexer lexer = getLexer(input);
-  LlamaParser parser(input, lexer.tokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
-  REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr");
-}
-
-TEST_CASE("GetSqlQueryFromRuleWithOneNumberFileMetadataCondition") {
-  std::string input = "rule MyRule { file_metadata: filesize == 30000 }";
-  LlamaLexer lexer = getLexer(input);
-  LlamaParser parser(input, lexer.tokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
-  REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr AND Filesize == 30000");
-}
-
-TEST_CASE("GetSqlQueryFromRuleWithOneStringFileMetadataCondition") {
-  std::string input = "rule MyRule { file_metadata: created > \"2023-05-04\" }";
-  LlamaLexer lexer = getLexer(input);
-  LlamaParser parser(input, lexer.tokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
-  REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr AND Created > '2023-05-04'");
-}
-
-TEST_CASE("GetSqlQueryFromRuleWithCompoundFileMetadataDef") {
-  std::string input = "rule MyRule { file_metadata: filesize == 123456 or created > \"2023-05-04\" and modified < \"2023-05-06\" and filename == \"test\" and filepath == \"test\" }";
-  LlamaLexer lexer = getLexer(input);
-  LlamaParser parser(input, lexer.tokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
-  REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(rules.at(0).getSqlQuery(parser) == "SELECT '" + rules.at(0).getHash(parser).to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr AND (Filesize == 123456 OR (((Created > '2023-05-04' AND Modified < '2023-05-06') AND Name == 'test') AND Path == 'test'))");
 }
 
 TEST_CASE("GetRuleHashWithNoSections") {

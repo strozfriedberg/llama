@@ -30,47 +30,6 @@ void Function::validate() {
   }
 }
 
-std::string BoolNode::getSqlQuery(const LlamaParser& parser) const {
-  std::string query = "(";
-  query += Left->getSqlQuery(parser);
-  query += Type == NodeType::AND ? " AND " : " OR ";
-  query += Right->getSqlQuery(parser);
-  query += ")";
-  return query;
-}
-
-std::string PropertyNode::getSqlQuery(const LlamaParser& parser) const {
-  std::string query = "";
-  std::string_view propertyName = parser.lexemeAt(Value.Name);
-  query += FileMetadataPropertySqlLookup.find(propertyName)->second;
-  query += " ";
-  query += parser.lexemeAt(Value.Op);
-  query += " ";
-  std::string_view val = parser.lexemeAt(Value.Val);
-  if (parser.Tokens[Value.Val].Type == LlamaTokenType::DOUBLE_QUOTED_STRING) {
-    query += "'";
-    query += val;
-    query += "'";
-  }
-  else {
-    query += val;
-  }
-  return query;
-}
-
-std::string Rule::getSqlQuery(const LlamaParser& parser) const {
-  std::string query = "SELECT '";
-  query += this->getHash(parser).to_string();
-  query += "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr";
-
-  if (FileMetadata) {
-    query += " AND ";
-    query += FileMetadata->getSqlQuery(parser);
-  }
-
-  return query;
-}
-
 void LlamaParser::clear() {
   Tokens.clear();
   Input.clear();
@@ -110,7 +69,7 @@ std::string_view LlamaParser::expect(LlamaTokenType token) {
 
 FieldHash Rule::getHash(const LlamaParser& parser) const {
   FieldHasher hasher;
-  hasher.hash_iter(parser.Tokens.begin() + Start, parser.Tokens.begin() + End, [](const Token& token) { return token.Type; });
+  hasher.hash_iter(parser.Tokens.begin() + Start, parser.Tokens.begin() + End, [](const Token& token) { return token.Lexeme; });
   return hasher.get_hash();
 }
 
@@ -295,8 +254,9 @@ std::shared_ptr<Node> LlamaParser::parseTerm(LlamaTokenType section) {
   std::shared_ptr<Node> left = parseFactor(section);
 
   while (matchAny(LlamaTokenType::AND)) {
-    std::shared_ptr<Node> node = std::make_shared<BoolNode>();
-    node->Type = NodeType::AND;
+    std::shared_ptr<BoolNode> node = std::make_shared<BoolNode>();
+    node->Operation = BoolNode::Op::AND;
+    node->Type = NodeType::BOOL;
     node->Left = left;
     node->Right = parseFactor(section);
     left = node;
@@ -308,8 +268,9 @@ std::shared_ptr<Node> LlamaParser::parseExpr(LlamaTokenType section) {
   std::shared_ptr<Node> left = parseTerm(section);
 
   while (matchAny(LlamaTokenType::OR)) {
-    std::shared_ptr<Node> node = std::make_shared<BoolNode>();
-    node->Type = NodeType::OR;
+    std::shared_ptr<BoolNode> node = std::make_shared<BoolNode>();
+    node->Operation = BoolNode::Op::OR;
+    node->Type = NodeType::BOOL;
     node->Left = left;
     node->Right = parseTerm(section);
     left = node;

@@ -4,6 +4,7 @@
 #include "llamaduck.h"
 #include "options.h"
 #include "rulereader.h"
+#include "ruleengine.h"
 
 struct ProgramHandle;
 
@@ -27,7 +28,6 @@ private:
   bool dbInit();
 
   void writeDB(const std::string& outdir);
-  void makeRuleTable();
 
   std::shared_ptr<Cli> CliParser;
 
@@ -37,7 +37,7 @@ private:
   std::shared_ptr<ProgramHandle> LgProg;
   std::shared_ptr<InputReader> Input;
 
-  RuleReader Reader;
+  LlamaRuleEngine RuleEngine;
   LlamaDB Db;
   LlamaDBConnection DbConn;
 };

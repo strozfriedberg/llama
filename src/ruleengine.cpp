@@ -3,8 +3,10 @@
 #include "rulereader.h"
 #include "llamabatch.h"
 
-void RuleEngine::writeRulesToDb(const RuleReader& reader, LlamaDBConnection& dbConn) {
-  if (reader.getRules().empty()) {
+LlamaRuleEngine::LlamaRuleEngine() : Reader(), Qb(Reader.getParser()) {}
+
+void LlamaRuleEngine::writeRulesToDb(LlamaDBConnection& dbConn) {
+  if (Reader.getRules().empty()) {
     return;
   }
   duckdb_result result;
@@ -12,10 +14,10 @@ void RuleEngine::writeRulesToDb(const RuleReader& reader, LlamaDBConnection& dbC
   std::string hits_query("INSERT INTO rule_hits ");
   const std::string sqlUnion(" UNION ");
 
-  for (const Rule& rule : reader.getRules()) {
-    ruleRecBatch.add(RuleRec{rule.getHash(reader.getParser()).to_string(), std::string(rule.Name)});
+  for (const Rule& rule : Reader.getRules()) {
+    ruleRecBatch.add(RuleRec{rule.getHash(Reader.getParser()).to_string(), std::string(rule.Name)});
     hits_query += "(";
-    hits_query += rule.getSqlQuery(reader.getParser());
+    hits_query += Qb.buildSqlQuery(rule);
     hits_query += ")";
     hits_query += sqlUnion;
   }
@@ -30,7 +32,7 @@ void RuleEngine::writeRulesToDb(const RuleReader& reader, LlamaDBConnection& dbC
   THROW_IF(state == DuckDBError, "Error inserting into rule matches table");
 }
 
-void RuleEngine::createTables(LlamaDBConnection& dbConn) {
+void LlamaRuleEngine::createTables(LlamaDBConnection& dbConn) {
   DBType<RuleRec> ruleRec;
   THROW_IF(!ruleRec.createTable(dbConn.get(), "rules"), "Error creating rule table");
   DBType<RuleMatch> ruleMatch;
@@ -39,14 +41,21 @@ void RuleEngine::createTables(LlamaDBConnection& dbConn) {
   THROW_IF(!searchHit.createTable(dbConn.get(), "search_hits"), "Error creating search hit table");
 }
 
-LgFsmHolder RuleEngine::getFsm(const RuleReader& reader) {
+LgFsmHolder LlamaRuleEngine::buildFsm() {
   LgFsmHolder fsm;
   FieldHash h;
-  for (const Rule& rule : reader.getRules()) {
-    h = rule.getHash(reader.getParser());
+  for (const Rule& rule : Reader.getRules()) {
+    h = rule.getHash(Reader.getParser());
     for (const auto& pPair : rule.Grep.Patterns.Patterns) {
-      fsm.addPatterns(pPair, reader.getParser(), h.to_string(), PatternToRuleId);
+      fsm.addPatterns(pPair, Reader.getParser(), h.to_string(), PatternToRuleId);
     }
   }
   return fsm;
+}
+
+bool LlamaRuleEngine::read(const std::string& input) {
+  // Make a copy of the input and save as member to ensure input string lifetime
+  // (since we're passing around `string_view`s)
+  Input = input;
+  return Reader.read(Input);
 }

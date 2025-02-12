@@ -1,18 +1,25 @@
 #pragma once
 
 #include "fsm.h"
+#include "querybuilder.h"
+#include "rulereader.h"
 
-class RuleReader;
 class LlamaDBConnection;
 
-class RuleEngine {
+class LlamaRuleEngine {
 public:
-  void writeRulesToDb(const RuleReader& reader, LlamaDBConnection& dbConn);
+  LlamaRuleEngine();
+  void writeRulesToDb(LlamaDBConnection& dbConn);
   void createTables(LlamaDBConnection& dbConn);
 
-  LgFsmHolder getFsm(const RuleReader& reader);
+  LgFsmHolder buildFsm();
+
+  bool read(const std::string& input);
 
   const std::vector<std::string>& patternToRuleId() const { return PatternToRuleId; }
 private:
   std::vector<std::string> PatternToRuleId;
+  std::string Input;
+  RuleReader Reader;
+  QueryBuilder Qb;
 };

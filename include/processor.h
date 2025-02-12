@@ -35,7 +35,8 @@ public:
 
   void addToSearchHitBatch(const LG_SearchHit* const hit);
 
-  void currentHash(const std::string& hash) { CurrentHash = hash; }
+  // for testing purposes
+  void setBlake3(const std::string& hash) { HashRecord.Blake3 = hash; }
 
   DBBatch<SearchHit>* searchHits() { return SearchHits.get(); }
 
@@ -44,15 +45,17 @@ private:
 
   std::vector<unsigned char> Buf; // to avoid reallocations
 
-  std::string CurrentHash; // for use with search hit - blake3 hash of file currently being processed
-
   LlamaDB* const Db; // weak pointer, allows for clone()
   LlamaDBConnection DbConn;
-  LlamaDBAppender   Appender;
+  LlamaDBAppender   HashAppender;
+  LlamaDBAppender   SearchHitAppender;
 
   std::shared_ptr<ProgramHandle> LgProg; // shared
   std::shared_ptr<ContextHandle> Ctx; // not shared, could be unique_ptr
   std::shared_ptr<SFHASH_Hasher> Hasher; // not shared, could be unique_ptr
+
+  HashRec HashRecord; // to be reused per set of hashes
+
   std::unique_ptr<HashBatch> Hashes;
   std::unique_ptr<DBBatch<SearchHit>> SearchHits;
 

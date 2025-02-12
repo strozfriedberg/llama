@@ -28,6 +28,7 @@ src_llama_common = \
 	src/parser.cpp \
 	src/pooloutputhandler.cpp \
 	src/processor.cpp \
+	src/querybuilder.cpp \
 	src/readseek_impl.cpp \
 	src/recordbuffer.cpp \
 	src/recordhasher.cpp \
@@ -84,6 +85,7 @@ test_test_SOURCES = \
 	test/test_parser.cpp \
 	test/test_patternparser.cpp \
 	test/test_processor.cpp \
+	test/test_querybuilder.cpp \
 	test/test_readseek.cpp \
 	test/test_recordbuffer.cpp \
 	test/test_recordhasher.cpp \
