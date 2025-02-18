@@ -161,18 +161,6 @@ TEST_CASE("parseHashSectionMultipleRecords") {
   REQUIRE(hashSection.HashAlgs == (SFHASH_MD5 | SFHASH_SHA_1));
 }
 
-TEST_CASE("parseOperatorThrowsIfNotOperator") {
-  std::string input = "notAnOperator";
-  LlamaParser parser(input, getLexer(input).tokens());
-  REQUIRE_THROWS_AS(parser.parseOperator(), ParserError);
-}
-
-TEST_CASE("parseOperatorDoesNotThrowIfOperator") {
-  std::string input = "==";
-  LlamaParser parser(input, getLexer(input).tokens());
-  REQUIRE_NOTHROW(parser.parseOperator());
-}
-
 TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
   std::string input = "= \"test\" nocase";
   LlamaParser parser(input, getLexer(input).tokens());

@@ -335,9 +335,6 @@ public:
       curLex == "filename"
     );
   }
-  // This does not return anything because we have no use for the operator itself,
-  // and if we did, we could just get it from `previous().Type`.
-  void parseOperator();
 
   SFHASH_HashAlgorithm parseHash();
   FileHashRecord       parseFileHashRecord();

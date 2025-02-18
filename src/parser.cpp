@@ -126,18 +126,6 @@ std::string_view LlamaParser::parseHashValue() {
   return expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
 }
 
-void LlamaParser::parseOperator() {
-  mustParse(
-    "Expected operator",
-    LlamaTokenType::EQUAL_EQUAL,
-    LlamaTokenType::NOT_EQUAL,
-    LlamaTokenType::GREATER_THAN,
-    LlamaTokenType::GREATER_THAN_EQUAL,
-    LlamaTokenType::LESS_THAN,
-    LlamaTokenType::LESS_THAN_EQUAL
-  );
-}
-
 PatternDef LlamaParser::parsePatternMod() {
   LG_KeyOptions opts{0,0,0};
   std::string pat = std::string(previousLexeme());
