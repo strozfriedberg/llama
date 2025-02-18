@@ -46,7 +46,13 @@ int Llama::run(int argc, const char* const argv[]) {
   }
   else if ("search" == Opts->Command) {
     Timer overall(&std::cerr, "Overall time: ");
-    search();
+    try {
+      search();
+    }
+    catch (const std::runtime_error &e) {
+      std::cerr << "Error: " << e.what() << std::endl;
+      return -1;
+    }
   }
   return 0;
 }

@@ -14,7 +14,9 @@ public:
   }
 
   LG_HPATTERN parse(PatternDef pDef) {
-    lg_parse_pattern(Pat, pDef.Pattern.c_str(), &pDef.Options, &Err);
+    if (lg_parse_pattern(Pat, pDef.Pattern.c_str(), &pDef.Options, &Err) == 0) {
+      throw std::runtime_error("Failed to parse pattern " + pDef.Pattern);
+    };
     return Pat;
   }
 
