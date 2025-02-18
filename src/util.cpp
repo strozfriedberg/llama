@@ -10,5 +10,5 @@ std::string randomNumString() {
 }
 
 void printErrWithSource(const std::runtime_error& e, const std::string source) {
-  std::cout << source << ": " << e.what() << std::endl;
+  std::cerr << source << ": " << e.what() << std::endl;
 }
