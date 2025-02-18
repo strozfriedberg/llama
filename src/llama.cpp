@@ -96,11 +96,6 @@ bool readRulesFromDir(LlamaRuleEngine& engine, const std::string& path) {
   const std::filesystem::path ruleDir{path};
   bool ret = false;
 
-  if (!(std::filesystem::is_directory(path))) {
-    std::cerr << "Error: " << path << " is not a directory" << std::endl;
-    return false;
-  }
-
   for (const auto& file : std::filesystem::directory_iterator{ruleDir}) {
     // don't exit early if there's an error because we want to give users all errors possible
     ret |= engine.read(readfile(file.path()), file.path());

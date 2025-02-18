@@ -12,15 +12,15 @@ TEST_CASE("testReadDirPopulatesRulesCorrectly") {
   REQUIRE(engine.numRulesRead() == 2);
 }
 
-TEST_CASE("testReadDirFailsIfPathIsNotDir") {
-  std::string testDir = "test/rules/test_rule.llama";
-  LlamaRuleEngine engine;
+// TEST_CASE("testReadDirFailsIfPathIsNotDir") {
+//   std::string testDir = "test/rules/test_rule.llama";
+//   LlamaRuleEngine engine;
 
-  std::stringstream cerrBuffer;
-  std::streambuf* originalCerr = std::cerr.rdbuf();
-  std::cerr.rdbuf(cerrBuffer.rdbuf());
+//   std::stringstream cerrBuffer;
+//   std::streambuf* originalCerr = std::cerr.rdbuf();
+//   std::cerr.rdbuf(cerrBuffer.rdbuf());
 
-  REQUIRE_FALSE(readRulesFromDir(engine, testDir));
-  std::cerr.rdbuf(originalCerr);
-  REQUIRE(cerrBuffer.str() == "Error: " + testDir + " is not a directory\n");
-}
+//   REQUIRE_FALSE(readRulesFromDir(engine, testDir));
+//   std::cerr.rdbuf(originalCerr);
+//   REQUIRE(cerrBuffer.str() == "Error: " + testDir + " is not a directory\n");
+// }

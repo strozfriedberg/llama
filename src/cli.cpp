@@ -1,5 +1,6 @@
 #include "cli.h"
 
+#include <filesystem>
 #include <ostream>
 #include <stdexcept>
 #include <thread>
@@ -57,6 +58,8 @@ std::shared_ptr<Options> Cli::parse(int argc, const char* const argv[]) const {
   Opts->Command = figureOutCommand(optsMap);
   Opts->OutputCodec = figureOutCodec();
 
+  validateOpts();
+
   return Opts;
 }
 
@@ -113,4 +116,26 @@ Codec Cli::figureOutCodec() const {
     return Codec::XZ;
   }
   throw std::invalid_argument("'" + CodecSelect + "' is not a valid option for --codec");
+}
+
+void Cli::validateOpts() const {
+  if (!Opts->RuleFile.empty()) {
+    if (!std::filesystem::exists(Opts->RuleFile)) {
+      throw std::invalid_argument("Rule file " + Opts->RuleFile + " not found.");
+    }
+
+    if (!std::filesystem::is_regular_file(Opts->RuleFile)) {
+      throw std::invalid_argument("Rule file " + Opts->RuleFile + " is not a file.");
+    }
+  }
+
+  if (!Opts->RuleDir.empty()) {
+    if (!std::filesystem::exists(Opts->RuleDir)) {
+      throw std::invalid_argument("Rule directory " + Opts->RuleDir + " not found.");
+    }
+
+    if (!std::filesystem::is_directory(Opts->RuleDir)) {
+      throw std::invalid_argument("Rule directory " + Opts->RuleDir + " is not a directory.");
+    }
+  }
 }
