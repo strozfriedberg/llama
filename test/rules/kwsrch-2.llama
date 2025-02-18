@@ -1,0 +1,14 @@
+rule KeywordSearch {
+  meta:
+    description = "These rules test how llama handles ASCII strings in a FAT file system."
+    source = "https://dftt.sourceforge.net/test2/index.html"
+
+  grep:
+    patterns:
+      a = "first" fixed
+      b = "SECOND" fixed
+      c = "a?b\c*d$e#f[g^" fixed
+    
+    condition:
+      any()
+}

@@ -101,6 +101,16 @@ std::string readDir(const std::string& path) {
   return str;
 }
 
+bool readRulesFromDir(LlamaRuleEngine& engine, const std::string& path) {
+  const std::filesystem::path ruleDir{path};
+  bool ret = 0;
+  for (const auto& file : std::filesystem::directory_iterator{ruleDir}) {
+    // don't exit early if there's an error because we want to give users all errors possible
+    ret |= engine.read(readfile(file.path()), file.path());
+  }
+  return ret;
+}
+
 bool Llama::readpatterns(const std::vector<std::string>& keyFiles) {
   std::shared_ptr<FSMHandle> fsm(lg_create_fsm(1000, 100000), lg_destroy_fsm);
 
@@ -160,8 +170,8 @@ bool Llama::init() {
   });
 
   auto rules = make_future(Pool, [this](){
-    return (this->Opts->RuleFile.empty() || RuleEngine.read(readfile(this->Opts->RuleFile))) &&
-           (this->Opts->RuleDir.empty() || RuleEngine.read(readDir(this->Opts->RuleDir)));
+    return (this->Opts->RuleFile.empty() || RuleEngine.read(readfile(this->Opts->RuleFile), this->Opts->RuleFile)) &&
+           (this->Opts->RuleDir.empty() || readRulesFromDir(RuleEngine, this->Opts->RuleDir));
   });
 
   return readPats.get() && open.get() && db.get() && rules.get();

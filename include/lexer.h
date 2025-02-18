@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "token.h"
+#include "util.h"
 
 class LlamaLexer {
 public:
@@ -26,7 +27,7 @@ public:
     Pos.reset();
   }
 
-  void scanTokens();
+  void scanTokens(const std::string& source = "stdin");
   void scanToken();
 
   void parseIdentifier(LineCol pos);
