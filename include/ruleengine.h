@@ -15,6 +15,7 @@ public:
   LgFsmHolder buildFsm();
 
   bool read(const std::string& input);
+  uint64_t numRulesRead();
 
   const std::vector<std::string>& patternToRuleId() const { return PatternToRuleId; }
 private:

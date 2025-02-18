@@ -59,3 +59,7 @@ bool LlamaRuleEngine::read(const std::string& input) {
   Input = input;
   return Reader.read(Input);
 }
+
+uint64_t LlamaRuleEngine::numRulesRead() {
+  return Reader.getRules().size();
+}

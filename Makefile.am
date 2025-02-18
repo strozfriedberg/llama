@@ -81,6 +81,7 @@ test_test_SOURCES = \
 	test/test_fsm.cpp \
 	test/test_hex.cpp \
 	test/test_inodeandblocktrackerimpl.cpp \
+	test/test_llama.cpp \
 	test/test_lexer.cpp \
 	test/test_parser.cpp \
 	test/test_patternparser.cpp \
