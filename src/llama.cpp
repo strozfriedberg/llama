@@ -92,15 +92,6 @@ std::string readfile(const std::string& path) {
   return str;
 }
 
-std::string readDir(const std::string& path) {
-  const std::filesystem::path ruleDir{path};
-  std::string str;
-  for (const auto& file : std::filesystem::directory_iterator{ruleDir}) {
-    str += readfile(file.path());
-  }
-  return str;
-}
-
 bool readRulesFromDir(LlamaRuleEngine& engine, const std::string& path) {
   const std::filesystem::path ruleDir{path};
   bool ret = false;
