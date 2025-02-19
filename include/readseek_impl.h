@@ -15,8 +15,10 @@ public:
   virtual void close(void) override {}
 
   virtual uint64_t getID() const override { return 0; }
+  virtual bool isPDF() override;
 
   virtual int64_t read(size_t len, std::vector<uint8_t>& buf) override;
+  virtual int64_t readAll(std::vector<uint8_t>& buf) override { buf = Buf; };
 
   virtual size_t tellg() const override { return Pos; }
   virtual size_t seek(size_t pos) override { return (Pos = (pos < Buf.size() ? pos: Buf.size())); }
@@ -40,8 +42,10 @@ public:
   virtual void close(void) override {}
 
   virtual uint64_t getID() const override { return 0; }
+  virtual bool isPDF() override;
 
   virtual int64_t read(size_t len, std::vector<uint8_t>& buf) override;
+  virtual int64_t readAll(std::vector<uint8_t>& buf) override { return read(Size, buf); };
 
   virtual size_t tellg() const override;
   virtual size_t seek(size_t pos) override;
@@ -67,8 +71,10 @@ public:
   virtual void close(void) override;
 
   virtual uint64_t getID() const override { return Inum; }
+  virtual bool isPDF() override;
 
   virtual int64_t read(size_t len, std::vector<uint8_t>& buf) override;
+  virtual int64_t readAll(std::vector<uint8_t>& buf) override { return FilePtr ? read(FilePtr->meta->size, buf) : 0; }
 
   virtual size_t tellg() const override { return 0; }
   virtual size_t seek(size_t pos) override;

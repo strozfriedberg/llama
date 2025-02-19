@@ -12,6 +12,8 @@ class Cli;
 class InputReader;
 class OutputWriter;
 
+std::string readfile(const std::string& path);
+
 class Llama {
 public:
   Llama();

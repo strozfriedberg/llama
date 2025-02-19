@@ -5,6 +5,10 @@
 
 #include "throw.h"
 
+namespace {
+  static std::vector<uint8_t> pdfSig = {0x25, 0x50, 0x44, 0x46, 0x2D}; // %PDF-
+}
+
 int64_t ReadSeekBuf::read(size_t len, std::vector<uint8_t>& buf) {
   if (Pos >= Buf.size()) {
     return 0;
@@ -18,6 +22,10 @@ int64_t ReadSeekBuf::read(size_t len, std::vector<uint8_t>& buf) {
   return toRead;
 }
 
+bool ReadSeekBuf::isPDF() {
+  return std::equal(Buf.begin(), Buf.begin() + pdfSig.size(), pdfSig.begin(), pdfSig.end());
+}
+
 //*******************************************************************
 
 ReadSeekFile::ReadSeekFile(std::shared_ptr<FILE> fileptr):
@@ -26,6 +34,13 @@ ReadSeekFile::ReadSeekFile(std::shared_ptr<FILE> fileptr):
   std::fseek(FilePtr.get(), 0, SEEK_END);
   Size = std::ftell(FilePtr.get());
   std::fseek(FilePtr.get(), 0, SEEK_SET);
+}
+
+bool ReadSeekFile::isPDF() {
+  std::vector<uint8_t> buf;
+  read(pdfSig.size(), buf);
+  seek(0);
+  return (buf == pdfSig);
 }
 
 int64_t ReadSeekFile::read(size_t len, std::vector<uint8_t>& buf) {
@@ -77,6 +92,13 @@ void ReadSeekTSK::close(void) {
     tsk_fs_file_close(FilePtr);
     FilePtr = nullptr;
   }
+}
+
+bool ReadSeekTSK::isPDF() {
+  std::vector<uint8_t> buf;
+  read(pdfSig.size(), buf);
+  seek(0);
+  return (buf == pdfSig);
 }
 
 int64_t ReadSeekTSK::read(size_t len, std::vector<uint8_t>& buf) {

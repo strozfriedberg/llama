@@ -91,6 +91,10 @@ void Processor::search(ReadSeek& rs) {
   size_t bytesRead = 0;
   uint64_t offset = 0;
   rs.seek(0);
+  if (rs.isPDF()) {
+    // get searchable stream from xpdf
+    // ReadSeek must become a ReadSeekBuf here temporarily so that we can reassign the buf..?
+  }
   do {
       bytesRead = rs.read(1 << 20, Buf);
       if (bytesRead > 0) {

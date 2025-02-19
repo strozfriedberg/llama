@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "readseek_impl.h"
+#include "llama.h"
 
 namespace {
   std::vector<uint8_t> SRCBUF{ 35, 32, 113, 65 };
@@ -41,4 +42,12 @@ TEST_CASE("readSeekFile") {
 
   ReadSeekFile rs(f);
   basicReadSeekTest(SRCBUF, rs);
+}
+
+TEST_CASE("readSeekFileIsPDF") {
+  std::string testPath = "test/data/small.pdf";
+  std::shared_ptr<FILE> f(fopen(testPath.c_str(), "r"), std::fclose);
+  ReadSeekFile rs(f);
+  REQUIRE(rs.isPDF());
+  REQUIRE(rs.tellg() == 0);
 }
