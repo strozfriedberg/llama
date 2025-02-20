@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <thread>
 
+#include "throw.h"
+
 namespace po = boost::program_options;
 
 Cli::Cli() : All(), Opts(new Options) {
@@ -120,22 +122,12 @@ Codec Cli::figureOutCodec() const {
 
 void Cli::validateOpts() const {
   if (!Opts->RuleFile.empty()) {
-    if (!std::filesystem::exists(Opts->RuleFile)) {
-      throw std::invalid_argument("Rule file " + Opts->RuleFile + " not found.");
-    }
-
-    if (!std::filesystem::is_regular_file(Opts->RuleFile)) {
-      throw std::invalid_argument("Rule file " + Opts->RuleFile + " is not a file.");
-    }
+    THROW_IF(!std::filesystem::exists(Opts->RuleFile), "Rule file " + Opts->RuleFile + " not found.");
+    THROW_IF(!std::filesystem::is_regular_file(Opts->RuleFile), "Rule file " + Opts->RuleFile + " is not a file.");
   }
 
   if (!Opts->RuleDir.empty()) {
-    if (!std::filesystem::exists(Opts->RuleDir)) {
-      throw std::invalid_argument("Rule directory " + Opts->RuleDir + " not found.");
-    }
-
-    if (!std::filesystem::is_directory(Opts->RuleDir)) {
-      throw std::invalid_argument("Rule directory " + Opts->RuleDir + " is not a directory.");
-    }
+    THROW_IF(!std::filesystem::exists(Opts->RuleDir), "Rule directory " + Opts->RuleDir + " not found.");
+    THROW_IF(!std::filesystem::is_directory(Opts->RuleDir), "Rule directory " + Opts->RuleDir + " is not a directory.");
   }
 }
