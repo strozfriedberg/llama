@@ -15,7 +15,7 @@ public:
 
   LG_HPATTERN parse(PatternDef pDef) {
     if (lg_parse_pattern(Pat, pDef.Pattern.c_str(), &pDef.Options, &Err) == 0) {
-      throw std::runtime_error("Failed to parse pattern " + pDef.Pattern);
+      throw std::runtime_error("Lightgrep failed to parse pattern " + pDef.Pattern + "\n" + Err->Message);
     };
     return Pat;
   }
