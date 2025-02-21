@@ -22,7 +22,7 @@ TEST_CASE("initLlamaLgFsm")
 TEST_CASE("parseWithPatternDef") {
   std::string input = "rule MyRule { grep: patterns: a = \"test\" encodings=UTF-8,UTF-16LE condition: all()}";
   LlamaParser parser(input, LlamaLexer::getTokens(input, "test"));
-  auto rules = parser.parseRules({0});
+  auto rules = parser.parseRules({0}, "test");
   LgFsmHolder lFsm;
   std::vector<std::string> patToRuleId;
   for (const auto& pPair : rules[0].Grep.Patterns.Patterns) {

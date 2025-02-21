@@ -359,7 +359,7 @@ public:
 
   Rule parseRuleDecl();
 
-  std::vector<Rule> parseRules(const std::vector<size_t>& ruleIndices, const std::string& source = "stdin");
+  std::vector<Rule> parseRules(const std::vector<size_t>& ruleIndices, const std::string& source);
 
   const std::vector<ParserError>& errors() const { return Errors; }
 
