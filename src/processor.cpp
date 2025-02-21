@@ -94,6 +94,8 @@ void Processor::search(ReadSeek& rs) {
   if (rs.isPDF()) {
     // get searchable stream from xpdf
     // ReadSeek must become a ReadSeekBuf here temporarily so that we can reassign the buf..?
+    // move this into process before the call to search()
+    // if PDF, create a ReadSeekBuf from return val of readAll
   }
   do {
       bytesRead = rs.read(1 << 20, Buf);

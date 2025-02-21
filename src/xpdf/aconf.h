@@ -98,7 +98,7 @@
 /*
  * This is defined if using FreeType 2.
  */
-#define HAVE_FREETYPE_H 1
+#define HAVE_FREETYPE_H 0
 
 /*
  * This is defined if using D-Type 4.
@@ -108,17 +108,22 @@
 /*
  * This is defined if using libpaper.
  */
-#define HAVE_PAPER_H 1
+#define HAVE_PAPER_H 0
 
 /*
  * This is defined if using libfontconfig.
  */
-#define HAVE_FONTCONFIG 1
+#define HAVE_FONTCONFIG 0
 
 /*
  * Defined if the Splash library is avaiable.
  */
-#define HAVE_SPLASH 1
+#define HAVE_SPLASH 0
+
+/*
+ * Full path for the system-wide xpdfrc file.
+ */
+#define SYSTEM_XPDFRC "src/xpdf/.xpdfrc"
 
 /*
  * Defined if using lcms2.

@@ -1,3 +1,4 @@
 class PDFReader {
-  std::vector<uint8_t> readText(std::vector<uint8_t> stream);
+public:
+  bool readText(std::string filename);
 };

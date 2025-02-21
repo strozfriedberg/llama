@@ -1,12 +1,68 @@
 ACLOCAL_AMFLAGS = -I m4
 
-AM_CPPFLAGS = -I$(srcdir)/include $(BOOST_CPPFLAGS) $(LLAMA_CPPFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/src/xpdf -I$(srcdir)/src/splash -I$(srcdir)/src/goo -isystem $(BOOST_CPPFLAGS) $(LLAMA_CPPFLAGS)
 AM_CXXFLAGS = $(STDCXX_CXXFLAGS) $(LLAMA_CXXFLAGS) $(BOOST_CXXFLAGS) $(ASAN_CXXFLAGS)
 AM_LDFLAGS = $(BOOST_LDFLAGS) $(LLAMA_LDFLAGS) $(ASAN_LDFLAGS)
 
 bin_PROGRAMS = src/llama
 
 src_llama_common = \
+	src/xpdf/AcroForm.cc \
+	src/xpdf/Annot.cc \
+	src/xpdf/Array.cc \
+	src/xpdf/BuiltinFont.cc \
+	src/xpdf/BuiltinFontTables.cc \
+	src/xpdf/Catalog.cc \
+	src/xpdf/CharCodeToUnicode.cc \
+	src/xpdf/CMap.cc \
+	src/xpdf/Decrypt.cc \
+	src/xpdf/Dict.cc \
+	src/xpdf/Error.cc \
+	src/xpdf/FoFiBase.cc \
+	src/xpdf/FoFiEncodings.cc \
+	src/xpdf/FoFiIdentifier.cc \
+	src/xpdf/FoFiTrueType.cc \
+	src/xpdf/FoFiType1.cc \
+	src/xpdf/FoFiType1C.cc \
+	src/xpdf/FontEncodingTables.cc \
+	src/xpdf/Function.cc \
+	src/xpdf/Gfx.cc \
+	src/xpdf/GfxFont.cc \
+	src/xpdf/GfxState.cc \
+	src/xpdf/GHash.cc \
+	src/xpdf/GList.cc \
+	src/xpdf/GlobalParams.cc \
+	src/xpdf/gmem.cc \
+	src/xpdf/gmempp.cc \
+	src/xpdf/GString.cc \
+	src/xpdf/JArithmeticDecoder.cc \
+	src/xpdf/JBIG2Stream.cc \
+	src/xpdf/JPXStream.cc \
+	src/xpdf/Lexer.cc \
+	src/xpdf/Link.cc \
+	src/xpdf/NameToCharCode.cc \
+	src/xpdf/Object.cc \
+	src/xpdf/OptionalContent.cc \
+	src/xpdf/Outline.cc \
+	src/xpdf/OutputDev.cc \
+	src/xpdf/Page.cc \
+	src/xpdf/Parser.cc \
+	src/xpdf/PDF417Barcode.cc \
+	src/xpdf/PDFDoc.cc \
+	src/xpdf/PDFDocEncoding.cc \
+	src/xpdf/PSTokenizer.cc \
+	src/xpdf/SecurityHandler.cc \
+	src/xpdf/Stream.cc \
+	src/xpdf/TextOutputDev.cc \
+	src/xpdf/TextString.cc \
+	src/xpdf/UnicodeMap.cc \
+	src/xpdf/UnicodeRemapping.cc \
+	src/xpdf/UnicodeTypeTable.cc \
+	src/xpdf/UTF8.cc \
+	src/xpdf/XFAScanner.cc \
+	src/xpdf/XRef.cc \
+	src/xpdf/Zoox.cc \
+	src/goo/gfile.cc \
 	src/batchhandler.cpp \
 	src/blocksequence_impl.cpp \
 	src/cli.cpp \
@@ -26,6 +82,7 @@ src_llama_common = \
 	src/llama.cpp \
 	src/outputtar.cpp \
 	src/parser.cpp \
+	src/pdfreader.cpp \
 	src/pooloutputhandler.cpp \
 	src/processor.cpp \
 	src/querybuilder.cpp \
@@ -84,6 +141,7 @@ test_test_SOURCES = \
 	test/test_lexer.cpp \
 	test/test_parser.cpp \
 	test/test_patternparser.cpp \
+	test/test_pdfreader.cpp \
 	test/test_processor.cpp \
 	test/test_querybuilder.cpp \
 	test/test_readseek.cpp \
