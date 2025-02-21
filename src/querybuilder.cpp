@@ -21,6 +21,9 @@ std::string QueryBuilder::buildSqlClause(std::shared_ptr<Node> n) {
       clause = buildSqlClause(bn);
       break;
     }
+    default: {
+      throw std::runtime_error("Invalid node type " + std::to_string(static_cast<int>(n->Type)));
+    }
   }
   return clause;
 }
@@ -65,3 +68,4 @@ std::string QueryBuilder::buildSqlQuery(const Rule& rule) {
 
   return query;
 }
+
