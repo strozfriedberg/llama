@@ -55,7 +55,7 @@ TEST_CASE("ScanTokenString") {
 TEST_CASE("parseString") {
   std::string input = "\"some string\"";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   REQUIRE(lexer.tokens().at(0).Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
   REQUIRE(lexer.tokens().at(0).Lexeme == "some string");
 }
@@ -63,7 +63,7 @@ TEST_CASE("parseString") {
 TEST_CASE("parseEncodingsList") {
   std::string input = "encodings=UTF-8,UTF-16";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   REQUIRE(lexer.tokens().size() == 6);
   REQUIRE(lexer.tokens().at(0).Type == LlamaTokenType::ENCODINGS);
   REQUIRE(lexer.tokens().at(1).Type == LlamaTokenType::EQUAL);
@@ -252,7 +252,7 @@ TEST_CASE("parseNumber") {
 TEST_CASE("scanTokens") {
   std::string input = "{ }";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   REQUIRE(lexer.tokens().size() == 3);
   REQUIRE(lexer.tokens()[0].Type == LlamaTokenType::OPEN_BRACE);
   REQUIRE(lexer.tokens()[1].Type == LlamaTokenType::CLOSE_BRACE);
@@ -262,7 +262,7 @@ TEST_CASE("scanTokens") {
 TEST_CASE("scanTokensParseIdentifierKeyword") {
   std::string input = "rule";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   REQUIRE(lexer.tokens().size() == 2);
   REQUIRE(lexer.tokens()[0].Type == LlamaTokenType::RULE);
   REQUIRE(lexer.tokens()[1].Type == LlamaTokenType::END_OF_FILE);
@@ -271,7 +271,7 @@ TEST_CASE("scanTokensParseIdentifierKeyword") {
 TEST_CASE("parseTokensParseIdentifierNonKeyword") {
   std::string input = "foobar";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   REQUIRE(lexer.tokens().size() == 2);
   REQUIRE(lexer.tokens()[0].Type == LlamaTokenType::IDENTIFIER);
   REQUIRE(lexer.tokens()[1].Type == LlamaTokenType::END_OF_FILE);
@@ -295,7 +295,7 @@ TEST_CASE("match") {
 TEST_CASE("scanTokensFullRule") {
   std::string input = "rule MyRule {\n\tmeta:\n\t\tdescription = \"this is my rule\"\nsomething = 5\n}";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   std::vector<Token> tokens = lexer.tokens();
   REQUIRE(tokens.size() == 13);
   REQUIRE(tokens[0].Type == LlamaTokenType::RULE);
@@ -335,7 +335,7 @@ TEST_CASE("newLinesIncrementCurPosLineNum") {
 TEST_CASE("parseIdentifierStringNumberLineCol") {
   std::string input = "description = \"this is my rule\"\nsomething = 56789 encodings=ASCII,UTF-8";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   REQUIRE(lexer.tokens().at(0).Pos.LineNum == 1);
   REQUIRE(lexer.tokens().at(0).Pos.ColNum == 1);
   REQUIRE(lexer.tokens().at(1).Pos.LineNum == 1);
@@ -386,7 +386,7 @@ TEST_CASE("parseSingleLineCommentIsIgnored") {
 TEST_CASE("parseSingleLineComment") {
   std::string input = "//this is a comment";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   REQUIRE(lexer.isAtEnd());
 }
 
@@ -406,7 +406,7 @@ TEST_CASE("parseMultiLineCommentThrowsIfUnterminated") {
 TEST_CASE("parseRuleWithMultiLineComment") {
   std::string input = "rule /* this is a multi \n line comment */ MyRule {}";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   REQUIRE(lexer.tokens().size() == 5);
 }
 
@@ -432,21 +432,21 @@ TEST_CASE("peekWhenAtEndShouldReturnNullChar") {
 TEST_CASE("parseSingleLineCommentWithinMultiLineComment") {
   std::string input = "/* this \nis a // single line comment */";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   REQUIRE(lexer.tokens().size() == 1);
 }
 
 TEST_CASE("parseMultiLineCommentWithManyAsterisks") {
   std::string input = "/******************* this is a multi-line \ncomment *******************/";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   REQUIRE(lexer.tokens().size() == 1);
 }
 
 TEST_CASE("parseMultiLineCommentUnterminatedComplex") {
   std::string input = "/* /// ***** /*  //";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   REQUIRE(lexer.tokens().size() == 1);
   REQUIRE(lexer.tokens().at(0).Type == LlamaTokenType::END_OF_FILE);
 }
@@ -454,14 +454,14 @@ TEST_CASE("parseMultiLineCommentUnterminatedComplex") {
 TEST_CASE("parseSingleLineCommentWithMultiLineCommentIsIgnored") {
   std::string input = "// this is a single line comment /* this is a multi-line comment*/";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   REQUIRE(lexer.tokens().size() == 1);
 }
 
 TEST_CASE("parseSingleLineCommentWithMultiLineCommentWithNewlineIsIgnored") {
   std::string input = "// this is a single line comment /* this is a multi-line comment with a newline \n*/";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   REQUIRE(lexer.tokens().size() == 2);
   REQUIRE(lexer.tokens().at(0).Type == LlamaTokenType::UNRECOGNIZED);
   REQUIRE(lexer.tokens().at(1).Type == LlamaTokenType::END_OF_FILE);
@@ -470,7 +470,7 @@ TEST_CASE("parseSingleLineCommentWithMultiLineCommentWithNewlineIsIgnored") {
 TEST_CASE("parseMultiLineCommentIncreasesLineNumAndResetsColumnNum") {
   std::string input = "/* this is a multi-line comment\n\n\n*/";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   REQUIRE(lexer.tokens().size() == 1);
   REQUIRE(lexer.Pos.LineNum == 4);
   REQUIRE(lexer.Pos.ColNum == 3);
@@ -479,7 +479,7 @@ TEST_CASE("parseMultiLineCommentIncreasesLineNumAndResetsColumnNum") {
 TEST_CASE("parseStringWithEscapedDoubleQuote") {
   std::string input = R"("this is a \"string\" that is escaped")";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   REQUIRE(lexer.tokens().size() == 2);
   REQUIRE(lexer.tokens().at(0).Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
   REQUIRE(lexer.tokens().at(0).length() == input.size() - 2);
@@ -489,7 +489,7 @@ TEST_CASE("parseStringWithEscapedDoubleQuote") {
 TEST_CASE("multipleRuleCount") {
   std::string input = "rule rule rule rule rule rule";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   REQUIRE(lexer.ruleIndices().size() == 6);
   REQUIRE(lexer.ruleIndices() == std::vector<size_t>{0, 1, 2, 3, 4, 5});
 }
@@ -497,7 +497,7 @@ TEST_CASE("multipleRuleCount") {
 TEST_CASE("unicodeRuleNameEmojis") {
   std::string input = "rule 💀🔥💯 {}";
   LlamaLexer lexer(input);
-  REQUIRE_NOTHROW(lexer.scanTokens());
+  REQUIRE_NOTHROW(lexer.scanTokens("test"));
   auto tokens = lexer.tokens();
   REQUIRE(tokens.size() > 5);
   REQUIRE(tokens[1].Type == LlamaTokenType::UNRECOGNIZED);
@@ -506,7 +506,7 @@ TEST_CASE("unicodeRuleNameEmojis") {
 TEST_CASE("ruleNameNotAlphaIsUnrecognized") {
   std::string input = "rule _BadRuleName {}";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   auto tokens = lexer.tokens();
   REQUIRE(tokens.size() == 6);
   REQUIRE(tokens[0].Type == LlamaTokenType::RULE);
@@ -520,7 +520,7 @@ TEST_CASE("ruleNameNotAlphaIsUnrecognized") {
 TEST_CASE("unicodeInDoubleQuotedString") {
   std::string input = "rule Rule { grep: patterns: \"菠萝💀🔥💯привет\"}";
   LlamaLexer lexer(input);
-  REQUIRE_NOTHROW(lexer.scanTokens());
+  REQUIRE_NOTHROW(lexer.scanTokens("test"));
   auto tokens = lexer.tokens();
   REQUIRE(tokens.size() == 10);
   REQUIRE(std::string(tokens[7].Lexeme) == "菠萝💀🔥💯привет");
@@ -529,7 +529,7 @@ TEST_CASE("unicodeInDoubleQuotedString") {
 TEST_CASE("ruleWithSingleUnexpectedToken") {
   std::string input = "rule { . }";
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   REQUIRE(lexer.tokens().size() == 5);
   REQUIRE(lexer.tokens().at(2).Type == LlamaTokenType::UNRECOGNIZED);
  }

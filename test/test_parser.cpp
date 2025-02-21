@@ -6,7 +6,7 @@
 
 LlamaLexer getLexer(const std::string& input) {
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   lexer.tokens();
   return lexer;
 }
