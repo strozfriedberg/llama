@@ -99,12 +99,13 @@ std::string readfile(const std::string& path) {
 }
 
 bool readRulesFromDir(LlamaRuleEngine& engine, const std::string& path) {
-  const std::filesystem::path ruleDir{path};
+  std::filesystem::path ruleDir{path};
   bool ret = false;
 
   for (const auto& file : std::filesystem::directory_iterator{ruleDir}) {
     // don't exit early if there's an error because we want to give users all errors possible
-    ret |= engine.read(readfile(file.path()), file.path());
+    std::string filePath = file.path().string();
+    ret |= engine.read(readfile(filePath), filePath);
   }
   return ret;
 }
