@@ -65,7 +65,7 @@ TEST_CASE("LlamaParserBenchmark") {
   RuleReader r;
   int res = 0;
   BENCHMARK("parser") {
-    res = r.read(rules);
+    res = r.read(rules, "test");
     r.clear();
   };
   CHECK(res == 4);

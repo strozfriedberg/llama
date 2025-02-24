@@ -335,9 +335,6 @@ public:
       curLex == "filename"
     );
   }
-  // This does not return anything because we have no use for the operator itself,
-  // and if we did, we could just get it from `previous().Type`.
-  void parseOperator();
 
   SFHASH_HashAlgorithm parseHash();
   FileHashRecord       parseFileHashRecord();
@@ -362,7 +359,7 @@ public:
 
   Rule parseRuleDecl();
 
-  std::vector<Rule> parseRules(const std::vector<size_t>& ruleIndices);
+  std::vector<Rule> parseRules(const std::vector<size_t>& ruleIndices, const std::string& source);
 
   const std::vector<ParserError>& errors() const { return Errors; }
 

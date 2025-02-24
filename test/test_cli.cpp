@@ -63,8 +63,8 @@ TEST_CASE("testCLIKeywordsFiles") {
 
 TEST_CASE("testCLIRuleFiles") {
   const char* args[] = {"llama", "--rule-file",
-                        "rules.txt", "output", "nosnits_workstation.E01"};
-  std::string expected("rules.txt");
+                        "test/rules/test_rule.llama", "output", "nosnits_workstation.E01"};
+  std::string expected("test/rules/test_rule.llama");
   Cli cli;
   auto opts = cli.parse(5, args);
   REQUIRE(expected == opts->RuleFile);
@@ -72,15 +72,45 @@ TEST_CASE("testCLIRuleFiles") {
 
 TEST_CASE("testCLIRuleDir") {
   const char* args[] = {"llama", "--rule-dir",
-                        "rules/", "output", "nosnits_workstation.E01"};
-  std::string expected("rules/");
+                        "test/rules/", "output", "nosnits_workstation.E01"};
+  std::string expected("test/rules/");
   Cli cli;
   auto opts = cli.parse(5, args);
   REQUIRE(expected == opts->RuleDir);
 }
 
+TEST_CASE("testCLIRuleFileNonFile") {
+  const char* args[] = {"llama", "--rule-file",
+                        "test/rules/", "output", "nosnits_workstation.E01"};
+  Cli cli;
+  REQUIRE_THROWS(cli.parse(5, args));
+}
+
+TEST_CASE("testCLIRuleFileDoesNotExist") {
+  const char* args[] = {"llama", "--rule-file",
+                        "test/rules/nonexistent", "output", "nosnits_workstation.E01"};
+  Cli cli;
+  REQUIRE_THROWS(cli.parse(5, args));
+}
+
+TEST_CASE("testCLIRuleDirNonDirectory") {
+  const char* args[] = {"llama", "--rule-dir",
+                        "test/rules/test_rule.llama", "output", "nosnits_workstation.E01"};
+  Cli cli;
+  REQUIRE_THROWS(cli.parse(5, args));
+}
+
+TEST_CASE("testCLIRuleDirDoesNotExist") {
+  const char* args[] = {"llama", "--rule-dir",
+                        "test/rules/non_existent", "output", "nosnits_workstation.E01"};
+  Cli cli;
+  REQUIRE_THROWS(cli.parse(5, args));
+}
+
+
+
 TEST_CASE("testCLIReal") {
-  const char* args[] = {"llama", "-f", "patterns.txt", "output.tar",
+  const char* args[] = {"llama", "-f", "test/rules/test_rule.llama", "output.tar",
                         "nosnits_workstation.E01"};
   Cli cli;
   auto opts = cli.parse(5, args);

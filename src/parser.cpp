@@ -33,6 +33,7 @@ void Function::validate() {
 void LlamaParser::clear() {
   Tokens.clear();
   Input.clear();
+  Errors.clear();
   resetCounters();
 }
 
@@ -124,18 +125,6 @@ FileHashRecord LlamaParser::parseFileHashRecord() {
 std::string_view LlamaParser::parseHashValue() {
   expect(LlamaTokenType::EQUAL_EQUAL);
   return expect(LlamaTokenType::DOUBLE_QUOTED_STRING);
-}
-
-void LlamaParser::parseOperator() {
-  mustParse(
-    "Expected operator",
-    LlamaTokenType::EQUAL_EQUAL,
-    LlamaTokenType::NOT_EQUAL,
-    LlamaTokenType::GREATER_THAN,
-    LlamaTokenType::GREATER_THAN_EQUAL,
-    LlamaTokenType::LESS_THAN,
-    LlamaTokenType::LESS_THAN_EQUAL
-  );
 }
 
 PatternDef LlamaParser::parsePatternMod() {
@@ -394,7 +383,7 @@ Rule LlamaParser::parseRuleDecl() {
   return rule;
 }
 
-std::vector<Rule> LlamaParser::parseRules(const std::vector<size_t>& ruleIndices) {
+std::vector<Rule> LlamaParser::parseRules(const std::vector<size_t>& ruleIndices, const std::string& source) {
   std::vector<Rule> rules;
   rules.reserve(ruleIndices.size());
 
@@ -417,6 +406,7 @@ std::vector<Rule> LlamaParser::parseRules(const std::vector<size_t>& ruleIndices
     }
     catch (ParserError& e) {
       Errors.push_back(e);
+      printErrWithSource(e, source);
     }
 
     // Move to next rule context.

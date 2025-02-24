@@ -87,6 +87,9 @@ void Processor::addToSearchHitBatch(const LG_SearchHit* const hit) {
 }
 
 void Processor::search(ReadSeek& rs) {
+  if (!Ctx) {
+    return;
+  }
   lg_reset_context(Ctx.get());
   size_t bytesRead = 0;
   uint64_t offset = 0;

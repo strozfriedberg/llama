@@ -27,7 +27,7 @@ TEST_CASE("TestCreateTables") {
 TEST_CASE("TestWriteRuleToDb") {
   std::string input = "rule MyRule { file_metadata: created > \"2021-01-01\" } rule MyRule2 { file_metadata: filesize > 100 }";
   LlamaRuleEngine engine;
-  engine.read(input);
+  engine.read(input, "test");
   LlamaDB db;
   LlamaDBConnection conn(db);
   REQUIRE(DBType<Dirent>::createTable(conn.get(), "dirent"));
@@ -71,7 +71,7 @@ TEST_CASE("getFsm") {
         any()
   })";
   LlamaRuleEngine engine;
-  engine.read(input);
+  engine.read(input, "test");
   LgFsmHolder fsmHolder = engine.buildFsm();
   REQUIRE(lg_fsm_pattern_count(fsmHolder.getFsm()) == 3);
   auto patToRuleId = engine.patternToRuleId();
