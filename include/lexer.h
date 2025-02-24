@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "token.h"
+#include "util.h"
 
 class LlamaLexer {
 public:
@@ -26,7 +27,7 @@ public:
     Pos.reset();
   }
 
-  void scanTokens();
+  void scanTokens(const std::string& source);
   void scanToken();
 
   void parseIdentifier(LineCol pos);
@@ -54,9 +55,9 @@ public:
   const std::vector<UnexpectedInputError>& errors() const { return Errors; }
 
   // convenience function for unit test purposes
-  static std::vector<Token> getTokens(const std::string& input) {
+  static std::vector<Token> getTokens(const std::string& input, const std::string& source) {
     LlamaLexer lexer(input);
-    lexer.scanTokens();
+    lexer.scanTokens(source);
     return lexer.tokens();
   }
 

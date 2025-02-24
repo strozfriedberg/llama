@@ -1,0 +1,7 @@
+rule TestRule {
+  grep:
+    patterns:
+      a = "foo"
+    condition:
+      any()
+}

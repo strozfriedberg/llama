@@ -1,8 +1,11 @@
 #include "cli.h"
 
+#include <filesystem>
 #include <ostream>
 #include <stdexcept>
 #include <thread>
+
+#include "throw.h"
 
 namespace po = boost::program_options;
 
@@ -56,6 +59,8 @@ std::shared_ptr<Options> Cli::parse(int argc, const char* const argv[]) const {
 
   Opts->Command = figureOutCommand(optsMap);
   Opts->OutputCodec = figureOutCodec();
+
+  validateOpts();
 
   return Opts;
 }
@@ -113,4 +118,16 @@ Codec Cli::figureOutCodec() const {
     return Codec::XZ;
   }
   throw std::invalid_argument("'" + CodecSelect + "' is not a valid option for --codec");
+}
+
+void Cli::validateOpts() const {
+  if (!Opts->RuleFile.empty()) {
+    THROW_IF(!std::filesystem::exists(Opts->RuleFile), "Rule file " + Opts->RuleFile + " not found.");
+    THROW_IF(!std::filesystem::is_regular_file(Opts->RuleFile), "Rule file " + Opts->RuleFile + " is not a file.");
+  }
+
+  if (!Opts->RuleDir.empty()) {
+    THROW_IF(!std::filesystem::exists(Opts->RuleDir), "Rule directory " + Opts->RuleDir + " not found.");
+    THROW_IF(!std::filesystem::is_directory(Opts->RuleDir), "Rule directory " + Opts->RuleDir + " is not a directory.");
+  }
 }

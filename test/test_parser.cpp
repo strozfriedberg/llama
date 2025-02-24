@@ -6,7 +6,7 @@
 
 LlamaLexer getLexer(const std::string& input) {
   LlamaLexer lexer(input);
-  lexer.scanTokens();
+  lexer.scanTokens("test");
   lexer.tokens();
   return lexer;
 }
@@ -159,18 +159,6 @@ TEST_CASE("parseHashSectionMultipleRecords") {
   REQUIRE(findKey(hashSection.FileHashRecords.at(0), SFHASH_SHA_1)->second == "abcdef");
   REQUIRE(findKey(hashSection.FileHashRecords.at(1), SFHASH_MD5)->second == "test2");
   REQUIRE(hashSection.HashAlgs == (SFHASH_MD5 | SFHASH_SHA_1));
-}
-
-TEST_CASE("parseOperatorThrowsIfNotOperator") {
-  std::string input = "notAnOperator";
-  LlamaParser parser(input, getLexer(input).tokens());
-  REQUIRE_THROWS_AS(parser.parseOperator(), ParserError);
-}
-
-TEST_CASE("parseOperatorDoesNotThrowIfOperator") {
-  std::string input = "==";
-  LlamaParser parser(input, getLexer(input).tokens());
-  REQUIRE_NOTHROW(parser.parseOperator());
 }
 
 TEST_CASE("parseStringModDoesNotThrowIfStringMod") {
@@ -638,7 +626,7 @@ TEST_CASE("startRule") {
   LlamaLexer lexer = getLexer(input);
   LlamaParser parser(input, lexer.tokens());
   std::vector<Rule> rules;
-  REQUIRE_NOTHROW(rules = parser.parseRules(lexer.ruleIndices()));
+  REQUIRE_NOTHROW(rules = parser.parseRules(lexer.ruleIndices(), "test"));
   REQUIRE(rules.size() == 2);
   REQUIRE(rules.at(0).Name == "MyRule");
   REQUIRE(rules.at(0).Meta.Fields.find("description")->second == "test");
@@ -925,14 +913,14 @@ TEST_CASE("EmptyStringNoRules") {
   std::string input = "";
   LlamaLexer lexer = getLexer(input);
   LlamaParser parser(input, lexer.tokens());
-  REQUIRE(parser.parseRules(lexer.ruleIndices()).size() == 0);
+  REQUIRE(parser.parseRules(lexer.ruleIndices(), "test").size() == 0);
 }
 
 TEST_CASE("GetRuleHashWithNoSections") {
   std::string input = "rule MyRule { } rule MyOtherRule { file_metadata: filesize > 30000 }";
   LlamaLexer lexer = getLexer(input);
   LlamaParser parser(input, lexer.tokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
+  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices(), "test");
   REQUIRE(rules.at(0).getHash(parser) != rules.at(1).getHash(parser));
 }
 
@@ -958,7 +946,7 @@ TEST_CASE("badRuleSkippedOne") {
   LlamaLexer lexer = getLexer(input);
   REQUIRE(lexer.ruleIndices() == std::vector<size_t>{0});
   LlamaParser parser(input, lexer.tokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
+  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices(), "test");
   REQUIRE(rules.size() == 0);
 }
 
@@ -967,7 +955,7 @@ TEST_CASE("badRuleSkippedTwo") {
   LlamaLexer lexer = getLexer(input);
   REQUIRE(lexer.ruleIndices() == std::vector<size_t>{0, 3});
   LlamaParser parser(input, lexer.tokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
+  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices(), "test");
   REQUIRE(rules.size() == 1);
   REQUIRE(rules[0].Name == "myGoodRule");
 }
@@ -977,7 +965,7 @@ TEST_CASE("badRuleSkippedTwoOfThree") {
   LlamaLexer lexer = getLexer(input);
   REQUIRE(lexer.ruleIndices() == std::vector<size_t>{0, 3, 6, 10});
   LlamaParser parser(input, lexer.tokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
+  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices(), "test");
   REQUIRE(rules.size() == 1);
   REQUIRE(rules[0].Name == "myGoodRule");
   auto errors = parser.errors();
@@ -993,7 +981,7 @@ TEST_CASE("ruleWithUnexpectedInputIsSkipped") {
   LlamaLexer lexer = getLexer(input);
   REQUIRE(lexer.ruleIndices() == std::vector<size_t>{0, 9});
   LlamaParser parser(input, lexer.tokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
+  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices(), "test");
   REQUIRE(rules.size() == 1);
   REQUIRE(rules[0].Name == "myGoodRule");
   auto errors = parser.errors();
@@ -1007,7 +995,7 @@ TEST_CASE("ruleWithMisspelledFunctionName") {
   LlamaLexer lexer = getLexer(input);
   REQUIRE(lexer.ruleIndices() == std::vector<size_t>{0, 13});
   LlamaParser parser(input, lexer.tokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
+  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices(), "test");
   REQUIRE(rules.size() == 1);
   REQUIRE(rules[0].Name == "myGoodRule");
   auto errors = parser.errors();
@@ -1021,7 +1009,7 @@ TEST_CASE("inputWithUnrecognizedCharBetweenRulesIsIgnored") {
   LlamaLexer lexer = getLexer(input);
   REQUIRE(lexer.ruleIndices() == std::vector<size_t>{0, 7});
   LlamaParser parser(input, lexer.tokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
+  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices(), "test");
   REQUIRE(rules.size() == 2);
   REQUIRE(rules[0].Name == "myGoodRule");
   REQUIRE(rules[1].Name == "myOtherGoodRule");
@@ -1035,7 +1023,7 @@ TEST_CASE("inputWithUnterminatedMultiLineCommentInRule") {
   REQUIRE(lErrors.size() == 1);
   REQUIRE(std::string(lErrors[0].what()) == "Unterminated multi-line comment at line 1 column 17");
   LlamaParser parser(input, lexer.tokens());
-  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
+  std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices(), "test");
   REQUIRE(rules.size() == 0);
   auto pErrors = parser.errors();
   REQUIRE(pErrors.size() == 1);
@@ -1047,7 +1035,7 @@ TEST_CASE("garbageTokensNoRules") {
   LlamaLexer lexer = getLexer(input);
   REQUIRE(lexer.tokens().size() == 10);
   LlamaParser parser(input, lexer.tokens());
-  REQUIRE(parser.parseRules(lexer.ruleIndices()).size() == 0);
+  REQUIRE(parser.parseRules(lexer.ruleIndices(), "test").size() == 0);
   auto errors = parser.errors();
   REQUIRE(errors.size() == 1);
   REQUIRE(std::string(errors[0].what()) == "Unexpected token * at line 1 column 1");
@@ -1058,7 +1046,7 @@ TEST_CASE("goodRuleWithGarbageAtEnd") {
   LlamaLexer lexer = getLexer(input);
   REQUIRE(lexer.tokens().size() == 14);
   LlamaParser parser(input, lexer.tokens());
-  REQUIRE(parser.parseRules(lexer.ruleIndices()).size() == 1);
+  REQUIRE(parser.parseRules(lexer.ruleIndices(), "test").size() == 1);
   auto errors = parser.errors();
   REQUIRE(errors.size() == 1);
   REQUIRE(std::string(errors[0].what()) == "Unexpected token * at line 1 column 18");
@@ -1069,7 +1057,7 @@ TEST_CASE("goodRuleWithGarbageBefore") {
   LlamaLexer lexer = getLexer(input);
   REQUIRE(lexer.tokens().size() == 14);
   LlamaParser parser(input, lexer.tokens());
-  auto rules = parser.parseRules(lexer.ruleIndices());
+  auto rules = parser.parseRules(lexer.ruleIndices(), "test");
   REQUIRE(rules.size() == 1);
   REQUIRE(rules[0].Name == "GoodRule");
   auto errors = parser.errors();

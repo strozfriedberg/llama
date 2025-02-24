@@ -28,6 +28,8 @@ private:
   std::string figureOutCommand(const boost::program_options::variables_map& optsMap) const;
   Codec figureOutCodec() const;
 
+  void validateOpts() const;
+
   boost::program_options::options_description All;
   boost::program_options::positional_options_description PosOpts;
 

@@ -12,6 +12,9 @@ class Cli;
 class InputReader;
 class OutputWriter;
 
+std::string readDir(const std::string&);
+bool readRulesFromDir(LlamaRuleEngine& engine, const std::string& path);
+
 class Llama {
 public:
   Llama();
