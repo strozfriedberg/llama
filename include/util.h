@@ -5,6 +5,8 @@
 #include <functional>
 #include <iostream>
 
+class ReadSeek;
+
 template <class T, class D>
 std::unique_ptr<T, D> make_unique_del(T* p, D&& deleter) {
   return std::unique_ptr<T, D>{p, std::forward<D>(deleter)};
@@ -70,3 +72,5 @@ inline bool isOdd(int x) { return x & 1; }
 inline bool isEven(int x) { return !isOdd(x); }
 
 void printErrWithSource(const std::runtime_error& e, const std::string source);
+
+bool isPDF(ReadSeek& rs);

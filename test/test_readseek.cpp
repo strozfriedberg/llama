@@ -43,20 +43,3 @@ TEST_CASE("readSeekFile") {
   ReadSeekFile rs(f);
   basicReadSeekTest(SRCBUF, rs);
 }
-
-TEST_CASE("readSeekFileIsPDF") {
-  std::string testPath = "test/data/small.pdf";
-  std::shared_ptr<FILE> f(fopen(testPath.c_str(), "r"), std::fclose);
-  ReadSeekFile rs(f);
-  REQUIRE(rs.isPDF());
-  REQUIRE(rs.tellg() == 0);
-}
-
-TEST_CASE("readSeekBufIsPDFAndReadAll") {
-  std::vector<uint8_t> testBuf{0x25, 0x50, 0x44, 0x46, 0x2D, 0x01, 0x02, 0x03, 0x04};
-  ReadSeekBuf rs(testBuf);
-  REQUIRE(rs.isPDF());
-  std::vector<uint8_t> outBuf;
-  rs.readAll(outBuf);
-  REQUIRE(outBuf == testBuf);
-}

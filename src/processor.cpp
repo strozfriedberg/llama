@@ -7,8 +7,10 @@
 #include "blocksequence.h"
 #include "filerecord.h"
 #include "outputhandler.h"
-#include "readseek.h"
+#include "readseek_impl.h"
 #include "timer.h"
+#include "util.h"
+#include "pdfreader.h"
 
 namespace {
   const LG_ContextOptions ctxOpts{0, 0};
@@ -62,7 +64,13 @@ void Processor::process(ReadSeek& stream) {
 
   {
     Timer procTime;
-    search(stream);
+    if (isPDF(stream)) {
+      ReadSeekBuf rs(PDFReader::readTextFromPDF(stream));
+      search(rs);
+    }
+    else {
+      search(stream);
+    }
     ProcTimeTotal += procTime.elapsed();
   }
 }
@@ -94,12 +102,6 @@ void Processor::search(ReadSeek& rs) {
   size_t bytesRead = 0;
   uint64_t offset = 0;
   rs.seek(0);
-  if (rs.isPDF()) {
-    // get searchable stream from xpdf
-    // ReadSeek must become a ReadSeekBuf here temporarily so that we can reassign the buf..?
-    // move this into process before the call to search()
-    // if PDF, create a ReadSeekBuf from return val of readAll
-  }
   do {
       bytesRead = rs.read(1 << 20, Buf);
       if (bytesRead > 0) {

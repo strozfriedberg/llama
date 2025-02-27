@@ -1,4 +1,8 @@
+#include "readseek_impl.h"
+
+class ReadSeek;
+
 class PDFReader {
 public:
-  bool readText(std::string filename);
+  static std::string readTextFromPDF(ReadSeek& rs);
 };

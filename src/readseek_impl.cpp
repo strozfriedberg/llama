@@ -5,10 +5,6 @@
 
 #include "throw.h"
 
-namespace {
-  static std::vector<uint8_t> pdfSig = {0x25, 0x50, 0x44, 0x46, 0x2D}; // %PDF-
-}
-
 int64_t ReadSeekBuf::read(size_t len, std::vector<uint8_t>& buf) {
   if (Pos >= Buf.size()) {
     return 0;
@@ -22,8 +18,14 @@ int64_t ReadSeekBuf::read(size_t len, std::vector<uint8_t>& buf) {
   return toRead;
 }
 
-bool ReadSeekBuf::isPDF() {
-  return std::equal(Buf.begin(), Buf.begin() + pdfSig.size(), pdfSig.begin(), pdfSig.end());
+int64_t ReadSeekBuf::read(size_t len, uint8_t* buf) {
+  if ((Pos + len) > Buf.size() || len == 0) {
+    // we don't want to read past the end and we want to early exit if nothing to be read
+    return 0;
+  }
+  std::memcpy(buf, Buf.data() + Pos, len);
+  Pos += len;
+  return len;
 }
 
 //*******************************************************************
@@ -36,13 +38,6 @@ ReadSeekFile::ReadSeekFile(std::shared_ptr<FILE> fileptr):
   std::fseek(FilePtr.get(), 0, SEEK_SET);
 }
 
-bool ReadSeekFile::isPDF() {
-  std::vector<uint8_t> buf;
-  read(pdfSig.size(), buf);
-  seek(0);
-  return (buf == pdfSig);
-}
-
 int64_t ReadSeekFile::read(size_t len, std::vector<uint8_t>& buf) {
   if (std::feof(FilePtr.get()) || len == 0) {
     return 0;
@@ -53,6 +48,15 @@ int64_t ReadSeekFile::read(size_t len, std::vector<uint8_t>& buf) {
   THROW_IF(ret < len && std::ferror(FilePtr.get()), "call to fread() had error");
   return ret;
 };
+
+int64_t ReadSeekFile::read(size_t len, uint8_t* buf) {
+  if (std::feof(FilePtr.get()) || len == 0) {
+    return 0;
+  }
+  size_t ret = std::fread(buf, 1, len, FilePtr.get());
+  Pos = std::min(Size, Pos + ret);
+  return ret;
+}
 
 size_t ReadSeekFile::tellg() const {
   return Pos;
@@ -94,13 +98,6 @@ void ReadSeekTSK::close(void) {
   }
 }
 
-bool ReadSeekTSK::isPDF() {
-  std::vector<uint8_t> buf;
-  read(pdfSig.size(), buf);
-  seek(0);
-  return (buf == pdfSig);
-}
-
 int64_t ReadSeekTSK::read(size_t len, std::vector<uint8_t>& buf) {
   if (FilePtr && Pos < size_t(FilePtr->meta->size)) {
     buf.resize(len);
@@ -110,6 +107,15 @@ int64_t ReadSeekTSK::read(size_t len, std::vector<uint8_t>& buf) {
     return bytesRead;
   }
   return 0;
+}
+
+int64_t ReadSeekTSK::read(size_t len, uint8_t* buf) {
+  if (!(FilePtr) || (Pos + len) > size_t(FilePtr->meta->size) || len == 0) {
+    return 0;
+  }
+  auto bytesRead = tsk_fs_file_read(FilePtr, Pos, (char*)buf, len, TSK_FS_FILE_READ_FLAG_NONE);
+  Pos += bytesRead;
+  return bytesRead;
 }
 
 size_t ReadSeekTSK::seek(size_t pos) {
