@@ -3,6 +3,7 @@
 #include "llamaduck.h"
 #include "duckhash.h"
 #include "llamabatch.h"
+#include "pdfreader.h"
 #include <lightgrep/search_hit.h>
 
 #include <memory>

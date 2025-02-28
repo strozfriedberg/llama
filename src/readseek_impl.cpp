@@ -19,13 +19,13 @@ int64_t ReadSeekBuf::read(size_t len, std::vector<uint8_t>& buf) {
 }
 
 int64_t ReadSeekBuf::read(size_t len, uint8_t* buf) {
-  if ((Pos + len) > Buf.size() || len == 0) {
-    // we don't want to read past the end and we want to early exit if nothing to be read
+  if (Pos >= Buf.size()) {
     return 0;
   }
-  std::memcpy(buf, Buf.data() + Pos, len);
-  Pos += len;
-  return len;
+  size_t toRead = std::min(len, Buf.size() - Pos);
+  std::memcpy(buf, Buf.data() + Pos, toRead);
+  Pos += toRead;
+  return toRead;
 }
 
 //*******************************************************************

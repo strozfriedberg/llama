@@ -65,7 +65,9 @@ void Processor::process(ReadSeek& stream) {
   {
     Timer procTime;
     if (isPDF(stream)) {
-      ReadSeekBuf rs(PDFReader::readTextFromPDF(stream));
+      PDFReader reader;
+      reader.readTextFromPDF(stream);
+      ReadSeekBuf rs(reader.getExtractedText());
       search(rs);
     }
     else {
