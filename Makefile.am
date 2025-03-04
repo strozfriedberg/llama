@@ -14,7 +14,6 @@ src_llama_common = \
 	src/direntbatch.cpp \
 	src/direntstack.cpp \
 	src/dirreader.cpp \
-	src/extractor.cpp \
 	src/fieldhasher.cpp \
 	src/filerecord.cpp \
 	src/filescheduler.cpp \
@@ -78,7 +77,6 @@ test_test_SOURCES = \
 	test/test_direntstack.cpp \
 	test/test_dirreader.cpp \
 	test/test_duckdb.cpp \
-	test/test_extractor.cpp \
 	test/test_fieldhasher.cpp \
 	test/test_fileproxy.cpp \
 	test/test_filerecord.cpp \
