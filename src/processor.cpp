@@ -7,8 +7,10 @@
 #include "blocksequence.h"
 #include "filerecord.h"
 #include "outputhandler.h"
-#include "readseek.h"
+#include "readseek_impl.h"
 #include "timer.h"
+#include "util.h"
+#include "pdfreader.h"
 
 namespace {
   const LG_ContextOptions ctxOpts{0, 0};
@@ -62,7 +64,15 @@ void Processor::process(ReadSeek& stream) {
 
   {
     Timer procTime;
-    search(stream);
+    if (isPDF(stream)) {
+      PDFReader reader;
+      reader.readTextFromPDF(stream);
+      ReadSeekBuf rs(reader.getExtractedText());
+      search(rs);
+    }
+    else {
+      search(stream);
+    }
     ProcTimeTotal += procTime.elapsed();
   }
 }

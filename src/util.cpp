@@ -1,6 +1,11 @@
 #include "util.h"
+#include "readseek.h"
 
 #include <random>
+
+namespace {
+  const std::vector<uint8_t> pdfSig = {0x25, 0x50, 0x44, 0x46, 0x2D}; // %PDF-
+}
 
 std::string randomNumString() {
   std::random_device rd;
@@ -11,4 +16,11 @@ std::string randomNumString() {
 
 void printErrWithSource(const std::runtime_error& e, const std::string source) {
   std::cerr << source << ": " << e.what() << std::endl;
+}
+
+bool isPDF(ReadSeek& rs) {
+  std::vector<uint8_t> buf;
+  rs.read(pdfSig.size(), buf);
+  rs.seek(0);
+  return (buf == pdfSig);
 }

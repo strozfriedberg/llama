@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "readseek_impl.h"
+#include "llama.h"
 
 namespace {
   std::vector<uint8_t> SRCBUF{ 35, 32, 113, 65 };
@@ -8,6 +9,7 @@ namespace {
 
 void basicReadSeekTest(const std::vector<uint8_t>& srcbuf, ReadSeek& rs) {
   std::vector<uint8_t> buf;
+  std::unique_ptr<uint8_t[]> bufPtr(new uint8_t[srcbuf.size()]);
 
   REQUIRE(rs.tellg() == 0);
   REQUIRE(rs.size() == srcbuf.size());
@@ -23,6 +25,17 @@ void basicReadSeekTest(const std::vector<uint8_t>& srcbuf, ReadSeek& rs) {
   REQUIRE(rs.tellg() == 3);
 
   REQUIRE(rs.seek(rs.size() + 1) == rs.size());
+
+  REQUIRE(rs.seek(0) == 0);
+  REQUIRE(size_t(rs.read(srcbuf.size(), bufPtr.get())) == srcbuf.size());
+  REQUIRE(rs.tellg() == rs.size());
+  REQUIRE(size_t(rs.read(1, bufPtr.get())) == 0);
+  REQUIRE(rs.seek(1) == 1);
+  REQUIRE(rs.tellg() == 1);
+  REQUIRE(rs.read(2, bufPtr.get()) == 2);
+  REQUIRE(*bufPtr.get() == 32);
+  REQUIRE(*(bufPtr.get() + 1) == 113);
+  REQUIRE(rs.tellg() == 3);
 }
 
 TEST_CASE("readSeekBuf") {

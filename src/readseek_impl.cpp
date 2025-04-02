@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <cstring>
 
 #include "throw.h"
 
@@ -14,6 +15,16 @@ int64_t ReadSeekBuf::read(size_t len, std::vector<uint8_t>& buf) {
   for (size_t i = 0, cur = Pos; i < toRead; ++i, ++cur) {
     buf[i] = Buf[cur];
   }
+  Pos += toRead;
+  return toRead;
+}
+
+int64_t ReadSeekBuf::read(size_t len, uint8_t* buf) {
+  if (Pos >= Buf.size()) {
+    return 0;
+  }
+  size_t toRead = std::min(len, Buf.size() - Pos);
+  std::memcpy(buf, Buf.data() + Pos, toRead);
   Pos += toRead;
   return toRead;
 }
@@ -38,6 +49,15 @@ int64_t ReadSeekFile::read(size_t len, std::vector<uint8_t>& buf) {
   THROW_IF(ret < len && std::ferror(FilePtr.get()), "call to fread() had error");
   return ret;
 };
+
+int64_t ReadSeekFile::read(size_t len, uint8_t* buf) {
+  if (std::feof(FilePtr.get()) || len == 0) {
+    return 0;
+  }
+  size_t ret = std::fread(buf, 1, len, FilePtr.get());
+  Pos = std::min(Size, Pos + ret);
+  return ret;
+}
 
 size_t ReadSeekFile::tellg() const {
   return Pos;
@@ -88,6 +108,15 @@ int64_t ReadSeekTSK::read(size_t len, std::vector<uint8_t>& buf) {
     return bytesRead;
   }
   return 0;
+}
+
+int64_t ReadSeekTSK::read(size_t len, uint8_t* buf) {
+  if (!(FilePtr) || Pos >= size_t(FilePtr->meta->size) || len == 0) {
+    return 0;
+  }
+  auto bytesRead = tsk_fs_file_read(FilePtr, Pos, (char*)buf, len, TSK_FS_FILE_READ_FLAG_NONE);
+  Pos += bytesRead;
+  return bytesRead;
 }
 
 size_t ReadSeekTSK::seek(size_t pos) {
