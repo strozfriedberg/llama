@@ -24,16 +24,21 @@ struct FileRecord;
 class OutputHandler;
 class ReadSeek;
 
-
-
 struct HashsetBundle {
   HashsetBundle(const char* path);
   ~HashsetBundle();
 
+  // Returns true if the given hash is contained in the hash set.
+  bool lookup(SFHASH_HashAlgorithm alg, uint8_t* hash) {
+    int idx = sfhash_hashset_index_for_type(Hashset, alg);
+    return sfhash_hashset_lookup(Hashset, idx, hash);
+  }
+
+  // The hashset file is memory-mapped, so we want to ensure the lifetime of the file mapping and mapped region
   bip::file_mapping HashsetMapping;
   bip::mapped_region HashsetRegion;
-  SFHASH_Hashset* Hashset;
 
+  SFHASH_Hashset* Hashset;
 };
 
 struct ProcessorContext {
