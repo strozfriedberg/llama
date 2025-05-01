@@ -10,10 +10,19 @@
 
 #include <hasher/api.h>
 
+#include <iostream>
+#include <fstream>
 #include <thread>
 #include <vector>
+#include <filesystem>
 
 #include "boost_asio.h"
+
+#include "boost/interprocess/file_mapping.hpp"
+#include "boost/interprocess/mapped_region.hpp"
+
+namespace bip = boost::interprocess;
+
 
 TEST_CASE("testBoostThreadPool") {
   unsigned int count = 0;
@@ -82,7 +91,9 @@ private:
     // duckdb setup
     DBType<SearchHit>::createTable(DbConn.get(), "search_hits");
     DBType<HashRec>::createTable(DbConn.get(), "hash");
-    return Processor{&Db, pHandle, PatternToRuleId};
+
+    auto procContext = std::make_shared<ProcessorContext>(&Db, pHandle, PatternToRuleId, "", "");
+    return Processor(procContext);
   }
   std::vector<std::string> PatternToRuleId;
   ReadSeekBuf RsBuf;
@@ -146,4 +157,28 @@ TEST_CASE("testSearchWithMultipleHits") {
   pst.createTempTableAndPopulate(expectedHits);
   REQUIRE(0 == pst.numDiffsBetweenTables());
 
+}
+
+TEST_CASE("testCheckHset") {
+  SFHASH_HashValues Hashes;
+  std::string blake3 = "4878ca0425c739fa427f7eda20fe845f6b2e46ba5fe2a14df5b1e32f50603215";
+  sfhash_unhex(Hashes.Blake3, blake3.c_str(), blake3.size());
+
+  const char* fileName = "actual.hset";
+  bip::file_mapping fm(fileName, bip::read_only);
+  bip::mapped_region mr(fm, bip::read_only);
+
+  uint8_t* beg = reinterpret_cast<uint8_t*>(mr.get_address());
+  uint8_t* end = beg + mr.get_size();
+
+  SFHASH_Error* err = nullptr;
+  const SFHASH_Hashset* hset = sfhash_load_hashset(beg, end, &err);
+  REQUIRE(!err);
+
+  size_t tidx = sfhash_hashset_index_for_type(hset, SFHASH_BLAKE3);
+
+  REQUIRE(sfhash_hashset_count(hset, tidx) == 3);
+  REQUIRE(std::string(sfhash_hashset_name(hset)) == "Test");
+  REQUIRE(std::string(sfhash_hashset_description(hset)) == "test for llama");
+  REQUIRE(sfhash_hashset_lookup(hset, tidx, Hashes.Blake3));
 }

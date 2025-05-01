@@ -67,7 +67,8 @@ void Llama::search() {
 
     LG_ProgramOptions opts{10};
     LgProg.reset(lg_create_program(RuleEngine.buildFsm().getFsm(), &opts), lg_destroy_program);
-    auto protoProc = std::make_shared<Processor>(&Db, LgProg, RuleEngine.patternToRuleId());
+    auto procContext = std::make_shared<ProcessorContext>(&Db, LgProg, RuleEngine.patternToRuleId(), Opts->ExclusionHashset, Opts->InclusionHashset);
+    auto protoProc = std::make_shared<Processor>(procContext);
     auto scheduler = std::make_shared<FileScheduler>(Db, Pool, protoProc, Opts);
     auto inh = std::shared_ptr<InputHandler>(new BatchHandler(scheduler));
 

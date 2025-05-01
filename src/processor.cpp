@@ -12,6 +12,11 @@
 #include "util.h"
 #include "pdfreader.h"
 
+#include "boost/interprocess/file_mapping.hpp"
+#include "boost/interprocess/mapped_region.hpp"
+
+namespace bip = boost::interprocess;
+
 namespace {
   const LG_ContextOptions ctxOpts{0, 0};
 
@@ -27,16 +32,46 @@ namespace {
     } while (bytesRead > 0);
     sfhash_get_hashes(hasher, &hashes);
   }
+
+  SFHASH_Hashset* getHashset(const bip::mapped_region& mr, const char* path) {
+    uint8_t* beg = reinterpret_cast<uint8_t*>(mr.get_address());
+    uint8_t* end = beg + mr.get_size();
+
+    SFHASH_Error* err = nullptr;
+    SFHASH_Hashset* hset = sfhash_load_hashset(beg, end, &err);
+    THROW_IF(err, "Failed to load hashset " << path << " due to " << err->message);
+
+    return hset;
+  }
+
 }
 
-Processor::Processor(LlamaDB* db, const std::shared_ptr<ProgramHandle>& prog, const std::vector<std::string>& patternToRuleId):
-  PatternToRuleId(patternToRuleId),
-  Db(db),
-  DbConn(*db),
+HashsetBundle::HashsetBundle(const char* path) : HashsetMapping(path, bip::read_only), HashsetRegion(HashsetMapping, bip::read_only), Hashset(getHashset(HashsetRegion, path)) {}
+
+HashsetBundle::~HashsetBundle() {
+  sfhash_destroy_hashset(Hashset);
+}
+
+ProcessorContext::ProcessorContext(LlamaDB* db,
+                                   const std::shared_ptr<ProgramHandle>& prog,
+                                   const std::vector<std::string>& patternToRuleId,
+                                   const std::string& exclusionHsetPath,
+                                   const std::string& inclusionHsetPath) : Db(db), Prog(prog), PatternToRuleId(patternToRuleId) {
+  if (!exclusionHsetPath.empty()) {
+    ExclusionHashset.reset(new HashsetBundle(exclusionHsetPath.c_str()));
+  }
+
+  if (!inclusionHsetPath.empty()) {
+    InclusionHashset.reset(new HashsetBundle(inclusionHsetPath.c_str()));
+  }
+}
+
+Processor::Processor(std::shared_ptr<ProcessorContext> procContext):
+  Context(procContext),
+  DbConn(*Context->Db),
   HashAppender(DbConn.get(), "hash"),
   SearchHitAppender(DbConn.get(), "search_hits"),
-  LgProg(prog),
-  Ctx(prog.get() ? lg_create_context(prog.get(), &ctxOpts) : nullptr, lg_destroy_context),
+  LgCtx(Context->Prog.get() ? lg_create_context(Context->Prog.get(), &ctxOpts) : nullptr, lg_destroy_context),
   Hasher(sfhash_create_hasher(SFHASH_MD5 | SFHASH_SHA_1 | SFHASH_SHA_2_256 | SFHASH_BLAKE3 | SFHASH_FUZZY), sfhash_destroy_hasher),
   HashRecord(),
   Hashes(std::make_unique<HashBatch>()),
@@ -47,7 +82,7 @@ Processor::Processor(LlamaDB* db, const std::shared_ptr<ProgramHandle>& prog, co
 }
 
 std::shared_ptr<Processor> Processor::clone() const {
-  return std::make_shared<Processor>(Db, LgProg, PatternToRuleId);
+  return std::make_shared<Processor>(Context);
 }
 
 void Processor::process(ReadSeek& stream) {
@@ -91,26 +126,26 @@ void handleSearchHit(void* userData, const LG_SearchHit* const hit) {
 }
 
 void Processor::addToSearchHitBatch(const LG_SearchHit* const hit) {
-  LG_PatternInfo* info = lg_prog_pattern_info(LgProg.get(), hit->KeywordIndex);
+  LG_PatternInfo* info = lg_prog_pattern_info(Context->Prog.get(), hit->KeywordIndex);
   std::string pat(info->Pattern);
-  SearchHits->add(SearchHit{pat, hit->Start, hit->End, PatternToRuleId[hit->KeywordIndex], HashRecord.Blake3, hit->End - hit->Start});
+  SearchHits->add(SearchHit{pat, hit->Start, hit->End, Context->PatternToRuleId[hit->KeywordIndex], HashRecord.Blake3, hit->End - hit->Start});
 }
 
 void Processor::search(ReadSeek& rs) {
-  if (!Ctx) {
+  if (!LgCtx) {
     return;
   }
-  lg_reset_context(Ctx.get());
+  lg_reset_context(LgCtx.get());
   size_t bytesRead = 0;
   uint64_t offset = 0;
   rs.seek(0);
   do {
       bytesRead = rs.read(1 << 20, Buf);
       if (bytesRead > 0) {
-        lg_search(Ctx.get(), (char*)Buf.data(), (char*)Buf.data() + bytesRead, offset, (void*)this, handleSearchHit);
+        lg_search(LgCtx.get(), (char*)Buf.data(), (char*)Buf.data() + bytesRead, offset, (void*)this, handleSearchHit);
       }
       offset += bytesRead;
     } while (bytesRead > 0);
 
-  lg_closeout_search(Ctx.get(), (void*)this, handleSearchHit);
+  lg_closeout_search(LgCtx.get(), (void*)this, handleSearchHit);
 }

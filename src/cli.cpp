@@ -41,7 +41,17 @@ Cli::Cli() : All(), Opts(new Options) {
         po::value<std::vector<std::string>>(&Opts->KeyFiles)
         ->composing()
         ->value_name("KEY_FILE"),
-        "File containing newline-separated patterns to search");
+        "File containing newline-separated patterns to search")
+      ("exclusion-hashset",
+        po::value<std::string>(&Opts->ExclusionHashset)
+        ->default_value("")
+        ->value_name("EXCLUSION_HASHSET"),
+        "Path to hashset file containing hashes to be excluded")
+      ("inclusion-hashset",
+        po::value<std::string>(&Opts->InclusionHashset)
+        ->default_value("")
+        ->value_name("INCLUSION_HASHSET"),
+        "Path to hashset file containing hashes to be included");
 
   All.add(commands).add(ioOpts).add(configOpts);
 
