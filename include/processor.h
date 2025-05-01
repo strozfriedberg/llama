@@ -24,14 +24,24 @@ struct FileRecord;
 class OutputHandler;
 class ReadSeek;
 
+namespace {
+  const std::vector<SFHASH_HashAlgorithm> searchedHashAlgs{SFHASH_MD5, SFHASH_SHA_1, SFHASH_SHA_2_256, SFHASH_BLAKE3};
+}
+
 struct HashsetBundle {
   HashsetBundle(const char* path);
   ~HashsetBundle();
 
   // Returns true if the given hash is contained in the hash set.
-  bool lookup(SFHASH_HashAlgorithm alg, uint8_t* hash) {
-    int idx = sfhash_hashset_index_for_type(Hashset, alg);
-    return sfhash_hashset_lookup(Hashset, idx, hash);
+  bool lookup(uint8_t* hash) {
+    int idx = -1;
+    for (const SFHASH_HashAlgorithm alg: searchedHashAlgs) {
+      idx = sfhash_hashset_index_for_type(Hashset, alg);
+      if (idx >= 0) {
+        return sfhash_hashset_lookup(Hashset, idx, hash);
+      }
+    }
+    return false;
   }
 
   // The hashset file is memory-mapped, so we want to ensure the lifetime of the file mapping and mapped region

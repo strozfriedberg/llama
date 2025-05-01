@@ -165,5 +165,5 @@ TEST_CASE("testCheckHset") {
   sfhash_unhex(Hashes.Blake3, blake3.c_str(), blake3.size());
 
   HashsetBundle hsetBundle("actual.hset");
-  REQUIRE(hsetBundle.lookup(SFHASH_BLAKE3, Hashes.Blake3));
+  REQUIRE(hsetBundle.lookup(Hashes.Blake3));
 }
