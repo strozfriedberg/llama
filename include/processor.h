@@ -3,19 +3,12 @@
 #include "llamaduck.h"
 #include "duckhash.h"
 #include "llamabatch.h"
+#include "hashset.h"
 #include "pdfreader.h"
 #include <lightgrep/search_hit.h>
 
 #include <memory>
 #include <vector>
-
-#include "boost/interprocess/file_mapping.hpp"
-#include "boost/interprocess/mapped_region.hpp"
-
-namespace bip = boost::interprocess;
-
-struct SFHASH_Hasher;
-struct SFHASH_Hashset;
 
 struct ProgramHandle;
 struct ContextHandle;
@@ -24,27 +17,6 @@ struct FileRecord;
 class OutputHandler;
 class ReadSeek;
 
-namespace {
-  const std::vector<SFHASH_HashAlgorithm> searchedHashAlgs{SFHASH_MD5, SFHASH_SHA_1, SFHASH_SHA_2_256, SFHASH_BLAKE3};
-}
-
-struct LlamaHashset {
-  LlamaHashset(const char* path);
-  ~LlamaHashset();
-
-  // Returns true if the given hash is contained in the hash set.
-  bool lookup(const uint8_t* hash);
-
-private:
-  int getSupportedHashAlgIdx();
-
-  // The hashset file is memory-mapped, so we want to ensure the lifetime of the file mapping and mapped region
-  bip::file_mapping HashsetMapping;
-  bip::mapped_region HashsetRegion;
-
-  SFHASH_Hashset* Hashset;
-  int SupportedHashAlgIdx;
-};
 
 struct ProcessorContext {
   ProcessorContext(

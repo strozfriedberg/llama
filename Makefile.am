@@ -19,6 +19,7 @@ src_llama_common = \
 	src/filescheduler.cpp \
 	src/filesignatures.cpp \
 	src/fsm.cpp \
+	src/hashset.cpp \
 	src/hex.cpp \
 	src/inodeandblocktrackerimpl.cpp \
 	src/inputreader.cpp \
