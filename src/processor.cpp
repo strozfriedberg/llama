@@ -46,17 +46,17 @@ namespace {
 
 }
 
-HashsetBundle::HashsetBundle(const char* path) 
+LlamaHashset::LlamaHashset(const char* path) 
   : HashsetMapping(path, bip::read_only),
     HashsetRegion(HashsetMapping, bip::read_only),
     Hashset(getHashset(HashsetRegion, path)),
     SupportedHashAlgIdx(getSupportedHashAlgIdx()) {}
 
-HashsetBundle::~HashsetBundle() {
+LlamaHashset::~LlamaHashset() {
   sfhash_destroy_hashset(Hashset);
 }
 
-int HashsetBundle::getSupportedHashAlgIdx() {
+int LlamaHashset::getSupportedHashAlgIdx() {
   int idx = -1;
   for (const SFHASH_HashAlgorithm alg: searchedHashAlgs) {
     idx = sfhash_hashset_index_for_type(Hashset, alg);
@@ -67,7 +67,7 @@ int HashsetBundle::getSupportedHashAlgIdx() {
   return idx;
 }
 
-bool HashsetBundle::lookup(const uint8_t* hash) {
+bool LlamaHashset::lookup(const uint8_t* hash) {
   if (SupportedHashAlgIdx >= 0) {
     // This means that our SupportedHashAlgIdx is initialized and valid
     return sfhash_hashset_lookup(Hashset, SupportedHashAlgIdx, hash);
@@ -82,11 +82,11 @@ ProcessorContext::ProcessorContext(LlamaDB* db,
                                    const std::string& exclusionHsetPath,
                                    const std::string& inclusionHsetPath) : Db(db), Prog(prog), PatternToRuleId(patternToRuleId) {
   if (!exclusionHsetPath.empty()) {
-    ExclusionHashset.reset(new HashsetBundle(exclusionHsetPath.c_str()));
+    ExclusionHashset.reset(new LlamaHashset(exclusionHsetPath.c_str()));
   }
 
   if (!inclusionHsetPath.empty()) {
-    InclusionHashset.reset(new HashsetBundle(inclusionHsetPath.c_str()));
+    InclusionHashset.reset(new LlamaHashset(inclusionHsetPath.c_str()));
   }
 }
 

@@ -28,9 +28,9 @@ namespace {
   const std::vector<SFHASH_HashAlgorithm> searchedHashAlgs{SFHASH_MD5, SFHASH_SHA_1, SFHASH_SHA_2_256, SFHASH_BLAKE3};
 }
 
-struct HashsetBundle {
-  HashsetBundle(const char* path);
-  ~HashsetBundle();
+struct LlamaHashset {
+  LlamaHashset(const char* path);
+  ~LlamaHashset();
 
   // Returns true if the given hash is contained in the hash set.
   bool lookup(const uint8_t* hash);
@@ -58,8 +58,8 @@ struct ProcessorContext {
   LlamaDB* Db;
   const std::shared_ptr<ProgramHandle> Prog;
   const std::vector<std::string>& PatternToRuleId;
-  std::unique_ptr<HashsetBundle> ExclusionHashset;
-  std::unique_ptr<HashsetBundle> InclusionHashset;
+  std::unique_ptr<LlamaHashset> ExclusionHashset;
+  std::unique_ptr<LlamaHashset> InclusionHashset;
 };
 
 class Processor {
