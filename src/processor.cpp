@@ -46,10 +46,34 @@ namespace {
 
 }
 
-HashsetBundle::HashsetBundle(const char* path) : HashsetMapping(path, bip::read_only), HashsetRegion(HashsetMapping, bip::read_only), Hashset(getHashset(HashsetRegion, path)) {}
+HashsetBundle::HashsetBundle(const char* path) 
+  : HashsetMapping(path, bip::read_only),
+    HashsetRegion(HashsetMapping, bip::read_only),
+    Hashset(getHashset(HashsetRegion, path)),
+    SupportedHashAlgIdx(getSupportedHashAlgIdx()) {}
 
 HashsetBundle::~HashsetBundle() {
   sfhash_destroy_hashset(Hashset);
+}
+
+int HashsetBundle::getSupportedHashAlgIdx() {
+  int idx = -1;
+  for (const SFHASH_HashAlgorithm alg: searchedHashAlgs) {
+    idx = sfhash_hashset_index_for_type(Hashset, alg);
+    if (idx >= 0) {
+      return idx;
+    }
+  }
+  return idx;
+}
+
+bool HashsetBundle::lookup(const uint8_t* hash) {
+  if (SupportedHashAlgIdx >= 0) {
+    // This means that our SupportedHashAlgIdx is initialized and valid
+    return sfhash_hashset_lookup(Hashset, SupportedHashAlgIdx, hash);
+  }
+  // If we get here, that means there was no supported hash algorithm in the hset
+  return false;
 }
 
 ProcessorContext::ProcessorContext(LlamaDB* db,

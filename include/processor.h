@@ -33,22 +33,17 @@ struct HashsetBundle {
   ~HashsetBundle();
 
   // Returns true if the given hash is contained in the hash set.
-  bool lookup(uint8_t* hash) {
-    int idx = -1;
-    for (const SFHASH_HashAlgorithm alg: searchedHashAlgs) {
-      idx = sfhash_hashset_index_for_type(Hashset, alg);
-      if (idx >= 0) {
-        return sfhash_hashset_lookup(Hashset, idx, hash);
-      }
-    }
-    return false;
-  }
+  bool lookup(const uint8_t* hash);
+
+private:
+  int getSupportedHashAlgIdx();
 
   // The hashset file is memory-mapped, so we want to ensure the lifetime of the file mapping and mapped region
   bip::file_mapping HashsetMapping;
   bip::mapped_region HashsetRegion;
 
   SFHASH_Hashset* Hashset;
+  int SupportedHashAlgIdx;
 };
 
 struct ProcessorContext {
