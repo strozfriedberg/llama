@@ -12,11 +12,11 @@ struct LlamaHashset {
   ~LlamaHashset();
 
   // Returns true if the given hash is contained in the hash set.
-  bool lookup(const uint8_t* hash);
   bool lookup(const SFHASH_HashValues& h);
 
 private:
   void setSupportedHashAlg();
+  bool lookup(const uint8_t* hash);
 
   // The hashset file is memory-mapped, so we want to ensure the lifetime of the file mapping and mapped region
   bip::file_mapping HashsetMapping;
