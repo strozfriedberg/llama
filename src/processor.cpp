@@ -76,6 +76,13 @@ void Processor::process(ReadSeek& stream) {
   }
   HashRecord.set(h, stream.getID());
 
+  if (Context->ExclusionHashset && Context->ExclusionHashset->lookup(h)) {
+    // do something here if hash is in exclusion hset
+  } else if (Context->InclusionHashset && Context->InclusionHashset->lookup(h)) {
+    // add to rule hits here if hash in inclusion hset
+    // since we want to treat inclusion hset as if it were another rule
+  }
+
   // write hash record to database
   Hashes->add(HashRecord);
 
