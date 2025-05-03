@@ -30,12 +30,11 @@ LlamaHashset::~LlamaHashset() {
 
 int LlamaHashset::getSupportedHashAlgIdx() {
   int idx = -1;
-  for (const SFHASH_HashAlgorithm alg: searchedHashAlgs) {
-    idx = sfhash_hashset_index_for_type(Hashset, alg);
-    if (idx >= 0) {
-      return idx;
-    }
+
+  for (std::vector<SFHASH_HashAlgorithm>::const_iterator it = searchedHashAlgs.begin(); idx == -1 && it != searchedHashAlgs.end(); it++) {
+    idx = sfhash_hashset_index_for_type(Hashset, *it);
   }
+  THROW_IF(idx == -1, "No supported hash algorithm found in hashset.");
   return idx;
 }
 
