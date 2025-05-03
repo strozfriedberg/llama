@@ -21,28 +21,34 @@ namespace {
 LlamaHashset::LlamaHashset(const char* path) 
   : HashsetMapping(path, bip::read_only),
     HashsetRegion(HashsetMapping, bip::read_only),
-    Hashset(getHashset(HashsetRegion, path)),
-    SupportedHashAlgIdx(getSupportedHashAlgIdx()) {}
+    Hashset(getHashset(HashsetRegion, path)) {
+  setSupportedHashAlg();
+}
 
 LlamaHashset::~LlamaHashset() {
   sfhash_destroy_hashset(Hashset);
 }
 
-int LlamaHashset::getSupportedHashAlgIdx() {
-  int idx = -1;
-
-  for (std::vector<SFHASH_HashAlgorithm>::const_iterator it = searchedHashAlgs.begin(); idx == -1 && it != searchedHashAlgs.end(); it++) {
-    idx = sfhash_hashset_index_for_type(Hashset, *it);
+void LlamaHashset::setSupportedHashAlg() {
+  for (std::vector<SFHASH_HashAlgorithm>::const_iterator it = searchedHashAlgs.begin(); SupportedHashAlgIdx == -1 && it != searchedHashAlgs.end(); it++) {
+    SupportedHashAlg = *it;
+    SupportedHashAlgIdx = sfhash_hashset_index_for_type(Hashset, SupportedHashAlg);
   }
-  THROW_IF(idx == -1, "No supported hash algorithm found in hashset.");
-  return idx;
+  THROW_IF(SupportedHashAlgIdx == -1, "No supported hash algorithm found in hashset.");
 }
 
 bool LlamaHashset::lookup(const uint8_t* hash) {
-  if (SupportedHashAlgIdx >= 0) {
-    // This means that our SupportedHashAlgIdx is initialized and valid
-    return sfhash_hashset_lookup(Hashset, SupportedHashAlgIdx, hash);
-  }
-  // If we get here, that means there was no supported hash algorithm in the hset
-  return false;
+  return sfhash_hashset_lookup(Hashset, SupportedHashAlgIdx, hash);
+}
+
+bool LlamaHashset::lookup(const SFHASH_HashValues& h) {
+  const uint8_t* hash;
+  switch (SupportedHashAlg) {
+    case SFHASH_MD5: hash = h.Md5; break;
+    case SFHASH_SHA_1: hash = h.Sha1; break;
+    case SFHASH_SHA_2_256: hash = h.Sha2_256; break;
+    case SFHASH_BLAKE3: hash = h.Blake3; break;
+    default: THROW("Supported hash alg value for hset is not actually supported. This shouldn't happen.");
+  };
+  return lookup(hash);
 }

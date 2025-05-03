@@ -16,12 +16,13 @@ struct LlamaHashset {
   bool lookup(const SFHASH_HashValues& h);
 
 private:
-  int getSupportedHashAlgIdx();
+  void setSupportedHashAlg();
 
   // The hashset file is memory-mapped, so we want to ensure the lifetime of the file mapping and mapped region
   bip::file_mapping HashsetMapping;
   bip::mapped_region HashsetRegion;
 
   SFHASH_Hashset* Hashset;
-  int SupportedHashAlgIdx;
+  int SupportedHashAlgIdx = -1;
+  SFHASH_HashAlgorithm SupportedHashAlg;
 };
