@@ -69,7 +69,7 @@ Processor::Processor(std::shared_ptr<ProcessorContext> procContext):
   HashAppender(DbConn.get(), "hash"),
   SearchHitAppender(DbConn.get(), "search_hits"),
   LgCtx(Context->Prog.get() ? lg_create_context(Context->Prog.get(), &ctxOpts) : nullptr, lg_destroy_context),
-  Hasher(sfhash_create_hasher(SFHASH_MD5 | SFHASH_SHA_1 | SFHASH_SHA_2_256 | SFHASH_BLAKE3 | SFHASH_FUZZY), sfhash_destroy_hasher),
+  Hasher(sfhash_create_hasher(Context->getSupportedHashAlgsFromContext()), sfhash_destroy_hasher),
   HashRecord(),
   Hashes(std::make_unique<HashBatch>()),
   SearchHits(std::make_unique<DBBatch<SearchHit>>()),
