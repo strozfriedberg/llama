@@ -151,3 +151,42 @@ TEST_CASE("testSearchWithMultipleHits") {
   REQUIRE(0 == pst.numDiffsBetweenTables());
 
 }
+
+TEST_CASE("testProcessorContextGetSupportedHashAlgsDiffAlgs") {
+  ProcessorContext procCtx{
+    nullptr,
+    nullptr,
+    {},
+    "test/hsets/md5.hset",
+    "test/hsets/sha1.hset",
+  };
+
+  REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_BLAKE3 | SFHASH_MD5 | SFHASH_SHA_1));
+}
+
+TEST_CASE("testProcessorContextGetSupportedHashAlgsSameAlgs") {
+  ProcessorContext procCtx{
+    nullptr,
+    nullptr,
+    {},
+    "test/hsets/md5.hset",
+    "test/hsets/md5.hset",
+  };
+
+  REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_BLAKE3 | SFHASH_MD5));
+}
+
+TEST_CASE("testProcessorContextGetSupportedHashAlgsMultipleAlgs") {
+  // When there are multiple algs available in the hashset, the first responsive one is
+  // dependent on the order of the algs in hashset<anonymous namespace>::searchedHashAlgs.
+  // In this case, it's MD5 because MD5 comes first in searchedHashAlgs.
+  ProcessorContext procCtx{
+    nullptr,
+    nullptr,
+    {},
+    "test/hsets/md5.hset",
+    "test/hsets/sha1_md5.hset",
+  };
+
+  REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_BLAKE3 | SFHASH_MD5));
+}

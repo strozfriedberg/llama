@@ -14,6 +14,10 @@ struct LlamaHashset {
   // Returns true if the given hash is contained in the hash set.
   bool lookup(const SFHASH_HashValues& h);
 
+  // Returns the first known supported hash algorithm from the hashset.
+  // This can be used to determine which hashes to calculate for files in the batch.
+  SFHASH_HashAlgorithm supportedHashAlg() { return SupportedHashAlg; }
+
 private:
   void setSupportedHashAlg();
   bool lookup(const uint8_t* hash);

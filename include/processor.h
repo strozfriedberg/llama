@@ -27,6 +27,10 @@ struct ProcessorContext {
     const std::string& inclusionHsetPath
   );
 
+  // Returns hash flag to be used when initializing a SFHASH_Hasher, based
+  // on what's supported by the context's hash sets.
+  uint32_t getSupportedHashAlgsFromContext();
+
   LlamaDB* Db;
   const std::shared_ptr<ProgramHandle> Prog;
   const std::vector<std::string>& PatternToRuleId;

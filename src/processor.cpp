@@ -48,6 +48,21 @@ ProcessorContext::ProcessorContext(LlamaDB* db,
   }
 }
 
+uint32_t ProcessorContext::getSupportedHashAlgsFromContext() {
+  // We always want to calculate the Blake3 hash because we use it for mapping files -> rule hits
+  uint32_t hashAlgs = SFHASH_BLAKE3;
+
+  if (ExclusionHashset) {
+    hashAlgs |= ExclusionHashset->supportedHashAlg();
+  }
+
+  if (InclusionHashset) {
+    hashAlgs |= InclusionHashset->supportedHashAlg();
+  }
+
+  return hashAlgs;
+}
+
 Processor::Processor(std::shared_ptr<ProcessorContext> procContext):
   Context(procContext),
   DbConn(*Context->Db),
