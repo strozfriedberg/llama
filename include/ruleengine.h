@@ -18,6 +18,7 @@ public:
   uint64_t numRulesRead();
 
   const std::vector<std::string>& patternToRuleId() const { return PatternToRuleId; }
+  void setPatternToRuleId(const std::vector<std::string>& patternToRuleId) { PatternToRuleId = patternToRuleId; }
 private:
   std::vector<std::string> PatternToRuleId;
   std::string Input;

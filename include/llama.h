@@ -14,7 +14,7 @@ class OutputWriter;
 
 std::string readfile(const std::string& path);
 std::string readDir(const std::string&);
-bool readRulesFromDir(LlamaRuleEngine& engine, const std::string& path);
+bool readRulesFromDir(std::shared_ptr<LlamaRuleEngine> engine, const std::string& path);
 
 class Llama {
 public:
@@ -40,8 +40,8 @@ private:
   std::shared_ptr<Options> Opts;
   std::shared_ptr<ProgramHandle> LgProg;
   std::shared_ptr<InputReader> Input;
-
-  LlamaRuleEngine RuleEngine;
+  std::shared_ptr<LlamaRuleEngine> RuleEngine;
+  // LlamaRuleEngine RuleEngine;
   LlamaDB Db;
   LlamaDBConnection DbConn;
 };

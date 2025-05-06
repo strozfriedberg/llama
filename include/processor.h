@@ -5,6 +5,7 @@
 #include "llamabatch.h"
 #include "hashset.h"
 #include "pdfreader.h"
+#include "ruleengine.h"
 #include <lightgrep/search_hit.h>
 
 #include <memory>
@@ -12,7 +13,6 @@
 
 struct ProgramHandle;
 struct ContextHandle;
-
 struct FileRecord;
 class OutputHandler;
 class ReadSeek;
@@ -22,7 +22,7 @@ struct ProcessorContext {
   ProcessorContext(
     LlamaDB* db,
     const std::shared_ptr<ProgramHandle>& prog,
-    const std::vector<std::string>& patternToRuleId,
+    const std::shared_ptr<LlamaRuleEngine> ruleEngine,
     const std::string& exclusionHsetPath,
     const std::string& inclusionHsetPath
   );
@@ -33,7 +33,7 @@ struct ProcessorContext {
 
   LlamaDB* Db;
   const std::shared_ptr<ProgramHandle> Prog;
-  const std::vector<std::string>& PatternToRuleId;
+  const std::shared_ptr<LlamaRuleEngine> RuleEngine;
   std::unique_ptr<LlamaHashset> ExclusionHashset;
   std::unique_ptr<LlamaHashset> InclusionHashset;
 };

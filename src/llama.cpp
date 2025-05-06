@@ -28,7 +28,7 @@ namespace fs = std::filesystem;
 Llama::Llama()
     : CliParser(std::make_shared<Cli>()), Pool(),
       LgProg(nullptr, lg_destroy_program),
-      RuleEngine(), Db(), DbConn(Db) {}
+      RuleEngine(new LlamaRuleEngine()), Db(), DbConn(Db) {}
 
 int Llama::run(int argc, const char* const argv[]) {
   try {
@@ -63,11 +63,11 @@ void Llama::search() {
     std::filesystem::path outdir(Opts->Output);
     std::filesystem::create_directories(outdir);
 
-    RuleEngine.createTables(DbConn);
+    RuleEngine->createTables(DbConn);
 
     LG_ProgramOptions opts{10};
-    LgProg.reset(lg_create_program(RuleEngine.buildFsm().getFsm(), &opts), lg_destroy_program);
-    auto procContext = std::make_shared<ProcessorContext>(&Db, LgProg, RuleEngine.patternToRuleId(), Opts->ExclusionHashset, Opts->InclusionHashset);
+    LgProg.reset(lg_create_program(RuleEngine->buildFsm().getFsm(), &opts), lg_destroy_program);
+    auto procContext = std::make_shared<ProcessorContext>(&Db, LgProg, RuleEngine, Opts->ExclusionHashset, Opts->InclusionHashset);
     auto protoProc = std::make_shared<Processor>(procContext);
     auto scheduler = std::make_shared<FileScheduler>(Db, Pool, protoProc, Opts);
     auto inh = std::shared_ptr<InputHandler>(new BatchHandler(scheduler));
@@ -80,7 +80,7 @@ void Llama::search() {
     Pool.join();
     std::cerr << "Hashing Time: " << scheduler->getProcessorTime() << "s\n";
 
-    RuleEngine.writeRulesToDb(DbConn);
+    RuleEngine->writeRulesToDb(DbConn);
     writeDB(outdir.string());
   }
   else {
@@ -99,14 +99,14 @@ std::string readfile(const std::string& path) {
   return str;
 }
 
-bool readRulesFromDir(LlamaRuleEngine& engine, const std::string& path) {
+bool readRulesFromDir(std::shared_ptr<LlamaRuleEngine> engine, const std::string& path) {
   std::filesystem::path ruleDir{path};
   bool ret = false;
 
   for (const auto& file : std::filesystem::directory_iterator{ruleDir}) {
     // don't exit early if there's an error because we want to give users all errors possible
     std::string filePath = file.path().string();
-    ret |= engine.read(readfile(filePath), filePath);
+    ret |= engine->read(readfile(filePath), filePath);
   }
   return ret;
 }
@@ -170,7 +170,7 @@ bool Llama::init() {
   });
 
   auto rules = make_future(Pool, [this](){
-    return (this->Opts->RuleFile.empty() || RuleEngine.read(readfile(this->Opts->RuleFile), this->Opts->RuleFile)) &&
+    return (this->Opts->RuleFile.empty() || RuleEngine->read(readfile(this->Opts->RuleFile), this->Opts->RuleFile)) &&
            (this->Opts->RuleDir.empty() || readRulesFromDir(RuleEngine, this->Opts->RuleDir));
   });
 

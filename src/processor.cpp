@@ -11,6 +11,7 @@
 #include "timer.h"
 #include "util.h"
 #include "pdfreader.h"
+#include "ruleengine.h"
 
 #include "boost/interprocess/file_mapping.hpp"
 #include "boost/interprocess/mapped_region.hpp"
@@ -36,9 +37,9 @@ namespace {
 
 ProcessorContext::ProcessorContext(LlamaDB* db,
                                    const std::shared_ptr<ProgramHandle>& prog,
-                                   const std::vector<std::string>& patternToRuleId,
+                                   const std::shared_ptr<LlamaRuleEngine> ruleEngine,
                                    const std::string& exclusionHsetPath,
-                                   const std::string& inclusionHsetPath) : Db(db), Prog(prog), PatternToRuleId(patternToRuleId) {
+                                   const std::string& inclusionHsetPath) : Db(db), Prog(prog), RuleEngine(ruleEngine) {
   if (!exclusionHsetPath.empty()) {
     ExclusionHashset.reset(new LlamaHashset(exclusionHsetPath.c_str()));
   }
@@ -132,7 +133,7 @@ void handleSearchHit(void* userData, const LG_SearchHit* const hit) {
 void Processor::addToSearchHitBatch(const LG_SearchHit* const hit) {
   LG_PatternInfo* info = lg_prog_pattern_info(Context->Prog.get(), hit->KeywordIndex);
   std::string pat(info->Pattern);
-  SearchHits->add(SearchHit{pat, hit->Start, hit->End, Context->PatternToRuleId[hit->KeywordIndex], HashRecord.Blake3, hit->End - hit->Start});
+  SearchHits->add(SearchHit{pat, hit->Start, hit->End, Context->RuleEngine->patternToRuleId()[hit->KeywordIndex], HashRecord.Blake3, hit->End - hit->Start});
 }
 
 void Processor::search(ReadSeek& rs) {

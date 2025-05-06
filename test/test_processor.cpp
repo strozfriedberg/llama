@@ -33,8 +33,9 @@ TEST_CASE("testBoostThreadPool") {
 class ProcessorSearchTester {
 public:
   ProcessorSearchTester(std::string needle, std::string haystack, uint64_t numExpectedHits) 
-  : PatternToRuleId(numExpectedHits, "rule_id"), RsBuf(haystack), Db(), DbConn(Db), Proc(createProcessor(needle)) {
+  : RuleEngine(new LlamaRuleEngine()), RsBuf(haystack), Db(), DbConn(Db), Proc(createProcessor(needle)) {
     Proc.setBlake3("file_hash");
+    RuleEngine->setPatternToRuleId(std::vector<std::string>(numExpectedHits, "rule_id"));
   }
 
   void search() {
@@ -85,10 +86,10 @@ private:
     DBType<SearchHit>::createTable(DbConn.get(), "search_hits");
     DBType<HashRec>::createTable(DbConn.get(), "hash");
 
-    auto procContext = std::make_shared<ProcessorContext>(&Db, pHandle, PatternToRuleId, "", "");
+    auto procContext = std::make_shared<ProcessorContext>(&Db, pHandle, RuleEngine, "", "");
     return Processor(procContext);
   }
-  std::vector<std::string> PatternToRuleId;
+  std::shared_ptr<LlamaRuleEngine> RuleEngine;
   ReadSeekBuf RsBuf;
   LlamaDB Db;
   LlamaDBConnection DbConn;
