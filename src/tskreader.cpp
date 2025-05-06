@@ -1,6 +1,7 @@
 #include "tskreader.h"
 
 #include "blocksequence_impl.h"
+#include "entry.h"
 #include "inode.h"
 #include "inodeandblocktracker.h"
 #include "inodeandblocktrackerimpl.h"
@@ -78,13 +79,13 @@ TSK_FILTER_ENUM TskReader::filterFs(TSK_FS_INFO* fs_info) {
   return TSK_FILTER_CONT;
 }
 
-TSK_RETVAL_ENUM TskReader::processFile(TSK_FS_FILE* fs_file, const char* /* path */) {
+TSK_RETVAL_ENUM TskReader::processFile(TSK_FS_FILE* fs_file, const char* path) {
   // std::cerr << "processFile " << path << "/" << fs_file->name->name << std::endl;
-  addToBatch(fs_file);
+  addToBatch(fs_file, path);
   return TSK_OK;
 }
 
-bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
+bool TskReader::addToBatch(TSK_FS_FILE* fs_file, const char* path) {
   if (!fs_file || !fs_file->meta) {
     // TODO: Can we have a nonull fs_file->name in this case?
     // nothing to process
@@ -108,6 +109,7 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
 
     Input->push(inode);
     Input->push(makeReadSeek(fs_file));
+    Input->push(std::make_unique<Entry>(std::string(fs_file->name ? fs_file->name->name : ""), std::string(path), meta.addr, makeReadSeek(fs_file)));
     InodeTracker[meta.addr - fs_file->fs_info->first_inum] = true;
   }
   // handle the name
