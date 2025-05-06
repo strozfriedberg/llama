@@ -46,6 +46,7 @@ ProcessorContext::ProcessorContext(LlamaDB* db,
 
   if (!inclusionHsetPath.empty()) {
     InclusionHashset.reset(new LlamaHashset(inclusionHsetPath.c_str()));
+    RuleEngine->addRuleRec(RuleRec{InclusionHashset->getHash(), InclusionHashset->getName()});
   }
 }
 
@@ -69,6 +70,7 @@ Processor::Processor(std::shared_ptr<ProcessorContext> procContext):
   DbConn(*Context->Db),
   HashAppender(DbConn.get(), "hash"),
   SearchHitAppender(DbConn.get(), "search_hits"),
+  RuleMatchAppender(DbConn.get(), "rule_hits"),
   LgCtx(Context->Prog.get() ? lg_create_context(Context->Prog.get(), &ctxOpts) : nullptr, lg_destroy_context),
   Hasher(sfhash_create_hasher(Context->getSupportedHashAlgsFromContext()), sfhash_destroy_hasher),
   HashRecord(),

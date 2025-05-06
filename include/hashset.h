@@ -16,7 +16,10 @@ struct LlamaHashset {
 
   // Returns the first known supported hash algorithm from the hashset.
   // This can be used to determine which hashes to calculate for files in the batch.
-  SFHASH_HashAlgorithm supportedHashAlg() { return SupportedHashAlg; }
+  SFHASH_HashAlgorithm supportedHashAlg() const { return SupportedHashAlg; }
+
+  std::string getName() const { return sfhash_hashset_name(Hashset); }
+  std::string getHash() const;
 
 private:
   void setSupportedHashAlg();

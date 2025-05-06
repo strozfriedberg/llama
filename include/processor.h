@@ -70,6 +70,7 @@ private:
   LlamaDBConnection DbConn;
   LlamaDBAppender   HashAppender;
   LlamaDBAppender   SearchHitAppender;
+  LlamaDBAppender   RuleMatchAppender;
 
   std::shared_ptr<ContextHandle> LgCtx; // not shared, could be unique_ptr
   std::shared_ptr<SFHASH_Hasher> Hasher; // not shared, could be unique_ptr

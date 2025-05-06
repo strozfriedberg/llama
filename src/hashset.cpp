@@ -1,6 +1,7 @@
 #include "hashset.h"
 #include "readseek_impl.h"
 #include "throw.h"
+#include "hex.h"
 
 #include <lightgrep/api.h>
 
@@ -27,6 +28,11 @@ LlamaHashset::LlamaHashset(const char* path)
 
 LlamaHashset::~LlamaHashset() {
   sfhash_destroy_hashset(Hashset);
+}
+
+std::string LlamaHashset::getHash() const {
+  auto hash = sfhash_hashset_sha2_256(Hashset);
+  return hexEncode(hash, 32);
 }
 
 void LlamaHashset::setSupportedHashAlg() {

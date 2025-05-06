@@ -72,6 +72,7 @@ public:
 
 private:
   Processor createProcessor(std::string needle) {
+    RuleEngine->createTables(DbConn);
     std::shared_ptr<PatternHandle> pat(lg_create_pattern(), lg_destroy_pattern);
     LG_KeyOptions opts{0,0,0};
     LG_Error* err(nullptr);
@@ -154,10 +155,11 @@ TEST_CASE("testSearchWithMultipleHits") {
 }
 
 TEST_CASE("testProcessorContextGetSupportedHashAlgsDiffAlgs") {
+  std::shared_ptr<LlamaRuleEngine> ruleEngine = std::make_shared<LlamaRuleEngine>();
   ProcessorContext procCtx{
     nullptr,
     nullptr,
-    {},
+    ruleEngine,
     "test/hsets/md5.hset",
     "test/hsets/sha1.hset",
   };
@@ -166,10 +168,11 @@ TEST_CASE("testProcessorContextGetSupportedHashAlgsDiffAlgs") {
 }
 
 TEST_CASE("testProcessorContextGetSupportedHashAlgsSameAlgs") {
+  std::shared_ptr<LlamaRuleEngine> ruleEngine = std::make_shared<LlamaRuleEngine>();
   ProcessorContext procCtx{
     nullptr,
     nullptr,
-    {},
+    ruleEngine,
     "test/hsets/md5.hset",
     "test/hsets/md5.hset",
   };
@@ -181,10 +184,11 @@ TEST_CASE("testProcessorContextGetSupportedHashAlgsMultipleAlgs") {
   // When there are multiple algs available in the hashset, the first responsive one is
   // dependent on the order of the algs in hashset<anonymous namespace>::searchedHashAlgs.
   // In this case, it's MD5 because MD5 comes first in searchedHashAlgs.
+  std::shared_ptr<LlamaRuleEngine> ruleEngine = std::make_shared<LlamaRuleEngine>();
   ProcessorContext procCtx{
     nullptr,
     nullptr,
-    {},
+    ruleEngine,
     "test/hsets/md5.hset",
     "test/hsets/sha1_md5.hset",
   };

@@ -44,3 +44,4 @@ struct SearchHit {
 };
 
 using RuleMatchBatch = DBBatch<RuleMatch>;
+using RuleRecBatch = DBBatch<RuleRec>;
