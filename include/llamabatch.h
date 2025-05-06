@@ -42,3 +42,5 @@ struct SearchHit {
   std::string file_hash;
   uint64_t length;
 };
+
+using RuleMatchBatch = DBBatch<RuleMatch>;

@@ -1,9 +1,8 @@
 #include "ruleengine.h"
 #include "llamaduck.h"
 #include "rulereader.h"
-#include "llamabatch.h"
 
-LlamaRuleEngine::LlamaRuleEngine() : Reader(), Qb(Reader.getParser()) {}
+LlamaRuleEngine::LlamaRuleEngine() : Reader(), Qb(Reader.getParser()), RuleMatches(std::make_unique<RuleMatchBatch>()){}
 
 void LlamaRuleEngine::writeRulesToDb(LlamaDBConnection& dbConn) {
   if (Reader.getRules().empty()) {
@@ -62,4 +61,8 @@ bool LlamaRuleEngine::read(const std::string& input, const std::string& source) 
 
 uint64_t LlamaRuleEngine::numRulesRead() {
   return Reader.getRules().size();
+}
+
+void LlamaRuleEngine::addRuleMatch(const RuleMatch& match) {
+  RuleMatches->add(match);
 }
