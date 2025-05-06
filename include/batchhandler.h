@@ -5,6 +5,7 @@
 
 #include "direntbatch.h"
 #include "duckinode.h"
+#include "entry.h"
 #include "readseek.h"
 
 class FileScheduler;
@@ -20,6 +21,7 @@ public:
   virtual void push(const Dirent& dirent) override;
   virtual void push(const Inode& inode) override;
   virtual void push(std::unique_ptr<ReadSeek> stream) override;
+  virtual void push(std::unique_ptr<Entry> entry) override;
 
   virtual void maybeFlush() override; // flushes only if the batch is full
   virtual void flush() override; // always flushes
@@ -30,5 +32,6 @@ private:
   std::unique_ptr<DirentBatch> CurDents;
   std::unique_ptr<InodeBatch>  CurInodes;
   std::shared_ptr<std::vector<std::unique_ptr<ReadSeek>>> CurStreams;
+  std::shared_ptr<std::vector<std::unique_ptr<Entry>>> CurEntries;
 };
 

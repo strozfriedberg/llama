@@ -27,6 +27,10 @@ void BatchHandler::push(std::unique_ptr<ReadSeek> stream) {
   CurStreams->push_back(std::move(stream));
 }
 
+void BatchHandler::push(std::unique_ptr<Entry> entry) {
+  CurEntries->push_back(std::move(entry));
+}
+
 void BatchHandler::maybeFlush() {
   if (CurInodes->size() > BATCH_SIZE) {
     flush();
@@ -38,5 +42,5 @@ void BatchHandler::flush() {
   CurDents->clear();
   CurInodes->clear();
   CurStreams.reset(new std::vector<std::unique_ptr<ReadSeek>>());
+  CurEntries.reset(new std::vector<std::unique_ptr<Entry>>());
 }
-
