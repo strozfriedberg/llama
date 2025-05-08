@@ -5,6 +5,7 @@
 #include <lightgrep/api.h>
 
 #include "blocksequence.h"
+#include "entry.h"
 #include "filerecord.h"
 #include "outputhandler.h"
 #include "readseek_impl.h"
@@ -85,14 +86,14 @@ std::shared_ptr<Processor> Processor::clone() const {
   return std::make_shared<Processor>(Context);
 }
 
-void Processor::process(ReadSeek& stream) {
+void Processor::process(Entry& entry) {
   SFHASH_HashValues h;
   {
     Timer procTime;
-    hashFile(Hasher.get(), stream, Buf, h);
+    hashFile(Hasher.get(), entry.getStream(), Buf, h);
     ProcTimeTotal += procTime.elapsed();
   }
-  HashRecord.set(h, stream.getID());
+  HashRecord.set(h, entry.Addr);
 
   if (Context->ExclusionHashset && Context->ExclusionHashset->lookup(h)) {
     // do something here if hash is in exclusion hset
@@ -106,9 +107,9 @@ void Processor::process(ReadSeek& stream) {
 
   {
     Timer procTime;
-    if (isPDF(stream)) {
+    if (isPDF(entry.getStream())) {
       PDFReader reader;
-      reader.readTextFromPDF(stream);
+      reader.readTextFromPDF(entry.getStream());
       ReadSeekBuf rs(reader.getExtractedText());
       // should this call process again? should we call process recursively for archives, for example?
       // what to do about the ReadSeek ID? ReadSeekBuf getID just returns 0...
@@ -122,7 +123,7 @@ void Processor::process(ReadSeek& stream) {
       search(rs);
     }
     else {
-      search(stream);
+      search(entry.getStream());
     }
     ProcTimeTotal += procTime.elapsed();
   }

@@ -8,6 +8,7 @@
 
 #include "boost_asio.h"
 
+#include "entry.h"
 #include "llamaduck.h"
 #include "direntbatch.h"
 #include "duckinode.h"
@@ -26,14 +27,14 @@ public:
 
   void scheduleFileBatch(const DirentBatch& dirents,
                          const InodeBatch& inodes,
-                         const std::shared_ptr<std::vector<std::unique_ptr<ReadSeek>>>& streams);
+                         const std::shared_ptr<std::vector<std::unique_ptr<Entry>>>& entries);
 
   double getProcessorTime();
 
 private:
   void performScheduling(DirentBatch& dirents,
                          InodeBatch& inodes,
-                         const std::shared_ptr<std::vector<std::unique_ptr<ReadSeek>>>& streams);
+                         const std::shared_ptr<std::vector<std::unique_ptr<Entry>>>& entries);
 
   std::shared_ptr<Processor> popProc();
   void pushProc(const std::shared_ptr<Processor>& proc);

@@ -16,6 +16,7 @@ struct ContextHandle;
 struct FileRecord;
 class OutputHandler;
 class ReadSeek;
+class Entry;
 
 
 struct ProcessorContext {
@@ -44,7 +45,7 @@ public:
 
   std::shared_ptr<Processor> clone() const;
 
-  void process(ReadSeek& stream);
+  void process(Entry& entry);
 
   void flush(void);
 
