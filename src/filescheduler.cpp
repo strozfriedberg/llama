@@ -76,13 +76,7 @@ void FileScheduler::performScheduling(DirentBatch& dirents,
   // post for multithreaded processing
   auto proc = popProc(); // blocks
   boost::asio::post(Pool, [=]() {
-    for (auto& entry : *entries) {
-      if (entry->getStream().open()) {
-        proc->process(*entry);
-        entry->getStream().close();
-      }
-    }
-    proc->flush();
+    proc->processBatch(entries);
     this->pushProc(proc);
   });
 }

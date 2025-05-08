@@ -129,6 +129,16 @@ void Processor::process(Entry& entry) {
   }
 }
 
+void Processor::processBatch(const std::shared_ptr<std::vector<std::unique_ptr<Entry>>>& entries) {
+  for (auto& entry : *entries) {
+    if (entry->getStream().open()) {
+      process(*entry);
+      entry->getStream().close();
+    }
+  }
+  flush();
+}
+
 void Processor::flush(void) {
   if (Hashes->size()) {
     Hashes->copyToDB(HashAppender.get());

@@ -46,6 +46,7 @@ public:
   std::shared_ptr<Processor> clone() const;
 
   void process(Entry& entry);
+  void processBatch(const std::shared_ptr<std::vector<std::unique_ptr<Entry>>>& entries);
 
   void flush(void);
 
