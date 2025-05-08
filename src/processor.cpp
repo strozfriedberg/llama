@@ -110,6 +110,15 @@ void Processor::process(ReadSeek& stream) {
       PDFReader reader;
       reader.readTextFromPDF(stream);
       ReadSeekBuf rs(reader.getExtractedText());
+      // should this call process again? should we call process recursively for archives, for example?
+      // what to do about the ReadSeek ID? ReadSeekBuf getID just returns 0...
+      // what is the ID for the extracted text from a PDF? From a file within an archive?
+      // for archive, is the ID of the file the same as the ID of the parent archive?
+      // once process takes an Entry instead of a ReadSeek, we can add member attrs to 
+      // the Entry class to differentiate different streams that comes from the same inode
+      // maybe Entries can have their own unique IDs that are a function of the Addr, MetaAddr, and 
+      // hash of the stream?
+      // How do we handle duplicate archives in different locations?
       search(rs);
     }
     else {
