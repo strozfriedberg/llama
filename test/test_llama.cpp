@@ -7,7 +7,7 @@
 
 TEST_CASE("testReadDirPopulatesRulesCorrectly") {
   std::string testDir = "test/rules";
-  LlamaRuleEngine engine;
+  std::shared_ptr<LlamaRuleEngine> engine = std::make_shared<LlamaRuleEngine>(LlamaRuleEngine());
   readRulesFromDir(engine, testDir);
-  REQUIRE(engine.numRulesRead() == 2);
+  REQUIRE(engine->numRulesRead() == 2);
 }

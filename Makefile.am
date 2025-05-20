@@ -19,6 +19,7 @@ src_llama_common = \
 	src/filescheduler.cpp \
 	src/filesignatures.cpp \
 	src/fsm.cpp \
+	src/hashset.cpp \
 	src/hex.cpp \
 	src/inodeandblocktrackerimpl.cpp \
 	src/inputreader.cpp \
@@ -81,6 +82,7 @@ test_test_SOURCES = \
 	test/test_fileproxy.cpp \
 	test/test_filerecord.cpp \
 	test/test_fsm.cpp \
+	test/test_hashset.cpp \
 	test/test_hex.cpp \
 	test/test_inodeandblocktrackerimpl.cpp \
 	test/test_llama.cpp \

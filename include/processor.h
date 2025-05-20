@@ -3,28 +3,50 @@
 #include "llamaduck.h"
 #include "duckhash.h"
 #include "llamabatch.h"
+#include "hashset.h"
 #include "pdfreader.h"
+#include "ruleengine.h"
 #include <lightgrep/search_hit.h>
 
 #include <memory>
 #include <vector>
 
-struct SFHASH_Hasher;
-
 struct ProgramHandle;
 struct ContextHandle;
-
 struct FileRecord;
 class OutputHandler;
 class ReadSeek;
+class Entry;
+
+
+struct ProcessorContext {
+  ProcessorContext(
+    LlamaDB* db,
+    const std::shared_ptr<ProgramHandle>& prog,
+    const std::shared_ptr<LlamaRuleEngine> ruleEngine,
+    const std::string& exclusionHsetPath,
+    const std::string& inclusionHsetPath
+  );
+
+  // Returns hash flag to be used when initializing a SFHASH_Hasher, based
+  // on what's supported by the context's hash sets.
+  uint32_t getSupportedHashAlgsFromContext();
+
+  LlamaDB* Db;
+  const std::shared_ptr<ProgramHandle> Prog;
+  const std::shared_ptr<LlamaRuleEngine> RuleEngine;
+  std::unique_ptr<LlamaHashset> ExclusionHashset;
+  std::unique_ptr<LlamaHashset> InclusionHashset;
+};
 
 class Processor {
 public:
-  Processor(LlamaDB* db, const std::shared_ptr<ProgramHandle>& prog, const std::vector<std::string>& patternToRuleId);
+  Processor(std::shared_ptr<ProcessorContext> procContext);
 
   std::shared_ptr<Processor> clone() const;
 
-  void process(ReadSeek& stream);
+  void process(Entry& entry);
+  void processBatch(const std::shared_ptr<std::vector<std::unique_ptr<Entry>>>& entries);
 
   void flush(void);
 
@@ -41,18 +63,18 @@ public:
 
   DBBatch<SearchHit>* searchHits() { return SearchHits.get(); }
 
-private:
-  const std::vector<std::string>& PatternToRuleId;
+  HashRec hashRecord() { return HashRecord; }
 
+private:
+  std::shared_ptr<ProcessorContext> Context;
   std::vector<unsigned char> Buf; // to avoid reallocations
 
-  LlamaDB* const Db; // weak pointer, allows for clone()
   LlamaDBConnection DbConn;
   LlamaDBAppender   HashAppender;
   LlamaDBAppender   SearchHitAppender;
+  LlamaDBAppender   RuleMatchAppender;
 
-  std::shared_ptr<ProgramHandle> LgProg; // shared
-  std::shared_ptr<ContextHandle> Ctx; // not shared, could be unique_ptr
+  std::shared_ptr<ContextHandle> LgCtx; // not shared, could be unique_ptr
   std::shared_ptr<SFHASH_Hasher> Hasher; // not shared, could be unique_ptr
 
   HashRec HashRecord; // to be reused per set of hashes

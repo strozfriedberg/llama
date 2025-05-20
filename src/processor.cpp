@@ -5,12 +5,19 @@
 #include <lightgrep/api.h>
 
 #include "blocksequence.h"
+#include "entry.h"
 #include "filerecord.h"
 #include "outputhandler.h"
 #include "readseek_impl.h"
 #include "timer.h"
 #include "util.h"
 #include "pdfreader.h"
+#include "ruleengine.h"
+
+#include "boost/interprocess/file_mapping.hpp"
+#include "boost/interprocess/mapped_region.hpp"
+
+namespace bip = boost::interprocess;
 
 namespace {
   const LG_ContextOptions ctxOpts{0, 0};
@@ -29,15 +36,44 @@ namespace {
   }
 }
 
-Processor::Processor(LlamaDB* db, const std::shared_ptr<ProgramHandle>& prog, const std::vector<std::string>& patternToRuleId):
-  PatternToRuleId(patternToRuleId),
-  Db(db),
-  DbConn(*db),
+ProcessorContext::ProcessorContext(LlamaDB* db,
+                                   const std::shared_ptr<ProgramHandle>& prog,
+                                   const std::shared_ptr<LlamaRuleEngine> ruleEngine,
+                                   const std::string& exclusionHsetPath,
+                                   const std::string& inclusionHsetPath) : Db(db), Prog(prog), RuleEngine(ruleEngine) {
+  if (!exclusionHsetPath.empty()) {
+    ExclusionHashset.reset(new LlamaHashset(exclusionHsetPath.c_str()));
+  }
+
+  if (!inclusionHsetPath.empty()) {
+    InclusionHashset.reset(new LlamaHashset(inclusionHsetPath.c_str()));
+    RuleEngine->addRuleRec(RuleRec{InclusionHashset->getHash(), InclusionHashset->getName()});
+  }
+}
+
+uint32_t ProcessorContext::getSupportedHashAlgsFromContext() {
+  // We always want to calculate the Blake3 hash because we use it for mapping files -> rule hits
+  uint32_t hashAlgs = SFHASH_BLAKE3;
+
+  if (ExclusionHashset) {
+    hashAlgs |= ExclusionHashset->supportedHashAlg();
+  }
+
+  if (InclusionHashset) {
+    hashAlgs |= InclusionHashset->supportedHashAlg();
+  }
+
+  return hashAlgs;
+}
+
+Processor::Processor(std::shared_ptr<ProcessorContext> procContext):
+  Context(procContext),
+  DbConn(*Context->Db),
   HashAppender(DbConn.get(), "hash"),
   SearchHitAppender(DbConn.get(), "search_hits"),
-  LgProg(prog),
-  Ctx(prog.get() ? lg_create_context(prog.get(), &ctxOpts) : nullptr, lg_destroy_context),
-  Hasher(sfhash_create_hasher(SFHASH_MD5 | SFHASH_SHA_1 | SFHASH_SHA_2_256 | SFHASH_BLAKE3 | SFHASH_FUZZY), sfhash_destroy_hasher),
+  RuleMatchAppender(DbConn.get(), "rule_hits"),
+  LgCtx(Context->Prog.get() ? lg_create_context(Context->Prog.get(), &ctxOpts) : nullptr, lg_destroy_context),
+  Hasher(sfhash_create_hasher(Context->getSupportedHashAlgsFromContext()), sfhash_destroy_hasher),
   HashRecord(),
   Hashes(std::make_unique<HashBatch>()),
   SearchHits(std::make_unique<DBBatch<SearchHit>>()),
@@ -47,34 +83,60 @@ Processor::Processor(LlamaDB* db, const std::shared_ptr<ProgramHandle>& prog, co
 }
 
 std::shared_ptr<Processor> Processor::clone() const {
-  return std::make_shared<Processor>(Db, LgProg, PatternToRuleId);
+  return std::make_shared<Processor>(Context);
 }
 
-void Processor::process(ReadSeek& stream) {
+void Processor::process(Entry& entry) {
   SFHASH_HashValues h;
   {
     Timer procTime;
-    hashFile(Hasher.get(), stream, Buf, h);
+    hashFile(Hasher.get(), entry.getStream(), Buf, h);
     ProcTimeTotal += procTime.elapsed();
   }
-  HashRecord.set(h, stream.getID());
+  HashRecord.set(h, entry.Addr);
+
+  if (Context->ExclusionHashset && Context->ExclusionHashset->lookup(h)) {
+    // do something here if hash is in exclusion hset
+  } else if (Context->InclusionHashset && Context->InclusionHashset->lookup(h)) {
+    // add to rule hits here if hash in inclusion hset
+    // since we want to treat inclusion hset as if it were another rule
+  }
 
   // write hash record to database
   Hashes->add(HashRecord);
 
   {
     Timer procTime;
-    if (isPDF(stream)) {
+    if (isPDF(entry.getStream())) {
       PDFReader reader;
-      reader.readTextFromPDF(stream);
+      reader.readTextFromPDF(entry.getStream());
       ReadSeekBuf rs(reader.getExtractedText());
+      // should this call process again? should we call process recursively for archives, for example?
+      // what to do about the ReadSeek ID? ReadSeekBuf getID just returns 0...
+      // what is the ID for the extracted text from a PDF? From a file within an archive?
+      // for archive, is the ID of the file the same as the ID of the parent archive?
+      // once process takes an Entry instead of a ReadSeek, we can add member attrs to 
+      // the Entry class to differentiate different streams that comes from the same inode
+      // maybe Entries can have their own unique IDs that are a function of the Addr, MetaAddr, and 
+      // hash of the stream?
+      // How do we handle duplicate archives in different locations?
       search(rs);
     }
     else {
-      search(stream);
+      search(entry.getStream());
     }
     ProcTimeTotal += procTime.elapsed();
   }
+}
+
+void Processor::processBatch(const std::shared_ptr<std::vector<std::unique_ptr<Entry>>>& entries) {
+  for (auto& entry : *entries) {
+    if (entry->getStream().open()) {
+      process(*entry);
+      entry->getStream().close();
+    }
+  }
+  flush();
 }
 
 void Processor::flush(void) {
@@ -91,26 +153,26 @@ void handleSearchHit(void* userData, const LG_SearchHit* const hit) {
 }
 
 void Processor::addToSearchHitBatch(const LG_SearchHit* const hit) {
-  LG_PatternInfo* info = lg_prog_pattern_info(LgProg.get(), hit->KeywordIndex);
+  LG_PatternInfo* info = lg_prog_pattern_info(Context->Prog.get(), hit->KeywordIndex);
   std::string pat(info->Pattern);
-  SearchHits->add(SearchHit{pat, hit->Start, hit->End, PatternToRuleId[hit->KeywordIndex], HashRecord.Blake3, hit->End - hit->Start});
+  SearchHits->add(SearchHit{pat, hit->Start, hit->End, Context->RuleEngine->patternToRuleId()[hit->KeywordIndex], HashRecord.Blake3, hit->End - hit->Start});
 }
 
 void Processor::search(ReadSeek& rs) {
-  if (!Ctx) {
+  if (!LgCtx) {
     return;
   }
-  lg_reset_context(Ctx.get());
+  lg_reset_context(LgCtx.get());
   size_t bytesRead = 0;
   uint64_t offset = 0;
   rs.seek(0);
   do {
       bytesRead = rs.read(1 << 20, Buf);
       if (bytesRead > 0) {
-        lg_search(Ctx.get(), (char*)Buf.data(), (char*)Buf.data() + bytesRead, offset, (void*)this, handleSearchHit);
+        lg_search(LgCtx.get(), (char*)Buf.data(), (char*)Buf.data() + bytesRead, offset, (void*)this, handleSearchHit);
       }
       offset += bytesRead;
     } while (bytesRead > 0);
 
-  lg_closeout_search(Ctx.get(), (void*)this, handleSearchHit);
+  lg_closeout_search(LgCtx.get(), (void*)this, handleSearchHit);
 }

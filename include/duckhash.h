@@ -32,4 +32,3 @@ struct HashRec {
 };
 
 using HashBatch = DBBatch<HashRec>;
-

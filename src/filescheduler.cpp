@@ -21,7 +21,7 @@ FileScheduler::FileScheduler(LlamaDB& db,
 
 void FileScheduler::scheduleFileBatch(const DirentBatch& dirents,
                                       const InodeBatch& inodes,
-                                      const std::shared_ptr<std::vector<std::unique_ptr<ReadSeek>>>& streams)
+                                      const std::shared_ptr<std::vector<std::unique_ptr<Entry>>>& entries)
 {
   // here we copy the batches in the lambda capture, so that the passed-in batches
   // can be reused by the caller while the scheduler does its work on a separate thread
@@ -30,7 +30,7 @@ void FileScheduler::scheduleFileBatch(const DirentBatch& dirents,
   boost::asio::post(
     Strand,
     [=]() {
-      performScheduling(*dPtr, *iPtr, streams);
+      performScheduling(*dPtr, *iPtr, entries);
     }
   );
 }
@@ -45,7 +45,7 @@ double FileScheduler::getProcessorTime() {
 
 void FileScheduler::performScheduling(DirentBatch& dirents,
                                       InodeBatch& inodes,
-                                      const std::shared_ptr<std::vector<std::unique_ptr<ReadSeek>>>& streams)
+                                      const std::shared_ptr<std::vector<std::unique_ptr<Entry>>>& entries)
 {
   std::string tmpDents = "_temp_dirent";
   std::string tmpInodes = "_temp_inode";
@@ -76,13 +76,7 @@ void FileScheduler::performScheduling(DirentBatch& dirents,
   // post for multithreaded processing
   auto proc = popProc(); // blocks
   boost::asio::post(Pool, [=]() {
-    for (auto& stream : *streams) {
-      if (stream->open()) {
-        proc->process(*stream);
-        stream->close();
-      }
-    }
-    proc->flush();
+    proc->processBatch(entries);
     this->pushProc(proc);
   });
 }

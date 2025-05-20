@@ -1,21 +1,23 @@
 #include "ruleengine.h"
 #include "llamaduck.h"
 #include "rulereader.h"
-#include "llamabatch.h"
 
-LlamaRuleEngine::LlamaRuleEngine() : Reader(), Qb(Reader.getParser()) {}
+LlamaRuleEngine::LlamaRuleEngine() 
+  : Reader(),
+    Qb(Reader.getParser()),
+    RuleMatches(std::make_unique<RuleMatchBatch>()),
+    RuleRecs(std::make_unique<RuleRecBatch>()) {}
 
 void LlamaRuleEngine::writeRulesToDb(LlamaDBConnection& dbConn) {
   if (Reader.getRules().empty()) {
     return;
   }
   duckdb_result result;
-  DBBatch<RuleRec> ruleRecBatch;
   std::string hits_query("INSERT INTO rule_hits ");
   const std::string sqlUnion(" UNION ");
 
   for (const Rule& rule : Reader.getRules()) {
-    ruleRecBatch.add(RuleRec{rule.getHash(Reader.getParser()).to_string(), std::string(rule.Name)});
+    RuleRecs->add(RuleRec{rule.getHash(Reader.getParser()).to_string(), std::string(rule.Name)});
     hits_query += "(";
     hits_query += Qb.buildSqlQuery(rule);
     hits_query += ")";
@@ -25,7 +27,7 @@ void LlamaRuleEngine::writeRulesToDb(LlamaDBConnection& dbConn) {
   hits_query += ";";
 
   LlamaDBAppender appender(dbConn.get(), "rules");
-  ruleRecBatch.copyToDB(appender.get());
+  RuleRecs->copyToDB(appender.get());
   appender.flush();
   
   auto state = duckdb_query(dbConn.get(), hits_query.c_str(), &result);
@@ -62,4 +64,17 @@ bool LlamaRuleEngine::read(const std::string& input, const std::string& source) 
 
 uint64_t LlamaRuleEngine::numRulesRead() {
   return Reader.getRules().size();
+}
+
+void LlamaRuleEngine::addRuleMatch(const RuleMatch& match) {
+  RuleMatches->add(match);
+}
+
+void LlamaRuleEngine::addRuleRec(const RuleRec& ruleRec) {
+  RuleRecs->add(ruleRec);
+}
+
+void LlamaRuleEngine::flush(LlamaDBAppender& appender) {
+  RuleMatches->copyToDB(appender.get());
+  appender.flush();
 }

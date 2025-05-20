@@ -12,6 +12,8 @@ struct Options {
   std::string RuleFile;
   std::string RuleDir;
   std::string MatchSet;
+  std::string ExclusionHashset;
+  std::string InclusionHashset;
   std::vector<std::string> KeyFiles;
   unsigned int NumThreads;
   Codec OutputCodec;

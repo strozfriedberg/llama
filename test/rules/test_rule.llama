@@ -1,7 +1,7 @@
 rule TestRule {
   grep:
     patterns:
-      a = "foo"
+      a = "r-alloc"
     condition:
       any()
 }

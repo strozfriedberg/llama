@@ -10,6 +10,8 @@
 
 #include <hasher/api.h>
 
+#include <iostream>
+#include <fstream>
 #include <thread>
 #include <vector>
 
@@ -31,8 +33,9 @@ TEST_CASE("testBoostThreadPool") {
 class ProcessorSearchTester {
 public:
   ProcessorSearchTester(std::string needle, std::string haystack, uint64_t numExpectedHits) 
-  : PatternToRuleId(numExpectedHits, "rule_id"), RsBuf(haystack), Db(), DbConn(Db), Proc(createProcessor(needle)) {
+  : RuleEngine(new LlamaRuleEngine()), RsBuf(haystack), Db(), DbConn(Db), Proc(createProcessor(needle)) {
     Proc.setBlake3("file_hash");
+    RuleEngine->setPatternToRuleId(std::vector<std::string>(numExpectedHits, "rule_id"));
   }
 
   void search() {
@@ -69,6 +72,7 @@ public:
 
 private:
   Processor createProcessor(std::string needle) {
+    RuleEngine->createTables(DbConn);
     std::shared_ptr<PatternHandle> pat(lg_create_pattern(), lg_destroy_pattern);
     LG_KeyOptions opts{0,0,0};
     LG_Error* err(nullptr);
@@ -82,9 +86,11 @@ private:
     // duckdb setup
     DBType<SearchHit>::createTable(DbConn.get(), "search_hits");
     DBType<HashRec>::createTable(DbConn.get(), "hash");
-    return Processor{&Db, pHandle, PatternToRuleId};
+
+    auto procContext = std::make_shared<ProcessorContext>(&Db, pHandle, RuleEngine, "", "");
+    return Processor(procContext);
   }
-  std::vector<std::string> PatternToRuleId;
+  std::shared_ptr<LlamaRuleEngine> RuleEngine;
   ReadSeekBuf RsBuf;
   LlamaDB Db;
   LlamaDBConnection DbConn;
@@ -146,4 +152,46 @@ TEST_CASE("testSearchWithMultipleHits") {
   pst.createTempTableAndPopulate(expectedHits);
   REQUIRE(0 == pst.numDiffsBetweenTables());
 
+}
+
+TEST_CASE("testProcessorContextGetSupportedHashAlgsDiffAlgs") {
+  std::shared_ptr<LlamaRuleEngine> ruleEngine = std::make_shared<LlamaRuleEngine>();
+  ProcessorContext procCtx{
+    nullptr,
+    nullptr,
+    ruleEngine,
+    "test/hsets/md5.hset",
+    "test/hsets/sha1.hset",
+  };
+
+  REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_BLAKE3 | SFHASH_MD5 | SFHASH_SHA_1));
+}
+
+TEST_CASE("testProcessorContextGetSupportedHashAlgsSameAlgs") {
+  std::shared_ptr<LlamaRuleEngine> ruleEngine = std::make_shared<LlamaRuleEngine>();
+  ProcessorContext procCtx{
+    nullptr,
+    nullptr,
+    ruleEngine,
+    "test/hsets/md5.hset",
+    "test/hsets/md5.hset",
+  };
+
+  REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_BLAKE3 | SFHASH_MD5));
+}
+
+TEST_CASE("testProcessorContextGetSupportedHashAlgsMultipleAlgs") {
+  // When there are multiple algs available in the hashset, the first responsive one is
+  // dependent on the order of the algs in hashset<anonymous namespace>::searchedHashAlgs.
+  // In this case, it's MD5 because MD5 comes first in searchedHashAlgs.
+  std::shared_ptr<LlamaRuleEngine> ruleEngine = std::make_shared<LlamaRuleEngine>();
+  ProcessorContext procCtx{
+    nullptr,
+    nullptr,
+    ruleEngine,
+    "test/hsets/md5.hset",
+    "test/hsets/sha1_md5.hset",
+  };
+
+  REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_BLAKE3 | SFHASH_MD5));
 }
