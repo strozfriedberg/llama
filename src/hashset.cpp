@@ -50,10 +50,22 @@ bool LlamaHashset::lookup(const uint8_t* hash) {
 bool LlamaHashset::lookup(const SFHASH_HashValues& h) {
   const uint8_t* hash;
   switch (SupportedHashAlg) {
-    case SFHASH_MD5: hash = h.Md5; break;
-    case SFHASH_SHA_1: hash = h.Sha1; break;
-    case SFHASH_SHA_2_256: hash = h.Sha2_256; break;
-    case SFHASH_BLAKE3: hash = h.Blake3; break;
+    case SFHASH_MD5: {
+      hash = h.Md5;
+      break;
+    }
+    case SFHASH_SHA_1: {
+      hash = h.Sha1;
+      break;
+    }
+    case SFHASH_SHA_2_256: {
+      hash = h.Sha2_256;
+      break;
+    }
+    case SFHASH_BLAKE3: {
+      hash = h.Blake3;
+      break;
+    }
     default: THROW("Supported hash alg value for hset is not actually supported. This shouldn't happen.");
   };
   return lookup(hash);
