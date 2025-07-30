@@ -81,7 +81,7 @@ test_sources = [
 
 # Only build tests if Catch2 is available
 if catch2_dep.found()
-  
+
   # Main test executable
   test_exe = executable('llama_test',
     llama_common_sources + test_sources,
@@ -89,22 +89,22 @@ if catch2_dep.found()
     dependencies: llama_deps + [catch2_dep],
     build_by_default: false
   )
-  
+
   # Register the test with all sanitizers completely disabled
-  test('llama_tests', test_exe, 
+  test('llama_tests', test_exe,
        workdir : meson.project_source_root(),
-       env : ['ASAN_OPTIONS=detect_leaks=0:detect_container_overflow=0:detect_stack_use_after_return=0:check_initialization_order=0:strict_init_order=0:halt_on_error=0:abort_on_error=0:disable_coredump=0:unmap_shadow_on_exit=1:mmap_limit_mb=0', 
-              'UBSAN_OPTIONS=halt_on_error=0:abort_on_error=0:print_stacktrace=0:silence_unsigned_overflow=1', 
+       env : ['ASAN_OPTIONS=detect_leaks=0:detect_container_overflow=0:detect_stack_use_after_return=0:check_initialization_order=0:strict_init_order=0:halt_on_error=0:abort_on_error=0:disable_coredump=0:unmap_shadow_on_exit=1:mmap_limit_mb=0',
+              'UBSAN_OPTIONS=halt_on_error=0:abort_on_error=0:print_stacktrace=0:silence_unsigned_overflow=1',
               'MSAN_OPTIONS=halt_on_error=0:abort_on_error=0:exit_code=0',
               'MALLOC_CHECK_=0'])
-  
+
   # Benchmarks (only if YARA is available)
   if yara_dep.found()
     benchmark_sources = [
       'benchmarks/test_parser.cpp',
       'benchmarks/test_yara.cpp'
     ]
-    
+
     benchmark_exe = executable('benchmarks',
       llama_common_sources + benchmark_sources,
       include_directories: [inc, include_directories('../src')],
@@ -112,5 +112,6 @@ if catch2_dep.found()
       build_by_default: false
     )
   endif
-  
+
 endif
+
