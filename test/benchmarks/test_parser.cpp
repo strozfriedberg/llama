@@ -61,7 +61,6 @@ rule BetterRule {
 }
 )");
 
-// write a benchmark for just the LlamaLexer over the rules string above 
 TEST_CASE("LlamaLexerBenchmark") {
   LlamaLexer lexer;
   int res = 0;
@@ -75,10 +74,25 @@ TEST_CASE("LlamaLexerBenchmark") {
   CHECK(lexer.errors().empty());
 }
 
+TEST_CASE("LlamaParser") {
+  LlamaLexer lexer;
+  lexer.setInput(rules);
+  lexer.scanTokens("test");
+  CHECK(lexer.errors().empty());
+
+  LlamaParser parser(rules, lexer.tokens());
+  std::vector<Rule> parsed;
+  BENCHMARK("parser") {
+    parsed = parser.parseRules(lexer.ruleIndices(), "test");
+    parser.clear();
+  };
+  CHECK(parsed.size() == 5);
+}
+
 TEST_CASE("LlamaParserBenchmark") {
   RuleReader r;
   bool res = false;
-  BENCHMARK("parser") {
+  BENCHMARK("RuleReader") {
     res = r.read(rules, "test");
     r.clear();
   };
