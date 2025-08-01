@@ -61,13 +61,28 @@ rule BetterRule {
 }
 )");
 
+// write a benchmark for just the LlamaLexer over the rules string above 
+TEST_CASE("LlamaLexerBenchmark") {
+  LlamaLexer lexer;
+  int res = 0;
+  BENCHMARK("lexer") {
+    lexer.setInput(rules);
+    lexer.scanTokens("test");
+    res = lexer.tokens().size();
+    lexer.clear();
+  };
+  CHECK(res == 175);
+  CHECK(lexer.errors().empty());
+}
+
 TEST_CASE("LlamaParserBenchmark") {
   RuleReader r;
-  int res = 0;
+  bool res = false;
   BENCHMARK("parser") {
     res = r.read(rules, "test");
     r.clear();
   };
-  CHECK(res == 4);
+  CHECK(res);
   CHECK(r.getLastError() == "");
 }
+
