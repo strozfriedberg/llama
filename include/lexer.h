@@ -40,15 +40,15 @@ public:
     Tokens.emplace_back(type, Input.substr(start, end - start), pos);
   }
 
-  char advance() { ++Pos.ColNum; return Input[CurIdx++]; }
+  uint8_t advance() { ++Pos.ColNum; return Input[CurIdx++]; }
 
   bool match(char expected);
   bool isAtEnd() const { return CurIdx == InputSize; }
 
-  char curChar() const { return Input[CurIdx]; };
+  uint8_t curChar() const { return Input[CurIdx]; };
 
   // Peek at the next char without consuming the current one.
-  char peek() const { return isAtEnd() ? '\0' : Input[CurIdx + 1]; }
+  uint8_t peek() const { return CurIdx + 1 < InputSize ? Input[CurIdx + 1]: '\0'; }
 
   const std::vector<Token>& tokens() const { return Tokens; }
   const std::vector<size_t>& ruleIndices() const { return RuleIndices; }

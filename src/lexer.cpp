@@ -36,7 +36,7 @@ void LlamaLexer::scanToken() {
   }
   const uint64_t start = CurIdx;
   const LineCol pos(Pos);
-  const char c = advance();
+  const uint8_t c = advance();
   LlamaTokenType op;
   switch(c) {
     case '\t': break;
@@ -98,14 +98,12 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
   if (CurIdx > 0) {
     start--;
   }
-  char c = curChar();
-  while (IdentifierChars[c]) {
+  while (!isAtEnd() && IdentifierChars[curChar()]) {
     advance();
-    c = curChar();
   }
-
   uint64_t end = CurIdx;
-  auto found = LlamaKeywords.find(Input.substr(start, end - start));
+  std::string_view identifier(Input.data() + start, end - start);
+  auto found = LlamaKeywords.find(identifier);
 
   if (found != LlamaKeywords.end()) {
     addToken(found->second, start, end, pos);
@@ -120,16 +118,23 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
 
 void LlamaLexer::parseString(LineCol pos) {
   uint64_t start = CurIdx;
-  while(curChar() != '"' && !isAtEnd()) {
-    if (curChar() == '\\') {
-      advance();
+  const char* closeQuote = static_cast<const char*>(std::memchr(Input.data() + CurIdx, '"', InputSize - CurIdx));
+  while (closeQuote != nullptr) {
+    CurIdx = (uint64_t)(closeQuote - Input.data());
+    if (*(closeQuote - 1) == '\\') {
+      // If the previous character is a backslash, this is an escaped quote.
+      // We need to continue searching for the next unescaped quote.
+      closeQuote = static_cast<const char*>(std::memchr(Input.data() + CurIdx + 1, '"', InputSize - CurIdx - 1));
     }
-    advance();
+    else {
+      break;
+    }
   }
-  if (isAtEnd()) {
+  if (closeQuote == nullptr) {
     throw UnexpectedInputError("Unterminated string", pos);
   }
-  advance(); // consume closing quote
+  advance();
+
   uint64_t end = CurIdx - 1;
   addToken(LlamaTokenType::DOUBLE_QUOTED_STRING, start, end, pos);
 }
@@ -139,22 +144,21 @@ void LlamaLexer::parseNumber(LineCol pos) {
   if (CurIdx > 0) {
     start--;
   }
-  while (isdigit(curChar())) {
+  while (!isAtEnd() && isdigit(curChar())) {
     advance();
   }
-
   uint64_t end = CurIdx;
   addToken(LlamaTokenType::NUMBER, start, end, pos);
 }
 
 void LlamaLexer::parseSingleLineComment() {
-  while (curChar() != '\n' && !isAtEnd()) {
+  while (!isAtEnd() && curChar() != '\n') {
     advance();
   }
 }
 
 void LlamaLexer::parseMultiLineComment(LineCol pos) {
-  while (curChar() != '*' && !isAtEnd()) {
+  while (!isAtEnd() && curChar() != '*') {
     if (curChar() == '\n') {
       Pos.LineNum++;
       Pos.ColNum = 0;

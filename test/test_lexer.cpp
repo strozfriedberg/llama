@@ -533,3 +533,20 @@ TEST_CASE("ruleWithSingleUnexpectedToken") {
   REQUIRE(lexer.tokens().size() == 5);
   REQUIRE(lexer.tokens().at(2).Type == LlamaTokenType::UNRECOGNIZED);
  }
+
+TEST_CASE("nonASCIIUnrecognized") {
+  std::string input = "μ";
+  LlamaLexer lexer(input);
+  lexer.scanToken();
+  REQUIRE(lexer.tokens().size() == 1);
+  REQUIRE(lexer.tokens().at(0).Type == LlamaTokenType::UNRECOGNIZED);
+}
+
+TEST_CASE("nonASCIIStringIsFine") {
+  std::string input = "\"μ\"";
+  LlamaLexer lexer(input);
+  lexer.scanTokens("test");
+  REQUIRE(lexer.tokens().size() == 2);
+  REQUIRE(lexer.tokens().at(0).Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.tokens().at(0).Lexeme == "μ");
+}
