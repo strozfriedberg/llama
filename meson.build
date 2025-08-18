@@ -16,7 +16,7 @@ add_project_arguments([
 if get_option('buildtype') == 'debug'
   add_project_arguments('-Og', language: 'cpp')
 else
-  add_project_arguments('-O3', '-mtune=intel', language: 'cpp')
+  add_project_arguments('-O3', '-march=native', language: 'cpp')
 endif
 
 # Threading support
