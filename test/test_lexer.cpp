@@ -486,6 +486,33 @@ TEST_CASE("parseStringWithEscapedDoubleQuote") {
   REQUIRE(lexer.tokens().at(1).Type == LlamaTokenType::END_OF_FILE);
 }
 
+TEST_CASE("stringWithConsecutiveBackslashes") {
+  std::string input = R"("test\\")";  // Should be valid: test + escaped backslash
+  LlamaLexer lexer(input);
+  lexer.scanTokens("test");
+  REQUIRE(lexer.tokens().size() == 2);
+  REQUIRE(lexer.tokens()[0].Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.tokens()[0].Lexeme == "test\\\\");
+}
+
+TEST_CASE("stringWithEscapedQuote") {
+  std::string input = R"("test\"more")";  // Should continue after escaped quote
+  LlamaLexer lexer(input);
+  lexer.scanTokens("test");
+  REQUIRE(lexer.tokens().size() == 2);
+  REQUIRE(lexer.tokens()[0].Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.tokens()[0].Lexeme == "test\\\"more");
+}
+
+TEST_CASE("stringWithBackslashAndEscapedQuote") {
+  std::string input = R"("test\\\"")";  // Backslash + escaped quote, should end
+  LlamaLexer lexer(input);
+  lexer.scanTokens("test");
+  REQUIRE(lexer.tokens().size() == 2);
+  REQUIRE(lexer.tokens()[0].Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.tokens()[0].Lexeme == "test\\\"");
+}
+
 TEST_CASE("multipleRuleCount") {
   std::string input = "rule rule rule rule rule rule";
   LlamaLexer lexer(input);

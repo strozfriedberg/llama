@@ -117,25 +117,37 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
 }
 
 void LlamaLexer::parseString(LineCol pos) {
-  uint64_t start = CurIdx;
-  const char* closeQuote = static_cast<const char*>(std::memchr(Input.data() + CurIdx, '"', InputSize - CurIdx));
-  while (closeQuote != nullptr) {
-    CurIdx = (uint64_t)(closeQuote - Input.data());
-    if (*(closeQuote - 1) == '\\') {
-      // If the previous character is a backslash, this is an escaped quote.
-      // We need to continue searching for the next unescaped quote.
-      closeQuote = static_cast<const char*>(std::memchr(Input.data() + CurIdx + 1, '"', InputSize - CurIdx - 1));
+  const uint64_t start = CurIdx;
+  const char* cur = Input.data() + start;
+  const char* closeQuote = nullptr;
+  const char* backslash = nullptr;
+  do {
+    closeQuote = static_cast<const char*>(std::memchr(cur, '"', Input.end() - cur));
+    if (closeQuote == nullptr) {
+      throw UnexpectedInputError("Unterminated string", pos);
     }
-    else {
-      break;
+    backslash  = static_cast<const char*>(std::memchr(cur, '\\', closeQuote - cur));
+    if (backslash != nullptr) {
+      // we've got to deal with escaping, do a loop from start of backslash
+      do {
+        // if the backslash is followed by another backslash, we need to memchr for backslash again
+        if (*(backslash + 1) == '\\') {
+          backslash = static_cast<const char*>(std::memchr(backslash + 2, '\\', closeQuote - (backslash + 2)));
+        }
+        else if (*(backslash + 1) == '"') {
+          cur = backslash + 2; // find next quote
+          break;               // repeat outer do-loop
+        }
+        else {
+          // otherwise, we have an unrecognized escape sequence
+          throw UnexpectedInputError("Unrecognized escape sequence in string", pos);
+        }
+      } while (backslash != nullptr && backslash < closeQuote);
     }
-  }
-  if (closeQuote == nullptr) {
-    throw UnexpectedInputError("Unterminated string", pos);
-  }
-  advance();
+  } while (backslash != nullptr && backslash < cur); // even if cur is end of string, loop for exception throw
 
-  uint64_t end = CurIdx - 1;
+  const uint64_t end = closeQuote - Input.data();
+  CurIdx = end + 1; // move past closing quote
   addToken(LlamaTokenType::DOUBLE_QUOTED_STRING, start, end, pos);
 }
 
