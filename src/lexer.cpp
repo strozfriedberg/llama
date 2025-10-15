@@ -130,17 +130,14 @@ void LlamaLexer::parseString(LineCol pos) {
     if (backslash != nullptr) {
       // we've got to deal with escaping, do a loop from start of backslash
       do {
-        // if the backslash is followed by another backslash, we need to memchr for backslash again
-        if (*(backslash + 1) == '\\') {
-          backslash = static_cast<const char*>(std::memchr(backslash + 2, '\\', closeQuote - (backslash + 2)));
-        }
-        else if (*(backslash + 1) == '"') {
-          cur = backslash + 2; // find next quote
+        auto lookahead = backslash + 1;
+        if (*lookahead == '"') {
+          cur = lookahead + 1; // escape quote, find next quote
           break;               // repeat outer do-loop
         }
         else {
-          // otherwise, we have an unrecognized escape sequence
-          throw UnexpectedInputError("Unrecognized escape sequence in string", pos);
+          ++lookahead; // skip escaped char to find next backslash
+          backslash = static_cast<const char*>(std::memchr(lookahead, '\\', closeQuote - lookahead));
         }
       } while (backslash != nullptr && backslash < closeQuote);
     }

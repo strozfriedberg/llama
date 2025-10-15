@@ -510,7 +510,7 @@ TEST_CASE("stringWithBackslashAndEscapedQuote") {
   lexer.scanTokens("test");
   REQUIRE(lexer.tokens().size() == 2);
   REQUIRE(lexer.tokens()[0].Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(lexer.tokens()[0].Lexeme == "test\\\"");
+  REQUIRE(lexer.tokens()[0].Lexeme == "test\\\\\\\""); // test\\\"
 }
 
 TEST_CASE("multipleRuleCount") {
