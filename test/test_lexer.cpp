@@ -492,7 +492,7 @@ TEST_CASE("stringWithConsecutiveBackslashes") {
   lexer.scanTokens();
   REQUIRE(lexer.tokens().size() == 2);
   REQUIRE(lexer.tokens()[0].Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(lexer.tokens()[0].Lexeme == "test\\\\");
+  REQUIRE(lexer.tokens()[0].Lexeme == R"(test\\)");
 }
 
 TEST_CASE("stringWithEscapedQuote") {
@@ -501,7 +501,7 @@ TEST_CASE("stringWithEscapedQuote") {
   lexer.scanTokens();
   REQUIRE(lexer.tokens().size() == 2);
   REQUIRE(lexer.tokens()[0].Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(lexer.tokens()[0].Lexeme == "test\\\"more");
+  REQUIRE(lexer.tokens()[0].Lexeme == R"(test\"more)");
 }
 
 TEST_CASE("stringWithBackslashAndEscapedQuote") {
@@ -510,7 +510,7 @@ TEST_CASE("stringWithBackslashAndEscapedQuote") {
   lexer.scanTokens();
   REQUIRE(lexer.tokens().size() == 2);
   REQUIRE(lexer.tokens()[0].Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
-  REQUIRE(lexer.tokens()[0].Lexeme == "test\\\\\\\""); // test\\\"
+  REQUIRE(lexer.tokens()[0].Lexeme == R"(test\\\")");
 }
 
 TEST_CASE("multipleRuleCount") {
