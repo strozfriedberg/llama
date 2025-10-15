@@ -24,7 +24,6 @@ void LlamaLexer::scanTokens(const std::string& source) {
     }
     catch (const UnexpectedInputError& e) {
       Errors.push_back(e);
-      printErrWithSource(e, source);
     }
   }
   addToken(LlamaTokenType::END_OF_FILE, CurIdx, CurIdx+1, Pos);

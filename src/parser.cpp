@@ -406,7 +406,6 @@ std::vector<Rule> LlamaParser::parseRules(const std::vector<size_t>& ruleIndices
     }
     catch (ParserError& e) {
       Errors.push_back(e);
-      printErrWithSource(e, source);
     }
 
     // Move to next rule context.
