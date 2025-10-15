@@ -66,7 +66,7 @@ TEST_CASE("LlamaLexerBenchmark") {
   int res = 0;
   BENCHMARK("lexer") {
     lexer.setInput(rules);
-    lexer.scanTokens("test");
+    lexer.scanTokens();
     res = lexer.tokens().size();
     lexer.clear();
   };
@@ -77,13 +77,13 @@ TEST_CASE("LlamaLexerBenchmark") {
 TEST_CASE("LlamaParser") {
   LlamaLexer lexer;
   lexer.setInput(rules);
-  lexer.scanTokens("test");
+  lexer.scanTokens();
   CHECK(lexer.errors().empty());
 
   LlamaParser parser(rules, lexer.tokens());
   std::vector<Rule> parsed;
   BENCHMARK("parser") {
-    parsed = parser.parseRules(lexer.ruleIndices(), "test");
+    parsed = parser.parseRules(lexer.ruleIndices());
     parser.clear();
   };
   CHECK(parsed.size() == 5);

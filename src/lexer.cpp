@@ -14,7 +14,7 @@ namespace {
   static const std::bitset<256> IdentifierChars = initIdentifierChars();
 }
 
-void LlamaLexer::scanTokens(const std::string& source) {
+void LlamaLexer::scanTokens() {
   // Estimate final size of the token vector to eliminate array doubling.
   // Set to length of input since there can't possibly be more tokens than characters.
   Tokens.reserve(InputSize);

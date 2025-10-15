@@ -14,10 +14,6 @@ std::string randomNumString() {
   return std::to_string(dis(gen));
 }
 
-void printErrWithSource(const std::runtime_error& e, const std::string source) {
-  std::cerr << source << ": " << e.what() << std::endl;
-}
-
 bool isPDF(ReadSeek& rs) {
   std::vector<uint8_t> buf;
   rs.read(pdfSig.size(), buf);

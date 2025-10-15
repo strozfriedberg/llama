@@ -383,7 +383,7 @@ Rule LlamaParser::parseRuleDecl() {
   return rule;
 }
 
-std::vector<Rule> LlamaParser::parseRules(const std::vector<size_t>& ruleIndices, const std::string& source) {
+std::vector<Rule> LlamaParser::parseRules(const std::vector<size_t>& ruleIndices) {
   std::vector<Rule> rules;
   rules.reserve(ruleIndices.size());
 

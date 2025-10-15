@@ -27,7 +27,7 @@ public:
     Pos.reset();
   }
 
-  void scanTokens(const std::string& source);
+  void scanTokens();
   void scanToken();
 
   void parseIdentifier(LineCol pos);
@@ -55,9 +55,9 @@ public:
   const std::vector<UnexpectedInputError>& errors() const { return Errors; }
 
   // convenience function for unit test purposes
-  static std::vector<Token> getTokens(const std::string& input, const std::string& source) {
+  static std::vector<Token> getTokens(const std::string& input, const std::string&) {
     LlamaLexer lexer(input);
-    lexer.scanTokens(source);
+    lexer.scanTokens();
     return lexer.tokens();
   }
 

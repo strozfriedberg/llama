@@ -71,6 +71,4 @@ std::string randomNumString();
 inline bool isOdd(int x) { return x & 1; }
 inline bool isEven(int x) { return !isOdd(x); }
 
-void printErrWithSource(const std::runtime_error& e, const std::string source);
-
 bool isPDF(ReadSeek& rs);
