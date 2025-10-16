@@ -1,5 +1,8 @@
 #include "lexer.h"
 
+#include <bitset>
+#include <cstring>
+
 namespace {
   std::bitset<256> initIdentifierChars() {
     std::bitset<256> b;

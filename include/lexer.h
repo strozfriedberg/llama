@@ -1,15 +1,11 @@
 #pragma once
 
-#include <bitset>
 #include <cctype>
 #include <cstdint>
-#include <iostream>
-#include <regex>
 #include <string_view>
 #include <vector>
 
 #include "token.h"
-#include "util.h"
 
 class LlamaLexer {
 public:
