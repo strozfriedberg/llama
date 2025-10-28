@@ -17,7 +17,7 @@ rule Malware {
 rule sedexp {
   meta:
     description = "Rule to find sedexp malware"
-    source = "https://www.aon.com/en/insights/cyber-labs/unveiling-sedexp"
+    source = "https://levelblue.com/blogs/strozfriedberg/unveiling-sedexp"
   hash:
     sha256 == "43f72f4cdab8ed40b2f913be4a55b17e7fd8a7946a636adb4452f685c1ffea02"
     sha256 == "94ef35124a5ce923818d01b2d47b872abd5840c4f4f2178f50f918855e0e5ca2"
@@ -39,7 +39,7 @@ rule WebShell {
 rule BetterRule {
   meta:
     description = "Another rule to find sedexp malware"
-    source = "https://www.aon.com/en/insights/cyber-labs/unveiling-sedexp"
+    source = "https://levelblue.com/blogs/strozfriedberg/unveiling-sedexp"
     author = "me"
 
   hash:
