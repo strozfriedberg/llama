@@ -513,6 +513,36 @@ TEST_CASE("stringWithBackslashAndEscapedQuote") {
   REQUIRE(lexer.tokens()[0].Lexeme == R"(test\\\")");
 }
 
+TEST_CASE("emptyString") {
+  std::string input = R"("")";
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  REQUIRE(lexer.tokens().size() == 2);
+  REQUIRE(lexer.tokens()[0].Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.tokens()[0].Lexeme == "");
+  REQUIRE(lexer.tokens()[1].Type == LlamaTokenType::END_OF_FILE);
+}
+
+TEST_CASE("stringWithOnlyEscapedQuote") {
+  std::string input = R"("\"")";  // String containing just an escaped quote
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  REQUIRE(lexer.tokens().size() == 2);
+  REQUIRE(lexer.tokens()[0].Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.tokens()[0].Lexeme == R"(\")");
+  REQUIRE(lexer.tokens()[1].Type == LlamaTokenType::END_OF_FILE);
+}
+
+TEST_CASE("stringWithMultipleEscapedQuotes") {
+  std::string input = R"("a\"b\"c")";  // String with multiple escaped quotes
+  LlamaLexer lexer(input);
+  lexer.scanTokens();
+  REQUIRE(lexer.tokens().size() == 2);
+  REQUIRE(lexer.tokens()[0].Type == LlamaTokenType::DOUBLE_QUOTED_STRING);
+  REQUIRE(lexer.tokens()[0].Lexeme == R"(a\"b\"c)");
+  REQUIRE(lexer.tokens()[1].Type == LlamaTokenType::END_OF_FILE);
+}
+
 TEST_CASE("unterminatedStringWithEscapedQuoteThrows") {
   std::string input = R"("this\"has a normal escaped string\" but is unterminated)";
   LlamaLexer lexer(input);
