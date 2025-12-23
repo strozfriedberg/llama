@@ -518,34 +518,14 @@ TEST_CASE("unterminatedStringWithEscapedQuoteThrows") {
   LlamaLexer lexer(input);
   lexer.scanTokens();
 
-  // Check tokens produced - lexer treats \" as string terminator, then backslash as unrecognized
-  REQUIRE(lexer.tokens().size() == 12);
-  REQUIRE(lexer.tokens()[0].Type == LlamaTokenType::IDENTIFIER);
-  REQUIRE(lexer.tokens()[0].Lexeme == "this");
-  REQUIRE(lexer.tokens()[1].Type == LlamaTokenType::UNRECOGNIZED);
-  REQUIRE(lexer.tokens()[1].Lexeme == "\\");
-  REQUIRE(lexer.tokens()[2].Type == LlamaTokenType::IDENTIFIER);
-  REQUIRE(lexer.tokens()[2].Lexeme == "has");
-  REQUIRE(lexer.tokens()[3].Type == LlamaTokenType::IDENTIFIER);
-  REQUIRE(lexer.tokens()[3].Lexeme == "a");
-  REQUIRE(lexer.tokens()[4].Type == LlamaTokenType::IDENTIFIER);
-  REQUIRE(lexer.tokens()[4].Lexeme == "normal");
-  REQUIRE(lexer.tokens()[5].Type == LlamaTokenType::IDENTIFIER);
-  REQUIRE(lexer.tokens()[5].Lexeme == "escaped");
-  REQUIRE(lexer.tokens()[6].Type == LlamaTokenType::IDENTIFIER);
-  REQUIRE(lexer.tokens()[6].Lexeme == "string");
-  REQUIRE(lexer.tokens()[7].Type == LlamaTokenType::UNRECOGNIZED);
-  REQUIRE(lexer.tokens()[7].Lexeme == "\\");
-  REQUIRE(lexer.tokens()[8].Type == LlamaTokenType::IDENTIFIER);
-  REQUIRE(lexer.tokens()[8].Lexeme == "but");
-  REQUIRE(lexer.tokens()[9].Type == LlamaTokenType::IDENTIFIER);
-  REQUIRE(lexer.tokens()[9].Lexeme == "is");
-  REQUIRE(lexer.tokens()[10].Type == LlamaTokenType::IDENTIFIER);
-  REQUIRE(lexer.tokens()[10].Lexeme == "unterminated");
-  REQUIRE(lexer.tokens()[11].Type == LlamaTokenType::END_OF_FILE);
+  // Correct behavior: lexer recognizes escaped quotes, finds no closing quote,
+  // reports single error, advances past the unterminated string content
+  REQUIRE(lexer.errors().size() == 1);
+  std::string errMsg = lexer.errors()[0].what();
+  REQUIRE(errMsg.find("Unterminated string") != std::string::npos);
 
-  // Check errors produced
-  REQUIRE(lexer.errors().size() == 3);
+  REQUIRE(lexer.tokens().size() == 1);
+  REQUIRE(lexer.tokens()[0].Type == LlamaTokenType::END_OF_FILE);
 }
 
 TEST_CASE("multipleRuleCount") {

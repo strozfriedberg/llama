@@ -126,6 +126,7 @@ void LlamaLexer::parseString(LineCol pos) {
   do {
     closeQuote = static_cast<const char*>(std::memchr(cur, '"', Input.end() - cur));
     if (closeQuote == nullptr) {
+      CurIdx = InputSize;
       throw UnexpectedInputError("Unterminated string", pos);
     }
     backslash  = static_cast<const char*>(std::memchr(cur, '\\', closeQuote - cur));
