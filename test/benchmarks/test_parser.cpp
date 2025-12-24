@@ -178,7 +178,7 @@ TEST_CASE("SqlGenerationBenchmark") {
   CHECK(!query.empty());
 }
 
-TEST_CASE("SqlGenerationABBenchmark") {
+TEST_CASE("SqlGenerationPreallocBenchmark") {
   std::string corpus = generateRules(100);
 
   RuleReader r;
@@ -188,25 +188,9 @@ TEST_CASE("SqlGenerationABBenchmark") {
   const auto& rules = r.getRules();
   const std::string sqlUnion(" UNION ");
 
-  // Baseline: current implementation (no pre-allocation)
-  BENCHMARK("SQL-noPrealloc") {
-    std::string hits_query("INSERT INTO rule_hits ");
-    for (const Rule& rule : rules) {
-      hits_query += "(";
-      hits_query += qb.buildSqlQuery(rule);
-      hits_query += ")";
-      hits_query += sqlUnion;
-    }
-    hits_query.erase(hits_query.size() - sqlUnion.size());
-    hits_query += ";";
-    return hits_query.size();
-  };
-
-  // Optimized: with pre-allocation
-  BENCHMARK("SQL-prealloc") {
+  BENCHMARK("SQL-buildQuery") {
     std::string hits_query;
-    // ~200 chars per rule SQL + overhead
-    hits_query.reserve(rules.size() * 220 + 50);
+    hits_query.reserve(rules.size() * 256);
     hits_query = "INSERT INTO rule_hits ";
     for (const Rule& rule : rules) {
       hits_query += "(";
