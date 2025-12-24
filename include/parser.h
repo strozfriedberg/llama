@@ -14,9 +14,10 @@
 
 #include <fieldhasher.h>
 
-class ParserError : public UnexpectedInputError {
+class ParserError : public std::runtime_error {
 public:
-  ParserError(const std::string_view& message, LineCol pos) : UnexpectedInputError(message, pos) {}
+  ParserError(const std::string_view& message, LineCol pos)
+    : std::runtime_error(formatErrorWithPos(message, pos)) {}
 };
 
 class LlamaParser;
