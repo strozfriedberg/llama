@@ -231,3 +231,60 @@ TEST_CASE("RuleHashBenchmark") {
   CHECK(h.to_string().size() == 64); // SHA256 hex string length
 }
 
+TEST_CASE("LexerScalingBenchmark") {
+  std::string corpus100 = generateRules(100);
+  std::string corpus500 = generateRules(500);
+
+  LlamaLexer lexer;
+  size_t tokenCount = 0;
+
+  BENCHMARK("Lexer-100rules") {
+    lexer.setInput(corpus100);
+    lexer.scanTokens();
+    tokenCount = lexer.tokens().size();
+    lexer.clear();
+  };
+
+  BENCHMARK("Lexer-500rules") {
+    lexer.setInput(corpus500);
+    lexer.scanTokens();
+    tokenCount = lexer.tokens().size();
+    lexer.clear();
+  };
+
+  CHECK(tokenCount > 0);
+}
+
+TEST_CASE("ParserScalingBenchmark") {
+  std::string corpus100 = generateRules(100);
+  std::string corpus500 = generateRules(500);
+
+  // Pre-lex for parser-only timing
+  LlamaLexer lexer100;
+  lexer100.setInput(corpus100);
+  lexer100.scanTokens();
+
+  LlamaLexer lexer500;
+  lexer500.setInput(corpus500);
+  lexer500.scanTokens();
+
+  LlamaParser parser100(corpus100, lexer100.tokens());
+  LlamaParser parser500(corpus500, lexer500.tokens());
+
+  size_t ruleCount = 0;
+
+  BENCHMARK("Parser-100rules") {
+    auto rules = parser100.parseRules(lexer100.ruleIndices());
+    ruleCount = rules.size();
+    parser100.resetCounters();
+  };
+
+  BENCHMARK("Parser-500rules") {
+    auto rules = parser500.parseRules(lexer500.ruleIndices());
+    ruleCount = rules.size();
+    parser500.resetCounters();
+  };
+
+  CHECK(ruleCount > 0);
+}
+
