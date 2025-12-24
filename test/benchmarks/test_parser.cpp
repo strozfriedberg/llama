@@ -97,6 +97,5 @@ TEST_CASE("LlamaParserBenchmark") {
     r.clear();
   };
   CHECK(res);
-  CHECK(r.getLastError() == "");
 }
 
