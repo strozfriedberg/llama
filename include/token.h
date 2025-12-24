@@ -103,17 +103,16 @@ public:
   LineCol Pos;
 };
 
+inline std::string formatErrorWithPos(std::string_view errMsg, LineCol pos) {
+  std::string msg(errMsg);
+  msg += " at ";
+  msg += pos.toString();
+  return msg;
+}
+
 class UnexpectedInputError : public std::runtime_error {
 public:
   UnexpectedInputError(const std::string_view& message, LineCol pos)
- : std::runtime_error(messageWithPos(message, pos)) {}
-
-private:
-  static std::string messageWithPos(std::string_view errMsg, LineCol pos) {
-    std::string msg(errMsg);
-    msg += " at ";
-    msg += pos.toString();
-    return msg;
-  }
+    : std::runtime_error(formatErrorWithPos(message, pos)) {}
 };
 
