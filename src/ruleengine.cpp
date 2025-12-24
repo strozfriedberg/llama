@@ -13,7 +13,10 @@ void LlamaRuleEngine::writeRulesToDb(LlamaDBConnection& dbConn) {
     return;
   }
   duckdb_result result;
-  std::string hits_query("INSERT INTO rule_hits ");
+  std::string hits_query;
+  // Pre-allocate: ~200 chars per rule SQL + INSERT prefix + semicolon
+  hits_query.reserve(Reader.getRules().size() * 220 + 50);
+  hits_query = "INSERT INTO rule_hits ";
   const std::string sqlUnion(" UNION ");
 
   for (const Rule& rule : Reader.getRules()) {
