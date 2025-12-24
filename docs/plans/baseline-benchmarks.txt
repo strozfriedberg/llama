@@ -1,5 +1,4 @@
-Filters: "~LlamaParser"
-Randomness seeded to: 1404352581
+Randomness seeded to: 3993314516
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 parser_benchmarks is a Catch2 v3.5.3 host application.
@@ -15,10 +14,25 @@ benchmark name                       samples       iterations    est run time
                                      mean          low mean      high mean
                                      std dev       low std dev   high std dev
 -------------------------------------------------------------------------------
-lexer                                           20             8     322.72 us 
-                                        2.31126 us    2.23651 us    2.43419 us 
-                                        214.879 ns    145.278 ns    322.335 ns 
-                                                                               
+lexer                                          100             8     1.5832 ms
+                                        2.00576 us    1.95338 us     2.1866 us
+                                        443.623 ns    134.178 ns    1.00052 us
+
+
+-------------------------------------------------------------------------------
+LlamaParser
+-------------------------------------------------------------------------------
+../test/benchmarks/test_parser.cpp:79
+...............................................................................
+
+benchmark name                       samples       iterations    est run time
+                                     mean          low mean      high mean
+                                     std dev       low std dev   high std dev
+-------------------------------------------------------------------------------
+parser                                         100             7     1.4287 ms
+                                        1.93356 us     1.9154 us    2.01184 us
+                                        164.204 ns    29.6132 ns    385.521 ns
+
 
 -------------------------------------------------------------------------------
 LlamaParserBenchmark
@@ -30,10 +44,10 @@ benchmark name                       samples       iterations    est run time
                                      mean          low mean      high mean
                                      std dev       low std dev   high std dev
 -------------------------------------------------------------------------------
-RuleReader                                      20             4     389.92 us 
-                                        5.13767 us    4.78977 us    5.92101 us 
-                                        1.13009 us    573.487 ns    2.03796 us 
-                                                                               
+RuleReader                                     100             3     1.4124 ms
+                                         4.5429 us    4.46831 us    4.78247 us
+                                        606.923 ns    203.485 ns    1.33657 us
+
 
 -------------------------------------------------------------------------------
 LargeCorpusBenchmark
@@ -45,10 +59,10 @@ benchmark name                       samples       iterations    est run time
                                      mean          low mean      high mean
                                      std dev       low std dev   high std dev
 -------------------------------------------------------------------------------
-RuleReader-100rules                             20             1    1.25264 ms 
-                                        57.7359 us    56.2818 us     62.259 us 
-                                        5.26496 us    1.56503 us    10.0628 us 
-                                                                               
+RuleReader-100rules                            100             1     5.7764 ms
+                                        58.6666 us    57.7566 us    59.8207 us
+                                        5.21007 us    4.34347 us    6.24703 us
+
 
 -------------------------------------------------------------------------------
 ScalingBenchmark
@@ -60,22 +74,22 @@ benchmark name                       samples       iterations    est run time
                                      mean          low mean      high mean
                                      std dev       low std dev   high std dev
 -------------------------------------------------------------------------------
-RuleReader-10rules                              20             3      415.8 us 
-                                        6.25508 us    5.96343 us     7.0294 us 
-                                        997.601 ns    288.094 ns    1.80431 us 
-                                                                               
-RuleReader-50rules                              20             1     566.46 us 
-                                        30.0984 us    29.0485 us    32.4714 us 
-                                        3.35866 us    1.18151 us    5.68953 us 
-                                                                               
-RuleReader-100rules-scaling                     20             1    1.24286 ms 
-                                         55.986 us    54.9527 us    59.0652 us 
-                                        3.67163 us    971.547 ns    6.89053 us 
-                                                                               
-RuleReader-500rules                             20             1    6.15394 ms 
-                                        286.163 us     281.04 us    293.338 us 
-                                        13.7422 us    10.0764 us    19.4254 us 
-                                                                               
+RuleReader-10rules                             100             3      1.797 ms
+                                        6.01345 us    5.93345 us    6.14721 us
+                                        517.246 ns    364.368 ns    765.214 ns
+
+RuleReader-50rules                             100             1     2.9315 ms
+                                        29.1878 us    28.9049 us    29.6324 us
+                                        1.78147 us    1.19114 us    2.74669 us
+
+RuleReader-100rules-scaling                    100             1     5.7761 ms
+                                        56.2316 us    55.6341 us     57.217 us
+                                        3.83719 us     2.6112 us    5.26748 us
+
+RuleReader-500rules                            100             1    30.5623 ms
+                                        292.484 us    289.563 us    298.799 us
+                                        20.9074 us    12.1443 us    41.2113 us
+
 
 -------------------------------------------------------------------------------
 SqlGenerationBenchmark
@@ -87,10 +101,10 @@ benchmark name                       samples       iterations    est run time
                                      mean          low mean      high mean
                                      std dev       low std dev   high std dev
 -------------------------------------------------------------------------------
-buildSqlQuery-100rules                          20             1    1.18724 ms 
-                                        59.3339 us    56.4922 us    65.0695 us 
-                                        8.87124 us    3.69406 us    13.7488 us 
-                                                                               
+buildSqlQuery-100rules                         100             1     5.2634 ms
+                                        53.5724 us    52.9871 us    54.3328 us
+                                        3.38456 us    2.68556 us    4.45606 us
+
 
 -------------------------------------------------------------------------------
 CheckFunctionNameBenchmark
@@ -102,10 +116,10 @@ benchmark name                       samples       iterations    est run time
                                      mean          low mean      high mean
                                      std dev       low std dev   high std dev
 -------------------------------------------------------------------------------
-checkFunctionName                               20           291      320.1 us 
-                                        49.3809 ns    49.2091 ns    50.0395 ns 
-                                       0.718037 ns  0.0451007 ns    1.43103 ns 
-                                                                               
+checkFunctionName                              100           281     1.3769 ms
+                                        50.0145 ns      49.62 ns    50.8805 ns
+                                        2.84264 ns    1.26536 ns    4.89326 ns
+
 
 -------------------------------------------------------------------------------
 RuleHashBenchmark
@@ -117,10 +131,10 @@ benchmark name                       samples       iterations    est run time
                                      mean          low mean      high mean
                                      std dev       low std dev   high std dev
 -------------------------------------------------------------------------------
-getHash-100rules                                20             1     600.44 us 
-                                        29.6487 us    28.7654 us    31.9883 us 
-                                         3.0262 us    1.07862 us    5.55631 us 
-                                                                               
+getHash-100rules                               100             1     2.9098 ms
+                                        28.4328 us    28.0645 us    28.9832 us
+                                        2.27842 us    1.67438 us    3.04563 us
+
 
 -------------------------------------------------------------------------------
 LexerScalingBenchmark
@@ -132,14 +146,14 @@ benchmark name                       samples       iterations    est run time
                                      mean          low mean      high mean
                                      std dev       low std dev   high std dev
 -------------------------------------------------------------------------------
-Lexer-100rules                                  20             1     574.42 us 
-                                        29.6525 us    28.8379 us    30.7547 us 
-                                        2.15919 us    1.58674 us    2.76623 us 
-                                                                               
-Lexer-500rules                                  20             1     2.9115 ms 
-                                        150.213 us    145.665 us    156.913 us 
-                                        12.4262 us    8.40894 us    19.4338 us 
-                                                                               
+Lexer-100rules                                 100             1     2.8425 ms
+                                         28.904 us    28.5482 us    29.3957 us
+                                        2.11824 us    1.60322 us    2.78742 us
+
+Lexer-500rules                                 100             1     14.595 ms
+                                        145.027 us    144.231 us    146.366 us
+                                        5.13691 us     3.3343 us    9.23393 us
+
 
 -------------------------------------------------------------------------------
 ParserScalingBenchmark
@@ -151,15 +165,15 @@ benchmark name                       samples       iterations    est run time
                                      mean          low mean      high mean
                                      std dev       low std dev   high std dev
 -------------------------------------------------------------------------------
-Parser-100rules                                 20             1     363.04 us 
-                                         17.788 us    17.4797 us    18.7862 us 
-                                        1.14627 us    287.067 ns    2.24803 us 
-                                                                               
-Parser-500rules                                 20             1    1.94764 ms 
-                                        109.821 us    107.469 us     114.79 us 
-                                        7.44647 us    3.75678 us     12.358 us 
-                                                                               
+Parser-100rules                                100             1     1.8836 ms
+                                        19.2874 us    18.9728 us    19.7649 us
+                                        1.95577 us    1.40784 us    2.62756 us
+
+Parser-500rules                                100             1    10.0543 ms
+                                        101.223 us    100.414 us    102.475 us
+                                        5.06341 us    3.57977 us    8.40604 us
+
 
 ===============================================================================
-All tests passed (12 assertions in 9 test cases)
+All tests passed (14 assertions in 10 test cases)
 

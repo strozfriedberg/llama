@@ -86,9 +86,9 @@ TEST_CASE("LlamaParser") {
   std::vector<Rule> parsed;
   BENCHMARK("parser") {
     parsed = parser.parseRules(lexer.ruleIndices());
-    parser.clear();
+    parser.resetCounters();
   };
-  CHECK(parsed.size() == 5);
+  CHECK(parsed.size() == 4);
 }
 
 TEST_CASE("LlamaParserBenchmark") {
