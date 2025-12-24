@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "rulereader.h"
+#include "rule_generator.h"
 
 std::string rules(R"(
 rule Malware {
@@ -97,5 +98,53 @@ TEST_CASE("LlamaParserBenchmark") {
     r.clear();
   };
   CHECK(res);
+}
+
+TEST_CASE("LargeCorpusBenchmark") {
+  // Generate 100 rules for realistic workload
+  std::string largeCorpus = generateRules(100);
+
+  RuleReader r;
+  bool res = false;
+  size_t ruleCount = 0;
+
+  BENCHMARK("RuleReader-100rules") {
+    res = r.read(largeCorpus, "benchmark");
+    ruleCount = r.getRules().size();
+    r.clear();
+  };
+
+  CHECK(res);
+  CHECK(ruleCount == 100);
+}
+
+TEST_CASE("ScalingBenchmark") {
+  // Test scaling behavior with different rule counts
+  std::string corpus10 = generateRules(10);
+  std::string corpus50 = generateRules(50);
+  std::string corpus100 = generateRules(100);
+  std::string corpus500 = generateRules(500);
+
+  RuleReader r;
+
+  BENCHMARK("RuleReader-10rules") {
+    r.read(corpus10, "benchmark");
+    r.clear();
+  };
+
+  BENCHMARK("RuleReader-50rules") {
+    r.read(corpus50, "benchmark");
+    r.clear();
+  };
+
+  BENCHMARK("RuleReader-100rules-scaling") {
+    r.read(corpus100, "benchmark");
+    r.clear();
+  };
+
+  BENCHMARK("RuleReader-500rules") {
+    r.read(corpus500, "benchmark");
+    r.clear();
+  };
 }
 
