@@ -3,6 +3,7 @@
 
 #include "rulereader.h"
 #include "rule_generator.h"
+#include "querybuilder.h"
 
 std::string rules(R"(
 rule Malware {
@@ -146,5 +147,34 @@ TEST_CASE("ScalingBenchmark") {
     r.read(corpus500, "benchmark");
     r.clear();
   };
+}
+
+TEST_CASE("SqlGenerationBenchmark") {
+  // Use rules with file_metadata to exercise SQL generation
+  std::string corpus = generateRules(100);
+
+  RuleReader r;
+  REQUIRE(r.read(corpus, "benchmark"));
+
+  QueryBuilder qb(r.getParser());
+  const auto& rules = r.getRules();
+  std::string query;
+
+  BENCHMARK("buildSqlQuery-100rules") {
+    std::string hits_query("INSERT INTO rule_hits ");
+    const std::string sqlUnion(" UNION ");
+
+    for (const Rule& rule : rules) {
+      hits_query += "(";
+      hits_query += qb.buildSqlQuery(rule);
+      hits_query += ")";
+      hits_query += sqlUnion;
+    }
+    hits_query.erase(hits_query.size() - sqlUnion.size());
+    hits_query += ";";
+    query = std::move(hits_query);
+  };
+
+  CHECK(!query.empty());
 }
 
