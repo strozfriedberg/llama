@@ -211,3 +211,23 @@ TEST_CASE("CheckFunctionNameBenchmark") {
   CHECK(result); // Should have found at least one function name
 }
 
+TEST_CASE("RuleHashBenchmark") {
+  std::string corpus = generateRules(100);
+
+  RuleReader r;
+  REQUIRE(r.read(corpus, "benchmark"));
+
+  const auto& rules = r.getRules();
+  const auto& parser = r.getParser();
+  FieldHash h;
+
+  BENCHMARK("getHash-100rules") {
+    for (const Rule& rule : rules) {
+      h = rule.getHash(parser);
+    }
+  };
+
+  // Verify hash is computed
+  CHECK(h.to_string().size() == 64); // SHA256 hex string length
+}
+
