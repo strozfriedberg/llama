@@ -178,3 +178,36 @@ TEST_CASE("SqlGenerationBenchmark") {
   CHECK(!query.empty());
 }
 
+TEST_CASE("CheckFunctionNameBenchmark") {
+  // Test the string comparison hot path
+  std::string input = R"(
+    rule TestRule {
+      grep:
+        patterns:
+          p1 = "test"
+        condition:
+          any(p1) and all(p1) and count(p1) > 5
+    }
+  )";
+
+  LlamaLexer lexer;
+  lexer.setInput(input);
+  lexer.scanTokens();
+
+  LlamaParser parser(input, lexer.tokens());
+  bool result = false;
+
+  // Position parser at various function names and check
+  BENCHMARK("checkFunctionName") {
+    result = false;
+    for (size_t i = 0; i < parser.Tokens.size(); ++i) {
+      parser.CurIdx = i;
+      if (parser.checkFunctionName()) {
+        result = true;
+      }
+    }
+  };
+
+  CHECK(result); // Should have found at least one function name
+}
+
