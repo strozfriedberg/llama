@@ -23,6 +23,7 @@ public:
 
   const std::vector<std::string>& patternToRuleId() const { return PatternToRuleId; }
   void setPatternToRuleId(const std::vector<std::string>& patternToRuleId) { PatternToRuleId = patternToRuleId; }
+  const RuleReader& getReader() const { return Reader; }
 private:
   std::vector<std::string> PatternToRuleId;
   std::string Input;
