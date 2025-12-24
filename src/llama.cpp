@@ -101,12 +101,21 @@ std::string readfile(const std::string& path) {
 
 bool readRulesFromDir(std::shared_ptr<LlamaRuleEngine> engine, const std::string& path) {
   std::filesystem::path ruleDir{path};
-  bool ret = false;
+  bool ret = true;
 
   for (const auto& file : std::filesystem::directory_iterator{ruleDir}) {
-    // don't exit early if there's an error because we want to give users all errors possible
     std::string filePath = file.path().string();
-    ret |= engine->read(readfile(filePath), filePath);
+    if (!engine->read(readfile(filePath), filePath)) {
+      ret = false;
+      // Print lexer errors with filename context
+      for (const auto& err : engine->getReader().getLexer().errors()) {
+        std::cerr << filePath << ": " << err.what() << '\n';
+      }
+      // Print parser errors with filename context
+      for (const auto& err : engine->getReader().getParser().errors()) {
+        std::cerr << filePath << ": " << err.what() << '\n';
+      }
+    }
   }
   return ret;
 }
