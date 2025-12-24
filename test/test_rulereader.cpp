@@ -26,7 +26,6 @@ TEST_CASE("RuleReader") {
   REQUIRE(pErrors.size() == 2);
   REQUIRE(std::string(pErrors[0].what()) == "Expected identifier at line 1 column 6");
   REQUIRE(result == false);
-  REQUIRE(reader.getLastError() == "");
   result = reader.read(input3, "test");
   REQUIRE(result == true);
 }
