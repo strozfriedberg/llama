@@ -98,15 +98,27 @@ if catch2_dep.found()
               'MSAN_OPTIONS=halt_on_error=0:abort_on_error=0:exit_code=0',
               'MALLOC_CHECK_=0'])
 
-  # Benchmarks (only if YARA is available)
+  # Parser benchmarks (always available)
+  parser_benchmark_sources = [
+    'benchmarks/test_parser.cpp'
+  ]
+
+  parser_benchmark_exe = executable('parser_benchmarks',
+    llama_common_sources + parser_benchmark_sources,
+    include_directories: [inc, include_directories('../src')],
+    dependencies: llama_deps + [catch2_dep],
+    build_by_default: false
+  )
+
+  # YARA benchmarks (only if YARA is available)
   if yara_dep.found()
-    benchmark_sources = [
+    yara_benchmark_sources = [
       'benchmarks/test_parser.cpp',
       'benchmarks/test_yara.cpp'
     ]
 
-    benchmark_exe = executable('benchmarks',
-      llama_common_sources + benchmark_sources,
+    yara_benchmark_exe = executable('yara_benchmarks',
+      llama_common_sources + yara_benchmark_sources,
       include_directories: [inc, include_directories('../src')],
       dependencies: llama_deps + [catch2_dep],
       build_by_default: false
