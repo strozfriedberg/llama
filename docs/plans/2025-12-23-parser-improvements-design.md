@@ -73,7 +73,34 @@ These provide before/after data for each optimization.
 
 **File:** `test/benchmarks/test_parser.cpp`
 
-### 2.4 A/B Comparison Pattern
+### 2.4 Running Benchmarks
+
+#### Build
+```bash
+meson compile -C builddir parser_benchmarks
+```
+
+#### Run all benchmarks
+```bash
+./builddir/test/parser_benchmarks
+```
+
+#### Run specific benchmark
+```bash
+./builddir/test/parser_benchmarks "LargeCorpusBenchmark"
+```
+
+#### Run with more samples for accuracy
+```bash
+./builddir/test/parser_benchmarks --benchmark-samples 100
+```
+
+#### Export to XML for tracking
+```bash
+./builddir/test/parser_benchmarks --reporter xml > benchmark-results.xml
+```
+
+### 2.5 A/B Comparison Pattern
 
 For each optimization:
 1. Keep both old and new implementations temporarily callable
