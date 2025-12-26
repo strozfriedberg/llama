@@ -34,14 +34,12 @@ enum class NodeType {
 // Holds information about expressions under the `file_metadata`, `signature`, and `condition`
 // sections.
 struct Node {
-  virtual ~Node() = default;
-
   Node(NodeType type) : Type(type) {}
   Node() = default;
 
-  NodeType Type;
-  std::shared_ptr<Node> Left;
-  std::shared_ptr<Node> Right;
+  NodeType Type = NodeType::BOOL;
+  Node* Left = nullptr;
+  Node* Right = nullptr;
 };
 
 // Reserved for AND and OR nodes.
