@@ -8,6 +8,7 @@
 
 #include <boost/functional/hash.hpp>
 
+#include <deque>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -357,6 +358,30 @@ public:
   std::string              Input;
   uint64_t                 CurIdx     = 0;
   uint64_t                 CurRuleIdx = 0;
+
+  // Node arenas - deque provides pointer stability on growth
+  std::deque<BoolNode> BoolNodes;
+  std::deque<FuncNode> FuncNodes;
+  std::deque<PropertyNode> PropNodes;
+
+  // Allocate nodes in arenas, returning stable pointers
+  template<typename... Args>
+  BoolNode* allocBoolNode(Args&&... args) {
+    BoolNodes.emplace_back(std::forward<Args>(args)...);
+    return &BoolNodes.back();
+  }
+
+  template<typename... Args>
+  FuncNode* allocFuncNode(Args&&... args) {
+    FuncNodes.emplace_back(std::forward<Args>(args)...);
+    return &FuncNodes.back();
+  }
+
+  template<typename... Args>
+  PropertyNode* allocPropNode(Args&&... args) {
+    PropNodes.emplace_back(std::forward<Args>(args)...);
+    return &PropNodes.back();
+  }
 };
 
 template <class... TokenTypes>

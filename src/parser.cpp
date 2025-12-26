@@ -34,6 +34,9 @@ void LlamaParser::clear() {
   Tokens.clear();
   Input.clear();
   Errors.clear();
+  BoolNodes.clear();
+  FuncNodes.clear();
+  PropNodes.clear();
   resetCounters();
 }
 
