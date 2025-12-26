@@ -8,17 +8,15 @@ const static std::unordered_map<std::string_view, std::string> FileMetadataPrope
   {"filename", "Name"}
 };
 
-std::string QueryBuilder::buildSqlClause(std::shared_ptr<Node> n) {
-  std::string clause = "";
+std::string QueryBuilder::buildSqlClause(const Node* n) {
+  std::string clause;
   switch (n->Type) {
     case NodeType::PROP: {
-      auto pn = std::static_pointer_cast<PropertyNode>(n);
-      clause = buildSqlClause(pn);
+      clause = buildSqlClause(static_cast<const PropertyNode*>(n));
       break;
     }
     case NodeType::BOOL: {
-      auto bn = std::static_pointer_cast<BoolNode>(n);
-      clause = buildSqlClause(bn);
+      clause = buildSqlClause(static_cast<const BoolNode*>(n));
       break;
     }
     default: {
@@ -28,8 +26,8 @@ std::string QueryBuilder::buildSqlClause(std::shared_ptr<Node> n) {
   return clause;
 }
 
-std::string QueryBuilder::buildSqlClause(std::shared_ptr<PropertyNode> pn) {
-  std::string clause = "";
+std::string QueryBuilder::buildSqlClause(const PropertyNode* pn) {
+  std::string clause;
   std::string_view propertyName = Parser.lexemeAt(pn->Value.Name);
   clause += FileMetadataPropertySqlLookup.find(propertyName)->second;
   clause += " ";
@@ -47,7 +45,7 @@ std::string QueryBuilder::buildSqlClause(std::shared_ptr<PropertyNode> pn) {
   return clause;
 }
 
-std::string QueryBuilder::buildSqlClause(std::shared_ptr<BoolNode> bn) {
+std::string QueryBuilder::buildSqlClause(const BoolNode* bn) {
   std::string clause = "(";
   clause += buildSqlClause(bn->Left);
   clause += bn->Operation == BoolNode::Op::AND ? " AND " : " OR ";
