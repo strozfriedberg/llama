@@ -134,7 +134,7 @@ struct PatternSection {
 
 struct GrepSection {
   PatternSection Patterns;
-  std::shared_ptr<Node> Condition;
+  Node* Condition = nullptr;
 };
 
 /************************************ META SECTION ************************************************/
@@ -164,8 +164,8 @@ struct Rule {
   std::string_view      Name;
   MetaSection           Meta;
   HashSection           Hash;
-  std::shared_ptr<Node> Signature;
-  std::shared_ptr<Node> FileMetadata;
+  Node*                 Signature = nullptr;
+  Node*                 FileMetadata = nullptr;
   GrepSection           Grep;
 
   // Relative input offset where the Meta section ends and the first "real" section begins.
