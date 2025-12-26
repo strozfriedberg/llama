@@ -223,18 +223,18 @@ PatternDef LlamaParser::parseHexString() {
   return {LG_KeyOptions{0,0,0}, Encodings{0,0}, hexString};
 }
 
-std::shared_ptr<Node> LlamaParser::parseFactor(LlamaTokenType section) {
-  std::shared_ptr<Node> node;
+Node* LlamaParser::parseFactor(LlamaTokenType section) {
+  Node* node = nullptr;
   if (matchAny(LlamaTokenType::OPEN_PAREN)) {
     node = parseExpr(section);
     expect(LlamaTokenType::CLOSE_PAREN);
   }
   else if (section == LlamaTokenType::FILE_METADATA || section == LlamaTokenType::SIGNATURE) {
-    node = std::make_shared<PropertyNode>(parseProperty(section));;
+    node = allocPropNode(parseProperty(section));
   }
   else if (checkFunctionName()) {
     if (section != LlamaTokenType::CONDITION) throw ParserError("Invalid property in section", previous().Pos);
-    node = std::make_shared<FuncNode>(parseFuncCall());
+    node = allocFuncNode(parseFuncCall());
   }
   else {
     throw ParserError("Expected function call or signature definition", peek().Pos);
@@ -242,11 +242,11 @@ std::shared_ptr<Node> LlamaParser::parseFactor(LlamaTokenType section) {
   return node;
 }
 
-std::shared_ptr<Node> LlamaParser::parseTerm(LlamaTokenType section) {
-  std::shared_ptr<Node> left = parseFactor(section);
+Node* LlamaParser::parseTerm(LlamaTokenType section) {
+  Node* left = parseFactor(section);
 
   while (matchAny(LlamaTokenType::AND)) {
-    std::shared_ptr<BoolNode> node = std::make_shared<BoolNode>();
+    BoolNode* node = allocBoolNode();
     node->Operation = BoolNode::Op::AND;
     node->Type = NodeType::BOOL;
     node->Left = left;
@@ -256,11 +256,11 @@ std::shared_ptr<Node> LlamaParser::parseTerm(LlamaTokenType section) {
   return left;
 }
 
-std::shared_ptr<Node> LlamaParser::parseExpr(LlamaTokenType section) {
-  std::shared_ptr<Node> left = parseTerm(section);
+Node* LlamaParser::parseExpr(LlamaTokenType section) {
+  Node* left = parseTerm(section);
 
   while (matchAny(LlamaTokenType::OR)) {
-    std::shared_ptr<BoolNode> node = std::make_shared<BoolNode>();
+    BoolNode* node = allocBoolNode();
     node->Operation = BoolNode::Op::OR;
     node->Type = NodeType::BOOL;
     node->Left = left;

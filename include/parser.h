@@ -339,9 +339,9 @@ public:
   PatternDef parseHexString();
   Encodings  parseEncodings();
 
-  std::shared_ptr<Node> parseFactor(LlamaTokenType section);
-  std::shared_ptr<Node> parseTerm(LlamaTokenType section);
-  std::shared_ptr<Node> parseExpr(LlamaTokenType section);
+  Node* parseFactor(LlamaTokenType section);
+  Node* parseTerm(LlamaTokenType section);
+  Node* parseExpr(LlamaTokenType section);
 
   FuncNode         parseFuncCall();
   PropertyNode     parseProperty(LlamaTokenType);
