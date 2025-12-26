@@ -40,6 +40,12 @@ struct Node {
   NodeType Type = NodeType::BOOL;
   Node* Left = nullptr;
   Node* Right = nullptr;
+
+protected:
+  // Protected non-virtual destructor prevents deletion through base pointer (compile error).
+  // Nodes are destroyed via typed deques (std::deque<BoolNode>::clear(), etc).
+  // Non-virtual eliminates vtable pointer overhead (saves 8 bytes per node).
+  ~Node() = default;
 };
 
 // Reserved for AND and OR nodes.
