@@ -14,16 +14,6 @@
 
 #include <fieldhasher.h>
 
-// Compile-time FNV-1a hash for keyword comparison optimization
-constexpr uint64_t fnv1a(std::string_view str) {
-  uint64_t hash = 14695981039346656037ULL;
-  for (char c : str) {
-    hash ^= static_cast<uint64_t>(static_cast<unsigned char>(c));
-    hash *= 1099511628211ULL;
-  }
-  return hash;
-}
-
 class ParserError : public std::runtime_error {
 public:
   ParserError(const std::string_view& message, LineCol pos)
