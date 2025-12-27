@@ -154,3 +154,49 @@ def get_most_recent_commit(conn):
     if row:
         return row[0], row[1]
     return None, None
+
+# Comparison result status constants
+DEFINITELY_BETTER = "Definitely Better"
+DEFINITELY_WORSE = "Definitely Worse"
+PROBABLY_BETTER = "Probably Better"
+PROBABLY_WORSE = "Probably Worse"
+INSIGNIFICANT = "Insignificant"
+
+def compare_benchmarks(baseline, current):
+    """Compare two benchmark results using confidence interval analysis
+
+    Args:
+        baseline: Benchmark dict from parse_xml_benchmarks or load_benchmarks_for_commit
+        current: Benchmark dict from parse_xml_benchmarks or load_benchmarks_for_commit
+
+    Returns:
+        Dict with keys: status, percent_change, baseline, current
+    """
+    mean_b = baseline['mean_ns']
+    lower_b = baseline['lower_bound_ns']
+    upper_b = baseline['upper_bound_ns']
+
+    mean_n = current['mean_ns']
+    lower_n = current['lower_bound_ns']
+    upper_n = current['upper_bound_ns']
+
+    percent_change = ((mean_n - mean_b) / mean_b) * 100
+
+    # Determine status based on confidence interval analysis
+    if upper_n < lower_b:
+        status = DEFINITELY_BETTER
+    elif lower_n > upper_b:
+        status = DEFINITELY_WORSE
+    elif upper_n < mean_b or mean_n < lower_b:
+        status = PROBABLY_BETTER
+    elif lower_n > mean_b or mean_n > upper_b:
+        status = PROBABLY_WORSE
+    else:
+        status = INSIGNIFICANT
+
+    return {
+        'status': status,
+        'percent_change': percent_change,
+        'baseline': baseline,
+        'current': current
+    }

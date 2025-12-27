@@ -3,7 +3,7 @@ import sqlite3
 import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
-from benchmark_compare import init_database, parse_xml_benchmarks, store_benchmarks, load_benchmarks_for_commit, get_most_recent_commit
+from benchmark_compare import init_database, parse_xml_benchmarks, store_benchmarks, load_benchmarks_for_commit, get_most_recent_commit, compare_benchmarks, DEFINITELY_BETTER, DEFINITELY_WORSE, PROBABLY_BETTER, PROBABLY_WORSE, INSIGNIFICANT
 
 class TestDatabaseInit(unittest.TestCase):
     def setUp(self):
@@ -191,6 +191,67 @@ class TestLoadBenchmarks(unittest.TestCase):
 
         self.assertEqual(commit_hash, 'def5678')
         self.assertEqual(timestamp, '2025-12-27T10:00:00')
+
+class TestComparison(unittest.TestCase):
+    def test_definitely_better(self):
+        """Current upper bound < baseline lower bound = definitely better"""
+        baseline = {'name': 'test', 'mean_ns': 2000, 'lower_bound_ns': 1950, 'upper_bound_ns': 2050,
+                    'std_dev_ns': 50, 'samples': 100, 'iterations': 10}
+        current = {'name': 'test', 'mean_ns': 1800, 'lower_bound_ns': 1750, 'upper_bound_ns': 1850,
+                   'std_dev_ns': 50, 'samples': 100, 'iterations': 10}
+
+        result = compare_benchmarks(baseline, current)
+
+        self.assertEqual(result['status'], DEFINITELY_BETTER)
+        self.assertAlmostEqual(result['percent_change'], -10.0, places=1)
+
+    def test_definitely_worse(self):
+        """Current lower bound > baseline upper bound = definitely worse"""
+        baseline = {'name': 'test', 'mean_ns': 2000, 'lower_bound_ns': 1950, 'upper_bound_ns': 2050,
+                    'std_dev_ns': 50, 'samples': 100, 'iterations': 10}
+        current = {'name': 'test', 'mean_ns': 2300, 'lower_bound_ns': 2250, 'upper_bound_ns': 2350,
+                   'std_dev_ns': 50, 'samples': 100, 'iterations': 10}
+
+        result = compare_benchmarks(baseline, current)
+
+        self.assertEqual(result['status'], DEFINITELY_WORSE)
+        self.assertAlmostEqual(result['percent_change'], 15.0, places=1)
+
+    def test_probably_better(self):
+        """Current upper bound < baseline mean = probably better"""
+        baseline = {'name': 'test', 'mean_ns': 2000, 'lower_bound_ns': 1950, 'upper_bound_ns': 2050,
+                    'std_dev_ns': 50, 'samples': 100, 'iterations': 10}
+        current = {'name': 'test', 'mean_ns': 1900, 'lower_bound_ns': 1850, 'upper_bound_ns': 1950,
+                   'std_dev_ns': 50, 'samples': 100, 'iterations': 10}
+
+        result = compare_benchmarks(baseline, current)
+
+        self.assertEqual(result['status'], PROBABLY_BETTER)
+        self.assertAlmostEqual(result['percent_change'], -5.0, places=1)
+
+    def test_probably_worse(self):
+        """Current lower bound > baseline mean = probably worse"""
+        baseline = {'name': 'test', 'mean_ns': 2000, 'lower_bound_ns': 1950, 'upper_bound_ns': 2050,
+                    'std_dev_ns': 50, 'samples': 100, 'iterations': 10}
+        current = {'name': 'test', 'mean_ns': 2100, 'lower_bound_ns': 2050, 'upper_bound_ns': 2150,
+                   'std_dev_ns': 50, 'samples': 100, 'iterations': 10}
+
+        result = compare_benchmarks(baseline, current)
+
+        self.assertEqual(result['status'], PROBABLY_WORSE)
+        self.assertAlmostEqual(result['percent_change'], 5.0, places=1)
+
+    def test_insignificant(self):
+        """Overlapping confidence intervals = insignificant"""
+        baseline = {'name': 'test', 'mean_ns': 2000, 'lower_bound_ns': 1950, 'upper_bound_ns': 2050,
+                    'std_dev_ns': 50, 'samples': 100, 'iterations': 10}
+        current = {'name': 'test', 'mean_ns': 2010, 'lower_bound_ns': 1960, 'upper_bound_ns': 2060,
+                   'std_dev_ns': 50, 'samples': 100, 'iterations': 10}
+
+        result = compare_benchmarks(baseline, current)
+
+        self.assertEqual(result['status'], INSIGNIFICANT)
+        self.assertAlmostEqual(result['percent_change'], 0.5, places=1)
 
 if __name__ == '__main__':
     unittest.main()
