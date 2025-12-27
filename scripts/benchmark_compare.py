@@ -7,6 +7,8 @@ ABOUTME: Compares Catch2 XML results, stores in SQLite, detects regressions
 import sqlite3
 import xml.etree.ElementTree as ET
 from datetime import datetime
+import argparse
+import os
 
 def init_database(db_path):
     """Initialize database with benchmarks table and indexes"""
@@ -312,3 +314,44 @@ def format_comparison_output(comparison_result, baseline_info, verbose=False):
                 f"{len(comparison_result['new'])} new, {len(comparison_result['removed'])} removed")
 
     return "\n".join(lines)
+
+def cmd_store(args):
+    """Handle 'store' command"""
+    if not os.path.exists(args.xml_file):
+        print(f"Error: XML file not found: {args.xml_file}")
+        return 1
+
+    benchmarks = parse_xml_benchmarks(args.xml_file)
+
+    conn = init_database(args.db)
+    count = store_benchmarks(conn, benchmarks, args.commit)
+    conn.close()
+
+    print(f"Stored {count} benchmarks for commit {args.commit}")
+    return 0
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='Track and compare benchmark performance across commits'
+    )
+    parser.add_argument('--db', default='benchmarks.db',
+                       help='Database path (default: benchmarks.db)')
+
+    subparsers = parser.add_subparsers(dest='command', required=True)
+
+    # Store command
+    store_parser = subparsers.add_parser('store',
+                                         help='Store benchmark results in database')
+    store_parser.add_argument('xml_file', help='Catch2 XML output file')
+    store_parser.add_argument('--commit', required=True,
+                             help='Commit hash or label')
+
+    args = parser.parse_args()
+
+    if args.command == 'store':
+        return cmd_store(args)
+
+    return 1
+
+if __name__ == '__main__':
+    exit(main())
