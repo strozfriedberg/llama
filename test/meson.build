@@ -125,5 +125,13 @@ if catch2_dep.found()
     )
   endif
 
+  # Standalone profiling program (no Catch2 dependency in execution)
+  profile_parser_exe = executable('profile_parser',
+    llama_common_sources + ['profile_parser.cpp'],
+    include_directories: [inc, include_directories('../src'), include_directories('benchmarks')],
+    dependencies: llama_deps,
+    build_by_default: false
+  )
+
 endif
 
