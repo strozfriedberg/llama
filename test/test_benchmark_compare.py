@@ -3,7 +3,7 @@ import sqlite3
 import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
-from benchmark_compare import init_database, parse_xml_benchmarks
+from benchmark_compare import init_database, parse_xml_benchmarks, store_benchmarks
 
 class TestDatabaseInit(unittest.TestCase):
     def setUp(self):
@@ -100,6 +100,59 @@ class TestXMLParser(unittest.TestCase):
         self.assertEqual(results[1]['mean_ns'], 1727.63)
 
         os.remove('/tmp/test_bench.xml')
+
+class TestStoreBenchmarks(unittest.TestCase):
+    def setUp(self):
+        self.test_db = "/tmp/test_benchmarks.db"
+        if os.path.exists(self.test_db):
+            os.remove(self.test_db)
+        self.conn = init_database(self.test_db)
+
+    def tearDown(self):
+        self.conn.close()
+        if os.path.exists(self.test_db):
+            os.remove(self.test_db)
+
+    def test_store_benchmarks(self):
+        """Store benchmark results in database"""
+        benchmarks = [
+            {
+                'name': 'lexer',
+                'mean_ns': 1900.82,
+                'lower_bound_ns': 1887.06,
+                'upper_bound_ns': 1933.43,
+                'std_dev_ns': 102.154,
+                'samples': 100,
+                'iterations': 8
+            },
+            {
+                'name': 'parser',
+                'mean_ns': 1727.63,
+                'lower_bound_ns': 1629.58,
+                'upper_bound_ns': 2017.73,
+                'std_dev_ns': 784.178,
+                'samples': 100,
+                'iterations': 9
+            }
+        ]
+
+        count = store_benchmarks(self.conn, benchmarks, 'abc1234', '2025-12-27T10:00:00')
+
+        self.assertEqual(count, 2)
+
+        # Verify stored data
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM benchmarks WHERE commit_hash='abc1234' ORDER BY benchmark_name")
+        rows = cursor.fetchall()
+
+        self.assertEqual(len(rows), 2)
+
+        # Check first row (lexer)
+        self.assertEqual(rows[0][2], '2025-12-27T10:00:00')  # timestamp
+        self.assertEqual(rows[0][3], 'lexer')  # benchmark_name
+        self.assertEqual(rows[0][4], 1900.82)  # mean_ns
+        self.assertEqual(rows[0][5], 1887.06)  # lower_bound_ns
+        self.assertEqual(rows[0][6], 1933.43)  # upper_bound_ns
 
 if __name__ == '__main__':
     unittest.main()

@@ -6,6 +6,7 @@ ABOUTME: Compares Catch2 XML results, stores in SQLite, detects regressions
 
 import sqlite3
 import xml.etree.ElementTree as ET
+from datetime import datetime
 
 def init_database(db_path):
     """Initialize database with benchmarks table and indexes"""
@@ -69,3 +70,41 @@ def parse_xml_benchmarks(xml_path):
             results.append(result)
 
     return results
+
+def store_benchmarks(conn, benchmarks, commit_hash, timestamp=None):
+    """Store benchmark results in database
+
+    Args:
+        conn: SQLite connection
+        benchmarks: List of benchmark dicts from parse_xml_benchmarks
+        commit_hash: Git commit hash or label
+        timestamp: ISO 8601 timestamp (defaults to now)
+
+    Returns:
+        Number of benchmarks stored
+    """
+    if timestamp is None:
+        timestamp = datetime.now().isoformat()
+
+    cursor = conn.cursor()
+
+    for bench in benchmarks:
+        cursor.execute("""
+            INSERT INTO benchmarks
+            (commit_hash, timestamp, benchmark_name, mean_ns, lower_bound_ns,
+             upper_bound_ns, std_dev_ns, samples, iterations)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            commit_hash,
+            timestamp,
+            bench['name'],
+            bench['mean_ns'],
+            bench['lower_bound_ns'],
+            bench['upper_bound_ns'],
+            bench['std_dev_ns'],
+            bench['samples'],
+            bench['iterations']
+        ))
+
+    conn.commit()
+    return len(benchmarks)
