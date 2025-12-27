@@ -3,7 +3,7 @@ import sqlite3
 import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
-from benchmark_compare import init_database, parse_xml_benchmarks, store_benchmarks, load_benchmarks_for_commit, get_most_recent_commit, compare_benchmarks, DEFINITELY_BETTER, DEFINITELY_WORSE, PROBABLY_BETTER, PROBABLY_WORSE, INSIGNIFICANT
+from benchmark_compare import init_database, parse_xml_benchmarks, store_benchmarks, load_benchmarks_for_commit, get_most_recent_commit, compare_benchmarks, compare_benchmark_sets, DEFINITELY_BETTER, DEFINITELY_WORSE, PROBABLY_BETTER, PROBABLY_WORSE, INSIGNIFICANT
 
 class TestDatabaseInit(unittest.TestCase):
     def setUp(self):
@@ -252,6 +252,43 @@ class TestComparison(unittest.TestCase):
 
         self.assertEqual(result['status'], INSIGNIFICANT)
         self.assertAlmostEqual(result['percent_change'], 0.5, places=1)
+
+class TestCompareBenchmarkSets(unittest.TestCase):
+    def test_compare_benchmark_sets(self):
+        """Compare two sets of benchmarks, handle new/removed benchmarks"""
+        baseline = [
+            {'name': 'lexer', 'mean_ns': 2000, 'lower_bound_ns': 1950, 'upper_bound_ns': 2050,
+             'std_dev_ns': 50, 'samples': 100, 'iterations': 10},
+            {'name': 'parser', 'mean_ns': 3000, 'lower_bound_ns': 2900, 'upper_bound_ns': 3100,
+             'std_dev_ns': 100, 'samples': 100, 'iterations': 10},
+            {'name': 'old_benchmark', 'mean_ns': 1000, 'lower_bound_ns': 950, 'upper_bound_ns': 1050,
+             'std_dev_ns': 50, 'samples': 100, 'iterations': 10}
+        ]
+
+        current = [
+            {'name': 'lexer', 'mean_ns': 1800, 'lower_bound_ns': 1750, 'upper_bound_ns': 1850,
+             'std_dev_ns': 50, 'samples': 100, 'iterations': 10},
+            {'name': 'parser', 'mean_ns': 3200, 'lower_bound_ns': 3100, 'upper_bound_ns': 3300,
+             'std_dev_ns': 100, 'samples': 100, 'iterations': 10},
+            {'name': 'new_benchmark', 'mean_ns': 500, 'lower_bound_ns': 450, 'upper_bound_ns': 550,
+             'std_dev_ns': 50, 'samples': 100, 'iterations': 10}
+        ]
+
+        result = compare_benchmark_sets(baseline, current)
+
+        # Check comparisons
+        self.assertEqual(len(result['comparisons']), 2)
+        self.assertEqual(result['comparisons'][0]['name'], 'lexer')
+        self.assertEqual(result['comparisons'][0]['status'], DEFINITELY_BETTER)
+        self.assertEqual(result['comparisons'][1]['name'], 'parser')
+
+        # Check new benchmarks
+        self.assertEqual(len(result['new']), 1)
+        self.assertEqual(result['new'][0]['name'], 'new_benchmark')
+
+        # Check removed benchmarks
+        self.assertEqual(len(result['removed']), 1)
+        self.assertEqual(result['removed'][0]['name'], 'old_benchmark')
 
 if __name__ == '__main__':
     unittest.main()

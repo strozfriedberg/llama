@@ -200,3 +200,38 @@ def compare_benchmarks(baseline, current):
         'baseline': baseline,
         'current': current
     }
+
+def compare_benchmark_sets(baseline, current):
+    """Compare two sets of benchmarks
+
+    Args:
+        baseline: List of benchmark dicts
+        current: List of benchmark dicts
+
+    Returns:
+        Dict with keys:
+            'comparisons': List of comparison results for matching benchmarks
+            'new': List of benchmarks in current but not baseline
+            'removed': List of benchmarks in baseline but not current
+    """
+    baseline_by_name = {b['name']: b for b in baseline}
+    current_by_name = {b['name']: b for b in current}
+
+    comparisons = []
+    for name in sorted(current_by_name.keys()):
+        if name in baseline_by_name:
+            comp = compare_benchmarks(baseline_by_name[name], current_by_name[name])
+            comp['name'] = name
+            comparisons.append(comp)
+
+    new = [current_by_name[name] for name in sorted(current_by_name.keys())
+           if name not in baseline_by_name]
+
+    removed = [baseline_by_name[name] for name in sorted(baseline_by_name.keys())
+               if name not in current_by_name]
+
+    return {
+        'comparisons': comparisons,
+        'new': new,
+        'removed': removed
+    }
