@@ -235,3 +235,80 @@ def compare_benchmark_sets(baseline, current):
         'new': new,
         'removed': removed
     }
+
+def format_time(nanoseconds):
+    """Format nanoseconds to human-readable time"""
+    if nanoseconds < 1000:
+        return f"{nanoseconds:.2f}ns"
+    elif nanoseconds < 1000000:
+        return f"{nanoseconds/1000:.2f}us"
+    elif nanoseconds < 1000000000:
+        return f"{nanoseconds/1000000:.2f}ms"
+    else:
+        return f"{nanoseconds/1000000000:.2f}s"
+
+def format_comparison_output(comparison_result, baseline_info, verbose=False):
+    """Format comparison results for display
+
+    Args:
+        comparison_result: Dict from compare_benchmark_sets
+        baseline_info: Tuple of (commit_hash, timestamp)
+        verbose: If True, include detailed CI information
+
+    Returns:
+        Formatted string output
+    """
+    lines = []
+
+    commit_hash, timestamp = baseline_info
+    lines.append(f"Comparing current results to baseline (commit: {commit_hash}, {timestamp})")
+    lines.append("")
+
+    # Table header
+    lines.append(f"{'Benchmark':<30} {'Status':<20} {'Mean Change':<15} {'Baseline':<15} {'Current':<15}")
+    lines.append("-" * 95)
+
+    # Comparison rows
+    for comp in comparison_result['comparisons']:
+        name = comp['name']
+        status = comp['status']
+        change = f"{comp['percent_change']:+.1f}%"
+        baseline_mean = format_time(comp['baseline']['mean_ns'])
+        current_mean = format_time(comp['current']['mean_ns'])
+
+        lines.append(f"{name:<30} {status:<20} {change:<15} {baseline_mean:<15} {current_mean:<15}")
+
+        if verbose:
+            bl = comp['baseline']
+            cu = comp['current']
+            lines.append(f"  Baseline: mean={format_time(bl['mean_ns'])}, CI=[{format_time(bl['lower_bound_ns'])}, {format_time(bl['upper_bound_ns'])}]")
+            lines.append(f"  Current:  mean={format_time(cu['mean_ns'])}, CI=[{format_time(cu['lower_bound_ns'])}, {format_time(cu['upper_bound_ns'])}]")
+            lines.append("")
+
+    # New benchmarks
+    if comparison_result['new']:
+        lines.append("")
+        lines.append("New benchmarks (not in baseline):")
+        for bench in comparison_result['new']:
+            lines.append(f"  - {bench['name']}")
+
+    # Removed benchmarks
+    if comparison_result['removed']:
+        lines.append("")
+        lines.append("Removed benchmarks (not in current):")
+        for bench in comparison_result['removed']:
+            lines.append(f"  - {bench['name']}")
+
+    # Summary
+    better = sum(1 for c in comparison_result['comparisons']
+                 if c['status'] in [DEFINITELY_BETTER, PROBABLY_BETTER])
+    worse = sum(1 for c in comparison_result['comparisons']
+                if c['status'] in [DEFINITELY_WORSE, PROBABLY_WORSE])
+    insignificant = sum(1 for c in comparison_result['comparisons']
+                       if c['status'] == INSIGNIFICANT)
+
+    lines.append("")
+    lines.append(f"Summary: {better} better, {worse} worse, {insignificant} insignificant, "
+                f"{len(comparison_result['new'])} new, {len(comparison_result['removed'])} removed")
+
+    return "\n".join(lines)

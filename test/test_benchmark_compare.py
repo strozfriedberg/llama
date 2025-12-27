@@ -3,7 +3,7 @@ import sqlite3
 import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
-from benchmark_compare import init_database, parse_xml_benchmarks, store_benchmarks, load_benchmarks_for_commit, get_most_recent_commit, compare_benchmarks, compare_benchmark_sets, DEFINITELY_BETTER, DEFINITELY_WORSE, PROBABLY_BETTER, PROBABLY_WORSE, INSIGNIFICANT
+from benchmark_compare import init_database, parse_xml_benchmarks, store_benchmarks, load_benchmarks_for_commit, get_most_recent_commit, compare_benchmarks, compare_benchmark_sets, format_comparison_output, DEFINITELY_BETTER, DEFINITELY_WORSE, PROBABLY_BETTER, PROBABLY_WORSE, INSIGNIFICANT
 
 class TestDatabaseInit(unittest.TestCase):
     def setUp(self):
@@ -289,6 +289,42 @@ class TestCompareBenchmarkSets(unittest.TestCase):
         # Check removed benchmarks
         self.assertEqual(len(result['removed']), 1)
         self.assertEqual(result['removed'][0]['name'], 'old_benchmark')
+
+class TestFormatOutput(unittest.TestCase):
+    def test_format_comparison_output(self):
+        """Format comparison results for display"""
+        comparison_result = {
+            'comparisons': [
+                {
+                    'name': 'lexer',
+                    'status': DEFINITELY_BETTER,
+                    'percent_change': -10.0,
+                    'baseline': {'mean_ns': 2000, 'lower_bound_ns': 1950, 'upper_bound_ns': 2050},
+                    'current': {'mean_ns': 1800, 'lower_bound_ns': 1750, 'upper_bound_ns': 1850}
+                },
+                {
+                    'name': 'parser',
+                    'status': PROBABLY_WORSE,
+                    'percent_change': 5.0,
+                    'baseline': {'mean_ns': 3000, 'lower_bound_ns': 2900, 'upper_bound_ns': 3100},
+                    'current': {'mean_ns': 3150, 'lower_bound_ns': 3050, 'upper_bound_ns': 3250}
+                }
+            ],
+            'new': [{'name': 'new_benchmark', 'mean_ns': 500}],
+            'removed': [{'name': 'old_benchmark', 'mean_ns': 1000}]
+        }
+
+        baseline_info = ('abc1234', '2025-12-26 10:00:00')
+
+        output = format_comparison_output(comparison_result, baseline_info, verbose=False)
+
+        self.assertIn('abc1234', output)
+        self.assertIn('lexer', output)
+        self.assertIn('Definitely Better', output)
+        self.assertIn('-10.0%', output)
+        self.assertIn('new_benchmark', output)
+        self.assertIn('old_benchmark', output)
+        self.assertIn('Summary:', output)
 
 if __name__ == '__main__':
     unittest.main()
