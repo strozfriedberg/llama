@@ -1,0 +1,122 @@
+═══════════════════════════════════════════════════════════════
+Parser-100rules Profiling Summary
+═══════════════════════════════════════════════════════════════
+Date: 2025-12-26
+Post arena-allocation optimization
+Total runtime: 17.66 µs (177 samples at 1ms sampling)
+
+═══════════════════════════════════════════════════════════════
+RUNTIME BREAKDOWN
+═══════════════════════════════════════════════════════════════
+
+Parsing control flow (core logic):    55 samples (31.1%)
+Memory management:                    38 samples (21.5%) ⚠️
+Rule cleanup (destructors):           22 samples (12.4%)
+Other overhead:                       20 samples (11.3%)
+Token operations:                     15 samples (8.5%)
+Hash operations (non-alloc):          15 samples (8.5%)
+String copying:                       12 samples (6.8%)
+
+═══════════════════════════════════════════════════════════════
+TOP 5 OPTIMIZATION OPPORTUNITIES (RANKED)
+═══════════════════════════════════════════════════════════════
+
+1. Function::Args vector allocation/copy/free
+   Impact: 26 samples (14.7% of parse time)
+   Current: Each function call allocates std::vector<string_view>
+   Solution: Small-buffer optimization or store token indices
+   Difficulty: Medium
+   
+2. Hash table overhead (total)
+   Impact: 29 samples (16.4% of parse time)
+   Current: std::unordered_map for Meta + Pattern sections
+   Components:
+     • Bucket reallocation: 14 samples (7.9%)
+     • Hashing/lookup: 15 samples (8.5%)
+   Solution: Pre-size maps or use flat_map/vector
+   Difficulty: Medium
+
+3. Rule::~Rule() cleanup
+   Impact: 22 samples (12.4% of parse time)
+   Current: Destructor frees hash map buckets/nodes
+   Solution: Arena allocation for hash table nodes
+   Difficulty: Medium-Hard
+
+4. String copying (memmove)
+   Impact: 12 samples (6.8% of parse time)
+   Current: Various data movement operations
+   Solution: Reduce intermediate copies
+   Difficulty: Hard (may be unavoidable)
+
+5. Token operations (mustParse, etc)
+   Impact: 15 samples (8.5% of parse time)
+   Current: Token validation and consumption
+   Solution: Inline hot paths, reduce checks
+   Difficulty: Medium
+   Note: Core logic, likely not worth optimizing
+
+═══════════════════════════════════════════════════════════════
+POTENTIAL PERFORMANCE GAINS
+═══════════════════════════════════════════════════════════════
+
+Optimistic scenario (all optimizations):
+  • Function::Args: -14.7%
+  • Hash tables: -16.4%
+  • Rule cleanup: -12.4%
+  • String copying: -6.8%
+  ────────────────────────
+  Total: ~50% reduction possible
+
+Realistic scenario (Function::Args + Hash tables):
+  • Function::Args: -14.7%
+  • Hash table buckets: -7.9%
+  ────────────────────────
+  Total: ~22% reduction achievable
+
+Current: 17.66 µs
+With realistic optimizations: ~13.8 µs (22% faster)
+
+═══════════════════════════════════════════════════════════════
+WHY ARENA ALLOCATION SHOWED MINIMAL IMPROVEMENT
+═══════════════════════════════════════════════════════════════
+
+AST Node allocations: Only 5 samples (2.8% of runtime)
+Arena optimization: Successfully eliminated these
+Result: 0.2% improvement (within measurement variance)
+
+The optimization worked perfectly but targeted the wrong bottleneck.
+The real allocation overhead is in:
+  1. Function::Args vectors (14.7%)
+  2. Hash table structures (16.4%)
+  3. Not AST nodes (2.8%)
+
+This is a classic case of "measure before optimizing" - we made
+an educated guess about the bottleneck (heap allocations for nodes)
+which turned out to be correct in principle but wrong in magnitude.
+
+═══════════════════════════════════════════════════════════════
+FILES GENERATED
+═══════════════════════════════════════════════════════════════
+
+1. 2025-12-26-parser-profile-arena-allocation.txt
+   Full profiling output from macOS sample tool
+
+2. 2025-12-26-profile-analysis-summary.txt
+   Initial analysis focusing on memory management
+
+3. 2025-12-26-complete-runtime-breakdown.txt
+   Detailed breakdown of all 177 samples by category
+
+4. 2025-12-26-profiling-summary.txt (this file)
+   Executive summary and optimization roadmap
+
+═══════════════════════════════════════════════════════════════
+NEXT STEPS
+═══════════════════════════════════════════════════════════════
+
+Recommended optimization order:
+1. Fix Function::Args allocations (14.7% gain)
+2. Pre-size or simplify hash tables (7.9% gain)
+3. Consider arena allocation for hash nodes (12.4% gain)
+
+Expected cumulative improvement: ~35% reduction in parse time

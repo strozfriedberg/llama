@@ -1,0 +1,162 @@
+=== Complete Breakdown of Parser-100rules Runtime (177 samples) ===
+
+From profiling data: docs/plans/2025-12-26-parser-profile-arena-allocation.txt
+Generated: 2025-12-26
+
+═══════════════════════════════════════════════════════════════
+CATEGORY 1: MEMORY MANAGEMENT - 38 samples (21.5%)
+═══════════════════════════════════════════════════════════════
+
+Function::Args allocations:           13 samples (7.3%)
+Function::Args deallocations:          7 samples (4.0%)  
+Function::Args vector copying:         6 samples (3.4%)
+Hash table bucket allocations:        14 samples (7.9%)
+  - MetaSection map rehashing:         7 samples
+  - MetaSection node allocations:      7 samples
+  - PatternSection operations:         6 samples
+Other allocations:                     5 samples (2.8%)
+  - AST nodes (deque growth):          5 samples
+  - parseRules vector::reserve:        1 sample
+
+───────────────────────────────────────────────────────────────
+Subtotal: 38 samples (some overlap, net ~38 samples)
+
+═══════════════════════════════════════════════════════════════
+CATEGORY 2: HASH TABLE OPERATIONS (non-allocation) - ~15 samples (8.5%)
+═══════════════════════════════════════════════════════════════
+
+String hashing (__murmur2_or_cityhash):  ~8 samples (4.5%)
+  - For MetaSection keys:                3+2+2+1 = 8 samples
+  
+Hash table lookup/insertion logic:       ~7 samples (4.0%)
+  - __emplace_unique overhead:           ~5 samples
+  - Hash table traversal:                ~2 samples
+
+───────────────────────────────────────────────────────────────
+Subtotal: ~15 samples
+
+═══════════════════════════════════════════════════════════════
+CATEGORY 3: STRING/DATA COPYING - ~12 samples (6.8%)
+═══════════════════════════════════════════════════════════════
+
+_platform_memmove (string copies):      ~8 samples (4.5%)
+  - Function construction:               2 samples
+  - Pattern parsing:                     1 sample
+  - Other operations:                    5 samples
+
+Other data movement:                    ~4 samples (2.3%)
+
+───────────────────────────────────────────────────────────────
+Subtotal: ~12 samples
+
+═══════════════════════════════════════════════════════════════
+CATEGORY 4: TOKEN OPERATIONS - ~15 samples (8.5%)
+═══════════════════════════════════════════════════════════════
+
+mustParse (token matching):            ~12 samples (6.8%)
+  - Multiple 1-3 sample occurrences across parsing functions
+  - Validates and consumes expected tokens
+
+checkFunctionName:                      ~2 samples (1.1%)
+checkAny/matchAny/peek/advance:         ~1 sample (0.6%)
+
+───────────────────────────────────────────────────────────────
+Subtotal: ~15 samples
+
+═══════════════════════════════════════════════════════════════
+CATEGORY 5: PARSING CONTROL FLOW - ~55 samples (31.1%)
+═══════════════════════════════════════════════════════════════
+
+Expression parsing (parseExpr/Term/Factor):  ~33 samples (18.6%)
+  - Tree construction logic
+  - Operator precedence handling  
+  - Recursive descent
+
+parseFuncCall logic (non-allocation):        ~9 samples (5.1%)
+  - Function validation
+  - Argument collection
+  - Node construction
+
+parsePatternDef/parsePatternsSection:        ~3 samples (1.7%)
+parseMetaSection (non-hash):                 ~6 samples (3.4%)  
+parseGrepSection (non-hash/expr):            ~4 samples (2.3%)
+
+───────────────────────────────────────────────────────────────
+Subtotal: ~55 samples
+
+═══════════════════════════================================================================════════════════════════════
+CATEGORY 6: RULE DESTRUCTION & CLEANUP - ~22 samples (12.4%)
+═══════════════════════════════════════════════════════════════
+
+Rule::~Rule() destructor:               22 samples (12.4%)
+  - Cleaning up MetaSection hash map
+  - Cleaning up PatternSection hash map
+  - Cleaning up other Rule members
+
+───────────────────────────────────────────────────────────────
+Subtotal: ~22 samples
+
+═══════════════════════════════════════════════════════════════
+CATEGORY 7: PARSER OVERHEAD & OTHER - ~20 samples (11.3%)
+═══════════════════════════════════════════════════════════════
+
+parseRules vector operations:            ~3 samples (1.7%)
+parseRuleDecl overhead:                  ~5 samples (2.8%)
+Function::validate():                    ~1 sample (0.6%)
+Other unaccounted overhead:             ~11 samples (6.2%)
+
+───────────────────────────────────────────────────────────────
+Subtotal: ~20 samples
+
+═══════════════════════════════════════════════════════════════
+SUMMARY BY CATEGORY
+═══════════════════════════════════════════════════════════════
+
+Memory management:          38 samples (21.5%)  ← OPTIMIZATION TARGET
+Hash operations:            15 samples (8.5%)   ← OPTIMIZATION TARGET
+String copying:             12 samples (6.8%)
+Token operations:           15 samples (8.5%)
+Parsing control flow:       55 samples (31.1%)  ← Core logic
+Rule cleanup:               22 samples (12.4%)
+Other overhead:             20 samples (11.3%)
+───────────────────────────────────────────────
+TOTAL:                     177 samples (100%)
+
+═══════════════════════════════════════════════════════════════
+TOP OPTIMIZATION OPPORTUNITIES (Beyond arena allocation)
+═══════════════════════════════════════════════════════════════
+
+1. **Function::Args allocations** - 14.7%
+   • Most impactful single optimization
+   • Replace std::vector with small-buffer or indices
+
+2. **Hash table operations** - 16.4% total (alloc + hashing)
+   • 7.9% allocations (rehashing, node creation)
+   • 8.5% hashing/lookup overhead
+   • Pre-size tables or use simpler data structures
+
+3. **Rule::~Rule() cleanup** - 12.4%
+   • Hash map destruction overhead
+   • Could be reduced with simpler data structures
+
+4. **String copying (memmove)** - 6.8%
+   • Copying string_views and other data
+   • May be unavoidable or require different approach
+
+5. **Token operations (mustParse)** - 8.5%
+   • Core parsing logic
+   • Likely not worth optimizing (minimal gain)
+
+═══════════════════════════════════════════════════════════════
+WHY ARENA ALLOCATION DIDN'T HELP MUCH
+═══════════════════════════════════════════════════════════════
+
+AST node allocations were only ~5 samples (2.8%) of 177.
+We successfully eliminated them via arena allocation.
+But the real bottlenecks are:
+  • Function::Args vectors (26 samples, 14.7%)
+  • Hash table overhead (29 samples, 16.4%)
+  • Rule cleanup (22 samples, 12.4%)
+
+Combined, these account for ~43.5% of parse time vs our 2.8%.
+

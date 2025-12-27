@@ -1,0 +1,121 @@
+=== Parser-100rules Benchmark Profile Analysis ===
+Source: docs/plans/2025-12-26-parser-profile-arena-allocation.txt
+Date: 2025-12-26
+Post arena-allocation optimization
+
+TOTAL SAMPLES IN BENCHMARK: 177 (100%)
+
+═══════════════════════════════════════════════════════════════
+BREAKDOWN BY OPERATION
+═══════════════════════════════════════════════════════════════
+
+1. MEMORY ALLOCATIONS (operator new): 25 samples (14.1%)
+   ───────────────────────────────────────────────────────────
+   Function::Args vector allocations:       ~13 samples (7.3%)
+     - parseFuncCall() line 282:              6 samples
+     - parseFuncCall() line 295:              2 samples
+     - parseFactor() line 234:                5 samples (allocBoolNode/FuncNode)
+   
+   Hash table bucket rehashing:             ~14 samples (7.9%)
+     - MetaSection hash table:                7 samples (operator new)
+     - MetaSection hash nodes:                7 samples (operator new)
+     - PatternSection hash table:             3 samples (operator new)
+     - PatternSection hash nodes:             3 samples (operator new)
+   
+   Other:                                     5 samples (2.8%)
+     - parseFactor() for nodes:               7 samples
+     - parseRules vector::reserve:            1 sample
+     - FuncNode vector copy:                  2 samples
+
+2. MEMORY DEALLOCATIONS (free/delete): 7 samples (4.0%)
+   ───────────────────────────────────────────────────────────
+   - parseFuncCall() line 297:               4 samples
+   - parseFuncCall() line 297 (second):      3 samples
+   
+3. VECTOR OPERATIONS (Function::Args): 6 samples (3.4%)
+   ───────────────────────────────────────────────────────────
+   - vector::__assign_with_size:             6 samples
+     (copying Args from temporary Function to FuncNode)
+
+4. PARSING LOGIC: ~130 samples (73.4%)
+   ───────────────────────────────────────────────────────────
+   - parseRuleDecl():                       53 samples
+   - parseGrepSection():                    53 samples
+   - parseExpr/parseTerm/parseFactor:       79 samples
+   - parseFuncCall():                       29 samples
+   - Other parsing functions:               ~16 samples
+
+═══════════════════════════════════════════════════════════════
+MEMORY OVERHEAD SUMMARY
+═══════════════════════════════════════════════════════════════
+
+Total Memory Management: 38 samples (21.5% of parsing time)
+   - Allocations:    25 samples (14.1%)
+   - Deallocations:   7 samples (4.0%)
+   - Vector ops:      6 samples (3.4%)
+
+Breakdown by source:
+   1. Function::Args overhead:              26 samples (14.7%)
+      • Vector allocation:                  13 samples
+      • Vector deallocation:                 7 samples  
+      • Vector copying:                      6 samples
+   
+   2. Hash table overhead:                  14 samples (7.9%)
+      • MetaSection std::unordered_map:     14 samples
+      • PatternSection std::unordered_map:   6 samples
+      (Note: overlap in counting, actual ~14-20 samples)
+   
+   3. AST node allocations (ALREADY FIXED): ~5 samples (2.8%)
+      • Now using arena allocation
+      • Still shows in profile due to deque growth
+
+═══════════════════════════════════════════════════════════════
+OPTIMIZATION OPPORTUNITIES (RANKED)
+═══════════════════════════════════════════════════════════════
+
+1. **Function::Args vector** - 14.7% of parse time
+   Problem: Each function call allocates std::vector<string_view> for Args
+   Solution: Use small-buffer optimization or store indices instead
+   Impact: High - most frequent allocation source
+
+2. **Hash table bucket allocations** - ~7.9% of parse time  
+   Problem: MetaSection/PatternSection use std::unordered_map
+           which reallocates buckets during growth
+   Solution: Pre-size hash tables or use flat_map/vector
+   Impact: Medium - affects rules with many meta/pattern entries
+
+3. **AST node allocations** - ALREADY OPTIMIZED ✓
+   Problem: Was allocating nodes via shared_ptr
+   Solution: Arena allocation with std::deque
+   Status: Complete, minimal remaining overhead
+
+═══════════════════════════════════════════════════════════════
+WHY ARENA ALLOCATION SHOWED ONLY 0.2% IMPROVEMENT
+═══════════════════════════════════════════════════════════════
+
+The arena allocation optimization successfully eliminated AST node
+allocations, but this represented only ~5 samples (2.8%) of the 
+total 177 samples. The real allocation hotspots are:
+
+1. Function::Args vectors: 26 samples (14.7%)
+2. Hash table growth: 14-20 samples (7.9-11.3%)
+
+Arena allocation targeted the wrong bottleneck. While it improved
+code quality (better memory management, bulk deallocation), the
+performance impact was minimal because AST nodes were a small
+fraction of total allocations.
+
+The profiling reveals that ~38/177 samples (21.5%) are spent on
+memory management, with Function::Args being the dominant source.
+
+═══════════════════════════════════════════════════════════════
+NEXT STEPS
+═══════════════════════════════════════════════════════════════
+
+To achieve meaningful performance improvement:
+1. Eliminate Function::Args vector allocations (14.7% gain potential)
+2. Optimize hash table allocations (7.9% gain potential)
+3. Combined: ~22% total parse time reduction possible
+
+Current Parser-100rules time: 17.66 µs
+Theoretical with optimizations: 13.8 µs (22% reduction)

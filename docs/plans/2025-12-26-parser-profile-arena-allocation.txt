@@ -1,0 +1,892 @@
+Analysis of sampling parser_benchmarks (pid 75129) every 1 millisecond
+Process:         parser_benchmarks [75129]
+Path:            /Users/USER/*/parser_benchmarks
+Load Address:    0x1005e0000
+Identifier:      parser_benchmarks
+Version:         0
+Code Type:       ARM64
+Platform:        macOS
+Parent Process:  bash [75119]
+
+Date/Time:       2025-12-26 14:58:19.127 -0500
+Launch Time:     2025-12-26 14:58:18.527 -0500
+OS Version:      macOS 14.7.5 (23H527)
+Report Version:  7
+Analysis Tool:   /usr/bin/sample
+
+Physical footprint:         24.4M
+Physical footprint (peak):  335.6M
+Idle exit:                  untracked
+----
+
+Call graph:
+    4060 Thread_17185393   DispatchQueue_1: com.apple.main-thread  (serial)
+      4060 start  (in dyld) + 2476  [0x193a4b154]
+        4060 main  (in parser_benchmarks) + 68  [0x10066452c]
+          4060 Catch::Session::run<char>(int, char const* const*)  (in parser_benchmarks) + 104  [0x1006645e0]
+            4060 Catch::Session::run()  (in parser_benchmarks) + 88  [0x1006c5184]
+              4060 Catch::Session::runInternal()  (in parser_benchmarks) + 772  [0x1006c54e8]
+                4060 Catch::(anonymous namespace)::TestGroup::execute()  (in parser_benchmarks) + 160  [0x1006c5fa0]
+                  4060 Catch::RunContext::runTest(Catch::TestCaseHandle const&)  (in parser_benchmarks) + 456  [0x10072c428]
+                    4060 Catch::RunContext::runCurrentTest(std::basic_string<char>&, std::basic_string<char>&)  (in parser_benchmarks) + 864  [0x10072cb10]
+                      4060 Catch::RunContext::invokeActiveTestCase()  (in parser_benchmarks) + 48  [0x10072e798]
+                        4060 Catch::TestCaseHandle::invoke() const  (in parser_benchmarks) + 36  [0x10072e940]
+                          4060 Catch::(anonymous namespace)::TestInvokerAsFunction::invoke() const  (in parser_benchmarks) + 28  [0x100751260]
+                            4060 CATCH2_INTERNAL_TEST_47()  (in parser_benchmarks) + 616  [0x10065e8a8]  test_parser.cpp:560
+                              2848 Catch::Benchmark::Benchmark::run<std::chrono::steady_clock>()  (in parser_benchmarks) + 320  [0x10065efc0]  catch_benchmark.hpp:86
+                              + 2848 Catch::Benchmark::Detail::analyse(Catch::IConfig const&, std::chrono::duration<double, std::ratio<1l, 1000000000l>>*, std::chrono::duration<double, std::ratio<1l, 1000000000l>>*)  (in parser_benchmarks) + 392  [0x100664814]
+                              +   2848 Catch::Benchmark::Detail::analyse_samples(double, unsigned int, double*, double*)  (in parser_benchmarks) + 108  [0x10066a59c]
+                              +     2848 Catch::Benchmark::Detail::analyse_samples(double, unsigned int, double*, double*)::$_3::operator()(double (*)(double const*, double const*)) const  (in parser_benchmarks) + 112  [0x10066a74c]
+                              +       1642 Catch::Benchmark::Detail::(anonymous namespace)::resample<Catch::SimplePcg32, double (*)(double const*, double const*)>(Catch::SimplePcg32&, unsigned int, double const*, double const*, double (*&)(double const*, double const*))  (in parser_benchmarks) + 252  [0x10066af30]
+                              +       ! 1554 std::uniform_int_distribution<unsigned long>::operator()<Catch::SimplePcg32>(Catch::SimplePcg32&)  (in parser_benchmarks) + 36  [0x10066b39c]
+                              +       ! : 646 std::uniform_int_distribution<unsigned long>::operator()<Catch::SimplePcg32>(Catch::SimplePcg32&, std::uniform_int_distribution<unsigned long>::param_type const&)  (in parser_benchmarks) + 288  [0x10066b820]
+                              +       ! : | 582 std::__independent_bits_engine<Catch::SimplePcg32, unsigned long>::operator()()  (in parser_benchmarks) + 24  [0x10066b8f8]
+                              +       ! : | + 339 std::__independent_bits_engine<Catch::SimplePcg32, unsigned long>::__eval(std::integral_constant<bool, true>)  (in parser_benchmarks) + 52,276,...  [0x10066bc04,0x10066bce4,...]
+                              +       ! : | + 187 std::__independent_bits_engine<Catch::SimplePcg32, unsigned long>::__eval(std::integral_constant<bool, true>)  (in parser_benchmarks) + 88  [0x10066bc28]
+                              +       ! : | + ! 98 Catch::SimplePcg32::operator()()  (in parser_benchmarks) + 124,28,...  [0x10071f404,0x10071f3a4,...]
+                              +       ! : | + ! 89 Catch::SimplePcg32::operator()()  (in parser_benchmarks) + 64  [0x10071f3c8]
+                              +       ! : | + !   89 Catch::(anonymous namespace)::rotate_right(unsigned int, unsigned int)  (in parser_benchmarks) + 76,36,...  [0x10071f4c0,0x10071f498,...]
+                              +       ! : | + 35 std::__independent_bits_engine<Catch::SimplePcg32, unsigned long>::__eval(std::integral_constant<bool, true>)  (in parser_benchmarks) + 96  [0x10066bc30]
+                              +       ! : | + ! 21 DYLD-STUB$$Catch::SimplePcg32::min()  (in parser_benchmarks) + 4  [0x100784f94]
+                              +       ! : | + ! 14 Catch::SimplePcg32::min()  (in parser_benchmarks) + 0  [0x10066bdc0]
+                              +       ! : | + 21 DYLD-STUB$$std::__independent_bits_engine<Catch::SimplePcg32, unsigned long>::__eval(std::integral_constant<bool, true>)  (in parser_benchmarks) + 4  [0x100787fc4]
+                              +       ! : | 36 DYLD-STUB$$std::__independent_bits_engine<Catch::SimplePcg32, unsigned long>::operator()()  (in parser_benchmarks) + 4,0  [0x100787fd0,0x100787fcc]
+                              +       ! : | 28 std::__independent_bits_engine<Catch::SimplePcg32, unsigned long>::operator()()  (in parser_benchmarks) + 24,16  [0x10066b8f8,0x10066b8f0]
+                              +       ! : 401 std::uniform_int_distribution<unsigned long>::operator()<Catch::SimplePcg32>(Catch::SimplePcg32&, std::uniform_int_distribution<unsigned long>::param_type const&)  (in parser_benchmarks) + 276  [0x10066b814]
+                              +       ! : | 359 std::__independent_bits_engine<Catch::SimplePcg32, unsigned long>::__independent_bits_engine(Catch::SimplePcg32&, unsigned long)  (in parser_benchmarks) + 44  [0x10066b8d0]
+                              +       ! : | + 359 std::__independent_bits_engine<Catch::SimplePcg32, unsigned long>::__independent_bits_engine(Catch::SimplePcg32&, unsigned long)  (in parser_benchmarks) + 200,116,...  [0x10066ba34,0x10066b9e0,...]
+                              +       ! : | 42 std::__independent_bits_engine<Catch::SimplePcg32, unsigned long>::__independent_bits_engine(Catch::SimplePcg32&, unsigned long)  (in parser_benchmarks) + 48,16,...  [0x10066b8d4,0x10066b8b4,...]
+                              +       ! : 160 std::uniform_int_distribution<unsigned long>::operator()<Catch::SimplePcg32>(Catch::SimplePcg32&, std::uniform_int_distribution<unsigned long>::param_type const&)  (in parser_benchmarks) + 300,68,...  [0x10066b82c,0x10066b744,...]
+                              +       ! : 107 std::uniform_int_distribution<unsigned long>::operator()<Catch::SimplePcg32>(Catch::SimplePcg32&, std::uniform_int_distribution<unsigned long>::param_type const&)  (in parser_benchmarks) + 176  [0x10066b7b0]
+                              +       ! : | 89 std::__countl_zero[abi:v160006]<unsigned long>(unsigned long)  (in parser_benchmarks) + 72,16,...  [0x10066b94c,0x10066b914,...]
+                              +       ! : | 18 std::__countl_zero[abi:v160006]<unsigned long>(unsigned long)  (in parser_benchmarks) + 56  [0x10066b93c]
+                              +       ! : |   18 std::__libcpp_clz[abi:v160006](unsigned long)  (in parser_benchmarks) + 8,4  [0x10066bdd0,0x10066bdcc]
+                              +       ! : 77 std::uniform_int_distribution<unsigned long>::operator()<Catch::SimplePcg32>(Catch::SimplePcg32&, std::uniform_int_distribution<unsigned long>::param_type const&)  (in parser_benchmarks) + 208  [0x10066b7d0]
+                              +       ! : | 48 std::numeric_limits<unsigned long>::max[abi:v160006]()  (in parser_benchmarks) + 12  [0x10066b964]
+                              +       ! : | + 48 std::__libcpp_numeric_limits<unsigned long, true>::max[abi:v160006]()  (in parser_benchmarks) + 0,4  [0x10066bde4,0x10066bde8]
+                              +       ! : | 29 std::numeric_limits<unsigned long>::max[abi:v160006]()  (in parser_benchmarks) + 0,12  [0x10066b958,0x10066b964]
+                              +       ! : 65 std::uniform_int_distribution<unsigned long>::operator()<Catch::SimplePcg32>(Catch::SimplePcg32&, std::uniform_int_distribution<unsigned long>::param_type const&)  (in parser_benchmarks) + 336  [0x10066b850]
+                              +       ! : | 39 std::uniform_int_distribution<unsigned long>::param_type::a() const  (in parser_benchmarks) + 12,8,...  [0x10066b898,0x10066b894,...]
+                              +       ! : | 26 DYLD-STUB$$std::uniform_int_distribution<unsigned long>::param_type::a() const  (in parser_benchmarks) + 4,8  [0x100786668,0x10078666c]
+                              +       ! : 54 std::uniform_int_distribution<unsigned long>::operator()<Catch::SimplePcg32>(Catch::SimplePcg32&, std::uniform_int_distribution<unsigned long>::param_type const&)  (in parser_benchmarks) + 36  [0x10066b724]
+                              +       ! : | 34 DYLD-STUB$$std::uniform_int_distribution<unsigned long>::param_type::b() const  (in parser_benchmarks) + 4,0  [0x100786674,0x100786670]
+                              +       ! : | 20 std::uniform_int_distribution<unsigned long>::param_type::b() const  (in parser_benchmarks) + 12,8,...  [0x10066b880,0x10066b87c,...]
+                              +       ! : 26 std::uniform_int_distribution<unsigned long>::operator()<Catch::SimplePcg32>(Catch::SimplePcg32&, std::uniform_int_distribution<unsigned long>::param_type const&)  (in parser_benchmarks) + 48  [0x10066b730]
+                              +       ! : | 15 DYLD-STUB$$std::uniform_int_distribution<unsigned long>::param_type::a() const  (in parser_benchmarks) + 4  [0x100786668]
+                              +       ! : | 11 std::uniform_int_distribution<unsigned long>::param_type::a() const  (in parser_benchmarks) + 12  [0x10066b898]
+                              +       ! : 17 std::uniform_int_distribution<unsigned long>::operator()<Catch::SimplePcg32>(Catch::SimplePcg32&, std::uniform_int_distribution<unsigned long>::param_type const&)  (in parser_benchmarks) + 4,0  [0x100787fb8,0x100787fb4]
+                              +       ! : 1 std::__independent_bits_engine<Catch::SimplePcg32, unsigned long>::__independent_bits_engine(Catch::SimplePcg32&, unsigned long)  (in parser_benchmarks) + 56  [0x10066b8dc]
+                              +       ! 33 std::uniform_int_distribution<unsigned long>::operator()<Catch::SimplePcg32>(Catch::SimplePcg32&)  (in parser_benchmarks) + 36,12,...  [0x10066b39c,0x10066b384,...]
+                              +       ! 29 std::uniform_int_distribution<unsigned long>::operator()<Catch::SimplePcg32>(Catch::SimplePcg32&)  (in parser_benchmarks) + 4,0,...  [0x100787fac,0x100787fa8,...]
+                              +       ! 26 std::uniform_int_distribution<unsigned long>::operator()<Catch::SimplePcg32>(Catch::SimplePcg32&, std::uniform_int_distribution<unsigned long>::param_type const&)  (in parser_benchmarks) + 360  [0x10066b868]
+                              +       665 Catch::Benchmark::Detail::(anonymous namespace)::resample<Catch::SimplePcg32, double (*)(double const*, double const*)>(Catch::SimplePcg32&, unsigned int, double const*, double const*, double (*&)(double const*, double const*))  (in parser_benchmarks) + 280  [0x10066af4c]
+                              +       ! 467 std::vector<double>::push_back[abi:v160006](double const&)  (in parser_benchmarks) + 76  [0x10066b358]
+                              +       ! : 116 std::vector<double>::__construct_one_at_end[abi:v160006]<double const&>(double const&)  (in parser_benchmarks) + 76  [0x10066b588]
+                              +       ! : | 62 std::allocator_traits<std::allocator<double>>::construct[abi:v160006]<double, double const&, void>(std::allocator<double>&, double*, double const&)  (in parser_benchmarks) + 40  [0x10066b6cc]
+                              +       ! : | + 40 std::allocator<double>::construct[abi:v160006]<double, double const&>(double*, double const&)  (in parser_benchmarks) + 28,12,...  [0x10066b6f4,0x10066b6e4,...]
+                              +       ! : | + 22 std::allocator<double>::construct[abi:v160006]<double, double const&>(double*, double const&)  (in parser_benchmarks) + 4,0  [0x10078926c,0x100789268]
+                              +       ! : | 35 std::allocator_traits<std::allocator<double>>::construct[abi:v160006]<double, double const&, void>(std::allocator<double>&, double*, double const&)  (in parser_benchmarks) + 4,8,...  [0x100787e44,0x100787e48,...]
+                              +       ! : | 19 std::allocator_traits<std::allocator<double>>::construct[abi:v160006]<double, double const&, void>(std::allocator<double>&, double*, double const&)  (in parser_benchmarks) + 40,32,...  [0x10066b6cc,0x10066b6c4,...]
+                              +       ! : 103 std::vector<double>::__construct_one_at_end[abi:v160006]<double const&>(double const&)  (in parser_benchmarks) + 40  [0x10066b564]
+                              +       ! : | 68 std::vector<double>::_ConstructTransaction::_ConstructTransaction[abi:v160006](std::vector<double>&, unsigned long)  (in parser_benchmarks) + 44  [0x100666efc]
+                              +       ! : | + 68 std::vector<double>::_ConstructTransaction::_ConstructTransaction[abi:v160006](std::vector<double>&, unsigned long)  (in parser_benchmarks) + 56,44,...  [0x100666fa4,0x100666f98,...]
+                              +       ! : | 35 std::vector<double>::_ConstructTransaction::_ConstructTransaction[abi:v160006](std::vector<double>&, unsigned long)  (in parser_benchmarks) + 48,12,...  [0x100666f00,0x100666edc,...]
+                              +       ! : 69 std::vector<double>::__construct_one_at_end[abi:v160006]<double const&>(double const&)  (in parser_benchmarks) + 48  [0x10066b56c]
+                              +       ! : | 52 std::vector<double>::__alloc[abi:v160006]()  (in parser_benchmarks) + 28  [0x100665774]
+                              +       ! : | + 29 std::__compressed_pair<double*>::second[abi:v160006]()  (in parser_benchmarks) + 24,16,...  [0x100665a68,0x100665a60,...]
+                              +       ! : | + 23 std::__compressed_pair<double*>::second[abi:v160006]()  (in parser_benchmarks) + 24  [0x100665a68]
+                              +       ! : | +   23 std::__compressed_pair_elem<std::allocator<double>, 1, true>::__get[abi:v160006]()  (in parser_benchmarks) + 8  [0x100665a7c]
+                              +       ! : | 17 std::vector<double>::__alloc[abi:v160006]()  (in parser_benchmarks) + 28,16  [0x100665774,0x100665768]
+                              +       ! : 68 std::vector<double>::__construct_one_at_end[abi:v160006]<double const&>(double const&)  (in parser_benchmarks) + 100  [0x10066b5a0]
+                              +       ! : | 37 std::vector<double>::_ConstructTransaction::~_ConstructTransaction[abi:v160006]()  (in parser_benchmarks) + 32,20,...  [0x100666f60,0x100666f54,...]
+                              +       ! : | 31 std::vector<double>::_ConstructTransaction::~_ConstructTransaction[abi:v160006]()  (in parser_benchmarks) + 28  [0x100666f5c]
+                              +       ! : |   31 std::vector<double>::_ConstructTransaction::~_ConstructTransaction[abi:v160006]()  (in parser_benchmarks) + 20,24,...  [0x100666fec,0x100666ff0,...]
+                              +       ! : 67 std::vector<double>::__construct_one_at_end[abi:v160006]<double const&>(double const&)  (in parser_benchmarks) + 52,100,...  [0x10066b570,0x10066b5a0,...]
+                              +       ! : 25 std::vector<double>::__construct_one_at_end[abi:v160006]<double const&>(double const&)  (in parser_benchmarks) + 4,8  [0x100788c9c,0x100788ca0]
+                              +       ! : 14 std::vector<double>::__construct_one_at_end[abi:v160006]<double const&>(double const&)  (in parser_benchmarks) + 60  [0x10066b578]
+                              +       ! : | 14 std::__to_address[abi:v160006]<double>(double*)  (in parser_benchmarks) + 8  [0x100665810]
+                              +       ! : 3 std::vector<double>::__alloc[abi:v160006]()  (in parser_benchmarks) + 36  [0x10066577c]
+                              +       ! : 2 std::allocator_traits<std::allocator<double>>::construct[abi:v160006]<double, double const&, void>(std::allocator<double>&, double*, double const&)  (in parser_benchmarks) + 48  [0x10066b6d4]
+                              +       ! 106 std::vector<double>::push_back[abi:v160006](double const&)  (in parser_benchmarks) + 40  [0x10066b334]
+                              +       ! : 73 std::vector<double>::__end_cap[abi:v160006]()  (in parser_benchmarks) + 28  [0x100666410]
+                              +       ! : | 45 std::__compressed_pair<double*>::first[abi:v160006]()  (in parser_benchmarks) + 24  [0x100666b70]
+                              +       ! : | + 45 std::__compressed_pair_elem<double*, 0, false>::__get[abi:v160006]()  (in parser_benchmarks) + 8,4,...  [0x1006662e8,0x1006662e4,...]
+                              +       ! : | 28 std::__compressed_pair<double*>::first[abi:v160006]()  (in parser_benchmarks) + 24,0,...  [0x100666b70,0x100666b58,...]
+                              +       ! : 33 std::vector<double>::__end_cap[abi:v160006]()  (in parser_benchmarks) + 28,24,...  [0x100666410,0x10066640c,...]
+                              +       ! 92 std::vector<double>::push_back[abi:v160006](double const&)  (in parser_benchmarks) + 96,24,...  [0x10066b36c,0x10066b324,...]
+                              +       263 Catch::Benchmark::Detail::(anonymous namespace)::resample<Catch::SimplePcg32, double (*)(double const*, double const*)>(Catch::SimplePcg32&, unsigned int, double const*, double const*, double (*&)(double const*, double const*))  (in parser_benchmarks) + 200  [0x10066aefc]
+                              +       ! 262 std::vector<double>::clear[abi:v160006]()  (in parser_benchmarks) + 44  [0x10066b2ec]
+                              +       ! : 262 std::vector<double>::__clear[abi:v160006]()  (in parser_benchmarks) + 28  [0x100665718]
+                              +       ! :   92 std::vector<double>::__base_destruct_at_end[abi:v160006](double*)  (in parser_benchmarks) + 72  [0x100665864]
+                              +       ! :   | 75 std::vector<double>::__alloc[abi:v160006]()  (in parser_benchmarks) + 28  [0x100665774]
+                              +       ! :   | + 44 std::__compressed_pair<double*>::second[abi:v160006]()  (in parser_benchmarks) + 24  [0x100665a68]
+                              +       ! :   | + ! 44 std::__compressed_pair_elem<std::allocator<double>, 1, true>::__get[abi:v160006]()  (in parser_benchmarks) + 8,0  [0x100665a7c,0x100665a74]
+                              +       ! :   | + 31 std::__compressed_pair<double*>::second[abi:v160006]()  (in parser_benchmarks) + 0,24  [0x100665a50,0x100665a68]
+                              +       ! :   | 17 std::vector<double>::__alloc[abi:v160006]()  (in parser_benchmarks) + 28  [0x100665774]
+                              +       ! :   91 std::vector<double>::__base_destruct_at_end[abi:v160006](double*)  (in parser_benchmarks) + 104  [0x100665884]
+                              +       ! :   | 38 std::allocator_traits<std::allocator<double>>::destroy[abi:v160006]<double, void>(std::allocator<double>&, double*)  (in parser_benchmarks) + 4  [0x100787e2c]
+                              +       ! :   | 33 std::allocator_traits<std::allocator<double>>::destroy[abi:v160006]<double, void>(std::allocator<double>&, double*)  (in parser_benchmarks) + 32  [0x1006658c8]
+                              +       ! :   | + 33 std::allocator<double>::destroy[abi:v160006](double*)  (in parser_benchmarks) + 8  [0x1006658dc]
+                              +       ! :   | 20 std::allocator_traits<std::allocator<double>>::destroy[abi:v160006]<double, void>(std::allocator<double>&, double*)  (in parser_benchmarks) + 32  [0x1006658c8]
+                              +       ! :   49 std::vector<double>::__base_destruct_at_end[abi:v160006](double*)  (in parser_benchmarks) + 44,40  [0x100665848,0x100665844]
+                              +       ! :   30 std::vector<double>::__base_destruct_at_end[abi:v160006](double*)  (in parser_benchmarks) + 92  [0x100665878]
+                              +       ! :     30 std::__to_address[abi:v160006]<double>(double*)  (in parser_benchmarks) + 8  [0x100665810]
+                              +       ! 1 std::vector<double>::clear[abi:v160006]()  (in parser_benchmarks) + 56  [0x10066b2f8]
+                              +       !   1 std::vector<double>::__annotate_shrink[abi:v160006](unsigned long) const  (in parser_benchmarks) + 64  [0x10066b4c8]
+                              +       !     1 std::vector<double>::capacity[abi:v160006]() const  (in parser_benchmarks) + 28  [0x10066579c]
+                              +       !       1 std::vector<double>::__end_cap[abi:v160006]() const  (in parser_benchmarks) + 28  [0x100665aa4]
+                              +       !         1 std::__compressed_pair<double*>::first[abi:v160006]() const  (in parser_benchmarks) + 24  [0x100665ac8]
+                              +       238 Catch::Benchmark::Detail::(anonymous namespace)::resample<Catch::SimplePcg32, double (*)(double const*, double const*)>(Catch::SimplePcg32&, unsigned int, double const*, double const*, double (*&)(double const*, double const*))  (in parser_benchmarks) + 280,284,...  [0x10066af4c,0x10066af50,...]
+                              +       38 Catch::Benchmark::Detail::(anonymous namespace)::resample<Catch::SimplePcg32, double (*)(double const*, double const*)>(Catch::SimplePcg32&, unsigned int, double const*, double const*, double (*&)(double const*, double const*))  (in parser_benchmarks) + 424  [0x10066afdc]
+                              +       ! 38 Catch::Benchmark::Detail::mean(double const*, double const*)  (in parser_benchmarks) + 52,48,...  [0x1006695b4,0x1006695b0,...]
+                              +       1 Catch::Benchmark::Detail::(anonymous namespace)::resample<Catch::SimplePcg32, double (*)(double const*, double const*)>(Catch::SimplePcg32&, unsigned int, double const*, double const*, double (*&)(double const*, double const*))  (in parser_benchmarks) + 452  [0x10066aff8]
+                              +       ! 1 std::vector<double>::push_back[abi:v160006](double const&)  (in parser_benchmarks) + 76  [0x10066b358]
+                              +       !   1 std::vector<double>::__construct_one_at_end[abi:v160006]<double const&>(double const&)  (in parser_benchmarks) + 100  [0x10066b5a0]
+                              +       !     1 std::vector<double>::_ConstructTransaction::~_ConstructTransaction[abi:v160006]()  (in parser_benchmarks) + 28  [0x100666f5c]
+                              +       !       1 std::vector<double>::_ConstructTransaction::~_ConstructTransaction[abi:v160006]()  (in parser_benchmarks) + 16  [0x100666fe8]
+                              +       1 std::vector<double>::push_back[abi:v160006](double const&)  (in parser_benchmarks) + 104  [0x10066b374]
+                              684 Catch::Benchmark::Benchmark::run<std::chrono::steady_clock>()  (in parser_benchmarks) + 68  [0x10065eec4]  catch_benchmark.hpp:62
+                              + 639 Catch::Benchmark::Detail::measure_environment<std::chrono::steady_clock>()  (in parser_benchmarks) + 84  [0x10065f460]  catch_estimate_clock.hpp:115
+                              + ! 374 Catch::Benchmark::Detail::estimate_clock_resolution<std::chrono::steady_clock>(int)  (in parser_benchmarks) + 176  [0x10065f6f0]  catch_estimate_clock.hpp:67
+                              + ! : 151 Catch::Benchmark::Detail::classify_outliers(double const*, double const*)  (in parser_benchmarks) + 112  [0x100669314]
+                              + ! : | 91 Catch::Benchmark::Detail::weighted_average_quantile(int, int, double*, double*)  (in parser_benchmarks) + 160  [0x1006691c4]
+                              + ! : | + 91 std::nth_element[abi:v160006]<double*>(double*, double*, double*)  (in parser_benchmarks) + 40  [0x10066926c]
+                              + ! : | +   91 std::nth_element[abi:v160006]<double*, std::__less<double, double>>(double*, double*, double*, std::__less<double, double>)  (in parser_benchmarks) + 44  [0x10066c1ac]
+                              + ! : | +     91 std::__nth_element_impl[abi:v160006]<std::_ClassicAlgPolicy, double*, std::__less<double, double>>(double*, double*, double*, std::__less<double, double>&)  (in parser_benchmarks) + 88  [0x10066c210]
+                              + ! : | +       33 std::__nth_element[abi:v160006]<std::_ClassicAlgPolicy, std::__less<double, double>&, double*>(double*, double*, double*, std::__less<double, double>&)  (in parser_benchmarks) + 432  [0x10066c420]
+                              + ! : | +       ! 19 std::__nth_element_find_guard[abi:v160006]<std::__less<double, double>&, double*>(double*&, double*&, double*, std::__less<double, double>&)  (in parser_benchmarks) + 112  [0x10066caf4]
+                              + ! : | +       ! : 19 std::__less<double, double>::operator()[abi:v160006](double const&, double const&) const  (in parser_benchmarks) + 28,48,...  [0x10066ab74,0x10066ab88,...]
+                              + ! : | +       ! 14 std::__nth_element_find_guard[abi:v160006]<std::__less<double, double>&, double*>(double*&, double*&, double*, std::__less<double, double>&)  (in parser_benchmarks) + 52  [0x10066cab8]
+                              + ! : | +       19 std::__nth_element[abi:v160006]<std::_ClassicAlgPolicy, std::__less<double, double>&, double*>(double*, double*, double*, std::__less<double, double>&)  (in parser_benchmarks) + 928  [0x10066c610]
+                              + ! : | +       ! 19 std::__less<double, double>::operator()[abi:v160006](double const&, double const&) const  (in parser_benchmarks) + 28,0,...  [0x10066ab74,0x10066ab58,...]
+                              + ! : | +       12 std::__nth_element[abi:v160006]<std::_ClassicAlgPolicy, std::__less<double, double>&, double*>(double*, double*, double*, std::__less<double, double>&)  (in parser_benchmarks) + 748,720,...  [0x10066c55c,0x10066c540,...]
+                              + ! : | +       11 std::__nth_element[abi:v160006]<std::_ClassicAlgPolicy, std::__less<double, double>&, double*>(double*, double*, double*, std::__less<double, double>&)  (in parser_benchmarks) + 744  [0x10066c558]
+                              + ! : | +       ! 11 std::__less<double, double>::operator()[abi:v160006](double const&, double const&) const  (in parser_benchmarks) + 28,0  [0x10066ab74,0x10066ab58]
+                              + ! : | +       10 std::__nth_element[abi:v160006]<std::_ClassicAlgPolicy, std::__less<double, double>&, double*>(double*, double*, double*, std::__less<double, double>&)  (in parser_benchmarks) + 692  [0x10066c524]
+                              + ! : | +       ! 10 std::__less<double, double>::operator()[abi:v160006](double const&, double const&) const  (in parser_benchmarks) + 0,28,...  [0x10066ab58,0x10066ab74,...]
+                              + ! : | +       6 std::__nth_element[abi:v160006]<std::_ClassicAlgPolicy, std::__less<double, double>&, double*>(double*, double*, double*, std::__less<double, double>&)  (in parser_benchmarks) + 796  [0x10066c58c]
+                              + ! : | +         6 std::_IterOps<std::_ClassicAlgPolicy>::iter_swap[abi:v160006]<double*&, double*&>(double*&, double*&)  (in parser_benchmarks) + 40  [0x10066c890]
+                              + ! : | +           5 std::iter_swap[abi:v160006]<double*, double*>(double*, double*)  (in parser_benchmarks) + 32  [0x10066abec]
+                              + ! : | +           : 5 std::enable_if<is_move_constructible<double>::value && is_move_assignable<double>::value, void>::type std::swap[abi:v160006]<double>(double&, double&)  (in parser_benchmarks) + 48,32  [0x10066ac28,0x10066ac18]
+                              + ! : | +           1 std::iter_swap[abi:v160006]<double*, double*>(double*, double*)  (in parser_benchmarks) + 32  [0x10066abec]
+                              + ! : | 60 Catch::Benchmark::Detail::weighted_average_quantile(int, int, double*, double*)  (in parser_benchmarks) + 232  [0x10066920c]
+                              + ! : |   60 std::min_element[abi:v160006]<double*>(double*, double*)  (in parser_benchmarks) + 32  [0x100669298]
+                              + ! : |     60 std::min_element[abi:v160006]<double*, std::__less<double, double>>(double*, double*, std::__less<double, double>)  (in parser_benchmarks) + 36  [0x10066a9cc]
+                              + ! : |       60 std::__min_element[abi:v160006]<std::__less<double, double>&, double*, double*>(double*, double*, std::__less<double, double>&)  (in parser_benchmarks) + 56  [0x10066aa10]
+                              + ! : |         20 std::__min_element[abi:v160006]<std::__less<double, double>&, double*, double*, std::__identity>(double*, double*, std::__less<double, double>&, std::__identity&)  (in parser_benchmarks) + 132  [0x10066aaa0]
+                              + ! : |         ! 13 decltype(std::declval<std::__identity&>()(std::declval<double&>())) std::__invoke[abi:v160006]<std::__identity&, double&>(std::__identity&, double&)  (in parser_benchmarks) + 16,32,...  [0x10066ab3c,0x10066ab4c,...]
+                              + ! : |         ! 7 decltype(std::declval<std::__identity&>()(std::declval<double&>())) std::__invoke[abi:v160006]<std::__identity&, double&>(std::__identity&, double&)  (in parser_benchmarks) + 32  [0x10066ab4c]
+                              + ! : |         !   6 std::__identity::operator()<double&>(double&) const  (in parser_benchmarks) + 4,0  [0x1007863d4,0x1007863d0]
+                              + ! : |         !   1 std::__identity::operator()<double&>(double&) const  (in parser_benchmarks) + 12  [0x10066ab98]
+                              + ! : |         20 std::__min_element[abi:v160006]<std::__less<double, double>&, double*, double*, std::__identity>(double*, double*, std::__less<double, double>&, std::__identity&)  (in parser_benchmarks) + 148  [0x10066aab0]
+                              + ! : |         ! 12 decltype(std::declval<std::__identity&>()(std::declval<double&>())) std::__invoke[abi:v160006]<std::__identity&, double&>(std::__identity&, double&)  (in parser_benchmarks) + 32  [0x10066ab4c]
+                              + ! : |         ! : 6 std::__identity::operator()<double&>(double&) const  (in parser_benchmarks) + 12  [0x10066ab98]
+                              + ! : |         ! : 6 std::__identity::operator()<double&>(double&) const  (in parser_benchmarks) + 4  [0x1007863d4]
+                              + ! : |         ! 8 decltype(std::declval<std::__identity&>()(std::declval<double&>())) std::__invoke[abi:v160006]<std::__identity&, double&>(std::__identity&, double&)  (in parser_benchmarks) + 24,32  [0x10066ab44,0x10066ab4c]
+                              + ! : |         15 std::__min_element[abi:v160006]<std::__less<double, double>&, double*, double*, std::__identity>(double*, double*, std::__less<double, double>&, std::__identity&)  (in parser_benchmarks) + 164  [0x10066aac0]
+                              + ! : |         ! 11 decltype(std::declval<std::__less<double, double>&>()(std::declval<double&>(), std::declval<double&>())) std::__invoke[abi:v160006]<std::__less<double, double>&, double&, double&>(std::__less<double, double>&, double&, double&)  (in parser_benchmarks) + 40  [0x10066ab1c]
+                              + ! : |         ! : 11 std::__less<double, double>::operator()[abi:v160006](double const&, double const&) const  (in parser_benchmarks) + 28,32,...  [0x10066ab74,0x10066ab78,...]
+                              + ! : |         ! 4 decltype(std::declval<std::__less<double, double>&>()(std::declval<double&>(), std::declval<double&>())) std::__invoke[abi:v160006]<std::__less<double, double>&, double&, double&>(std::__less<double, double>&, double&, double&)  (in parser_benchmarks) + 44,28,...  [0x10066ab20,0x10066ab10,...]
+                              + ! : |         3 std::__min_element[abi:v160006]<std::__less<double, double>&, double*, double*, std::__identity>(double*, double*, std::__less<double, double>&, std::__identity&)  (in parser_benchmarks) + 92  [0x10066aa78]
+                              + ! : |         2 decltype(std::declval<std::__less<double, double>&>()(std::declval<double&>(), std::declval<double&>())) std::__invoke[abi:v160006]<std::__less<double, double>&, double&, double&>(std::__less<double, double>&, double&, double&)  (in parser_benchmarks) + 52  [0x10066ab28]
+                              + ! : 91 Catch::Benchmark::Detail::classify_outliers(double const*, double const*)  (in parser_benchmarks) + 200  [0x10066936c]
+                              + ! : | 71 Catch::Benchmark::Detail::weighted_average_quantile(int, int, double*, double*)  (in parser_benchmarks) + 160  [0x1006691c4]
+                              + ! : | + 71 std::nth_element[abi:v160006]<double*>(double*, double*, double*)  (in parser_benchmarks) + 40  [0x10066926c]
+                              + ! : | +   71 std::nth_element[abi:v160006]<double*, std::__less<double, double>>(double*, double*, double*, std::__less<double, double>)  (in parser_benchmarks) + 44  [0x10066c1ac]
+                              + ! : | +     71 std::__nth_element_impl[abi:v160006]<std::_ClassicAlgPolicy, double*, std::__less<double, double>>(double*, double*, double*, std::__less<double, double>&)  (in parser_benchmarks) + 88  [0x10066c210]
+                              + ! : | +       36 std::__nth_element[abi:v160006]<std::_ClassicAlgPolicy, std::__less<double, double>&, double*>(double*, double*, double*, std::__less<double, double>&)  (in parser_benchmarks) + 432  [0x10066c420]
+                              + ! : | +       ! 21 std::__nth_element_find_guard[abi:v160006]<std::__less<double, double>&, double*>(double*&, double*&, double*, std::__less<double, double>&)  (in parser_benchmarks) + 52  [0x10066cab8]
+                              + ! : | +       ! 15 std::__nth_element_find_guard[abi:v160006]<std::__less<double, double>&, double*>(double*&, double*&, double*, std::__less<double, double>&)  (in parser_benchmarks) + 112  [0x10066caf4]
+                              + ! : | +       !   15 std::__less<double, double>::operator()[abi:v160006](double const&, double const&) const  (in parser_benchmarks) + 28,16,...  [0x10066ab74,0x10066ab68,...]
+                              + ! : | +       10 std::__nth_element[abi:v160006]<std::_ClassicAlgPolicy, std::__less<double, double>&, double*>(double*, double*, double*, std::__less<double, double>&)  (in parser_benchmarks) + 692  [0x10066c524]
+                              + ! : | +       ! 10 std::__less<double, double>::operator()[abi:v160006](double const&, double const&) const  (in parser_benchmarks) + 28,0,...  [0x10066ab74,0x10066ab58,...]
+                              + ! : | +       8 std::__nth_element[abi:v160006]<std::_ClassicAlgPolicy, std::__less<double, double>&, double*>(double*, double*, double*, std::__less<double, double>&)  (in parser_benchmarks) + 692,932,...  [0x10066c524,0x10066c614,...]
+                              + ! : | +       7 std::__nth_element[abi:v160006]<std::_ClassicAlgPolicy, std::__less<double, double>&, double*>(double*, double*, double*, std::__less<double, double>&)  (in parser_benchmarks) + 744  [0x10066c558]
+                              + ! : | +       ! 7 std::__less<double, double>::operator()[abi:v160006](double const&, double const&) const  (in parser_benchmarks) + 28,0,...  [0x10066ab74,0x10066ab58,...]
+                              + ! : | +       3 std::__nth_element[abi:v160006]<std::_ClassicAlgPolicy, std::__less<double, double>&, double*>(double*, double*, double*, std::__less<double, double>&)  (in parser_benchmarks) + 928  [0x10066c610]
+                              + ! : | +       ! 3 std::__less<double, double>::operator()[abi:v160006](double const&, double const&) const  (in parser_benchmarks) + 28,24  [0x10066ab74,0x10066ab70]
+                              + ! : | +       3 std::__nth_element[abi:v160006]<std::_ClassicAlgPolicy, std::__less<double, double>&, double*>(double*, double*, double*, std::__less<double, double>&)  (in parser_benchmarks) + 980  [0x10066c644]
+                              + ! : | +       ! 3 std::__less<double, double>::operator()[abi:v160006](double const&, double const&) const  (in parser_benchmarks) + 28,36  [0x10066ab74,0x10066ab7c]
+                              + ! : | +       2 std::__nth_element[abi:v160006]<std::_ClassicAlgPolicy, std::__less<double, double>&, double*>(double*, double*, double*, std::__less<double, double>&)  (in parser_benchmarks) + 568  [0x10066c4a8]
+                              + ! : | +       ! 2 std::__less<double, double>::operator()[abi:v160006](double const&, double const&) const  (in parser_benchmarks) + 28  [0x10066ab74]
+                              + ! : | +       2 std::__nth_element[abi:v160006]<std::_ClassicAlgPolicy, std::__less<double, double>&, double*>(double*, double*, double*, std::__less<double, double>&)  (in parser_benchmarks) + 1032  [0x10066c678]
+                              + ! : | +         1 std::_IterOps<std::_ClassicAlgPolicy>::iter_swap[abi:v160006]<double*&, double*&>(double*&, double*&)  (in parser_benchmarks) + 40  [0x10066c890]
+                              + ! : | +         : 1 std::iter_swap[abi:v160006]<double*, double*>(double*, double*)  (in parser_benchmarks) + 32  [0x10066abec]
+                              + ! : | +         :   1 std::enable_if<is_move_constructible<double>::value && is_move_assignable<double>::value, void>::type std::swap[abi:v160006]<double>(double&, double&)  (in parser_benchmarks) + 48  [0x10066ac28]
+                              + ! : | +         1 std::_IterOps<std::_ClassicAlgPolicy>::iter_swap[abi:v160006]<double*&, double*&>(double*&, double*&)  (in parser_benchmarks) + 40  [0x10066c890]
+                              + ! : | 20 Catch::Benchmark::Detail::weighted_average_quantile(int, int, double*, double*)  (in parser_benchmarks) + 232  [0x10066920c]
+                              + ! : |   20 std::min_element[abi:v160006]<double*>(double*, double*)  (in parser_benchmarks) + 32  [0x100669298]
+                              + ! : |     20 std::min_element[abi:v160006]<double*, std::__less<double, double>>(double*, double*, std::__less<double, double>)  (in parser_benchmarks) + 36  [0x10066a9cc]
+                              + ! : |       20 std::__min_element[abi:v160006]<std::__less<double, double>&, double*, double*>(double*, double*, std::__less<double, double>&)  (in parser_benchmarks) + 56  [0x10066aa10]
+                              + ! : |         10 std::__min_element[abi:v160006]<std::__less<double, double>&, double*, double*, std::__identity>(double*, double*, std::__less<double, double>&, std::__identity&)  (in parser_benchmarks) + 164  [0x10066aac0]
+                              + ! : |         ! 5 decltype(std::declval<std::__less<double, double>&>()(std::declval<double&>(), std::declval<double&>())) std::__invoke[abi:v160006]<std::__less<double, double>&, double&, double&>(std::__less<double, double>&, double&, double&)  (in parser_benchmarks) + 40  [0x10066ab1c]
+                              + ! : |         ! : 5 std::__less<double, double>::operator()[abi:v160006](double const&, double const&) const  (in parser_benchmarks) + 28,32  [0x10066ab74,0x10066ab78]
+                              + ! : |         ! 5 decltype(std::declval<std::__less<double, double>&>()(std::declval<double&>(), std::declval<double&>())) std::__invoke[abi:v160006]<std::__less<double, double>&, double&, double&>(std::__less<double, double>&, double&, double&)  (in parser_benchmarks) + 28,44,...  [0x10066ab10,0x10066ab20,...]
+                              + ! : |         4 std::__min_element[abi:v160006]<std::__less<double, double>&, double*, double*, std::__identity>(double*, double*, std::__less<double, double>&, std::__identity&)  (in parser_benchmarks) + 132  [0x10066aaa0]
+                              + ! : |         ! 2 decltype(std::declval<std::__identity&>()(std::declval<double&>())) std::__invoke[abi:v160006]<std::__identity&, double&>(std::__identity&, double&)  (in parser_benchmarks) + 32  [0x10066ab4c]
+                              + ! : |         ! : 2 std::__identity::operator()<double&>(double&) const  (in parser_benchmarks) + 12  [0x10066ab98]
+                              + ! : |         ! 2 decltype(std::declval<std::__identity&>()(std::declval<double&>())) std::__invoke[abi:v160006]<std::__identity&, double&>(std::__identity&, double&)  (in parser_benchmarks) + 32  [0x10066ab4c]
+                              + ! : |         3 std::__min_element[abi:v160006]<std::__less<double, double>&, double*, double*, std::__identity>(double*, double*, std::__less<double, double>&, std::__identity&)  (in parser_benchmarks) + 148  [0x10066aab0]
+                              + ! : |         ! 2 decltype(std::declval<std::__identity&>()(std::declval<double&>())) std::__invoke[abi:v160006]<std::__identity&, double&>(std::__identity&, double&)  (in parser_benchmarks) + 24  [0x10066ab44]
+                              + ! : |         ! 1 decltype(std::declval<std::__identity&>()(std::declval<double&>())) std::__invoke[abi:v160006]<std::__identity&, double&>(std::__identity&, double&)  (in parser_benchmarks) + 32  [0x10066ab4c]
+                              + ! : |         !   1 std::__identity::operator()<double&>(double&) const  (in parser_benchmarks) + 4  [0x1007863d4]
+                              + ! : |         3 std::__min_element[abi:v160006]<std::__less<double, double>&, double*, double*, std::__identity>(double*, double*, std::__less<double, double>&, std::__identity&)  (in parser_benchmarks) + 92  [0x10066aa78]
+                              + ! : 75 Catch::Benchmark::Detail::classify_outliers(double const*, double const*)  (in parser_benchmarks) + 608  [0x100669504]
+                              + ! : | 75 std::vector<double>::~vector[abi:v160006]()  (in parser_benchmarks) + 28  [0x1006651b0]
+                              + ! : |   75 std::vector<double>::~vector[abi:v160006]()  (in parser_benchmarks) + 44  [0x10066552c]
+                              + ! : |     74 std::vector<double>::__destroy_vector::operator()[abi:v160006]()  (in parser_benchmarks) + 84  [0x1006655cc]
+                              + ! : |     + 74 std::vector<double>::__clear[abi:v160006]()  (in parser_benchmarks) + 28  [0x100665718]
+                              + ! : |     +   29 std::vector<double>::__base_destruct_at_end[abi:v160006](double*)  (in parser_benchmarks) + 72  [0x100665864]
+                              + ! : |     +   ! 25 std::vector<double>::__alloc[abi:v160006]()  (in parser_benchmarks) + 28  [0x100665774]
+                              + ! : |     +   ! : 14 std::__compressed_pair<double*>::second[abi:v160006]()  (in parser_benchmarks) + 24  [0x100665a68]
+                              + ! : |     +   ! : | 14 std::__compressed_pair_elem<std::allocator<double>, 1, true>::__get[abi:v160006]()  (in parser_benchmarks) + 8,0  [0x100665a7c,0x100665a74]
+                              + ! : |     +   ! : 11 std::__compressed_pair<double*>::second[abi:v160006]()  (in parser_benchmarks) + 24,0  [0x100665a68,0x100665a50]
+                              + ! : |     +   ! 4 std::vector<double>::__alloc[abi:v160006]()  (in parser_benchmarks) + 28  [0x100665774]
+                              + ! : |     +   29 std::vector<double>::__base_destruct_at_end[abi:v160006](double*)  (in parser_benchmarks) + 104  [0x100665884]
+                              + ! : |     +   ! 14 std::allocator_traits<std::allocator<double>>::destroy[abi:v160006]<double, void>(std::allocator<double>&, double*)  (in parser_benchmarks) + 32  [0x1006658c8]
+                              + ! : |     +   ! : 14 std::allocator<double>::destroy[abi:v160006](double*)  (in parser_benchmarks) + 8  [0x1006658dc]
+                              + ! : |     +   ! 11 std::allocator_traits<std::allocator<double>>::destroy[abi:v160006]<double, void>(std::allocator<double>&, double*)  (in parser_benchmarks) + 4  [0x100787e2c]
+                              + ! : |     +   ! 4 std::allocator_traits<std::allocator<double>>::destroy[abi:v160006]<double, void>(std::allocator<double>&, double*)  (in parser_benchmarks) + 32  [0x1006658c8]
+                              + ! : |     +   12 std::vector<double>::__base_destruct_at_end[abi:v160006](double*)  (in parser_benchmarks) + 44,40  [0x100665848,0x100665844]
+                              + ! : |     +   4 std::vector<double>::__base_destruct_at_end[abi:v160006](double*)  (in parser_benchmarks) + 92  [0x100665878]
+                              + ! : |     +     4 std::__to_address[abi:v160006]<double>(double*)  (in parser_benchmarks) + 8  [0x100665810]
+                              + ! : |     1 std::vector<double>::__destroy_vector::operator()[abi:v160006]()  (in parser_benchmarks) + 140  [0x100665604]
+                              + ! : |       1 std::allocator_traits<std::allocator<double>>::deallocate[abi:v160006](std::allocator<double>&, double*, unsigned long)  (in parser_benchmarks) + 40  [0x10066574c]
+                              + ! : |         1 std::allocator<double>::deallocate[abi:v160006](double*, unsigned long)  (in parser_benchmarks) + 44  [0x100665914]
+                              + ! : |           1 std::__libcpp_deallocate[abi:v160006](void*, unsigned long, unsigned long)  (in parser_benchmarks) + 80  [0x100665978]
+                              + ! : |             1 std::__do_deallocate_handle_size[abi:v160006]<>(void*, unsigned long)  (in parser_benchmarks) + 28  [0x1006659f4]
+                              + ! : |               1 std::__libcpp_operator_delete[abi:v160006]<void*>(void*)  (in parser_benchmarks) + 24  [0x100665a44]
+                              + ! : |                 1 _szone_free  (in libsystem_malloc.dylib) + 720  [0x193bfcd10]
+                              + ! : |                   1 free_large  (in libsystem_malloc.dylib) + 772  [0x193bf171c]
+                              + ! : |                     1 madvise  (in libsystem_kernel.dylib) + 8  [0x193d98a58]
+                              + ! : 49 Catch::Benchmark::Detail::classify_outliers(double const*, double const*)  (in parser_benchmarks) + 424,320,...  [0x10066944c,0x1006693e4,...]
+                              + ! : 8 Catch::Benchmark::Detail::classify_outliers(double const*, double const*)  (in parser_benchmarks) + 44  [0x1006692d0]
+                              + ! :   8 std::vector<double>::vector<double const*, 0>(double const*, double const*)  (in parser_benchmarks) + 44  [0x100669544]
+                              + ! :     8 std::vector<double>::vector<double const*, 0>(double const*, double const*)  (in parser_benchmarks) + 184  [0x10066cbe0]
+                              + ! :       8 std::vector<double>::__construct_at_end<double const*, 0>(double const*, double const*, unsigned long)  (in parser_benchmarks) + 72  [0x10066cd8c]
+                              + ! :         8 std::__uninitialized_allocator_copy[abi:v160006]<std::allocator<double>, double, double, (void*)0>(std::allocator<double>&, double const*, double const*, double*)  (in parser_benchmarks) + 44  [0x10066cec4]
+                              + ! :           8 std::copy[abi:v160006]<double const*, double*>(double const*, double const*, double*)  (in parser_benchmarks) + 40  [0x10066cef8]
+                              + ! :             8 std::__copy[abi:v160006]<std::_ClassicAlgPolicy, double const*, double const*, double*>(double const*, double const*, double*)  (in parser_benchmarks) + 40  [0x10066cf38]
+                              + ! :               8 std::__dispatch_copy_or_move[abi:v160006]<std::_ClassicAlgPolicy, std::__copy_loop<std::_ClassicAlgPolicy>, std::__copy_trivial, double const*, double const*, double*>(double const*, double const*, double*)  (in parser_benchmarks) + 40  [0x10066cf7c]
+                              + ! :                 8 std::__unwrap_and_dispatch[abi:v160006]<std::__overload<std::__copy_loop<std::_ClassicAlgPolicy>, std::__copy_trivial>, double const*, double const*, double*, 0>(double const*, double const*, double*)  (in parser_benchmarks) + 88  [0x10066cff0]
+                              + ! :                   8 std::__copy_trivial::operator()[abi:v160006]<double const, double, 0>(double const*, double const*, double*) const  (in parser_benchmarks) + 44  [0x10066d0d8]
+                              + ! :                     8 std::__copy_trivial_impl[abi:v160006]<double const, double>(double const*, double const*, double*)  (in parser_benchmarks) + 76  [0x10066d308]
+                              + ! :                       8 _platform_memmove  (in libsystem_platform.dylib) + 88  [0x193e071f8]
+                              + ! 251 Catch::Benchmark::Detail::estimate_clock_resolution<std::chrono::steady_clock>(int)  (in parser_benchmarks) + 96  [0x10065f6a0]  catch_estimate_clock.hpp:63
+                              + ! : 194 Catch::Benchmark::Detail::resolution<std::chrono::steady_clock>(int)  (in parser_benchmarks) + 196  [0x10065fae8]  catch_estimate_clock.hpp:33
+                              + ! : | 193 std::chrono::steady_clock::now()  (in libc++.1.dylib) + 28  [0x193cfca84]
+                              + ! : | + 190 clock_gettime  (in libsystem_c.dylib) + 72  [0x193c7b5a8]
+                              + ! : | + ! 179 clock_gettime_nsec_np  (in libsystem_c.dylib) + 300  [0x193c6e5d8]
+                              + ! : | + ! : 179 mach_continuous_time  (in libsystem_kernel.dylib) + 56,60,...  [0x193d961f4,0x193d961f8,...]
+                              + ! : | + ! 8 clock_gettime_nsec_np  (in libsystem_c.dylib) + 264,0  [0x193c6e5b4,0x193c6e4ac]
+                              + ! : | + ! 3 clock_gettime_nsec_np  (in libsystem_c.dylib) + 240  [0x193c6e59c]
+                              + ! : | + !   3 mach_timebase_info  (in libsystem_kernel.dylib) + 4  [0x193d96168]
+                              + ! : | + 3 clock_gettime  (in libsystem_c.dylib) + 76,72  [0x193c7b5ac,0x193c7b5a8]
+                              + ! : | 1 std::chrono::steady_clock::now()  (in libc++.1.dylib) + 8  [0x193cfca70]
+                              + ! : 30 Catch::Benchmark::Detail::resolution<std::chrono::steady_clock>(int)  (in parser_benchmarks) + 540,472,...  [0x10065fc40,0x10065fbfc,...]  catch_estimate_clock.hpp:39
+                              + ! : 13 Catch::Benchmark::Detail::resolution<std::chrono::steady_clock>(int)  (in parser_benchmarks) + 492,504  [0x10065fc10,0x10065fc1c]  catch_estimate_clock.hpp:38
+                              + ! : 7 Catch::Benchmark::Detail::resolution<std::chrono::steady_clock>(int)  (in parser_benchmarks) + 196,160  [0x10065fae8,0x10065fac4]  catch_estimate_clock.hpp:33
+                              + ! : 6 Catch::Benchmark::Detail::resolution<std::chrono::steady_clock>(int)  (in parser_benchmarks) + 512,524  [0x10065fc24,0x10065fc30]  catch_estimate_clock.hpp:40
+                              + ! : 1 _szone_free  (in libsystem_malloc.dylib) + 720  [0x193bfcd10]
+                              + ! :   1 free_large  (in libsystem_malloc.dylib) + 772  [0x193bf171c]
+                              + ! :     1 madvise  (in libsystem_kernel.dylib) + 8  [0x193d98a58]
+                              + ! 13 Catch::Benchmark::Detail::estimate_clock_resolution<std::chrono::steady_clock>(int)  (in parser_benchmarks) + 156  [0x10065f6dc]  catch_estimate_clock.hpp:66
+                              + ! : 13 Catch::Benchmark::Detail::mean(double const*, double const*)  (in parser_benchmarks) + 52,76,...  [0x1006695b4,0x1006695cc,...]
+                              + ! 1 Catch::Benchmark::Detail::estimate_clock_resolution<std::chrono::steady_clock>(int)  (in parser_benchmarks) + 188  [0x10065f6fc]  catch_estimate_clock.hpp:69
+                              + !   1 _szone_free  (in libsystem_malloc.dylib) + 720  [0x193bfcd10]
+                              + !     1 free_large  (in libsystem_malloc.dylib) + 772  [0x193bf171c]
+                              + !       1 madvise  (in libsystem_kernel.dylib) + 8  [0x193d98a58]
+                              + 45 Catch::Benchmark::Detail::measure_environment<std::chrono::steady_clock>()  (in parser_benchmarks) + 96  [0x10065f46c]  catch_estimate_clock.hpp:116
+                              +   30 Catch::Benchmark::Detail::estimate_clock_cost<std::chrono::steady_clock>(std::chrono::duration<double, std::ratio<1l, 1000000000l>>)  (in parser_benchmarks) + 184  [0x10065f7ec]  catch_estimate_clock.hpp:85
+                              +   : 30 std::chrono::steady_clock::now()  (in libc++.1.dylib) + 28  [0x193cfca84]
+                              +   :   29 clock_gettime  (in libsystem_c.dylib) + 72  [0x193c7b5a8]
+                              +   :   | 28 clock_gettime_nsec_np  (in libsystem_c.dylib) + 300  [0x193c6e5d8]
+                              +   :   | + 28 mach_continuous_time  (in libsystem_kernel.dylib) + 56,60  [0x193d961f4,0x193d961f8]
+                              +   :   | 1 clock_gettime_nsec_np  (in libsystem_c.dylib) + 296  [0x193c6e5d4]
+                              +   :   1 clock_gettime  (in libsystem_c.dylib) + 72  [0x193c7b5a8]
+                              +   15 Catch::Benchmark::Detail::estimate_clock_cost<std::chrono::steady_clock>(std::chrono::duration<double, std::ratio<1l, 1000000000l>>)  (in parser_benchmarks) + 388  [0x10065f8b8]  catch_estimate_clock.hpp:91
+                              +     15 std::chrono::steady_clock::now()  (in libc++.1.dylib) + 28  [0x193cfca84]
+                              +       14 clock_gettime  (in libsystem_c.dylib) + 72  [0x193c7b5a8]
+                              +       | 14 clock_gettime_nsec_np  (in libsystem_c.dylib) + 300  [0x193c6e5d8]
+                              +       |   14 mach_continuous_time  (in libsystem_kernel.dylib) + 56,60  [0x193d961f4,0x193d961f8]
+                              +       1 clock_gettime  (in libsystem_c.dylib) + 72  [0x193c7b5a8]
+                              264 Catch::Benchmark::Benchmark::run<std::chrono::steady_clock>()  (in parser_benchmarks) + 156  [0x10065ef1c]  catch_benchmark.hpp:66
+                              + 264 Catch::Benchmark::Benchmark::prepare<std::chrono::steady_clock>(Catch::IConfig const&, Catch::Benchmark::Environment) const  (in parser_benchmarks) + 136  [0x10065fe74]  catch_benchmark.hpp:51
+                              +   264 _ZN5Catch9Benchmark6Detail11measure_oneINSt3__16chrono12steady_clockERKNS1_17BenchmarkFunctionEEENS0_6TimingINS1_12CompleteTypeIu20__remove_reference_tIu11__remove_cvINS3_13invoke_resultIT0_JNS0_11ChronometerEEE4typeEEEE4typeEEEOSC_iNS3_17integral_constantIbLb1EEE  (in parser_benchmarks) + 68  [0x10065ffcc]  catch_run_for_at_least.hpp:33
+                              +     177 Catch::Benchmark::Detail::BenchmarkFunction::model<CATCH2_INTERNAL_TEST_47()::$_0>::call(Catch::Benchmark::Chronometer) const  (in parser_benchmarks) + 116  [0x1006631b0]  catch_benchmark_function.hpp:55
+                              +     ! 166 LlamaParser::parseRules(std::vector<unsigned long> const&)  (in parser_benchmarks) + 512  [0x10063a780]  parser.cpp:405
+                              +     ! : 53 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 1200  [0x10063a444]  parser.cpp:379
+                              +     ! : | 40 LlamaParser::parseGrepSection()  (in parser_benchmarks) + 328  [0x100639c8c]  parser.cpp:306
+                              +     ! : | + 39 LlamaParser::parseExpr(LlamaTokenType)  (in parser_benchmarks) + 44  [0x1006388a8]  parser.cpp:257
+                              +     ! : | + ! 39 LlamaParser::parseTerm(LlamaTokenType)  (in parser_benchmarks) + 44  [0x100639728]  parser.cpp:243
+                              +     ! : | + !   30 LlamaParser::parseFactor(LlamaTokenType)  (in parser_benchmarks) + 516  [0x1006385f0]  parser.cpp:234
+                              +     ! : | + !   : 7 LlamaParser::parseFuncCall()  (in parser_benchmarks) + 1016  [0x100639514]  parser.cpp:296
+                              +     ! : | + !   : | 6 FuncNode::FuncNode(Function&&)  (in parser_benchmarks) + 108  [0x100639af4]  parser.h:105
+                              +     ! : | + !   : | + 2 std::vector<std::basic_string_view<char>>::__assign_with_size[abi:fe180100]<std::basic_string_view<char>*, std::basic_string_view<char>*>(std::basic_string_view<char>*, std::basic_string_view<char>*, long)  (in parser_benchmarks) + 40  [0x10063b014]  vector:1334
+                              +     ! : | + !   : | + 2 std::vector<std::basic_string_view<char>>::__assign_with_size[abi:fe180100]<std::basic_string_view<char>*, std::basic_string_view<char>*>(std::basic_string_view<char>*, std::basic_string_view<char>*, long)  (in parser_benchmarks) + 148  [0x10063b080]  vector:1345
+                              +     ! : | + !   : | + ! 2 operator new(unsigned long)  (in libc++abi.dylib) + 32  [0x193d8fbd4]
+                              +     ! : | + !   : | + !   1 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 52  [0x193c10950]
+                              +     ! : | + !   : | + !   1 nanov2_malloc  (in libsystem_malloc.dylib) + 40  [0x193be6c48]
+                              +     ! : | + !   : | + 2 std::vector<std::basic_string_view<char>>::__assign_with_size[abi:fe180100]<std::basic_string_view<char>*, std::basic_string_view<char>*>(std::basic_string_view<char>*, std::basic_string_view<char>*, long)  (in parser_benchmarks) + 80,120  [0x10063b03c,0x10063b064]  vector:1345
+                              +     ! : | + !   : | 1 FuncNode::FuncNode(Function&&)  (in parser_benchmarks) + 76  [0x100639ad4]  parser.h:105
+                              +     ! : | + !   : 6 LlamaParser::parseFuncCall()  (in parser_benchmarks) + 360  [0x100639284]  parser.cpp:282
+                              +     ! : | + !   : | 6 operator new(unsigned long)  (in libc++abi.dylib) + 32  [0x193d8fbd4]
+                              +     ! : | + !   : |   3 nanov2_malloc  (in libsystem_malloc.dylib) + 40,208,...  [0x193be6c48,0x193be6cf0,...]
+                              +     ! : | + !   : |   2 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 52,96  [0x193c10950,0x193c1097c]
+                              +     ! : | + !   : |   1 DYLD-STUB$$malloc  (in libc++abi.dylib) + 8  [0x193d91c40]
+                              +     ! : | + !   : 5 LlamaParser::parseFuncCall()  (in parser_benchmarks) + 1004  [0x100639508]  parser.cpp:295
+                              +     ! : | + !   : | 2 Function::Function(LineCol, std::basic_string_view<char>, std::vector<std::basic_string_view<char>> const&&, unsigned long, unsigned long)  (in parser_benchmarks) + 84  [0x10063af58]  parser.h:71
+                              +     ! : | + !   : | + 2 operator new(unsigned long)  (in libc++abi.dylib) + 32  [0x193d8fbd4]
+                              +     ! : | + !   : | +   1 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 96  [0x193c1097c]
+                              +     ! : | + !   : | +   1 nanov2_malloc  (in libsystem_malloc.dylib) + 444  [0x193be6ddc]
+                              +     ! : | + !   : | 2 Function::Function(LineCol, std::basic_string_view<char>, std::vector<std::basic_string_view<char>> const&&, unsigned long, unsigned long)  (in parser_benchmarks) + 112  [0x10063af74]  parser.h:71
+                              +     ! : | + !   : | + 2 _platform_memmove  (in libsystem_platform.dylib) + 12,460  [0x193e071ac,0x193e0736c]
+                              +     ! : | + !   : | 1 Function::Function(LineCol, std::basic_string_view<char>, std::vector<std::basic_string_view<char>> const&&, unsigned long, unsigned long)  (in parser_benchmarks) + 136  [0x10063af8c]  parser.h:71
+                              +     ! : | + !   : |   1 Function::validate()  (in parser_benchmarks) + 40  [0x10063674c]  parser.cpp:20
+                              +     ! : | + !   : |     1 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, FunctionProperties>>::find<std::basic_string_view<char>>(std::basic_string_view<char> const&) const  (in parser_benchmarks) + 52  [0x10063b3f8]  __hash_table:1741
+                              +     ! : | + !   : |       1 std::__murmur2_or_cityhash<unsigned long, 64ul>::operator()[abi:fe180100](void const*, unsigned long) const  (in parser_benchmarks) + 16  [0x100609078]  hash.h:93
+                              +     ! : | + !   : 4 LlamaParser::parseFuncCall()  (in parser_benchmarks) + 1048  [0x100639534]  parser.cpp:297
+                              +     ! : | + !   : | 2 DYLD-STUB$$free  (in libc++abi.dylib) + 8  [0x193d91c20]
+                              +     ! : | + !   : | 1 _free  (in libsystem_malloc.dylib) + 124  [0x193c115f0]
+                              +     ! : | + !   : | 1 _nanov2_free  (in libsystem_malloc.dylib) + 696  [0x193c087c4]
+                              +     ! : | + !   : 3 LlamaParser::parseFuncCall()  (in parser_benchmarks) + 1032  [0x100639524]  parser.cpp:297
+                              +     ! : | + !   : | 1 DYLD-STUB$$free  (in libc++abi.dylib) + 8  [0x193d91c20]
+                              +     ! : | + !   : | 1 DYLD-STUB$$operator delete(void*)  (in parser_benchmarks) + 4  [0x100789380]
+                              +     ! : | + !   : | 1 _nanov2_free  (in libsystem_malloc.dylib) + 268  [0x193c08618]
+                              +     ! : | + !   : 1 FuncNode::FuncNode(Function&&)  (in parser_benchmarks) + 144  [0x100639b18]  parser.h:105
+                              +     ! : | + !   : 1 LlamaParser::parseFuncCall()  (in parser_benchmarks) + 44  [0x100639148]  parser.cpp:271
+                              +     ! : | + !   : | 1 LlamaParser::checkFunctionName()  (in parser_benchmarks) + 28  [0x100638fa0]  parser.h:323
+                              +     ! : | + !   : 1 LlamaParser::parseFuncCall()  (in parser_benchmarks) + 188  [0x1006391d8]  parser.cpp:280
+                              +     ! : | + !   : | 1 LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks) + 20  [0x100636d08]  parser.h:395
+                              +     ! : | + !   : 1 LlamaParser::parseFuncCall()  (in parser_benchmarks) + 544  [0x10063933c]  parser.cpp:283
+                              +     ! : | + !   : 1 LlamaParser::parseFuncCall()  (in parser_benchmarks) + 888  [0x100639494]  parser.cpp:290
+                              +     ! : | + !   7 LlamaParser::parseFactor(LlamaTokenType)  (in parser_benchmarks) + 524  [0x1006385f8]  parser.cpp:234
+                              +     ! : | + !   : 5 operator new(unsigned long)  (in libc++abi.dylib) + 32  [0x193d8fbd4]
+                              +     ! : | + !   : | 3 nanov2_malloc  (in libsystem_malloc.dylib) + 168,220,...  [0x193be6cc8,0x193be6cfc,...]
+                              +     ! : | + !   : | 1 DYLD-STUB$$malloc  (in libc++abi.dylib) + 8  [0x193d91c40]
+                              +     ! : | + !   : | 1 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 108  [0x193c10988]
+                              +     ! : | + !   : 2 DYLD-STUB$$operator new(unsigned long)  (in parser_benchmarks) + 4  [0x1007893a4]
+                              +     ! : | + !   1 LlamaParser::parseFactor(LlamaTokenType)  (in parser_benchmarks) + 492  [0x1006385d8]  parser.cpp:232
+                              +     ! : | + !   : 1 LlamaParser::checkFunctionName()  (in parser_benchmarks) + 388  [0x100639108]  parser.h:0
+                              +     ! : | + !   1 LlamaParser::parseFactor(LlamaTokenType)  (in parser_benchmarks) + 600  [0x100638644]  parser.cpp:234
+                              +     ! : | + 1 LlamaParser::parseTerm(LlamaTokenType)  (in parser_benchmarks) + 552  [0x100639924]  parser.cpp:254
+                              +     ! : | 11 LlamaParser::parseGrepSection()  (in parser_benchmarks) + 172  [0x100639bf0]  parser.cpp:303
+                              +     ! : | + 7 LlamaParser::parsePatternsSection()  (in parser_benchmarks) + 232  [0x10063827c]  parser.cpp:183
+                              +     ! : | + ! 3 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, PatternDef>>::__emplace_unique_key_args<std::basic_string_view<char>, std::pair<std::basic_string_view<char>, PatternDef>>(std::basic_string_view<char> const&, std::pair<std::basic_string_view<char>, PatternDef>&&)  (in parser_benchmarks) + 272  [0x10063b8b0]  __hash_table:1495
+                              +     ! : | + ! : 3 operator new(unsigned long)  (in libc++abi.dylib) + 32  [0x193d8fbd4]
+                              +     ! : | + ! :   1 DYLD-STUB$$malloc  (in libc++abi.dylib) + 8  [0x193d91c40]
+                              +     ! : | + ! :   1 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 52  [0x193c10950]
+                              +     ! : | + ! :   1 nanov2_malloc  (in libsystem_malloc.dylib) + 380  [0x193be6d9c]
+                              +     ! : | + ! 3 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, PatternDef>>::__emplace_unique_key_args<std::basic_string_view<char>, std::pair<std::basic_string_view<char>, PatternDef>>(std::basic_string_view<char> const&, std::pair<std::basic_string_view<char>, PatternDef>&&)  (in parser_benchmarks) + 420  [0x10063b944]  __hash_table:1497
+                              +     ! : | + ! : 3 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, PatternDef>>::__do_rehash<true>(unsigned long)  (in parser_benchmarks) + 40  [0x10063bb94]  __hash_table:1678
+                              +     ! : | + ! :   3 operator new(unsigned long)  (in libc++abi.dylib) + 32  [0x193d8fbd4]
+                              +     ! : | + ! :     2 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 96  [0x193c1097c]
+                              +     ! : | + ! :     1 nanov2_malloc  (in libsystem_malloc.dylib) + 176  [0x193be6cd0]
+                              +     ! : | + ! 1 operator new(unsigned long)  (in libc++abi.dylib) + 56  [0x193d8fbec]
+                              +     ! : | + 3 LlamaParser::parsePatternsSection()  (in parser_benchmarks) + 172  [0x100638240]  parser.cpp:183
+                              +     ! : | + ! 3 LlamaParser::parsePatternDef()  (in parser_benchmarks) + 128  [0x100637c2c]  parser.cpp:169
+                              +     ! : | + !   2 LlamaParser::parsePatternMod()  (in parser_benchmarks) + 188  [0x10063799c]  parser.cpp:132
+                              +     ! : | + !   : 1 DYLD-STUB$$memmove  (in parser_benchmarks) + 4  [0x1007897dc]
+                              +     ! : | + !   : 1 _platform_memmove  (in libsystem_platform.dylib) + 460  [0x193e0736c]
+                              +     ! : | + !   1 LlamaParser::parsePatternMod()  (in parser_benchmarks) + 24  [0x1006378f8]  parser.cpp:130
+                              +     ! : | + 1 LlamaParser::parsePatternsSection()  (in parser_benchmarks) + 204  [0x100638260]  parser.cpp:183
+                              +     ! : | 1 LlamaParser::parseGrepSection()  (in parser_benchmarks) + 80  [0x100639b94]  parser.cpp:301
+                              +     ! : | 1 LlamaParser::parseGrepSection()  (in parser_benchmarks) + 184  [0x100639bfc]  parser.cpp:303
+                              +     ! : |   1 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, PatternDef>>::__move_assign(std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, PatternDef>>&, std::integral_constant<bool, true>)  (in parser_benchmarks) + 24  [0x10063b150]  __hash_table:1134
+                              +     ! : 47 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 368  [0x10063a104]  parser.cpp:362
+                              +     ! : | 33 LlamaParser::parseMetaSection()  (in parser_benchmarks) + 256  [0x100639efc]  parser.cpp:348
+                              +     ! : | + 11 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, std::basic_string_view<char>>>::__emplace_unique_key_args<std::basic_string_view<char>, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>>(std::basic_string_view<char> const&, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>&&)  (in parser_benchmarks) + 376  [0x10063c16c]  __hash_table:1497
+                              +     ! : | + ! 7 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, std::basic_string_view<char>>>::__do_rehash<true>(unsigned long)  (in parser_benchmarks) + 40  [0x10063c35c]  __hash_table:1678
+                              +     ! : | + ! : 7 operator new(unsigned long)  (in libc++abi.dylib) + 32  [0x193d8fbd4]
+                              +     ! : | + ! :   7 nanov2_malloc  (in libsystem_malloc.dylib) + 176,68,...  [0x193be6cd0,0x193be6c64,...]
+                              +     ! : | + ! 4 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, std::basic_string_view<char>>>::__do_rehash<true>(unsigned long)  (in parser_benchmarks) + 4,8  [0x10063c338,0x10063c33c]  __hash_table:1676
+                              +     ! : | + 9 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, std::basic_string_view<char>>>::__emplace_unique_key_args<std::basic_string_view<char>, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>>(std::basic_string_view<char> const&, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>&&)  (in parser_benchmarks) + 268  [0x10063c100]  __hash_table:1495
+                              +     ! : | + ! 7 operator new(unsigned long)  (in libc++abi.dylib) + 32  [0x193d8fbd4]
+                              +     ! : | + ! : 3 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 124,68  [0x193c10998,0x193c10960]
+                              +     ! : | + ! : 3 nanov2_malloc  (in libsystem_malloc.dylib) + 156,272,...  [0x193be6cbc,0x193be6d30,...]
+                              +     ! : | + ! : 1 DYLD-STUB$$malloc  (in libc++abi.dylib) + 8  [0x193d91c40]
+                              +     ! : | + ! 2 DYLD-STUB$$operator new(unsigned long)  (in parser_benchmarks) + 4  [0x1007893a4]
+                              +     ! : | + 7 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, std::basic_string_view<char>>>::__emplace_unique_key_args<std::basic_string_view<char>, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>>(std::basic_string_view<char> const&, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>&&)  (in parser_benchmarks) + 60  [0x10063c030]  __hash_table:1477
+                              +     ! : | + ! 3 std::__murmur2_or_cityhash<unsigned long, 64ul>::operator()[abi:fe180100](void const*, unsigned long) const  (in parser_benchmarks) + 0  [0x100609068]  hash.h:91
+                              +     ! : | + ! 2 std::__murmur2_or_cityhash<unsigned long, 64ul>::operator()[abi:fe180100](void const*, unsigned long) const  (in parser_benchmarks) + 444  [0x100609224]  hash.h:0
+                              +     ! : | + ! 2 std::__murmur2_or_cityhash<unsigned long, 64ul>::operator()[abi:fe180100](void const*, unsigned long) const  (in parser_benchmarks) + 68,88  [0x1006090ac,0x1006090c0]  hash.h:93
+                              +     ! : | + 1 operator new(unsigned long)  (in libc++abi.dylib) + 56  [0x193d8fbec]
+                              +     ! : | + 1 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, std::basic_string_view<char>>>::__emplace_unique_key_args<std::basic_string_view<char>, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>>(std::basic_string_view<char> const&, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>&&)  (in parser_benchmarks) + 176  [0x10063c0a4]  __hash_table:0
+                              +     ! : | + 1 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, std::basic_string_view<char>>>::__emplace_unique_key_args<std::basic_string_view<char>, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>>(std::basic_string_view<char> const&, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>&&)  (in parser_benchmarks) + 64  [0x10063c034]  __hash_table:1478
+                              +     ! : | + 1 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, std::basic_string_view<char>>>::__emplace_unique_key_args<std::basic_string_view<char>, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>>(std::basic_string_view<char> const&, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>&&)  (in parser_benchmarks) + 164  [0x10063c098]  __hash_table:1487
+                              +     ! : | + 1 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, std::basic_string_view<char>>>::__emplace_unique_key_args<std::basic_string_view<char>, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>>(std::basic_string_view<char> const&, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>&&)  (in parser_benchmarks) + 296  [0x10063c11c]  __hash_table:1496
+                              +     ! : | + 1 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, std::basic_string_view<char>>>::__emplace_unique_key_args<std::basic_string_view<char>, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>>(std::basic_string_view<char> const&, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>&&)  (in parser_benchmarks) + 428  [0x10063c1a0]  __hash_table:1503
+                              +     ! : | 3 LlamaParser::parseMetaSection()  (in parser_benchmarks) + 156  [0x100639e98]  parser.cpp:345
+                              +     ! : | + 3 LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks) + 48,56,...  [0x100636d24,0x100636d2c,...]  parser.h:395
+                              +     ! : | 3 LlamaParser::parseMetaSection()  (in parser_benchmarks) + 200  [0x100639ec4]  parser.cpp:346
+                              +     ! : | + 3 LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks) + 20  [0x100636d08]  parser.h:395
+                              +     ! : | 3 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, std::basic_string_view<char>>>::__emplace_unique_key_args<std::basic_string_view<char>, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>>(std::basic_string_view<char> const&, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>&&)  (in parser_benchmarks) + 568  [0x10063c22c]  __hash_table:1523
+                              +     ! : | 2 LlamaParser::parseMetaSection()  (in parser_benchmarks) + 104  [0x100639e64]  parser.cpp:343
+                              +     ! : | 1 LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks) + 96  [0x100636d54]  parser.h:398
+                              +     ! : | 1 LlamaParser::parseMetaSection()  (in parser_benchmarks) + 164  [0x100639ea0]  parser.cpp:345
+                              +     ! : | 1 LlamaParser::parseMetaSection()  (in parser_benchmarks) + 180  [0x100639eb0]  parser.cpp:346
+                              +     ! : 28 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 756  [0x10063a288]  parser.cpp:371
+                              +     ! : | 26 LlamaParser::parseExpr(LlamaTokenType)  (in parser_benchmarks) + 44  [0x1006388a8]  parser.cpp:257
+                              +     ! : | + 25 LlamaParser::parseTerm(LlamaTokenType)  (in parser_benchmarks) + 44  [0x100639728]  parser.cpp:243
+                              +     ! : | + ! 16 LlamaParser::parseFactor(LlamaTokenType)  (in parser_benchmarks) + 292  [0x100638510]  parser.cpp:230
+                              +     ! : | + ! : 8 LlamaParser::parseProperty(LlamaTokenType)  (in parser_benchmarks) + 256  [0x100638c28]  parser.cpp:317
+                              +     ! : | + ! : | 2 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, PropertyInfo>>::find<std::basic_string_view<char>>(std::basic_string_view<char> const&) const  (in parser_benchmarks) + 52  [0x10063bf08]  __hash_table:1741
+                              +     ! : | + ! : | + 1 std::__murmur2_or_cityhash<unsigned long, 64ul>::operator()[abi:fe180100](void const*, unsigned long) const  (in parser_benchmarks) + 444  [0x100609224]  hash.h:0
+                              +     ! : | + ! : | + 1 std::__murmur2_or_cityhash<unsigned long, 64ul>::operator()[abi:fe180100](void const*, unsigned long) const  (in parser_benchmarks) + 16  [0x100609078]  hash.h:93
+                              +     ! : | + ! : | 2 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, PropertyInfo>>::find<std::basic_string_view<char>>(std::basic_string_view<char> const&) const  (in parser_benchmarks) + 172,228  [0x10063bf80,0x10063bfb8]  __hash_table:1748
+                              +     ! : | + ! : | 2 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, PropertyInfo>>::find<std::basic_string_view<char>>(std::basic_string_view<char> const&) const  (in parser_benchmarks) + 212  [0x10063bfa8]  __hash_table:1750
+                              +     ! : | + ! : | + 1 DYLD-STUB$$memcmp  (in parser_benchmarks) + 8  [0x1007897c8]
+                              +     ! : | + ! : | + 1 _platform_memcmp  (in libsystem_platform.dylib) + 272  [0x193e04e60]
+                              +     ! : | + ! : | 1 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, PropertyInfo>>::find<std::basic_string_view<char>>(std::basic_string_view<char> const&) const  (in parser_benchmarks) + 76  [0x10063bf20]  __hash_table:1744
+                              +     ! : | + ! : | 1 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, PropertyInfo>>::find<std::basic_string_view<char>>(std::basic_string_view<char> const&) const  (in parser_benchmarks) + 212  [0x10063bfa8]  __hash_table:1750
+                              +     ! : | + ! : 4 LlamaParser::parseProperty(LlamaTokenType)  (in parser_benchmarks) + 108,56,...  [0x100638b94,0x100638b60,...]  parser.cpp:312
+                              +     ! : | + ! : 2 LlamaParser::parseProperty(LlamaTokenType)  (in parser_benchmarks) + 388  [0x100638cac]  parser.cpp:330
+                              +     ! : | + ! : 1 LlamaParser::parseProperty(LlamaTokenType)  (in parser_benchmarks) + 420  [0x100638ccc]  parser.cpp:332
+                              +     ! : | + ! : 1 LlamaParser::parseProperty(LlamaTokenType)  (in parser_benchmarks) + 452  [0x100638cec]  parser.cpp:336
+                              +     ! : | + ! 6 LlamaParser::parseFactor(LlamaTokenType)  (in parser_benchmarks) + 300  [0x100638518]  parser.cpp:230
+                              +     ! : | + ! : 6 operator new(unsigned long)  (in libc++abi.dylib) + 32  [0x193d8fbd4]
+                              +     ! : | + ! :   4 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 12,72,...  [0x193c10928,0x193c10964,...]
+                              +     ! : | + ! :   2 nanov2_malloc  (in libsystem_malloc.dylib) + 108,168  [0x193be6c8c,0x193be6cc8]
+                              +     ! : | + ! 1 LlamaParser::parseFactor(LlamaTokenType)  (in parser_benchmarks) + 32  [0x10063840c]  parser.cpp:225
+                              +     ! : | + ! 1 LlamaParser::parseFactor(LlamaTokenType)  (in parser_benchmarks) + 432  [0x10063859c]  parser.cpp:230
+                              +     ! : | + ! 1 LlamaParser::parseProperty(LlamaTokenType)  (in parser_benchmarks) + 512  [0x100638d28]  parser.cpp:339
+                              +     ! : | + 1 LlamaParser::parseFactor(LlamaTokenType)  (in parser_benchmarks) + 864  [0x10063874c]  parser.cpp:240
+                              +     ! : | 1 LlamaParser::parseExpr(LlamaTokenType)  (in parser_benchmarks) + 132  [0x100638900]  parser.cpp:259
+                              +     ! : | 1 LlamaParser::parseTerm(LlamaTokenType)  (in parser_benchmarks) + 552  [0x100639924]  parser.cpp:254
+                              +     ! : 12 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 536  [0x10063a1ac]  parser.cpp:367
+                              +     ! : | 4 LlamaParser::parseHashSection()  (in parser_benchmarks) + 164  [0x100636f88]  parser.cpp:81
+                              +     ! : | + 2 LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks) + 96  [0x100636d54]  parser.h:398
+                              +     ! : | + 2 LlamaParser::parseFileHashRecord()  (in parser_benchmarks) + 152,400  [0x1006371f0,0x1006372e8]  parser.cpp:114
+                              +     ! : | 4 LlamaParser::parseHashSection()  (in parser_benchmarks) + 108  [0x100636f50]  parser.cpp:85
+                              +     ! : | + 2 std::vector<std::pair<SFHASH_HashAlgorithm, std::basic_string_view<char>>>* std::vector<std::vector<std::pair<SFHASH_HashAlgorithm, std::basic_string_view<char>>>>::__emplace_back_slow_path<std::vector<std::pair<SFHASH_HashAlgorithm, std::basic_string_view<char>>>&>(std::vector<std::pair<SFHASH_HashAlgorithm, std::basic_string_view<char>>>&)  (in parser_benchmarks) + 160  [0x10063b584]  vector:1489
+                              +     ! : | + ! 2 operator new(unsigned long)  (in libc++abi.dylib) + 32  [0x193d8fbd4]
+                              +     ! : | + !   1 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 52  [0x193c10950]
+                              +     ! : | + !   1 nanov2_malloc  (in libsystem_malloc.dylib) + 0  [0x193be6c20]
+                              +     ! : | + 1 std::vector<std::pair<SFHASH_HashAlgorithm, std::basic_string_view<char>>>* std::vector<std::vector<std::pair<SFHASH_HashAlgorithm, std::basic_string_view<char>>>>::__emplace_back_slow_path<std::vector<std::pair<SFHASH_HashAlgorithm, std::basic_string_view<char>>>&>(std::vector<std::pair<SFHASH_HashAlgorithm, std::basic_string_view<char>>>&)  (in parser_benchmarks) + 132  [0x10063b568]  vector:1489
+                              +     ! : | + 1 std::vector<std::pair<SFHASH_HashAlgorithm, std::basic_string_view<char>>>* std::vector<std::vector<std::pair<SFHASH_HashAlgorithm, std::basic_string_view<char>>>>::__emplace_back_slow_path<std::vector<std::pair<SFHASH_HashAlgorithm, std::basic_string_view<char>>>&>(std::vector<std::pair<SFHASH_HashAlgorithm, std::basic_string_view<char>>>&)  (in parser_benchmarks) + 252  [0x10063b5e0]  vector:1491
+                              +     ! : | +   1 operator new(unsigned long)  (in libc++abi.dylib) + 32  [0x193d8fbd4]
+                              +     ! : | +     1 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 12  [0x193c10928]
+                              +     ! : | 3 LlamaParser::parseHashSection()  (in parser_benchmarks) + 392  [0x10063706c]  parser.cpp:91
+                              +     ! : | + 3 _nanov2_free  (in libsystem_malloc.dylib) + 36,492,...  [0x193c08530,0x193c086f8,...]
+                              +     ! : | 1 LlamaParser::parseHashSection()  (in parser_benchmarks) + 40  [0x100636f0c]  parser.cpp:78
+                              +     ! : 3 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 116  [0x10063a008]  parser.cpp:355
+                              +     ! : | 2 LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks) + 16,20  [0x100636d04,0x100636d08]  parser.h:395
+                              +     ! : | 1 LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks) + 8  [0x100636cfc]  parser.h:394
+                              +     ! : 3 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 448,460  [0x10063a154,0x10063a160]  parser.cpp:365
+                              +     ! : 3 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 1384  [0x10063a4fc]  parser.cpp:382
+                              +     ! : | 3 LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks) + 20  [0x100636d08]  parser.h:395
+                              +     ! : 2 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 332  [0x10063a0e0]  parser.cpp:361
+                              +     ! : | 2 LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks) + 16,72  [0x100636d04,0x100636d3c]  parser.h:395
+                              +     ! : 2 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 408  [0x10063a12c]  parser.cpp:362
+                              +     ! : 2 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 1384,1392  [0x10063a4fc,0x10063a504]  parser.cpp:382
+                              +     ! : 1 LlamaParser::parseMetaSection()  (in parser_benchmarks) + 300  [0x100639f28]  parser.cpp:351
+                              +     ! : 1 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 172  [0x10063a040]  parser.cpp:356
+                              +     ! : | 1 LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks) + 16  [0x100636d04]  parser.h:395
+                              +     ! : 1 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 172  [0x10063a040]  parser.cpp:356
+                              +     ! : 1 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 240  [0x10063a084]  parser.cpp:358
+                              +     ! : | 1 LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks) + 20  [0x100636d08]  parser.h:395
+                              +     ! : 1 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 240  [0x10063a084]  parser.cpp:358
+                              +     ! : 1 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 280  [0x10063a0ac]  parser.cpp:360
+                              +     ! : 1 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 380  [0x10063a110]  parser.cpp:362
+                              +     ! : | 1 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, std::basic_string_view<char>>>::__move_assign(std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, std::basic_string_view<char>>>&, std::integral_constant<bool, true>)  (in parser_benchmarks) + 156  [0x10063b374]  __hash_table:1141
+                              +     ! : 1 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 716  [0x10063a260]  parser.cpp:370
+                              +     ! : 1 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 768  [0x10063a294]  parser.cpp:371
+                              +     ! : 1 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 868  [0x10063a2f8]  parser.cpp:373
+                              +     ! : 1 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 1124  [0x10063a3f8]  parser.cpp:377
+                              +     ! 3 LlamaParser::parseRules(std::vector<unsigned long> const&)  (in parser_benchmarks) + 944  [0x10063a930]  parser.cpp:405
+                              +     ! : 3 Rule::~Rule()  (in parser_benchmarks) + 92,252  [0x100634860,0x100634900]  parser.h:170
+                              +     ! 3 LlamaParser::parseRules(std::vector<unsigned long> const&)  (in parser_benchmarks) + 824,704  [0x10063a8b8,0x10063a840]  parser.cpp:405
+                              +     ! 2 LlamaParser::parseRules(std::vector<unsigned long> const&)  (in parser_benchmarks) + 476  [0x10063a75c]  parser.cpp:402
+                              +     ! 1 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 1420  [0x10063a520]  parser.cpp:384
+                              +     ! 1 LlamaParser::parseRules(std::vector<unsigned long> const&)  (in parser_benchmarks) + 72  [0x10063a5c8]  parser.cpp:388
+                              +     ! : 1 std::vector<Rule>::reserve(unsigned long)  (in parser_benchmarks) + 100  [0x10063abc8]  vector:1425
+                              +     ! :   1 operator new(unsigned long)  (in libc++abi.dylib) + 32  [0x193d8fbd4]
+                              +     ! :     1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 276  [0x193be7bb4]
+                              +     ! 1 LlamaParser::parseRules(std::vector<unsigned long> const&)  (in parser_benchmarks) + 172  [0x10063a62c]  parser.cpp:393
+                              +     87 Catch::Benchmark::Detail::BenchmarkFunction::model<CATCH2_INTERNAL_TEST_47()::$_0>::call(Catch::Benchmark::Chronometer) const  (in parser_benchmarks) + 176  [0x1006631ec]  catch_benchmark_function.hpp:55
+                              +       22 Rule::~Rule()  (in parser_benchmarks) + 340  [0x100634958]  parser.h:170
+                              +       : 11 _nanov2_free  (in libsystem_malloc.dylib) + 696,16,...  [0x193c087c4,0x193c0851c,...]
+                              +       : 5 _free  (in libsystem_malloc.dylib) + 0,124,...  [0x193c11574,0x193c115f0,...]
+                              +       : 4 _nanov2_free  (in libsystem_malloc.dylib) + 520  [0x193c08714]
+                              +       : | 4 _platform_memset  (in libsystem_platform.dylib) + 180,208  [0x193e06f84,0x193e06fa0]
+                              +       : 2 DYLD-STUB$$operator delete(void*)  (in parser_benchmarks) + 4  [0x100789380]
+                              +       18 Rule::~Rule()  (in parser_benchmarks) + 244  [0x1006348f8]  parser.h:170
+                              +       : 15 _nanov2_free  (in libsystem_malloc.dylib) + 840,16,...  [0x193c08854,0x193c0851c,...]
+                              +       : 3 _free  (in libsystem_malloc.dylib) + 0,48  [0x193c11574,0x193c115a4]
+                              +       12 Rule::~Rule()  (in parser_benchmarks) + 260,44,...  [0x100634908,0x100634830,...]  parser.h:170
+                              +       8 Rule::~Rule()  (in parser_benchmarks) + 364  [0x100634970]  parser.h:170
+                              +       : 3 _nanov2_free  (in libsystem_malloc.dylib) + 316,620,...  [0x193c08648,0x193c08778,...]
+                              +       : 2 DYLD-STUB$$operator delete(void*)  (in parser_benchmarks) + 4  [0x100789380]
+                              +       : 2 _free  (in libsystem_malloc.dylib) + 0,108  [0x193c11574,0x193c115e0]
+                              +       : 1 DYLD-STUB$$free  (in libc++abi.dylib) + 8  [0x193d91c20]
+                              +       6 Rule::~Rule()  (in parser_benchmarks) + 72  [0x10063484c]  parser.h:170
+                              +       : 4 FuncNode::~FuncNode()  (in parser_benchmarks) + 48  [0x100639670]  parser.h:103
+                              +       : | 2 DYLD-STUB$$free  (in libc++abi.dylib) + 8  [0x193d91c20]
+                              +       : | 1 _free  (in libsystem_malloc.dylib) + 48  [0x193c115a4]
+                              +       : | 1 _nanov2_free  (in libsystem_malloc.dylib) + 696  [0x193c087c4]
+                              +       : 1 _nanov2_free  (in libsystem_malloc.dylib) + 844  [0x193c08858]
+                              +       : 1 std::__shared_ptr_emplace<FuncNode>::__on_zero_shared()  (in parser_benchmarks) + 4  [0x10063bd48]  shared_ptr.h:287
+                              +       6 Rule::~Rule()  (in parser_benchmarks) + 188  [0x1006348c0]  parser.h:170
+                              +       : 3 _nanov2_free  (in libsystem_malloc.dylib) + 696,316  [0x193c087c4,0x193c08648]
+                              +       : 2 _free  (in libsystem_malloc.dylib) + 0,124  [0x193c11574,0x193c115f0]
+                              +       : 1 DYLD-STUB$$operator delete(void*)  (in parser_benchmarks) + 4  [0x100789380]
+                              +       4 Rule::~Rule()  (in parser_benchmarks) + 104  [0x10063486c]  parser.h:170
+                              +       : 3 _nanov2_free  (in libsystem_malloc.dylib) + 16,316,...  [0x193c0851c,0x193c08648,...]
+                              +       : 1 _free  (in libsystem_malloc.dylib) + 104  [0x193c115dc]
+                              +       3 Rule::~Rule()  (in parser_benchmarks) + 308  [0x100634938]  parser.h:170
+                              +       : 3 _nanov2_free  (in libsystem_malloc.dylib) + 280,696,...  [0x193c08624,0x193c087c4,...]
+                              +       2 Rule::~Rule()  (in parser_benchmarks) + 80  [0x100634854]  parser.h:170
+                              +       : 2 _nanov2_free  (in libsystem_malloc.dylib) + 316,628  [0x193c08648,0x193c08780]
+                              +       2 Rule::~Rule()  (in parser_benchmarks) + 236  [0x1006348f0]  parser.h:170
+                              +       : 2 PropertyNode::~PropertyNode()  (in parser_benchmarks) + 32  [0x100638f08]  parser.h:276
+                              +       2 Rule::~Rule()  (in parser_benchmarks) + 324  [0x100634948]  parser.h:170
+                              +       : 1 DYLD-STUB$$free  (in libc++abi.dylib) + 8  [0x193d91c20]
+                              +       : 1 _nanov2_free  (in libsystem_malloc.dylib) + 592  [0x193c0875c]
+                              +       1 FuncNode::~FuncNode()  (in parser_benchmarks) + 180  [0x1006396f4]  parser.h:103
+                              +       1 _nanov2_free  (in libsystem_malloc.dylib) + 852  [0x193c08860]
+                              264 Catch::Benchmark::Benchmark::run<std::chrono::steady_clock>()  (in parser_benchmarks) + 304  [0x10065efb0]  catch_benchmark.hpp:82
+                                231 Catch::Benchmark::ExecutionPlan::run<std::chrono::steady_clock>(Catch::IConfig const&, Catch::Benchmark::Environment) const  (in parser_benchmarks) + 128  [0x100660110]  catch_execution_plan.hpp:34
+                                ! 231 std::chrono::steady_clock::now()  (in libc++.1.dylib) + 28  [0x193cfca84]
+                                !   221 clock_gettime  (in libsystem_c.dylib) + 72  [0x193c7b5a8]
+                                !   : 207 clock_gettime_nsec_np  (in libsystem_c.dylib) + 300  [0x193c6e5d8]
+                                !   : | 207 mach_continuous_time  (in libsystem_kernel.dylib) + 56,60  [0x193d961f4,0x193d961f8]
+                                !   : 10 clock_gettime_nsec_np  (in libsystem_c.dylib) + 296,28  [0x193c6e5d4,0x193c6e4c8]
+                                !   : 4 clock_gettime_nsec_np  (in libsystem_c.dylib) + 240  [0x193c6e59c]
+                                !   :   4 mach_timebase_info  (in libsystem_kernel.dylib) + 28  [0x193d96180]
+                                !   10 clock_gettime  (in libsystem_c.dylib) + 72,0  [0x193c7b5a8,0x193c7b560]
+                                32 Catch::Benchmark::ExecutionPlan::run<std::chrono::steady_clock>(Catch::IConfig const&, Catch::Benchmark::Environment) const  (in parser_benchmarks) + 380  [0x10066020c]  catch_execution_plan.hpp:45
+                                ! 22 Catch::Benchmark::Detail::BenchmarkFunction::model<CATCH2_INTERNAL_TEST_47()::$_0>::call(Catch::Benchmark::Chronometer) const  (in parser_benchmarks) + 116  [0x1006631b0]  catch_benchmark_function.hpp:55
+                                ! : 22 LlamaParser::parseRules(std::vector<unsigned long> const&)  (in parser_benchmarks) + 512  [0x10063a780]  parser.cpp:405
+                                ! :   8 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 368  [0x10063a104]  parser.cpp:362
+                                ! :   | 4 LlamaParser::parseMetaSection()  (in parser_benchmarks) + 256  [0x100639efc]  parser.cpp:348
+                                ! :   | + 2 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, std::basic_string_view<char>>>::__emplace_unique_key_args<std::basic_string_view<char>, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>>(std::basic_string_view<char> const&, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>&&)  (in parser_benchmarks) + 268  [0x10063c100]  __hash_table:1495
+                                ! :   | + ! 2 operator new(unsigned long)  (in libc++abi.dylib) + 32  [0x193d8fbd4]
+                                ! :   | + !   2 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 68,124  [0x193c10960,0x193c10998]
+                                ! :   | + 1 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, std::basic_string_view<char>>>::__emplace_unique_key_args<std::basic_string_view<char>, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>>(std::basic_string_view<char> const&, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>&&)  (in parser_benchmarks) + 232  [0x10063c0dc]  __hash_table:1487
+                                ! :   | + 1 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, std::basic_string_view<char>>>::__emplace_unique_key_args<std::basic_string_view<char>, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>>(std::basic_string_view<char> const&, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>&&)  (in parser_benchmarks) + 548  [0x10063c218]  __hash_table:1523
+                                ! :   | 1 LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks) + 96  [0x100636d54]  parser.h:398
+                                ! :   | 1 LlamaParser::parseMetaSection()  (in parser_benchmarks) + 156  [0x100639e98]  parser.cpp:345
+                                ! :   | + 1 LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks) + 56  [0x100636d2c]  parser.h:395
+                                ! :   | 1 LlamaParser::parseMetaSection()  (in parser_benchmarks) + 200  [0x100639ec4]  parser.cpp:346
+                                ! :   | + 1 LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks) + 20  [0x100636d08]  parser.h:395
+                                ! :   | 1 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, std::basic_string_view<char>>>::__emplace_unique_key_args<std::basic_string_view<char>, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>>(std::basic_string_view<char> const&, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>&&)  (in parser_benchmarks) + 568  [0x10063c22c]  __hash_table:1523
+                                ! :   3 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 1200  [0x10063a444]  parser.cpp:379
+                                ! :   | 3 LlamaParser::parseGrepSection()  (in parser_benchmarks) + 328  [0x100639c8c]  parser.cpp:306
+                                ! :   |   3 LlamaParser::parseExpr(LlamaTokenType)  (in parser_benchmarks) + 44  [0x1006388a8]  parser.cpp:257
+                                ! :   |     3 LlamaParser::parseTerm(LlamaTokenType)  (in parser_benchmarks) + 44  [0x100639728]  parser.cpp:243
+                                ! :   |       3 LlamaParser::parseFactor(LlamaTokenType)  (in parser_benchmarks) + 516  [0x1006385f0]  parser.cpp:234
+                                ! :   |         1 LlamaParser::parseFuncCall()  (in parser_benchmarks) + 44  [0x100639148]  parser.cpp:271
+                                ! :   |         + 1 LlamaParser::checkFunctionName()  (in parser_benchmarks) + 388  [0x100639108]  parser.h:0
+                                ! :   |         1 LlamaParser::parseFuncCall()  (in parser_benchmarks) + 360  [0x100639284]  parser.cpp:282
+                                ! :   |         + 1 operator new(unsigned long)  (in libc++abi.dylib) + 32  [0x193d8fbd4]
+                                ! :   |         +   1 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 12  [0x193c10928]
+                                ! :   |         1 LlamaParser::parseFuncCall()  (in parser_benchmarks) + 1004  [0x100639508]  parser.cpp:295
+                                ! :   |           1 Function::Function(LineCol, std::basic_string_view<char>, std::vector<std::basic_string_view<char>> const&&, unsigned long, unsigned long)  (in parser_benchmarks) + 84  [0x10063af58]  parser.h:71
+                                ! :   |             1 DYLD-STUB$$operator new(unsigned long)  (in parser_benchmarks) + 4  [0x1007893a4]
+                                ! :   2 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 332  [0x10063a0e0]  parser.cpp:361
+                                ! :   | 2 LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks) + 16  [0x100636d04]  parser.h:395
+                                ! :   2 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 536  [0x10063a1ac]  parser.cpp:367
+                                ! :   | 1 LlamaParser::parseHashSection()  (in parser_benchmarks) + 164  [0x100636f88]  parser.cpp:81
+                                ! :   | + 1 LlamaParser::parseFileHashRecord()  (in parser_benchmarks) + 280  [0x100637270]  parser.cpp:114
+                                ! :   | 1 LlamaParser::parseHashSection()  (in parser_benchmarks) + 108  [0x100636f50]  parser.cpp:85
+                                ! :   |   1 std::vector<std::pair<SFHASH_HashAlgorithm, std::basic_string_view<char>>>* std::vector<std::vector<std::pair<SFHASH_HashAlgorithm, std::basic_string_view<char>>>>::__emplace_back_slow_path<std::vector<std::pair<SFHASH_HashAlgorithm, std::basic_string_view<char>>>&>(std::vector<std::pair<SFHASH_HashAlgorithm, std::basic_string_view<char>>>&)  (in parser_benchmarks) + 252  [0x10063b5e0]  vector:1491
+                                ! :   |     1 operator new(unsigned long)  (in libc++abi.dylib) + 32  [0x193d8fbd4]
+                                ! :   |       1 DYLD-STUB$$malloc  (in libc++abi.dylib) + 8  [0x193d91c40]
+                                ! :   2 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 756  [0x10063a288]  parser.cpp:371
+                                ! :   | 2 LlamaParser::parseExpr(LlamaTokenType)  (in parser_benchmarks) + 44  [0x1006388a8]  parser.cpp:257
+                                ! :   |   2 LlamaParser::parseTerm(LlamaTokenType)  (in parser_benchmarks) + 44  [0x100639728]  parser.cpp:243
+                                ! :   |     1 LlamaParser::parseFactor(LlamaTokenType)  (in parser_benchmarks) + 292  [0x100638510]  parser.cpp:230
+                                ! :   |     + 1 LlamaParser::parseProperty(LlamaTokenType)  (in parser_benchmarks) + 256  [0x100638c28]  parser.cpp:317
+                                ! :   |     +   1 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, PropertyInfo>>::find<std::basic_string_view<char>>(std::basic_string_view<char> const&) const  (in parser_benchmarks) + 228  [0x10063bfb8]  __hash_table:1748
+                                ! :   |     1 LlamaParser::parseFactor(LlamaTokenType)  (in parser_benchmarks) + 300  [0x100638518]  parser.cpp:230
+                                ! :   |       1 operator new(unsigned long)  (in libc++abi.dylib) + 32  [0x193d8fbd4]
+                                ! :   1 LlamaParser::parseMetaSection()  (in parser_benchmarks) + 300  [0x100639f28]  parser.cpp:351
+                                ! :   1 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 716  [0x10063a260]  parser.cpp:370
+                                ! :   | 1 LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks) + 72  [0x100636d3c]  parser.h:395
+                                ! :   1 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 768  [0x10063a294]  parser.cpp:371
+                                ! :   1 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 1212  [0x10063a450]  parser.cpp:379
+                                ! :   | 1 std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, PatternDef>>::__move_assign(std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, PatternDef>>&, std::integral_constant<bool, true>)  (in parser_benchmarks) + 120  [0x10063b1b0]  __hash_table:1136
+                                ! :   1 LlamaParser::parseRuleDecl()  (in parser_benchmarks) + 1384  [0x10063a4fc]  parser.cpp:382
+                                ! :     1 LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks) + 20  [0x100636d08]  parser.h:395
+                                ! 10 Catch::Benchmark::Detail::BenchmarkFunction::model<CATCH2_INTERNAL_TEST_47()::$_0>::call(Catch::Benchmark::Chronometer) const  (in parser_benchmarks) + 176  [0x1006631ec]  catch_benchmark_function.hpp:55
+                                !   3 Rule::~Rule()  (in parser_benchmarks) + 244  [0x1006348f8]  parser.h:170
+                                !   | 2 _nanov2_free  (in libsystem_malloc.dylib) + 520  [0x193c08714]
+                                !   | + 2 DYLD-STUB$$_platform_bzero  (in libsystem_malloc.dylib) + 8  [0x193c19068]
+                                !   | 1 std::__shared_weak_count::__release_weak()  (in libc++.1.dylib) + 44  [0x193d01840]
+                                !   2 Rule::~Rule()  (in parser_benchmarks) + 340  [0x100634958]  parser.h:170
+                                !   | 1 _free  (in libsystem_malloc.dylib) + 48  [0x193c115a4]
+                                !   | 1 _nanov2_free  (in libsystem_malloc.dylib) + 520  [0x193c08714]
+                                !   |   1 _platform_memset  (in libsystem_platform.dylib) + 208  [0x193e06fa0]
+                                !   2 Rule::~Rule()  (in parser_benchmarks) + 364  [0x100634970]  parser.h:170
+                                !   | 1 _free  (in libsystem_malloc.dylib) + 108  [0x193c115e0]
+                                !   | 1 _nanov2_free  (in libsystem_malloc.dylib) + 332  [0x193c08658]
+                                !   1 Rule::~Rule()  (in parser_benchmarks) + 80  [0x100634854]  parser.h:170
+                                !   | 1 DYLD-STUB$$std::__shared_weak_count::__release_weak()  (in parser_benchmarks) + 4  [0x100787ed4]
+                                !   1 Rule::~Rule()  (in parser_benchmarks) + 188  [0x1006348c0]  parser.h:170
+                                !   | 1 _nanov2_free  (in libsystem_malloc.dylib) + 620  [0x193c08778]
+                                !   1 Rule::~Rule()  (in parser_benchmarks) + 224  [0x1006348e4]  parser.h:170
+                                1 Catch::Benchmark::ExecutionPlan::run<std::chrono::steady_clock>(Catch::IConfig const&, Catch::Benchmark::Environment) const  (in parser_benchmarks) + 128  [0x100660110]  catch_execution_plan.hpp:34
+
+Total number in stack (recursive counted multiple, when >=5):
+        16       _nanov2_free  (in libsystem_malloc.dylib) + 0  [0x193c0850c]
+        15       operator new(unsigned long)  (in libc++abi.dylib) + 32  [0x193d8fbd4]
+        13       LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks) + 0  [0x100636cf4]  parser.h:395
+        12       _malloc_zone_malloc  (in libsystem_malloc.dylib) + 0  [0x193c1091c]
+        12       std::__less<double, double>::operator()[abi:v160006](double const&, double const&) const  (in parser_benchmarks) + 0  [0x10066ab58]
+        10       nanov2_malloc  (in libsystem_malloc.dylib) + 0  [0x193be6c20]
+        9       _free  (in libsystem_malloc.dylib) + 0  [0x193c11574]
+        5       DYLD-STUB$$free  (in libc++abi.dylib) + 0  [0x193d91c18]
+        5       DYLD-STUB$$malloc  (in libc++abi.dylib) + 0  [0x193d91c38]
+
+Sort by top of stack, same collapsed (when >= 5):
+        mach_continuous_time  (in libsystem_kernel.dylib)        428
+        std::__independent_bits_engine<Catch::SimplePcg32, unsigned long>::__independent_bits_engine(Catch::SimplePcg32&, unsigned long)  (in parser_benchmarks)        402
+        std::__independent_bits_engine<Catch::SimplePcg32, unsigned long>::__eval(std::integral_constant<bool, true>)  (in parser_benchmarks)        339
+        Catch::Benchmark::Detail::(anonymous namespace)::resample<Catch::SimplePcg32, double (*)(double const*, double const*)>(Catch::SimplePcg32&, unsigned int, double const*, double const*, double (*&)(double const*, double const*))  (in parser_benchmarks)        238
+        std::uniform_int_distribution<unsigned long>::operator()<Catch::SimplePcg32>(Catch::SimplePcg32&, std::uniform_int_distribution<unsigned long>::param_type const&)  (in parser_benchmarks)        203
+        std::__less<double, double>::operator()[abi:v160006](double const&, double const&) const  (in parser_benchmarks)        115
+        std::vector<double>::_ConstructTransaction::_ConstructTransaction[abi:v160006](std::vector<double>&, unsigned long)  (in parser_benchmarks)        103
+        Catch::SimplePcg32::operator()()  (in parser_benchmarks)        98
+        std::vector<double>::push_back[abi:v160006](double const&)  (in parser_benchmarks)        93
+        std::vector<double>::__construct_one_at_end[abi:v160006]<double const&>(double const&)  (in parser_benchmarks)        92
+        Catch::(anonymous namespace)::rotate_right(unsigned int, unsigned int)  (in parser_benchmarks)        89
+        std::__countl_zero[abi:v160006]<unsigned long>(unsigned long)  (in parser_benchmarks)        89
+        std::__compressed_pair_elem<std::allocator<double>, 1, true>::__get[abi:v160006]()  (in parser_benchmarks)        81
+        std::allocator_traits<std::allocator<double>>::destroy[abi:v160006]<double, void>(std::allocator<double>&, double*)  (in parser_benchmarks)        73
+        std::__compressed_pair<double*>::second[abi:v160006]()  (in parser_benchmarks)        71
+        std::vector<double>::_ConstructTransaction::~_ConstructTransaction[abi:v160006]()  (in parser_benchmarks)        69
+        std::allocator<double>::construct[abi:v160006]<double, double const&>(double*, double const&)  (in parser_benchmarks)        62
+        std::uniform_int_distribution<unsigned long>::operator()<Catch::SimplePcg32>(Catch::SimplePcg32&)  (in parser_benchmarks)        62
+        std::vector<double>::__base_destruct_at_end[abi:v160006](double*)  (in parser_benchmarks)        61
+        Catch::Benchmark::Detail::resolution<std::chrono::steady_clock>(int)  (in parser_benchmarks)        56
+        std::allocator_traits<std::allocator<double>>::construct[abi:v160006]<double, double const&, void>(std::allocator<double>&, double*, double const&)  (in parser_benchmarks)        56
+        Catch::Benchmark::Detail::mean(double const*, double const*)  (in parser_benchmarks)        51
+        _nanov2_free  (in libsystem_malloc.dylib)        51
+        std::uniform_int_distribution<unsigned long>::param_type::a() const  (in parser_benchmarks)        50
+        Catch::Benchmark::Detail::classify_outliers(double const*, double const*)  (in parser_benchmarks)        49
+        std::__libcpp_numeric_limits<unsigned long, true>::max[abi:v160006]()  (in parser_benchmarks)        48
+        std::__to_address[abi:v160006]<double>(double*)  (in parser_benchmarks)        48
+        std::allocator<double>::destroy[abi:v160006](double*)  (in parser_benchmarks)        47
+        std::__compressed_pair_elem<double*, 0, false>::__get[abi:v160006]()  (in parser_benchmarks)        45
+        DYLD-STUB$$std::uniform_int_distribution<unsigned long>::param_type::a() const  (in parser_benchmarks)        41
+        std::vector<double>::__alloc[abi:v160006]()  (in parser_benchmarks)        41
+        DYLD-STUB$$std::__independent_bits_engine<Catch::SimplePcg32, unsigned long>::operator()()  (in parser_benchmarks)        36
+        std::__nth_element_find_guard[abi:v160006]<std::__less<double, double>&, double*>(double*&, double*&, double*, std::__less<double, double>&)  (in parser_benchmarks)        35
+        DYLD-STUB$$std::uniform_int_distribution<unsigned long>::param_type::b() const  (in parser_benchmarks)        34
+        std::vector<double>::__end_cap[abi:v160006]()  (in parser_benchmarks)        33
+        std::numeric_limits<unsigned long>::max[abi:v160006]()  (in parser_benchmarks)        29
+        std::__compressed_pair<double*>::first[abi:v160006]()  (in parser_benchmarks)        28
+        std::__independent_bits_engine<Catch::SimplePcg32, unsigned long>::operator()()  (in parser_benchmarks)        28
+        LlamaParser::mustParse<LlamaTokenType>(std::basic_string_view<char> const&, LlamaTokenType)  (in parser_benchmarks)        27
+        decltype(std::declval<std::__identity&>()(std::declval<double&>())) std::__invoke[abi:v160006]<std::__identity&, double&>(std::__identity&, double&)  (in parser_benchmarks)        25
+        nanov2_malloc  (in libsystem_malloc.dylib)        23
+        std::__identity::operator()<double&>(double&) const  (in parser_benchmarks)        22
+        DYLD-STUB$$Catch::SimplePcg32::min()  (in parser_benchmarks)        21
+        DYLD-STUB$$std::__independent_bits_engine<Catch::SimplePcg32, unsigned long>::__eval(std::integral_constant<bool, true>)  (in parser_benchmarks)        21
+        _malloc_zone_malloc  (in libsystem_malloc.dylib)        20
+        std::__nth_element[abi:v160006]<std::_ClassicAlgPolicy, std::__less<double, double>&, double*>(double*, double*, double*, std::__less<double, double>&)  (in parser_benchmarks)        20
+        std::uniform_int_distribution<unsigned long>::param_type::b() const  (in parser_benchmarks)        20
+        clock_gettime_nsec_np  (in libsystem_c.dylib)        19
+        std::__libcpp_clz[abi:v160006](unsigned long)  (in parser_benchmarks)        18
+        _free  (in libsystem_malloc.dylib)        17
+        LlamaParser::parseRuleDecl()  (in parser_benchmarks)        16
+        Rule::~Rule()  (in parser_benchmarks)        16
+        clock_gettime  (in libsystem_c.dylib)        15
+        Catch::SimplePcg32::min()  (in parser_benchmarks)        14
+        _platform_memmove  (in libsystem_platform.dylib)        11
+        decltype(std::declval<std::__less<double, double>&>()(std::declval<double&>(), std::declval<double&>())) std::__invoke[abi:v160006]<std::__less<double, double>&, double&, double&>(std::__less<double, double>&, double&, double&)  (in parser_benchmarks)        11
+        std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, std::basic_string_view<char>>>::__emplace_unique_key_args<std::basic_string_view<char>, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>>(std::basic_string_view<char> const&, std::pair<std::basic_string_view<char>, std::basic_string_view<char>>&&)  (in parser_benchmarks)        11
+        std::__murmur2_or_cityhash<unsigned long, 64ul>::operator()[abi:fe180100](void const*, unsigned long) const  (in parser_benchmarks)        10
+        LlamaParser::parseProperty(LlamaTokenType)  (in parser_benchmarks)        9
+        DYLD-STUB$$free  (in libc++abi.dylib)        7
+        mach_timebase_info  (in libsystem_kernel.dylib)        7
+        DYLD-STUB$$operator delete(void*)  (in parser_benchmarks)        6
+        LlamaParser::parseMetaSection()  (in parser_benchmarks)        6
+        LlamaParser::parseRules(std::vector<unsigned long> const&)  (in parser_benchmarks)        6
+        std::__min_element[abi:v160006]<std::__less<double, double>&, double*, double*, std::__identity>(double*, double*, std::__less<double, double>&, std::__identity&)  (in parser_benchmarks)        6
+        std::enable_if<is_move_constructible<double>::value && is_move_assignable<double>::value, void>::type std::swap[abi:v160006]<double>(double&, double&)  (in parser_benchmarks)        6
+        DYLD-STUB$$malloc  (in libc++abi.dylib)        5
+        DYLD-STUB$$operator new(unsigned long)  (in parser_benchmarks)        5
+        _platform_memset  (in libsystem_platform.dylib)        5
+        std::__hash_table<std::__hash_value_type<std::basic_string_view<char>, PropertyInfo>>::find<std::basic_string_view<char>>(std::basic_string_view<char> const&) const  (in parser_benchmarks)        5
+
+Binary Images:
+       0x1005e0000 -        0x1007c3ff3 +parser_benchmarks (0) <84C935A2-D803-36A9-87D2-60002F0B615A> /Users/*/parser_benchmarks
+       0x100edc000 -        0x100eebffb +libbz2.1.0.8.dylib (0) <A83FAE73-5BE6-3F7D-96AB-A2EE3EC964E3> /opt/local/lib/libbz2.1.0.8.dylib
+       0x100f04000 -        0x100f07ff7 +libfuzzy.2.dylib (0) <38DE8009-CA12-3C4B-A1F2-1FD653B2AEFB> /opt/local/lib/libfuzzy.2.dylib
+       0x100f14000 -        0x100f23ff7 +libz.1.3.1.dylib (0) <8A6BD02F-4F63-30AE-A288-681EC3508C87> /opt/local/lib/libz.1.3.1.dylib
+       0x100f2c000 -        0x100f33ff7 +libb2.1.dylib (0) <0EBD1D03-9BFC-3B29-A0CD-58EC4E481744> /opt/local/lib/libb2.1.dylib
+       0x100f44000 -        0x100f73fff +libboost_program_options-mt.dylib (0) <47783641-25B8-3EF4-B5FE-9BF7519CEA01> /opt/local/libexec/*/libboost_program_options-mt.dylib
+       0x100fac000 -        0x100fdbfff +libhasher.0.dylib (0) <8C572A90-C38B-3A08-B43E-8C79545C68FA> /Users/*/libhasher.0.dylib
+       0x101028000 -        0x10103ffff +liblzo2.2.dylib (0) <866BF21E-244E-3B77-9B0A-E895F586B02D> /opt/local/lib/liblzo2.2.dylib
+       0x101070000 -        0x10108fff7 +liblz4.1.10.0.dylib (0) <743532F2-7768-325A-A775-E57638ABB558> /opt/local/lib/liblz4.1.10.0.dylib
+       0x1010c0000 -        0x10117bfff +libtsk.19.dylib (0) <0C46A723-5B04-3A53-96A5-4CBBA6CAA623> /Users/*/libtsk.19.dylib
+       0x1011d4000 -        0x101263fff +libarchive.13.dylib (0) <7C259A92-C6D4-3679-A33F-1DCF19E42D80> /opt/local/lib/libarchive.13.dylib
+       0x101288000 -        0x1012dbfff +liblightgrep.0.dylib (0) <C805FE3D-6BAD-30E3-A9F8-A20CBD1CF10B> /Users/*/liblightgrep.0.dylib
+       0x101364000 -        0x101387fff +liblzma.5.dylib (0) <3F000AD1-CCA6-328B-9424-0719763F1514> /opt/local/lib/liblzma.5.dylib
+       0x10140c000 -        0x1014d7fef +libpdfextractor.0.1.0.dylib (0) <F56CCC8F-6BA2-39D7-9A03-B0E76BC7D65A> /Users/*/libpdfextractor.0.1.0.dylib
+       0x10150c000 -        0x101587ff7 +libzstd.1.5.7.dylib (0) <87F5FC68-F671-32FC-A678-7D8486318F52> /opt/local/lib/libzstd.1.5.7.dylib
+       0x1015a0000 -        0x1016a3ff7 +libiconv.2.dylib (0) <BF47A1DF-1C9C-32CF-9C96-922FDB8FD634> /opt/local/lib/libiconv.2.dylib
+       0x101748000 -        0x10183bfff +libsqlite3.3.50.4.dylib (0) <0124566A-7733-3731-AC03-65063DF2070D> /opt/local/lib/libsqlite3.3.50.4.dylib
+       0x101868000 -        0x1019b7ff3 +libewf.3.dylib (0) <211CB5CC-6A86-39A3-B55E-7EC511955E82> /opt/local/lib/libewf.3.dylib
+       0x1019fc000 -        0x101b33ff7 +libicuuc.76.1.dylib (0) <094A6121-A236-33C2-9331-9B44069B1023> /opt/local/lib/libicuuc.76.1.dylib
+       0x101c0c000 -        0x101cdfff7 +libxml2.2.dylib (0) <F9306E5D-DAE1-363C-B844-9549FE79139B> /opt/local/lib/libxml2.2.dylib
+       0x102198000 -        0x1024a770f +libcrypto.3.dylib (0) <7BA7159D-FB98-33BE-BD9E-7C14DA8A0231> /opt/local/libexec/*/libcrypto.3.dylib
+       0x1041e4000 -        0x105ff3fef +libduckdb.dylib (0) <06ACE83D-AA6F-3E35-81E3-A7BF704F1E02> /opt/local/lib/libduckdb.dylib
+       0x10abcc000 -        0x10ca2ffff +libicudata.76.1.dylib (0) <B22223AE-2EB1-3356-A274-E49A6F8AABAB> /opt/local/lib/libicudata.76.1.dylib
+       0x1939f4000 -        0x193a44e0b  libobjc.A.dylib (912.7) <159DC289-06ED-3C83-A778-318DFD719044> /usr/lib/libobjc.A.dylib
+       0x193a45000 -        0x193ace733  dyld (1.0.0 - 1165.4) <7287D9C7-4F9F-3BB7-AFD8-5238E8B90031> /usr/lib/dyld
+       0x193acf000 -        0x193ad3ff8  libsystem_blocks.dylib (90) <7663F4E9-50B6-38E8-B856-95580FDD8219> /usr/lib/system/libsystem_blocks.dylib
+       0x193ad4000 -        0x193b1efff  libxpc.dylib (2748.140.10.702.4) <A59767D9-6CC7-3013-98A9-D65832900008> /usr/lib/system/libxpc.dylib
+       0x193b1f000 -        0x193b3afff  libsystem_trace.dylib (1510.140.4.700.1) <7E3B54D1-0BB4-35A4-9CD4-5A964AF2825E> /usr/lib/system/libsystem_trace.dylib
+       0x193b3b000 -        0x193be4fcf  libcorecrypto.dylib (1638.140.6) <62569514-73CA-3B48-A47B-3D0D0832AC02> /usr/lib/system/libcorecrypto.dylib
+       0x193be5000 -        0x193c21ff7  libsystem_malloc.dylib (521.120.7) <B9415DC8-0095-3450-97C6-D0D2D411F887> /usr/lib/system/libsystem_malloc.dylib
+       0x193c22000 -        0x193c69fff  libdispatch.dylib (1477.100.9) <F8460DBC-FE3F-3AFB-8EC3-D660994EDDA1> /usr/lib/system/libdispatch.dylib
+       0x193c6a000 -        0x193c6cfff  libsystem_featureflags.dylib (86) <F75ED3C5-6D49-3EB6-B38F-6B165D811D28> /usr/lib/system/libsystem_featureflags.dylib
+       0x193c6d000 -        0x193cebff7  libsystem_c.dylib (1592.100.35) <6B8BA6CE-63D9-3D2F-B380-C78392E7B8EC> /usr/lib/system/libsystem_c.dylib
+       0x193cec000 -        0x193d78ff7  libc++.1.dylib (1700.255.5) <C4E10D69-6F13-32B1-831D-82DA32D7DB88> /usr/lib/libc++.1.dylib
+       0x193d79000 -        0x193d94ffb  libc++abi.dylib (1700.255.5) <DB0A3DD8-096D-3AB8-AAD7-0449FBA9D72E> /usr/lib/libc++abi.dylib
+       0x193d95000 -        0x193dcffeb  libsystem_kernel.dylib (10063.141.1.704.6) <ADDB9C67-4C25-363C-990A-C2B77CBF9895> /usr/lib/system/libsystem_kernel.dylib
+       0x193dd0000 -        0x193ddcfff  libsystem_pthread.dylib (519.120.4) <57CF0002-C127-3580-A0B7-FD447CC0F745> /usr/lib/system/libsystem_pthread.dylib
+       0x193ddd000 -        0x193e02ff7  libdyld.dylib (1165.4) <8471F01E-634F-3B20-BB27-7C7037B652C6> /usr/lib/system/libdyld.dylib
+       0x193e03000 -        0x193e0afe7  libsystem_platform.dylib (316.100.10) <DB02DA28-4C07-365E-82D0-B474E56AE2FA> /usr/lib/system/libsystem_platform.dylib
+       0x193e0b000 -        0x193e37ffb  libsystem_info.dylib (583.0.1.700.1) <B98A2919-F461-32A9-8134-E4C98BB46CC3> /usr/lib/system/libsystem_info.dylib
+       0x193e38000 -        0x194310fff  com.apple.CoreFoundation (6.9 - 2602.0.902) <0C04D486-70BE-3895-958A-0D6FAA803FB5> /System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation
+       0x194311000 -        0x1945ccfff  com.apple.LaunchServices (1141.1 - 1141.1) <C8F48C21-8201-3846-8290-76F6D575820D> /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/LaunchServices
+       0x194719000 -        0x194ab4fef  libBLAS.dylib (1447.120.2) <BF96AF15-B1D2-3701-A1F6-E5EFA27A924D> /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib
+       0x194ab5000 -        0x194ba6ff7  com.apple.Lexicon-framework (1.0 - 134.9) <F2ECA27F-7AE4-33CF-BA6C-286BF1DDE38F> /System/Library/PrivateFrameworks/Lexicon.framework/Versions/A/Lexicon
+       0x194ba7000 -        0x194c0dfff  libSparse.dylib (125) <3F8DF7D6-4A60-330D-B187-D4D57E358254> /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libSparse.dylib
+       0x194c0e000 -        0x194ca1fff  com.apple.SystemConfiguration (1.21 - 1.21) <F1948F72-F2B8-3C13-91E2-907DEF987A4B> /System/Library/Frameworks/SystemConfiguration.framework/Versions/A/SystemConfiguration
+       0x194ca2000 -        0x194cd6ff3  libCRFSuite.dylib (52) <F97D597A-7FD0-378E-B8AF-837BEF7B3FE6> /usr/lib/libCRFSuite.dylib
+       0x194f8e000 -        0x195bebfff  com.apple.Foundation (6.9 - 2602.0.902) <00951166-8D7C-3761-BBFE-3A7868A77EAB> /System/Library/Frameworks/Foundation.framework/Versions/C/Foundation
+       0x195bec000 -        0x195dd1fff  com.apple.LanguageModeling (1.0 - 366.9) <6A442011-2EF0-30A1-B7AC-3B5BB2F3629F> /System/Library/PrivateFrameworks/LanguageModeling.framework/Versions/A/LanguageModeling
+       0x196b62000 -        0x196f35fff  com.apple.security (7.0 - 61123.141.1.702.4) <35DD688A-9B6C-3CE6-AED1-C1ED347FD583> /System/Library/Frameworks/Security.framework/Versions/A/Security
+       0x196f36000 -        0x1971fcfff  libicucore.A.dylib (74000.404.201) <C8A2486A-7F4D-3195-8027-7E86562BBF79> /usr/lib/libicucore.A.dylib
+       0x1971fd000 -        0x197207ff3  libsystem_darwin.dylib (1592.100.35) <9DD043B0-7E1B-3786-8363-A79FDF8C2CC3> /usr/lib/system/libsystem_darwin.dylib
+       0x197208000 -        0x19750dfff  com.apple.CoreServices.CarbonCore (1333 - 1333) <78261DEF-91AC-322E-8B7E-7248510A6796> /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/CarbonCore
+       0x19750e000 -        0x19754eff3  com.apple.CoreServicesInternal (505 - 505) <E76E4AE3-C447-315A-B2FE-28D7336F2FD2> /System/Library/PrivateFrameworks/CoreServicesInternal.framework/Versions/A/CoreServicesInternal
+       0x19754f000 -        0x19758ffff  com.apple.CSStore (1141.1 - 1141.1) <E7E9F8D1-9143-32EE-B3E2-F05E0426E2A5> /System/Library/PrivateFrameworks/CoreServicesStore.framework/Versions/A/CoreServicesStore
+       0x197590000 -        0x197672fff  com.apple.framework.IOKit (2.0.2 - 100076.120.9) <0491E1B1-51EB-3F76-90E3-4618F56DF36B> /System/Library/Frameworks/IOKit.framework/Versions/A/IOKit
+       0x197673000 -        0x197683ff7  libsystem_notify.dylib (317.120.2.701.1) <4E183183-0917-398D-A2B6-782345F8DD91> /usr/lib/system/libsystem_notify.dylib
+       0x1990f4000 -        0x1990f4fff  libnetwork.dylib (3762.140.6) <749F797D-0998-3821-817C-210FD9470F2A> /usr/lib/libnetwork.dylib
+       0x1990f5000 -        0x1994c8fff  com.apple.CFNetwork (1.0 - 1498.700.2) <398F53E6-95E8-3CB3-97AD-DBEE8EA53A30> /System/Library/Frameworks/CFNetwork.framework/Versions/A/CFNetwork
+       0x1994c9000 -        0x1994e3fff  libsystem_networkextension.dylib (1838.140.5.700.1) <69CFA7AD-4FC2-3900-B9E3-C5F7F3C45289> /usr/lib/system/libsystem_networkextension.dylib
+       0x1994e4000 -        0x1994e5fff  libenergytrace.dylib (23) <2FCBA07C-CEB8-326A-ACC5-3956A484DB24> /usr/lib/libenergytrace.dylib
+       0x1994e6000 -        0x19955bfff  libMobileGestalt.dylib (1332.120.2) <3CE91870-8D6E-3016-BFD1-5593F0ECDEB0> /usr/lib/libMobileGestalt.dylib
+       0x19955c000 -        0x199573ff7  libsystem_asl.dylib (398) <A4157B78-F42C-3334-847B-24564D25F36A> /usr/lib/system/libsystem_asl.dylib
+       0x199574000 -        0x199594ff0  com.apple.TCC (1.0 - 1) <913BD124-90E0-3306-9166-0251F353863D> /System/Library/PrivateFrameworks/TCC.framework/Versions/A/TCC
+       0x19ab2a000 -        0x19ab43fff  com.apple.ProtocolBuffer (1 - 300.26.4.18.2) <EC2229A1-015B-34C8-8B6D-3D62E47C2EF2> /System/Library/PrivateFrameworks/ProtocolBuffer.framework/Versions/A/ProtocolBuffer
+       0x19ab44000 -        0x19acf6fff  libsqlite3.dylib (351.4) <7A829707-57EA-3128-A489-DFB2872CC69A> /usr/lib/libsqlite3.dylib
+       0x19aed0000 -        0x19af43ff7  com.apple.AE (944 - 944) <04BBA243-E043-36B8-BAD5-BA15E3676872> /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/AE.framework/Versions/A/AE
+       0x19af44000 -        0x19af4efff  libdns_services.dylib (2200.140.11.700.1) <4BF51F64-27D7-3A98-B55B-A0119A531D23> /usr/lib/libdns_services.dylib
+       0x19af4f000 -        0x19af57ff3  libsystem_symptoms.dylib (1871.140.6) <71686BC0-66A7-37A5-82DE-037C3709E822> /usr/lib/system/libsystem_symptoms.dylib
+       0x19af58000 -        0x19bba4fff  com.apple.Network (1.0 - 1) <50C4080F-9DCB-36E6-A05D-66FF4C8E66A3> /System/Library/Frameworks/Network.framework/Versions/A/Network
+       0x19bba5000 -        0x19bbd3fff  com.apple.analyticsd (1.0 - 1) <0B4EE4A8-25C3-36FB-AEA6-36807A97800B> /System/Library/PrivateFrameworks/CoreAnalytics.framework/Versions/A/CoreAnalytics
+       0x19bbd4000 -        0x19bbd5fff  libDiagnosticMessagesClient.dylib (113) <46703670-238D-308F-9D4D-461ADB3811D9> /usr/lib/libDiagnosticMessagesClient.dylib
+       0x19bbd6000 -        0x19bc1cfff  com.apple.spotlight.metadata.utilities (1.0 - 2274.38.3) <1BE7EBA5-2D4A-3AFA-ADE6-E6A0B0A437F2> /System/Library/PrivateFrameworks/MetadataUtilities.framework/Versions/A/MetadataUtilities
+       0x19bc1d000 -        0x19bcb7fff  com.apple.Metadata (14.7 - 2274.38.3) <33E02375-FC4B-35BD-BDF8-9B9D86C18991> /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Metadata
+       0x19bcb8000 -        0x19bcc0ffb  com.apple.DiskArbitration (2.7 - 2.7) <C7155F6E-2F76-3091-833F-56D37296ED4F> /System/Library/Frameworks/DiskArbitration.framework/Versions/A/DiskArbitration
+       0x19bcc1000 -        0x19c0aafdf  com.apple.vImage (8.1 - 587.100.1) <B8939BAB-4E68-36F8-808E-28D55E56CCBB> /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vImage.framework/Versions/A/vImage
+       0x19c717000 -        0x19c726fff  com.apple.OpenDirectory (14.7 - 642) <DA9284AA-9302-37CF-9A5E-504B233C82A8> /System/Library/Frameworks/OpenDirectory.framework/Versions/A/OpenDirectory
+       0x19c727000 -        0x19c746ffb  com.apple.CFOpenDirectory (14.7 - 642) <3C36A648-76A1-34B0-8208-25EE10B8F62F> /System/Library/Frameworks/OpenDirectory.framework/Versions/A/Frameworks/CFOpenDirectory.framework/Versions/A/CFOpenDirectory
+       0x19c747000 -        0x19c753ff7  com.apple.CoreServices.FSEvents (1376.120.2 - 1376.120.2) <6E557CE9-64BF-3E2C-B794-92B8B9DAE3C1> /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/FSEvents.framework/Versions/A/FSEvents
+       0x19c754000 -        0x19c77efff  com.apple.coreservices.SharedFileList (225 - 225) <C556E66C-70BD-3A6B-9B43-C99198B7524D> /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/SharedFileList.framework/Versions/A/SharedFileList
+       0x19c77f000 -        0x19c785fff  libapp_launch_measurement.dylib (17) <E5FB083B-829D-313E-9D97-E818DFCC3032> /usr/lib/libapp_launch_measurement.dylib
+       0x19c786000 -        0x19c7cffff  com.apple.CoreAutoLayout (1.0 - 32) <71AF162D-74D6-3A04-A495-8820F2BE961E> /System/Library/PrivateFrameworks/CoreAutoLayout.framework/Versions/A/CoreAutoLayout
+       0x19c7d0000 -        0x19c8b9fff  libxml2.2.dylib (37.20) <9FD5A2F8-E5EB-3AD7-BCD9-1DE07927A1C9> /usr/lib/libxml2.2.dylib
+       0x19e0dd000 -        0x19e107fff  libsystem_containermanager.dylib (582.140.2.700.1) <45910609-78B8-3C6B-8054-6D96D4DE3095> /usr/lib/system/libsystem_containermanager.dylib
+       0x19e108000 -        0x19e11ffff  com.apple.IOSurface (352.50.1 - 352.50.1) <2266FDE0-3F58-337C-A8BF-7DB8A4DBBFD6> /System/Library/Frameworks/IOSurface.framework/Versions/A/IOSurface
+       0x19f0a1000 -        0x19f0a5fff  libsystem_configuration.dylib (1300.120.2.700.2) <0DF08575-B3BB-3714-9189-2EC4624605F2> /usr/lib/system/libsystem_configuration.dylib
+       0x19f0a6000 -        0x19f0abff3  libsystem_sandbox.dylib (2190.140.13.704.3) <C72285C8-3DA8-3DD9-8741-F5AA0FBB7100> /usr/lib/system/libsystem_sandbox.dylib
+       0x19f0ae000 -        0x19f0b1ffb  com.apple.AppleSystemInfo (3.1.5 - 3.1.5) <98C61966-769A-320F-B645-898960A3B251> /System/Library/PrivateFrameworks/AppleSystemInfo.framework/Versions/A/AppleSystemInfo
+       0x19f0b2000 -        0x19f0b3fff  liblangid.dylib (138) <CC05B5D0-B107-314A-A36D-4D8C2BCF917B> /usr/lib/liblangid.dylib
+       0x19f0b4000 -        0x19f1d6fff  com.apple.CoreNLP (1.0 - 313) <61603366-94F1-325B-B377-387A376BF96A> /System/Library/PrivateFrameworks/CoreNLP.framework/Versions/A/CoreNLP
+       0x19f1d7000 -        0x19f1dcfff  com.apple.LinguisticData (1.0 - 483.10) <C30B8D33-4A21-3C8B-9774-2ECB03DE2D5F> /System/Library/PrivateFrameworks/LinguisticData.framework/Versions/A/LinguisticData
+       0x19f1dd000 -        0x19fab0fef  libBNNS.dylib (830.120.10) <218A87A1-182A-3453-931D-A2358BAEF6B6> /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBNNS.dylib
+       0x19fab1000 -        0x19fba1f87  libvDSP.dylib (1043.120.8) <951AD43B-FBD0-32F0-944C-5E0032C85668> /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libvDSP.dylib
+       0x19fba2000 -        0x19fbd5fff  com.apple.CoreEmoji (1.0 - 200.401) <CDD94F9A-44E0-30E3-8E69-6770FEAEEC64> /System/Library/PrivateFrameworks/CoreEmoji.framework/Versions/A/CoreEmoji
+       0x19fbd6000 -        0x19fbe5ff7  com.apple.IOMobileFramebuffer (343.0.0 - 343.0.0) <1E33ABF7-5770-3650-B15F-0907F749372E> /System/Library/PrivateFrameworks/IOMobileFramebuffer.framework/Versions/A/IOMobileFramebuffer
+       0x19fe08000 -        0x19fe95fff  com.apple.securityfoundation (6.0 - 55283) <246E0287-EB4A-3A45-A0E1-0614629F2235> /System/Library/Frameworks/SecurityFoundation.framework/Versions/A/SecurityFoundation
+       0x19fe96000 -        0x19febcfff  com.apple.coreservices.BackgroundTaskManagement (1.0 - 104) <5672C8E5-290B-330E-BA53-AE15A9540485> /System/Library/PrivateFrameworks/BackgroundTaskManagement.framework/Versions/A/BackgroundTaskManagement
+       0x19fec8000 -        0x19fecafff  libquarantine.dylib (172.140.2.700.1) <B0054500-AF43-36FE-9CE4-1ABD23E6A638> /usr/lib/system/libquarantine.dylib
+       0x19fecb000 -        0x19fed6fff  libCheckFix.dylib (32) <C4D6871B-0BF5-3D27-A96C-3695F1C9E2B1> /usr/lib/libCheckFix.dylib
+       0x19fed7000 -        0x19feeefff  libcoretls.dylib (186) <4547F803-4440-344E-9E47-FA4C8D383CCE> /usr/lib/libcoretls.dylib
+       0x19feef000 -        0x19ff00ffb  libbsm.0.dylib (89) <3D142F39-4069-33C2-94AA-0187FCA7F0E1> /usr/lib/libbsm.0.dylib
+       0x19ff01000 -        0x19ff5cfff  libmecab.dylib (1062.400.200) <06123DC2-34E2-3DEF-B0E1-4CEECF6D5D62> /usr/lib/libmecab.dylib
+       0x19ff5d000 -        0x19ff5fffb  libgermantok.dylib (29) <370BC6CB-34DD-3138-93E3-E1C50E2CC0AF> /usr/lib/libgermantok.dylib
+       0x19ff60000 -        0x19ff74fff  libLinearAlgebra.dylib (1447.120.2) <D1CF7F1B-3C95-3066-94BB-652116856FB5> /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libLinearAlgebra.dylib
+       0x1a05ae000 -        0x1a0671fdf  com.apple.AppleFSCompression (163.140.2 - 1.0) <CDA4FF32-BD9D-3540-B8BA-F986E1997ECB> /System/Library/PrivateFrameworks/AppleFSCompression.framework/Versions/A/AppleFSCompression
+       0x1a0672000 -        0x1a067effb  libbz2.1.0.dylib (45) <12CD3348-8A64-3769-9AF6-670F9A842BED> /usr/lib/libbz2.1.0.dylib
+       0x1a067f000 -        0x1a0684fff  libsystem_coreservices.dylib (152.5.3) <89D46B68-9505-3205-9F8C-97BF622021B1> /usr/lib/system/libsystem_coreservices.dylib
+       0x1a0685000 -        0x1a06b6fff  com.apple.CoreServices.OSServices (1141.1 - 1141.1) <99E86DE7-41E9-3889-9D17-89C9CE95C047> /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/OSServices.framework/Versions/A/OSServices
+       0x1a099e000 -        0x1a09acfff  libz.1.dylib (91.40.4) <E138CA01-F66C-34C5-87EB-980E13B44C82> /usr/lib/libz.1.dylib
+       0x1a09ad000 -        0x1a09e3ff3  libsystem_m.dylib (3252.100.9) <39E9DC0C-EC48-34B8-9B19-9D87F51F4E63> /usr/lib/system/libsystem_m.dylib
+       0x1a09e4000 -        0x1a09e7fff  libcharset.1.dylib (102) <B8AAB913-3350-3213-B5DF-D6A3A3EC82C2> /usr/lib/libcharset.1.dylib
+       0x1a09e8000 -        0x1a09efffb  libmacho.dylib (1010.6) <34C677D6-4359-3FA9-9CB1-53596C6BC3E8> /usr/lib/system/libmacho.dylib
+       0x1a09f0000 -        0x1a0a0ffff  libkxld.dylib (10063.141.1.704.6) <2497A266-1DA4-3ACB-A10F-6466C0E36E03> /usr/lib/system/libkxld.dylib
+       0x1a0a10000 -        0x1a0a1dff7  libcommonCrypto.dylib (600028.100.1) <E51B7943-620C-3DB9-911C-A923134DD031> /usr/lib/system/libcommonCrypto.dylib
+       0x1a0a1e000 -        0x1a0a29fff  libunwind.dylib (1700.242) <FF688A7E-E00F-3821-BC80-234ECA3F8D1C> /usr/lib/system/libunwind.dylib
+       0x1a0a2a000 -        0x1a0a31fff  liboah.dylib (318.9) <6D5BE871-CA03-39C7-B079-79C3A93E4F5B> /usr/lib/liboah.dylib
+       0x1a0a32000 -        0x1a0a3bfff  libcopyfile.dylib (196.120.5) <C11549C7-421A-3DBB-8F9F-D92F6F58F0D0> /usr/lib/system/libcopyfile.dylib
+       0x1a0a3c000 -        0x1a0a3ffff  libcompiler_rt.dylib (103.2) <91648112-6386-3F89-8F4F-06C4C780B183> /usr/lib/system/libcompiler_rt.dylib
+       0x1a0a40000 -        0x1a0a44ffb  libsystem_collections.dylib (1592.100.35) <7D1FA5BA-2D08-3C01-AE58-3B1E6509A18D> /usr/lib/system/libsystem_collections.dylib
+       0x1a0a45000 -        0x1a0a48ffb  libsystem_secinit.dylib (147.140.2) <91C7BA05-B66E-327A-81FB-5871705E056A> /usr/lib/system/libsystem_secinit.dylib
+       0x1a0a49000 -        0x1a0a4bffb  libremovefile.dylib (70.100.4) <4877B5BF-BCC6-32AD-8D76-DF6A8955A105> /usr/lib/system/libremovefile.dylib
+       0x1a0a4c000 -        0x1a0a4cffb  libkeymgr.dylib (31) <2A39412F-7C2F-39B9-974A-1FA6217C6A0F> /usr/lib/system/libkeymgr.dylib
+       0x1a0a4d000 -        0x1a0a55ff7  libsystem_dnssd.dylib (2200.140.11.700.1) <67264B63-AF5D-3363-A37B-4484D0D7FBE7> /usr/lib/system/libsystem_dnssd.dylib
+       0x1a0a56000 -        0x1a0a5bfff  libcache.dylib (93) <F0A016A1-44C9-327A-AA08-404FB98EF5BF> /usr/lib/system/libcache.dylib
+       0x1a0a5c000 -        0x1a0a5dfff  libSystem.B.dylib (1345.120.2) <AFEBE755-67EF-3CE1-A96C-D94D5BB68EE3> /usr/lib/libSystem.B.dylib
+       0x1a0a5e000 -        0x1a0a61fff  libfakelink.dylib (5) <6030BCB7-CF29-3160-8953-BACE5D54CBCE> /usr/lib/libfakelink.dylib
+       0x1a0a62000 -        0x1a0a62ffb  com.apple.SoftLinking (1.0 - 47) <E90E0235-4372-3634-9B11-004AD7897CB9> /System/Library/PrivateFrameworks/SoftLinking.framework/Versions/A/SoftLinking
+       0x1a0a63000 -        0x1a0a98ff3  libpcap.A.dylib (131) <DC93E3C6-0EC8-31D2-9DC6-EBB9FB3C83AF> /usr/lib/libpcap.A.dylib
+       0x1a0a99000 -        0x1a0a9fff7  libiconv.2.dylib (102) <CB211569-8A68-3047-8701-D70FC887B738> /usr/lib/libiconv.2.dylib
+       0x1a0aa0000 -        0x1a0ab1fff  libcmph.dylib (8) <8F92249A-D148-37B9-8C72-AF99EC50802A> /usr/lib/libcmph.dylib
+       0x1a0ab2000 -        0x1a0b3afff  libarchive.2.dylib (131.140.2.704.1) <D9C9B9A6-0F52-3DEA-AC84-4C7E9BBAAEDE> /usr/lib/libarchive.2.dylib
+       0x1a0b3b000 -        0x1a0bb1ff3  com.apple.SearchKit (1.4.1 - 1.4.1) <2E2E3505-3391-3337-8F82-A51673EE60AE> /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/SearchKit.framework/Versions/A/SearchKit
+       0x1a0bb2000 -        0x1a0bb3ff7  libThaiTokenizer.dylib (15) <FDC2BA80-559B-3608-81C4-8AA787ABC58B> /usr/lib/libThaiTokenizer.dylib
+       0x1a0bb4000 -        0x1a0bdaff7  com.apple.applesauce (1.0 - 16.60.1) <BFB23A70-4688-3079-A7E0-8785B5CCC7B1> /System/Library/PrivateFrameworks/AppleSauce.framework/Versions/A/AppleSauce
+       0x1a0bdb000 -        0x1a0bf5ffb  libapple_nghttp2.dylib (20.120.2) <0C75636A-B2A6-3289-980C-B319E7067DF0> /usr/lib/libapple_nghttp2.dylib
+       0x1a0bf6000 -        0x1a0c08ff3  libSparseBLAS.dylib (1447.120.2) <65B3F8D3-EA57-3C22-88A0-DE0FFF2ADB20> /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libSparseBLAS.dylib
+       0x1a0c0b000 -        0x1a0c10fff  libpam.2.dylib (33) <94F95640-038F-3E72-89D9-6B0AA67784D5> /usr/lib/libpam.2.dylib
+       0x1a0c11000 -        0x1a0ce0ff7  libcompression.dylib (169.100.2) <64279281-0FB0-3E71-A734-FB34681956A2> /usr/lib/libcompression.dylib
+       0x1a0ce1000 -        0x1a0ce5ffb  libQuadrature.dylib (7) <49F91145-377F-3836-A51E-0A84B718D22A> /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libQuadrature.dylib
+       0x1a0ce6000 -        0x1a1e60fcf  libLAPACK.dylib (1447.120.2) <B9D5E418-878B-37FD-985D-D0C2BD9A6601> /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libLAPACK.dylib
+       0x1a1e61000 -        0x1a1eb7fff  com.apple.DictionaryServices (1.2 - 355) <4AE891AE-DAB9-34A9-BAFA-4D8E5F6C7E59> /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/DictionaryServices.framework/Versions/A/DictionaryServices
+       0x1a1eb8000 -        0x1a1ed6ff7  liblzma.5.dylib (20) <5655A82C-0749-33F2-9177-88F9670BF4CB> /usr/lib/liblzma.5.dylib
+       0x1a1ed7000 -        0x1a1ed8ffb  libcoretls_cfhelpers.dylib (186) <E7F36AE6-B45E-3478-85B7-DD20D96EB3D5> /usr/lib/libcoretls_cfhelpers.dylib
+       0x1a1ed9000 -        0x1a1f48ff7  com.apple.APFS (2236.141.1 - 2236.141.1) <413591E8-39FF-3D0A-988D-CB2D61525116> /System/Library/PrivateFrameworks/APFS.framework/Versions/A/APFS
+       0x1a1f49000 -        0x1a1f57ffb  libxar.1.dylib (498) <AF179B27-1F85-33FD-82CA-74AFA9482231> /usr/lib/libxar.1.dylib
+       0x1a1f58000 -        0x1a1f5bff7  libutil.dylib (72) <0D01B8A4-9EB9-3ACB-B80B-8B76E8FB8746> /usr/lib/libutil.dylib
+       0x1a1f5c000 -        0x1a1f87fff  libxslt.1.dylib (20.5) <065760D9-7DCD-32F7-A566-EE80C2944170> /usr/lib/libxslt.1.dylib
+       0x1a1f90000 -        0x1a200bfff  libvMisc.dylib (1043.120.8) <DC07EAD7-DEEF-337D-9DEB-34F4A7E0D271> /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libvMisc.dylib
+       0x1a2337000 -        0x1a2341fff  libheimdal-asn1.dylib (689.140.1) <99481331-18BD-3639-A03C-C045ED4FFE0E> /usr/lib/libheimdal-asn1.dylib
+       0x1a3aae000 -        0x1a400bfff  libswiftCore.dylib (5.10 - 5.10.0.12.11) <2F8BA773-D189-30ED-817B-58160DD3E9F5> /usr/lib/swift/libswiftCore.dylib
+       0x1a5ff2000 -        0x1a612ffff  com.apple.combine (1.0 - 311) <C08579F5-57FE-3E5F-9282-93E5D6858860> /System/Library/Frameworks/Combine.framework/Versions/A/Combine
+       0x1a80cd000 -        0x1a80cdfff  com.apple.Accelerate.vecLib (3.11 - vecLib 3.11) <BE3FE7FA-6E89-37B2-8943-5E3B5B986CF3> /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/vecLib
+       0x1a80f6000 -        0x1a80f6fff  com.apple.CoreServices (1226 - 1226) <EE133DA7-6F0B-3A35-AAF2-DF53EB53086A> /System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices
+       0x1a83bb000 -        0x1a83bbfff  com.apple.Accelerate (1.11 - Accelerate 1.11) <DC3383B6-688B-3B4C-9AE8-1BF8369E8ADA> /System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate
+       0x1a9767000 -        0x1a977eff7  libswiftDispatch.dylib (41) <7600AD3C-A0AF-356E-BDD2-980818FA6D3D> /usr/lib/swift/libswiftDispatch.dylib
+       0x1abfe2000 -        0x1abfe5ff5  libswiftObjectiveC.dylib (8) <51E6B8D3-172D-323A-B1AB-1F6E5A6769FF> /usr/lib/swift/libswiftObjectiveC.dylib
+       0x1abfe6000 -        0x1ac000fff  libswiftos.dylib (1049.100.4) <31419AFF-BF7D-3435-8537-635E0410FEA2> /usr/lib/swift/libswiftos.dylib
+       0x1b7247000 -        0x1b7250ff3  libswiftDarwin.dylib (5.10 - 5.10.0.12.11) <444818BC-9DDB-39A0-86CE-E2E14720C083> /usr/lib/swift/libswiftDarwin.dylib
+       0x1b97a8000 -        0x1b97ccfff  libmis.dylib (386.140.3) <D7A47929-0E68-32E6-B041-222FD65BBBE3> /usr/lib/libmis.dylib
+       0x1b97da000 -        0x1b97e0fff  libswiftCoreFoundation.dylib (2401) <96223DEC-7C6C-325E-B5DC-22C2D6DDFA88> /usr/lib/swift/libswiftCoreFoundation.dylib
+       0x1b97ec000 -        0x1b9823ff2  libswiftXPC.dylib (36.100.8) <6CB96259-612B-3FF4-ABFC-0C5FD5436C82> /usr/lib/swift/libswiftXPC.dylib
+       0x1b9825000 -        0x1b9825fff  libswiftIOKit.dylib (1) <014D0089-AA58-3BC6-9F13-EBB7E7F7FAE6> /usr/lib/swift/libswiftIOKit.dylib
+       0x1c9ee4000 -        0x1c9eebfff  com.apple.MobileSystemServices (1.0 - 1) <E4FAA1E8-C79E-3645-9E8F-EE6FF8ACC43F> /System/Library/PrivateFrameworks/MobileSystemServices.framework/Versions/A/MobileSystemServices
+       0x1e7f8f000 -        0x1e7f92fff  com.apple.ConfigProfileHelper (16.6 - 1672) <6AF429D7-1DFE-3537-B5DD-605263EAD3FA> /System/Library/PrivateFrameworks/ConfigProfileHelper.framework/Versions/A/ConfigProfileHelper
+       0x22cb34000 -        0x22cb47fff  com.apple.private.AppleMobileFileIntegrity-fmk (1.0 - 1) <11539058-5B43-3FB9-9261-66FF3CB76654> /System/Library/PrivateFrameworks/AppleMobileFileIntegrity.framework/Versions/A/AppleMobileFileIntegrity
+       0x22f399000 -        0x22f4f8fff  com.apple.CollectionsInternal (1.1.0 - 22) <CDBDB34D-2E77-3CF3-9BB4-11CFE2D36732> /System/Library/PrivateFrameworks/CollectionsInternal.framework/Versions/A/CollectionsInternal
+       0x23cdee000 -        0x23cecdfff  com.apple.InstalledContentLibrary (1.0 - 1.0) <AF931D54-C4E7-399D-ADC8-1829274B42EF> /System/Library/PrivateFrameworks/InstalledContentLibrary.framework/Versions/A/InstalledContentLibrary
+       0x23ec9b000 -        0x23f233fff  com.apple.MIL (3304.6 - 3304.6.1) <5BF47DC9-3FAE-3B2B-8E10-DAFC78F9ED20> /System/Library/PrivateFrameworks/MIL.framework/Versions/A/MIL
+       0x24054c000 -        0x240597fff  com.apple.MessageSecurity (1.0 - 101.100.4) <CCEAD0BA-0D60-3982-9D82-8520F1995E99> /System/Library/PrivateFrameworks/MessageSecurity.framework/Versions/A/MessageSecurity
+       0x24565a000 -        0x245662ff7  com.apple.ReflectionInternal (1.0.0 - 22) <A932E229-C95F-363C-8D3D-FC6F268E397A> /System/Library/PrivateFrameworks/ReflectionInternal.framework/Versions/A/ReflectionInternal
+       0x245bec000 -        0x245c03fff  com.apple.RuntimeInternal (1.0.0 - 22) <E512E3CB-ACC4-3D8B-A531-D67333A3FE35> /System/Library/PrivateFrameworks/RuntimeInternal.framework/Versions/A/RuntimeInternal
+       0x25a030000 -        0x25a03bfff  libCoreEntitlements.dylib (53.100.4) <48A0EC3C-A43E-3DA0-8928-505EE4C7B1B3> /usr/lib/libCoreEntitlements.dylib
+       0x25a21e000 -        0x25a229fff  libTLE.dylib (53.100.4) <3D67388D-0AA7-3AF0-BBC0-F7DBBAAF9086> /usr/lib/libTLE.dylib
+       0x25b623000 -        0x25b68eff7  libswift_Concurrency.dylib (5.10 - 5.10.0.12.11) <9D34F40E-6347-3603-AD2E-03C5C95E9E1E> /usr/lib/swift/libswift_Concurrency.dylib
+       0x25b6ce000 -        0x25b776ff7  libswift_RegexParser.dylib (5.10 - 5.10.0.12.11) <AD6DA981-C056-32B3-9FB4-F92A084360E5> /usr/lib/swift/libswift_RegexParser.dylib
+       0x25b777000 -        0x25b819ff7  libswift_StringProcessing.dylib (5.10 - 5.10.0.12.11) <8AB22507-5D30-3F1C-AC5C-A22809AAAB81> /usr/lib/swift/libswift_StringProcessing.dylib
+       0x25b970000 -        0x25b973fff  libsystem_darwindirectory.dylib (86.0.2) <F5A7C3BE-DE1C-357D-A3E3-5F5A8285460F> /usr/lib/system/libsystem_darwindirectory.dylib
+       0x25b974000 -        0x25b977fff  libsystem_eligibility.dylib (47.140.3) <BBEE4CD9-E0B7-32C7-92DE-780B8C47B621> /usr/lib/system/libsystem_eligibility.dylib
+       0x25b978000 -        0x25b97bffb  libsystem_sanitizers.dylib (8) <11F70EE3-34D6-35D4-903B-E91A241CD49E> /usr/lib/system/libsystem_sanitizers.dylib
