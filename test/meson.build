@@ -98,38 +98,17 @@ if catch2_dep.found()
               'MSAN_OPTIONS=halt_on_error=0:abort_on_error=0:exit_code=0',
               'MALLOC_CHECK_=0'])
 
-  # Parser benchmarks (always available)
-  parser_benchmark_sources = [
-    'benchmarks/test_parser.cpp'
-  ]
+  # Benchmarks (always includes parser, adds YARA if available)
+  benchmark_sources = ['benchmarks/test_parser.cpp']
 
-  parser_benchmark_exe = executable('parser_benchmarks',
-    llama_common_sources + parser_benchmark_sources,
-    include_directories: [inc, include_directories('../src')],
-    dependencies: llama_deps + [catch2_dep],
-    build_by_default: false
-  )
-
-  # YARA benchmarks (only if YARA is available)
   if yara_dep.found()
-    yara_benchmark_sources = [
-      'benchmarks/test_parser.cpp',
-      'benchmarks/test_yara.cpp'
-    ]
-
-    yara_benchmark_exe = executable('yara_benchmarks',
-      llama_common_sources + yara_benchmark_sources,
-      include_directories: [inc, include_directories('../src')],
-      dependencies: llama_deps + [catch2_dep],
-      build_by_default: false
-    )
+    benchmark_sources += 'benchmarks/test_yara.cpp'
   endif
 
-  # Standalone profiling program (no Catch2 dependency in execution)
-  profile_parser_exe = executable('profile_parser',
-    llama_common_sources + ['profile_parser.cpp'],
-    include_directories: [inc, include_directories('../src'), include_directories('benchmarks')],
-    dependencies: llama_deps,
+  benchmark_exe = executable('benchmarks',
+    llama_common_sources + benchmark_sources,
+    include_directories: [inc, include_directories('../src')],
+    dependencies: llama_deps + [catch2_dep],
     build_by_default: false
   )
 
