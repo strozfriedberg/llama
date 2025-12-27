@@ -330,12 +330,65 @@ def cmd_store(args):
     print(f"Stored {count} benchmarks for commit {args.commit}")
     return 0
 
+def cmd_compare(args):
+    """Handle 'compare' command"""
+    conn = init_database(args.db)
+
+    # Determine baseline
+    if args.baseline:
+        baseline_commit = args.baseline
+    else:
+        baseline_commit, baseline_timestamp = get_most_recent_commit(conn)
+        if baseline_commit is None:
+            print("Error: No baseline found in database. Use --baseline or store results first.")
+            conn.close()
+            return 1
+
+    baseline_benchmarks = load_benchmarks_for_commit(conn, baseline_commit)
+    if not baseline_benchmarks:
+        print(f"Error: No benchmarks found for baseline commit: {baseline_commit}")
+        conn.close()
+        return 1
+
+    # Get timestamp for baseline
+    cursor = conn.cursor()
+    cursor.execute("SELECT timestamp FROM benchmarks WHERE commit_hash=? LIMIT 1",
+                  (baseline_commit,))
+    baseline_timestamp = cursor.fetchone()[0]
+
+    # Determine current (XML file or commit hash)
+    current_arg = args.current
+    if current_arg.endswith('.xml'):
+        if not os.path.exists(current_arg):
+            print(f"Error: XML file not found: {current_arg}")
+            conn.close()
+            return 1
+        current_benchmarks = parse_xml_benchmarks(current_arg)
+    else:
+        current_benchmarks = load_benchmarks_for_commit(conn, current_arg)
+        if not current_benchmarks:
+            print(f"Error: No benchmarks found for commit: {current_arg}")
+            conn.close()
+            return 1
+
+    conn.close()
+
+    # Compare and output
+    comparison = compare_benchmark_sets(baseline_benchmarks, current_benchmarks)
+    output = format_comparison_output(comparison, (baseline_commit, baseline_timestamp),
+                                     verbose=args.verbose)
+    print(output)
+
+    return 0
+
 def main():
     parser = argparse.ArgumentParser(
         description='Track and compare benchmark performance across commits'
     )
     parser.add_argument('--db', default='benchmarks.db',
                        help='Database path (default: benchmarks.db)')
+    parser.add_argument('--verbose', action='store_true',
+                       help='Show detailed CI information')
 
     subparsers = parser.add_subparsers(dest='command', required=True)
 
@@ -346,10 +399,20 @@ def main():
     store_parser.add_argument('--commit', required=True,
                              help='Commit hash or label')
 
+    # Compare command
+    compare_parser = subparsers.add_parser('compare',
+                                          help='Compare benchmark results')
+    compare_parser.add_argument('current',
+                               help='Current results (XML file or commit hash)')
+    compare_parser.add_argument('--baseline',
+                               help='Baseline commit hash (default: most recent)')
+
     args = parser.parse_args()
 
     if args.command == 'store':
         return cmd_store(args)
+    elif args.command == 'compare':
+        return cmd_compare(args)
 
     return 1
 
