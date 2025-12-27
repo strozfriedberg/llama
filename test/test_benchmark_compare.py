@@ -3,7 +3,7 @@ import sqlite3
 import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
-from benchmark_compare import init_database, parse_xml_benchmarks, store_benchmarks
+from benchmark_compare import init_database, parse_xml_benchmarks, store_benchmarks, load_benchmarks_for_commit, get_most_recent_commit
 
 class TestDatabaseInit(unittest.TestCase):
     def setUp(self):
@@ -153,6 +153,44 @@ class TestStoreBenchmarks(unittest.TestCase):
         self.assertEqual(rows[0][4], 1900.82)  # mean_ns
         self.assertEqual(rows[0][5], 1887.06)  # lower_bound_ns
         self.assertEqual(rows[0][6], 1933.43)  # upper_bound_ns
+
+class TestLoadBenchmarks(unittest.TestCase):
+    def setUp(self):
+        self.test_db = "/tmp/test_benchmarks.db"
+        if os.path.exists(self.test_db):
+            os.remove(self.test_db)
+        self.conn = init_database(self.test_db)
+
+        # Store some test data
+        benchmarks = [
+            {'name': 'lexer', 'mean_ns': 1900.82, 'lower_bound_ns': 1887.06,
+             'upper_bound_ns': 1933.43, 'std_dev_ns': 102.154, 'samples': 100, 'iterations': 8},
+            {'name': 'parser', 'mean_ns': 1727.63, 'lower_bound_ns': 1629.58,
+             'upper_bound_ns': 2017.73, 'std_dev_ns': 784.178, 'samples': 100, 'iterations': 9}
+        ]
+        store_benchmarks(self.conn, benchmarks, 'abc1234', '2025-12-26T10:00:00')
+        store_benchmarks(self.conn, benchmarks, 'def5678', '2025-12-27T10:00:00')
+
+    def tearDown(self):
+        self.conn.close()
+        if os.path.exists(self.test_db):
+            os.remove(self.test_db)
+
+    def test_load_benchmarks_for_commit(self):
+        """Load benchmarks for a specific commit"""
+        results = load_benchmarks_for_commit(self.conn, 'abc1234')
+
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[0]['name'], 'lexer')
+        self.assertEqual(results[0]['mean_ns'], 1900.82)
+        self.assertEqual(results[1]['name'], 'parser')
+
+    def test_get_most_recent_commit(self):
+        """Get most recent commit hash by timestamp"""
+        commit_hash, timestamp = get_most_recent_commit(self.conn)
+
+        self.assertEqual(commit_hash, 'def5678')
+        self.assertEqual(timestamp, '2025-12-27T10:00:00')
 
 if __name__ == '__main__':
     unittest.main()

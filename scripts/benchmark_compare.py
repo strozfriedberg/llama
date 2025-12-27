@@ -108,3 +108,49 @@ def store_benchmarks(conn, benchmarks, commit_hash, timestamp=None):
 
     conn.commit()
     return len(benchmarks)
+
+def load_benchmarks_for_commit(conn, commit_hash):
+    """Load benchmark results for a specific commit
+
+    Returns list of dicts with same structure as parse_xml_benchmarks
+    """
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT benchmark_name, mean_ns, lower_bound_ns, upper_bound_ns,
+               std_dev_ns, samples, iterations
+        FROM benchmarks
+        WHERE commit_hash = ?
+        ORDER BY benchmark_name
+    """, (commit_hash,))
+
+    results = []
+    for row in cursor.fetchall():
+        results.append({
+            'name': row[0],
+            'mean_ns': row[1],
+            'lower_bound_ns': row[2],
+            'upper_bound_ns': row[3],
+            'std_dev_ns': row[4],
+            'samples': row[5],
+            'iterations': row[6]
+        })
+
+    return results
+
+def get_most_recent_commit(conn):
+    """Get the most recent commit hash and timestamp
+
+    Returns tuple of (commit_hash, timestamp) or (None, None) if empty
+    """
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT commit_hash, timestamp
+        FROM benchmarks
+        ORDER BY timestamp DESC
+        LIMIT 1
+    """)
+
+    row = cursor.fetchone()
+    if row:
+        return row[0], row[1]
+    return None, None
