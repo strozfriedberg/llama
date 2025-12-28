@@ -57,7 +57,7 @@ void LlamaParser::resetCounters() {
   CurRuleIdx = 0;
 }
 
-std::string_view expectedErrorMsg(LlamaTokenType token) {
+std::string_view LlamaParser::expectedErrorMsg(LlamaTokenType token) {
   switch (token) {
     case LlamaTokenType::RULE: return "Expected rule keyword";
     case LlamaTokenType::META: return "Expected meta keyword";
@@ -80,14 +80,6 @@ std::string_view expectedErrorMsg(LlamaTokenType token) {
     default:
       return "Invalid token type";
   }
-}
-
-std::string_view LlamaParser::expect(LlamaTokenType token) {
-  if (peek().Type != token) {
-    throw ParserError(expectedErrorMsg(token), peek().Pos);
-  }
-  advance();
-  return previous().Lexeme;
 }
 
 FieldHash Rule::getHash(const LlamaParser& parser) const {

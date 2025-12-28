@@ -273,11 +273,13 @@ public:
   LlamaParser() = default;
   LlamaParser(const std::string& input, const std::vector<Token>& tokens) : Tokens(tokens), Input(input) {}
 
+  bool isAtEnd() const { return peek().Type == LlamaTokenType::END_OF_FILE; }
+
   Token previous() const { return Tokens[CurIdx - 1]; }
 
   // Peek at the current Token without consuming it.
   Token peek() const { return Tokens[CurIdx]; }
-  Token advance() { if (!isAtEnd()) ++CurIdx; return previous();}
+  void advance() { if (!isAtEnd()) ++CurIdx;}
 
   // Increments CurIdx if match.
   template <class... TokenTypes>
@@ -287,10 +289,16 @@ public:
   template <class... TokenTypes>
   bool checkAny(TokenTypes... types) const { return ((peek().Type == types) || ...);};
 
-  // Throws if CurIdx is not pointing to the given LlamaTokenType.
-  std::string_view expect(LlamaTokenType);
+  static std::string_view expectedErrorMsg(LlamaTokenType token);
 
-  bool isAtEnd() const { return peek().Type == LlamaTokenType::END_OF_FILE; }
+  // Throws if CurIdx is not pointing to the given LlamaTokenType.
+  std::string_view expect(LlamaTokenType token) {
+    if (peek().Type != token) {
+      throw ParserError(expectedErrorMsg(token), peek().Pos);
+    }
+    advance();
+    return previous().Lexeme;
+  }
 
   // Increments CurIdx if match. Otherwise throws exception with given errMsg.
   template <class... LlamaTokenTypes>
