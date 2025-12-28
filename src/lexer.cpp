@@ -95,6 +95,62 @@ void LlamaLexer::scanToken() {
   }
 }
 
+namespace {
+  LlamaTokenType keywordOrID(const std::string_view& identifier) {
+    // using the first character results in fewer collisions than string length
+    // hardcoding here is quite a bit faster than unordered_map lookup
+    auto first = identifier[0];
+    switch (first) {
+      case 'a':
+        if (identifier == "and") return LlamaTokenType::AND;
+        break;
+      case 'b':
+        if (identifier == "blake3") return LlamaTokenType::BLAKE3;
+        break;
+      case 'c':
+        if (identifier == "condition") return LlamaTokenType::CONDITION;
+        break;
+      case 'e':
+        if (identifier == "encodings") return LlamaTokenType::ENCODINGS;
+        break;
+      case 'f':
+        if (identifier == "file_metadata") return LlamaTokenType::FILE_METADATA;
+        if (identifier == "fixed") return LlamaTokenType::FIXED;
+        break;
+      case 'g':
+        if (identifier == "grep") return LlamaTokenType::GREP;
+        break;
+      case 'h':
+        if (identifier == "hash") return LlamaTokenType::HASH;
+        break;
+      case 'm':
+        if (identifier == "meta") return LlamaTokenType::META;
+        if (identifier == "md5") return LlamaTokenType::MD5;
+        break;
+      case 'n':
+        if (identifier == "nocase") return LlamaTokenType::NOCASE;
+        break;
+      case 'o':
+        if (identifier == "or") return LlamaTokenType::OR;
+        break;
+      case 'p':
+        if (identifier == "patterns") return LlamaTokenType::PATTERNS;
+        break;
+      case 'r':
+        if (identifier == "rule") return LlamaTokenType::RULE;
+        break;
+      case 's':
+        if (identifier == "sha1") return LlamaTokenType::SHA1;
+        if (identifier == "sha256") return LlamaTokenType::SHA256;
+        if (identifier == "signature") return LlamaTokenType::SIGNATURE;
+        break;
+      default:
+        break;
+    }
+    return LlamaTokenType::IDENTIFIER;
+  }
+}
+
 void LlamaLexer::parseIdentifier(LineCol pos) {
   uint64_t start = CurIdx;
   if (CurIdx > 0) {
@@ -105,16 +161,11 @@ void LlamaLexer::parseIdentifier(LineCol pos) {
   }
   uint64_t end = CurIdx;
   std::string_view identifier(Input.data() + start, end - start);
-  auto found = LlamaKeywords.find(identifier);
 
-  if (found != LlamaKeywords.end()) {
-    addToken(found->second, start, end, pos);
-    if (found->second == LlamaTokenType::RULE) {
-      RuleIndices.push_back(Tokens.size() - 1);
-    }
-  }
-  else {
-    addToken(LlamaTokenType::IDENTIFIER, start, end, pos);
+  LlamaTokenType type = keywordOrID(identifier);
+  addToken(type, start, end, pos);
+  if (type == LlamaTokenType::RULE) {
+    RuleIndices.push_back(Tokens.size() - 1);
   }
 }
 
