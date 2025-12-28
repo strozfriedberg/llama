@@ -99,10 +99,10 @@ if catch2_dep.found()
               'MALLOC_CHECK_=0'])
 
   # Benchmarks (always includes parser, adds YARA if available)
-  benchmark_sources = ['benchmarks/test_parser.cpp']
+  benchmark_sources = ['benchmarks/parser_bench.cpp']
 
   if yara_dep.found()
-    benchmark_sources += 'benchmarks/test_yara.cpp'
+    benchmark_sources += 'benchmarks/yara_bench.cpp'
   endif
 
   benchmark_exe = executable('benchmarks',
