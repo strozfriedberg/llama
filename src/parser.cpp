@@ -8,12 +8,12 @@ FileHashRecord::const_iterator findKey(const FileHashRecord& container, SFHASH_H
 }
 
 uint64_t toLlamaOp(LlamaTokenType t) {
-    uint64_t res = 0;
-    if (t > LlamaTokenType::EQUAL && t < LlamaTokenType::IDENTIFIER) {
-      uint64_t shiftAmt = (uint64_t)(t) - (uint64_t)(LlamaTokenType::EQUAL_EQUAL);
-      res = 1 << shiftAmt;
-    }
-    return res;
+  uint64_t res = 0;
+  if (t > LlamaTokenType::EQUAL && t < LlamaTokenType::IDENTIFIER) {
+    uint64_t shiftAmt = (uint64_t)(t) - (uint64_t)(LlamaTokenType::EQUAL_EQUAL);
+    res = 1 << shiftAmt;
+  }
+  return res;
 }
 
 namespace {
