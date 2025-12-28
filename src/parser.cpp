@@ -57,30 +57,37 @@ void LlamaParser::resetCounters() {
   CurRuleIdx = 0;
 }
 
-std::string_view LlamaParser::expect(LlamaTokenType token) {
+std::string_view expectedErrorMsg(LlamaTokenType token) {
   switch (token) {
-    case LlamaTokenType::RULE: mustParse("Expected rule keyword", LlamaTokenType::RULE); break;
-    case LlamaTokenType::META: mustParse("Expected meta keyword", LlamaTokenType::META); break;
-    case LlamaTokenType::FILE_METADATA: mustParse("Expected file_metadata keyword", LlamaTokenType::FILE_METADATA); break;
-    case LlamaTokenType::SIGNATURE: mustParse("Expected signature keyword", LlamaTokenType::SIGNATURE); break;
-    case LlamaTokenType::GREP: mustParse("Expected grep keyword", LlamaTokenType::GREP); break;
-    case LlamaTokenType::PATTERNS: mustParse("Expected patterns keyword", LlamaTokenType::PATTERNS); break;
-    case LlamaTokenType::HASH: mustParse("Expected hash keyword", LlamaTokenType::HASH); break;
-    case LlamaTokenType::CONDITION: mustParse("Expected condition keyword", LlamaTokenType::CONDITION); break;
-    case LlamaTokenType::OPEN_BRACE: mustParse("Expected open brace", LlamaTokenType::OPEN_BRACE); break;
-    case LlamaTokenType::CLOSE_BRACE: mustParse("Expected close brace", LlamaTokenType::CLOSE_BRACE); break;
-    case LlamaTokenType::OPEN_PAREN: mustParse("Expected open parenthesis", LlamaTokenType::OPEN_PAREN); break;
-    case LlamaTokenType::CLOSE_PAREN: mustParse("Expected close parenthesis", LlamaTokenType::CLOSE_PAREN); break;
-    case LlamaTokenType::COLON: mustParse("Expected colon", LlamaTokenType::COLON); break;
-    case LlamaTokenType::EQUAL: mustParse("Expected equal sign", LlamaTokenType::EQUAL); break;
-    case LlamaTokenType::EQUAL_EQUAL: mustParse("Expected equality operator", LlamaTokenType::EQUAL_EQUAL); break;
-    case LlamaTokenType::IDENTIFIER: mustParse("Expected identifier", LlamaTokenType::IDENTIFIER); break;
-    case LlamaTokenType::DOUBLE_QUOTED_STRING: mustParse("Expected double quoted string", LlamaTokenType::DOUBLE_QUOTED_STRING); break;
-    case LlamaTokenType::NUMBER: mustParse("Expected number", LlamaTokenType::NUMBER); break;
+    case LlamaTokenType::RULE: return "Expected rule keyword";
+    case LlamaTokenType::META: return "Expected meta keyword";
+    case LlamaTokenType::FILE_METADATA: return "Expected file_metadata keyword";
+    case LlamaTokenType::SIGNATURE: return "Expected signature keyword";
+    case LlamaTokenType::GREP: return "Expected grep keyword";
+    case LlamaTokenType::PATTERNS: return "Expected patterns keyword";
+    case LlamaTokenType::HASH: return "Expected hash keyword";
+    case LlamaTokenType::CONDITION: return "Expected condition keyword";
+    case LlamaTokenType::OPEN_BRACE: return "Expected open brace";
+    case LlamaTokenType::CLOSE_BRACE: return "Expected close brace";
+    case LlamaTokenType::OPEN_PAREN: return "Expected open parenthesis";
+    case LlamaTokenType::CLOSE_PAREN: return "Expected close parenthesis";
+    case LlamaTokenType::COLON: return "Expected colon";
+    case LlamaTokenType::EQUAL: return "Expected equal sign";
+    case LlamaTokenType::EQUAL_EQUAL: return "Expected equality operator";
+    case LlamaTokenType::IDENTIFIER: return "Expected identifier";
+    case LlamaTokenType::DOUBLE_QUOTED_STRING: return "Expected double quoted string";
+    case LlamaTokenType::NUMBER: return "Expected number";
     default:
-      throw ParserError("Invalid token type", peek().Pos);
+      return "Invalid token type";
   }
-  return previousLexeme();
+}
+
+std::string_view LlamaParser::expect(LlamaTokenType token) {
+  if (peek().Type != token) {
+    throw ParserError(expectedErrorMsg(token), peek().Pos);
+  }
+  advance();
+  return previous().Lexeme;
 }
 
 FieldHash Rule::getHash(const LlamaParser& parser) const {
