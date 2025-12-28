@@ -32,8 +32,8 @@ public:
   void parseSingleLineComment();
   void parseMultiLineComment(LineCol pos);
 
-  void addToken(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos) {
-    Tokens.emplace_back(type, Input.substr(start, end - start), pos);
+  inline void addToken(LlamaTokenType type, uint64_t start, uint64_t end, LineCol pos) {
+    Tokens.emplace_back(type, std::string_view(Input.data() + start, end - start), pos);
   }
 
   uint8_t advance() { ++Pos.ColNum; return Input[CurIdx++]; }
