@@ -245,7 +245,7 @@ bool LlamaLexer::match(char expected) {
   if (isAtEnd() || Input[CurIdx] != expected) {
     return false;
   }
-
   advance();
   return true;
 }
+
