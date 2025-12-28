@@ -744,43 +744,37 @@ TEST_CASE("parseFactorProducesFuncNodeIfNoParen") {
 TEST_CASE("parseFactorSignatureSection") {
   std::string input = "name == \"Executable\"";
   LlamaParser parser(input, getLexer(input).tokens());
-  Node* node = nullptr;
-  REQUIRE_NOTHROW(node = parser.parseFactor(LlamaTokenType::SIGNATURE));
+  REQUIRE_NOTHROW(parser.parseFactor(LlamaTokenType::SIGNATURE));
 }
 
 TEST_CASE("parseFactorFileMetadataSection") {
   std::string input = "created == \"2023-04-05\"";
   LlamaParser parser(input, getLexer(input).tokens());
-  Node* node = nullptr;
-  REQUIRE_NOTHROW(node = parser.parseFactor(LlamaTokenType::FILE_METADATA));
+  REQUIRE_NOTHROW(parser.parseFactor(LlamaTokenType::FILE_METADATA));
 }
 
 TEST_CASE("parseFactorConditionSection") {
   std::string input = "any(s1, s2, s3)";
   LlamaParser parser(input, getLexer(input).tokens());
-  Node* node = nullptr;
-  REQUIRE_NOTHROW(node = parser.parseFactor(LlamaTokenType::CONDITION));
+  REQUIRE_NOTHROW(parser.parseFactor(LlamaTokenType::CONDITION));
 }
 
 TEST_CASE("parseFactorFileMetadataSectionWrongProperty") {
   std::string input = "name == \"Executable\"";
   LlamaParser parser(input, getLexer(input).tokens());
-  Node* node = nullptr;
-  REQUIRE_THROWS(node = parser.parseFactor(LlamaTokenType::FILE_METADATA));
+  REQUIRE_THROWS(parser.parseFactor(LlamaTokenType::FILE_METADATA));
 }
 
 TEST_CASE("parseFactorSignatureSectionWrongProperty") {
   std::string input = "created > \"2023-04-05\"";
   LlamaParser parser(input, getLexer(input).tokens());
-  Node* node = nullptr;
-  REQUIRE_THROWS(node = parser.parseFactor(LlamaTokenType::SIGNATURE));
+  REQUIRE_THROWS(parser.parseFactor(LlamaTokenType::SIGNATURE));
 }
 
 TEST_CASE("parseFactorConditionSectionWrongProperty") {
   std::string input = "created > \"2023-04-05\"";
   LlamaParser parser(input, getLexer(input).tokens());
-  Node* node = nullptr;
-  REQUIRE_THROWS(node = parser.parseFactor(LlamaTokenType::CONDITION));
+  REQUIRE_THROWS(parser.parseFactor(LlamaTokenType::CONDITION));
 }
 
 TEST_CASE("parseFileHashRecord") {

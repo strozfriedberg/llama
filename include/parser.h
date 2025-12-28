@@ -109,16 +109,6 @@ struct FunctionProperties {
   bool IsCompFunc;
 };
 
-// Holds the valid FunctionProperties for each function type. Used in Functions's validate().
-static const std::unordered_map<std::string_view, FunctionProperties> FunctionValidProperties {
-  {"all",            FunctionProperties{0, SIZE_MAX, false}},
-  {"any",            FunctionProperties{0, SIZE_MAX, false}},
-  {"offset",         FunctionProperties{1, 2, true}},
-  {"count",          FunctionProperties{1, 1, true}},
-  {"count_has_hits", FunctionProperties{0, SIZE_MAX, true}},
-  {"length",         FunctionProperties{1, 2, true}}
-};
-
 /********************************** PATTERNS SECTION **********************************************/
 
 static const std::string_view ASCII("ASCII");

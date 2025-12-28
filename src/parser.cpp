@@ -16,8 +16,20 @@ uint64_t toLlamaOp(LlamaTokenType t) {
     return res;
 }
 
+namespace {
+// Holds the valid FunctionProperties for each function type. Used in Functions's validate().
+static const std::unordered_map<std::string_view, FunctionProperties> FunctionValidProperties {
+  {"all",            FunctionProperties{0, SIZE_MAX, false}},
+  {"any",            FunctionProperties{0, SIZE_MAX, false}},
+  {"offset",         FunctionProperties{1, 2, true}},
+  {"count",          FunctionProperties{1, 1, true}},
+  {"count_has_hits", FunctionProperties{0, SIZE_MAX, true}},
+  {"length",         FunctionProperties{1, 2, true}}
+};
+}
+
 void Function::validate() {
-  FunctionProperties props = FunctionValidProperties.find(Name)->second;
+  const FunctionProperties& props = FunctionValidProperties.find(Name)->second;
   if (props.IsCompFunc && (Operator == SIZE_MAX || Value == SIZE_MAX)) {
     throw ParserError("Expected operator and value for comparison", Pos);
   }
