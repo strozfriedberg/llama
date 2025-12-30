@@ -90,14 +90,6 @@ if catch2_dep.found()
     build_by_default: false
   )
 
-  # Register the test with all sanitizers completely disabled
-  test('llama_tests', test_exe,
-       workdir : meson.project_source_root(),
-       env : ['ASAN_OPTIONS=detect_leaks=0:detect_container_overflow=0:detect_stack_use_after_return=0:check_initialization_order=0:strict_init_order=0:halt_on_error=0:abort_on_error=0:disable_coredump=0:unmap_shadow_on_exit=1:mmap_limit_mb=0',
-              'UBSAN_OPTIONS=halt_on_error=0:abort_on_error=0:print_stacktrace=0:silence_unsigned_overflow=1',
-              'MSAN_OPTIONS=halt_on_error=0:abort_on_error=0:exit_code=0',
-              'MALLOC_CHECK_=0'])
-
   # Benchmarks (always includes parser, adds YARA if available)
   benchmark_sources = ['benchmarks/parser_bench.cpp']
 
@@ -109,8 +101,16 @@ if catch2_dep.found()
     llama_common_sources + benchmark_sources,
     include_directories: [inc, include_directories('../src')],
     dependencies: llama_deps + [catch2_dep],
-    build_by_default: false
+    build_by_default: true
   )
+
+  # Register the test with all sanitizers completely disabled
+  test('llama_tests', test_exe,
+       workdir : meson.project_source_root(),
+       env : ['ASAN_OPTIONS=detect_leaks=0:detect_container_overflow=0:detect_stack_use_after_return=0:check_initialization_order=0:strict_init_order=0:halt_on_error=0:abort_on_error=0:disable_coredump=0:unmap_shadow_on_exit=1:mmap_limit_mb=0',
+              'UBSAN_OPTIONS=halt_on_error=0:abort_on_error=0:print_stacktrace=0:silence_unsigned_overflow=1',
+              'MSAN_OPTIONS=halt_on_error=0:abort_on_error=0:exit_code=0',
+              'MALLOC_CHECK_=0'])
 
 endif
 
