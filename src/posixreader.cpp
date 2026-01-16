@@ -4,6 +4,7 @@
 #ifdef __linux__
 
 #include "posixreader.h"
+#include "inputhandler.h"
 
 #include <linux/fiemap.h>
 #include <linux/fs.h>
@@ -32,8 +33,15 @@ void PosixReader::setOutputHandler(const std::shared_ptr<OutputHandler>& out) {
 }
 
 bool PosixReader::startReading() {
-    // TODO: Implement in later task
-    return false;
+    walkFilesystem();
+
+    // Flush remaining dirents
+    while (!Dirents.empty()) {
+        Input->push(Dirents.pop());
+    }
+
+    Input->flush();
+    return true;
 }
 
 std::string PosixReader::flagsToString(uint32_t flags) {
@@ -212,11 +220,57 @@ bool PosixReader::callFiemap(int fd, std::vector<uint8_t>& bufOut) {
 }
 
 void PosixReader::walkFilesystem() {
-    // TODO: Implement in later task
+    namespace fs = std::filesystem;
+
+    std::vector<uint8_t> fiemapBuf;
+    std::vector<Extent> extents;
+
+    std::error_code ec;
+    for (auto it = fs::recursive_directory_iterator(Mountpoint, fs::directory_options::skip_permission_denied, ec);
+         it != fs::recursive_directory_iterator();
+         ++it)
+    {
+        if (ec) {
+            ec.clear();
+            continue;
+        }
+
+        handleEntry(*it);
+
+        // For regular files, get FIEMAP data
+        if (it->is_regular_file(ec) && !ec) {
+            const std::string pathStr = it->path().string();
+            int fd = open(pathStr.c_str(), O_RDONLY);
+            if (fd >= 0) {
+                struct stat st;
+                if (fstat(fd, &st) == 0) {
+                    if (callFiemap(fd, fiemapBuf)) {
+                        parseExtents(fiemapBuf.data(), fiemapBuf.size(),
+                                     st.st_ino, pathStr, FsOffset, extents);
+                        // TODO: Add extents to batch and flush to DuckDB (Task B8)
+                        for (const auto& ext : extents) {
+                            // For now, just process - DuckDB integration in next task
+                        }
+                    }
+                }
+                close(fd);
+            }
+        }
+    }
 }
 
 void PosixReader::handleEntry(const std::filesystem::directory_entry& entry) {
-    // TODO: Implement in later task
+    std::error_code ec;
+    struct stat st;
+
+    if (lstat(entry.path().c_str(), &st) != 0) {
+        return;
+    }
+
+    Inode inode = statToInode(st, entry.path().string());
+    Input->push(inode);
+
+    // TODO: Handle dirents similar to TskReader/DirReader
 }
 
 #endif // __linux__
