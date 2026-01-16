@@ -44,7 +44,7 @@ void Function::validate() {
 
 void LlamaParser::clear() {
   Tokens.clear();
-  Input.clear();
+  Input = std::string_view();
   Errors.clear();
   BoolNodes.clear();
   FuncNodes.clear();

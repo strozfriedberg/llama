@@ -357,7 +357,7 @@ public:
 
   std::vector<Token>       Tokens;
   std::vector<ParserError> Errors;
-  std::string              Input;
+  std::string_view         Input;
   uint64_t                 CurIdx     = 0;
   uint64_t                 CurRuleIdx = 0;
 

@@ -13,5 +13,9 @@ public:
   std::string buildSqlQuery(const Rule& rule);
 
 private:
+  void buildSqlClauseImpl(const Node* n, std::string& out);
+  void buildSqlClauseImpl(const PropertyNode* pn, std::string& out);
+  void buildSqlClauseImpl(const BoolNode* bn, std::string& out);
+
   const LlamaParser& Parser;
 };
