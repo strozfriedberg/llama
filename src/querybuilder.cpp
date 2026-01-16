@@ -70,11 +70,11 @@ std::string QueryBuilder::buildSqlClause(const BoolNode* bn) {
   return result;
 }
 
-std::string QueryBuilder::buildSqlQuery(const Rule& rule) {
+std::string QueryBuilder::buildSqlQuery(const FieldHash& hash, const Rule& rule) {
   std::string query;
   query.reserve(256);
   query = "SELECT '";
-  query += rule.getHash(Parser).to_string();
+  query += hash.to_string();
   query += "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr";
 
   if (rule.FileMetadata) {

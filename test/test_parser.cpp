@@ -3,6 +3,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "rulereader.h"
+#include "fieldhasher.h"
 
 LlamaLexer getLexer(const std::string& input) {
   LlamaLexer lexer(input);
@@ -915,7 +916,8 @@ TEST_CASE("GetRuleHashWithNoSections") {
   LlamaLexer lexer = getLexer(input);
   LlamaParser parser(input, lexer.tokens());
   std::vector<Rule> rules = parser.parseRules(lexer.ruleIndices());
-  REQUIRE(rules.at(0).getHash(parser) != rules.at(1).getHash(parser));
+  FieldHasher hasher;
+  REQUIRE(rules.at(0).getHash(parser, hasher) != rules.at(1).getHash(parser, hasher));
 }
 
 TEST_CASE("getPreviousLexemeStringInvalidation") {

@@ -158,15 +158,16 @@ TEST_CASE("SqlGenerationBenchmark") {
 
   QueryBuilder qb(r.getParser());
   const auto& rules = r.getRules();
+  const auto& hashes = r.getRuleHashes();
   std::string query;
 
   BENCHMARK("buildSqlQuery-100rules") {
     std::string hits_query("INSERT INTO rule_hits ");
     const std::string sqlUnion(" UNION ");
 
-    for (const Rule& rule : rules) {
+    for (size_t i = 0; i < rules.size(); ++i) {
       hits_query += "(";
-      hits_query += qb.buildSqlQuery(rule);
+      hits_query += qb.buildSqlQuery(hashes[i], rules[i]);
       hits_query += ")";
       hits_query += sqlUnion;
     }
@@ -186,15 +187,16 @@ TEST_CASE("SqlGenerationPreallocBenchmark") {
 
   QueryBuilder qb(r.getParser());
   const auto& rules = r.getRules();
+  const auto& hashes = r.getRuleHashes();
   const std::string sqlUnion(" UNION ");
 
   BENCHMARK("SQL-buildQuery") {
     std::string hits_query;
     hits_query.reserve(rules.size() * 256);
     hits_query = "INSERT INTO rule_hits ";
-    for (const Rule& rule : rules) {
+    for (size_t i = 0; i < rules.size(); ++i) {
       hits_query += "(";
-      hits_query += qb.buildSqlQuery(rule);
+      hits_query += qb.buildSqlQuery(hashes[i], rules[i]);
       hits_query += ")";
       hits_query += sqlUnion;
     }
@@ -245,11 +247,12 @@ TEST_CASE("RuleHashBenchmark") {
 
   const auto& rules = r.getRules();
   const auto& parser = r.getParser();
+  FieldHasher hasher;
   FieldHash h;
 
   BENCHMARK("getHash-100rules") {
     for (const Rule& rule : rules) {
-      h = rule.getHash(parser);
+      h = rule.getHash(parser, hasher);
     }
   };
 
@@ -324,12 +327,13 @@ TEST_CASE("EndToEndWorkflowBenchmark") {
     r.read(corpus100, "benchmark");
 
     const auto& rules = r.getRules();
+    const auto& hashes = r.getRuleHashes();
     QueryBuilder qb(r.getParser());
 
     // Simulate FSM building (uses hash once per rule)
     volatile size_t dummy = 0;
-    for (const Rule& rule : rules) {
-      std::string hashStr = rule.getHash(r.getParser()).to_string();
+    for (size_t i = 0; i < rules.size(); ++i) {
+      std::string hashStr = hashes[i].to_string();
       dummy += hashStr.size();
     }
 
@@ -337,9 +341,9 @@ TEST_CASE("EndToEndWorkflowBenchmark") {
     std::string hits_query;
     hits_query.reserve(rules.size() * 256);
     hits_query = "INSERT INTO rule_hits ";
-    for (const Rule& rule : rules) {
+    for (size_t i = 0; i < rules.size(); ++i) {
       hits_query += "(";
-      hits_query += qb.buildSqlQuery(rule);
+      hits_query += qb.buildSqlQuery(hashes[i], rules[i]);
       hits_query += ") UNION ";
     }
 
@@ -351,12 +355,13 @@ TEST_CASE("EndToEndWorkflowBenchmark") {
     r.read(corpus500, "benchmark");
 
     const auto& rules = r.getRules();
+    const auto& hashes = r.getRuleHashes();
     QueryBuilder qb(r.getParser());
 
     // Simulate FSM building (uses hash once per rule)
     volatile size_t dummy = 0;
-    for (const Rule& rule : rules) {
-      std::string hashStr = rule.getHash(r.getParser()).to_string();
+    for (size_t i = 0; i < rules.size(); ++i) {
+      std::string hashStr = hashes[i].to_string();
       dummy += hashStr.size();
     }
 
@@ -364,9 +369,9 @@ TEST_CASE("EndToEndWorkflowBenchmark") {
     std::string hits_query;
     hits_query.reserve(rules.size() * 256);
     hits_query = "INSERT INTO rule_hits ";
-    for (const Rule& rule : rules) {
+    for (size_t i = 0; i < rules.size(); ++i) {
       hits_query += "(";
-      hits_query += qb.buildSqlQuery(rule);
+      hits_query += qb.buildSqlQuery(hashes[i], rules[i]);
       hits_query += ") UNION ";
     }
 

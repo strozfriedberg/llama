@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "llama.h"
 
 int main(int argc, const char* const argv[]) {

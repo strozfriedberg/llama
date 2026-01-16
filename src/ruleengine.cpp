@@ -19,10 +19,14 @@ void LlamaRuleEngine::writeRulesToDb(LlamaDBConnection& dbConn) {
   hits_query = "INSERT INTO rule_hits ";
   const std::string sqlUnion(" UNION ");
 
-  for (const Rule& rule : Reader.getRules()) {
-    RuleRecs->add(RuleRec{rule.getHash(Reader.getParser()).to_string(), std::string(rule.Name)});
+  const auto& rules = Reader.getRules();
+  const auto& hashes = Reader.getRuleHashes();
+  for (size_t i = 0; i < rules.size(); ++i) {
+    const Rule& rule = rules[i];
+    const FieldHash& hash = hashes[i];
+    RuleRecs->add(RuleRec{hash.to_string(), std::string(rule.Name)});
     hits_query += "(";
-    hits_query += Qb.buildSqlQuery(rule);
+    hits_query += Qb.buildSqlQuery(hash, rule);
     hits_query += ")";
     hits_query += sqlUnion;
   }
@@ -32,7 +36,7 @@ void LlamaRuleEngine::writeRulesToDb(LlamaDBConnection& dbConn) {
   LlamaDBAppender appender(dbConn.get(), "rules");
   RuleRecs->copyToDB(appender.get());
   appender.flush();
-  
+
   auto state = duckdb_query(dbConn.get(), hits_query.c_str(), &result);
   THROW_IF(state == DuckDBError, "Error inserting into rule matches table");
 }
@@ -48,11 +52,13 @@ void LlamaRuleEngine::createTables(LlamaDBConnection& dbConn) {
 
 LgFsmHolder LlamaRuleEngine::buildFsm() {
   LgFsmHolder fsm;
-  FieldHash h;
-  for (const Rule& rule : Reader.getRules()) {
-    h = rule.getHash(Reader.getParser());
+  const auto& rules = Reader.getRules();
+  const auto& hashes = Reader.getRuleHashes();
+  for (size_t i = 0; i < rules.size(); ++i) {
+    const Rule& rule = rules[i];
+    const FieldHash& hash = hashes[i];
     for (const auto& pPair : rule.Grep.Patterns.Patterns) {
-      fsm.addPatterns(pPair, Reader.getParser(), h.to_string(), PatternToRuleId);
+      fsm.addPatterns(pPair, Reader.getParser(), hash.to_string(), PatternToRuleId);
     }
   }
   return fsm;

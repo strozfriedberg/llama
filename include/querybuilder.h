@@ -1,6 +1,7 @@
 #pragma once
 
 #include <parser.h>
+#include <fieldhash.h>
 
 class QueryBuilder {
 public:
@@ -10,7 +11,7 @@ public:
   std::string buildSqlClause(const PropertyNode* pn);
   std::string buildSqlClause(const BoolNode* bn);
 
-  std::string buildSqlQuery(const Rule& rule);
+  std::string buildSqlQuery(const FieldHash& hash, const Rule& rule);
 
 private:
   void buildSqlClauseImpl(const Node* n, std::string& out);

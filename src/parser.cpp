@@ -82,8 +82,8 @@ std::string_view LlamaParser::expectedErrorMsg(LlamaTokenType token) {
   }
 }
 
-FieldHash Rule::getHash(const LlamaParser& parser) const {
-  FieldHasher hasher;
+FieldHash Rule::getHash(const LlamaParser& parser, FieldHasher& hasher) const {
+  hasher.reset();
   hasher.hash_iter(parser.Tokens.begin() + Start, parser.Tokens.begin() + End, [](const Token& token) { return token.Lexeme; });
   return hasher.get_hash();
 }
