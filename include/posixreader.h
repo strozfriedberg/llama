@@ -10,6 +10,8 @@
 #include "extent.h"
 #include "inode.h"
 #include "recordhasher.h"
+#include "duckextent.h"
+#include "llamaduck.h"
 
 #include <sys/stat.h>
 #include <filesystem>
@@ -60,6 +62,9 @@ private:
 
     RecordHasher RecHasher;
     DirentStack Dirents;
+
+    ExtentBatch ExtentsBatch;
+    std::shared_ptr<LlamaDBAppender> ExtentAppender;
 };
 
 #endif // __linux__

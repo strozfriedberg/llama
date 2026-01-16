@@ -222,6 +222,8 @@ bool PosixReader::callFiemap(int fd, std::vector<uint8_t>& bufOut) {
 void PosixReader::walkFilesystem() {
     namespace fs = std::filesystem;
 
+    static constexpr size_t EXTENT_BATCH_FLUSH_SIZE = 10000;
+
     std::vector<uint8_t> fiemapBuf;
     std::vector<Extent> extents;
 
@@ -247,15 +249,28 @@ void PosixReader::walkFilesystem() {
                     if (callFiemap(fd, fiemapBuf)) {
                         parseExtents(fiemapBuf.data(), fiemapBuf.size(),
                                      st.st_ino, pathStr, FsOffset, extents);
-                        // TODO: Add extents to batch and flush to DuckDB (Task B8)
+
+                        // Add extents to batch and flush when needed
                         for (const auto& ext : extents) {
-                            // For now, just process - DuckDB integration in next task
+                            ExtentsBatch.add(ext);
+                            if (ExtentsBatch.size() >= EXTENT_BATCH_FLUSH_SIZE) {
+                                if (ExtentAppender) {
+                                    ExtentsBatch.copyToDB(ExtentAppender->get());
+                                }
+                                ExtentsBatch.clear();
+                            }
                         }
                     }
                 }
                 close(fd);
             }
         }
+    }
+
+    // Flush remaining extents
+    if (ExtentsBatch.size() > 0 && ExtentAppender) {
+        ExtentsBatch.copyToDB(ExtentAppender->get());
+        ExtentsBatch.clear();
     }
 }
 
