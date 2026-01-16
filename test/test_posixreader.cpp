@@ -61,6 +61,44 @@ TEST_CASE("callFiemap returns data for regular file", "[posixreader][integration
     }
 }
 
+TEST_CASE("parseExtents converts FIEMAP buffer to Extent records", "[posixreader]") {
+    // Create a synthetic FIEMAP buffer
+    std::vector<uint8_t> buf(sizeof(fiemap) + 2 * sizeof(fiemap_extent));
+
+    fiemap* fm = reinterpret_cast<fiemap*>(buf.data());
+    fm->fm_mapped_extents = 2;
+
+    fiemap_extent* ext0 = &fm->fm_extents[0];
+    ext0->fe_logical = 0;
+    ext0->fe_physical = 1000;
+    ext0->fe_length = 4096;
+    ext0->fe_flags = 0;
+
+    fiemap_extent* ext1 = &fm->fm_extents[1];
+    ext1->fe_logical = 4096;
+    ext1->fe_physical = 8000;
+    ext1->fe_length = 4096;
+    ext1->fe_flags = FIEMAP_EXTENT_LAST | FIEMAP_EXTENT_SHARED;
+
+    std::vector<Extent> extents;
+    PosixReader::parseExtents(buf.data(), buf.size(), 42, "/test.txt", 0, extents);
+
+    REQUIRE(extents.size() == 2);
+
+    REQUIRE(extents[0].LogicalStart == 0);
+    REQUIRE(extents[0].LogicalEnd == 4096);
+    REQUIRE(extents[0].PhysicalStart == 1000);
+    REQUIRE(extents[0].PhysicalEnd == 1000 + 4096);
+    REQUIRE(extents[0].Inode == 42);
+    REQUIRE(extents[0].Path == "/test.txt");
+    REQUIRE(extents[0].Flags == "");
+
+    REQUIRE(extents[1].LogicalStart == 4096);
+    REQUIRE(extents[1].PhysicalStart == 8000);
+    REQUIRE(extents[1].Flags.find("LAST") != std::string::npos);
+    REQUIRE(extents[1].Flags.find("SHARED") != std::string::npos);
+}
+
 #else
 // Non-Linux placeholder
 TEST_CASE("PosixReader not available on this platform", "[posixreader]") {

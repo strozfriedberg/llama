@@ -74,8 +74,37 @@ void PosixReader::parseExtents(
     uint64_t fsOffset,
     std::vector<Extent>& extentsOut)
 {
-    // TODO: Implement in later task
     extentsOut.clear();
+
+    if (bufLen < sizeof(fiemap)) {
+        return;
+    }
+
+    const fiemap* fm = reinterpret_cast<const fiemap*>(fiemapBuf);
+    const size_t expectedSize = sizeof(fiemap) + fm->fm_mapped_extents * sizeof(fiemap_extent);
+
+    if (bufLen < expectedSize) {
+        return;
+    }
+
+    extentsOut.reserve(fm->fm_mapped_extents);
+
+    for (uint32_t i = 0; i < fm->fm_mapped_extents; ++i) {
+        const fiemap_extent& fe = fm->fm_extents[i];
+
+        Extent ext;
+        ext.LogicalStart = fe.fe_logical;
+        ext.LogicalEnd = fe.fe_logical + fe.fe_length;
+        ext.PhysicalStart = fe.fe_physical;
+        ext.PhysicalEnd = fe.fe_physical + fe.fe_length;
+        ext.Inode = inode;
+        ext.FilesystemOffset = fsOffset;
+        ext.Path = path;
+        ext.Flags = flagsToString(fe.fe_flags);
+        ext.Source = "filesystem";
+
+        extentsOut.push_back(std::move(ext));
+    }
 }
 
 bool PosixReader::callFiemap(int fd, std::vector<uint8_t>& bufOut) {
