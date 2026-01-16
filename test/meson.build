@@ -112,5 +112,14 @@ if catch2_dep.found()
               'MSAN_OPTIONS=halt_on_error=0:abort_on_error=0:exit_code=0',
               'MALLOC_CHECK_=0'])
 
+  # Extent struct test
+  test_extent = executable(
+      'test_extent',
+      'test_extent.cpp',
+      include_directories: inc,
+      dependencies: [catch2_dep, boost_dep],
+  )
+  test('test_extent', test_extent)
+
 endif
 
