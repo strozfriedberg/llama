@@ -121,5 +121,14 @@ if catch2_dep.found()
   )
   test('test_extent', test_extent)
 
+  # PosixReader test
+  test_posixreader = executable(
+      'test_posixreader',
+      'test_posixreader.cpp',
+      include_directories: inc,
+      dependencies: [catch2_dep],
+  )
+  test('test_posixreader', test_posixreader)
+
 endif
 

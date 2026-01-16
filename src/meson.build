@@ -44,6 +44,11 @@ llama_sources = [
   'util.cpp'
 ]
 
+# Add Linux-specific sources
+if host_machine.system() == 'linux'
+    llama_sources += files('posixreader.cpp')
+endif
+
 # Build the llama executable
 llama_exe = executable('llama',
   llama_sources,
