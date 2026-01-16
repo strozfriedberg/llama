@@ -4,6 +4,7 @@
 #include "direntbatch.h"
 #include "duckhash.h"
 #include "duckinode.h"
+#include "duckextent.h"
 #include "inode.h"
 #include "llamaduck.h"
 #include "llamabatch.h"
@@ -277,4 +278,29 @@ TEST_CASE("ruleBatchDbType") {
 
   RuleRec r{"MyRule", "1234abcd"};
   static_assert(std::is_same<decltype(boost::pfr::structure_to_tuple(r)), std::tuple<std::string, std::string>>::value);
+}
+
+TEST_CASE("ExtentBatch can add and retrieve extents", "[duckdb]") {
+    ExtentBatch batch;
+
+    Extent e{
+        .PhysicalStart = 1000,
+        .PhysicalEnd = 2000,
+        .LogicalStart = 0,
+        .LogicalEnd = 1000,
+        .Inode = 42,
+        .FilesystemOffset = 0,
+        .Path = "/test.txt",
+        .Flags = "SHARED",
+        .Source = "filesystem"
+    };
+
+    batch.add(e);
+    REQUIRE(batch.size() == 1);
+
+    batch.add(e);
+    REQUIRE(batch.size() == 2);
+
+    batch.clear();
+    REQUIRE(batch.size() == 0);
 }
