@@ -314,3 +314,63 @@ TEST_CASE("ParserScalingBenchmark") {
   CHECK(ruleCount > 0);
 }
 
+TEST_CASE("EndToEndWorkflowBenchmark") {
+  // Simulates the real workflow: parse -> build FSM (uses hashes) -> write to DB (uses hashes + SQL)
+  std::string corpus100 = generateRules(100);
+  std::string corpus500 = generateRules(500);
+
+  BENCHMARK("E2E-100rules") {
+    RuleReader r;
+    r.read(corpus100, "benchmark");
+
+    const auto& rules = r.getRules();
+    QueryBuilder qb(r.getParser());
+
+    // Simulate FSM building (uses hash once per rule)
+    volatile size_t dummy = 0;
+    for (const Rule& rule : rules) {
+      std::string hashStr = rule.getHash(r.getParser()).to_string();
+      dummy += hashStr.size();
+    }
+
+    // Simulate DB writing (uses hash + buildSqlQuery per rule)
+    std::string hits_query;
+    hits_query.reserve(rules.size() * 256);
+    hits_query = "INSERT INTO rule_hits ";
+    for (const Rule& rule : rules) {
+      hits_query += "(";
+      hits_query += qb.buildSqlQuery(rule);
+      hits_query += ") UNION ";
+    }
+
+    return dummy + hits_query.size();
+  };
+
+  BENCHMARK("E2E-500rules") {
+    RuleReader r;
+    r.read(corpus500, "benchmark");
+
+    const auto& rules = r.getRules();
+    QueryBuilder qb(r.getParser());
+
+    // Simulate FSM building (uses hash once per rule)
+    volatile size_t dummy = 0;
+    for (const Rule& rule : rules) {
+      std::string hashStr = rule.getHash(r.getParser()).to_string();
+      dummy += hashStr.size();
+    }
+
+    // Simulate DB writing (uses hash + buildSqlQuery per rule)
+    std::string hits_query;
+    hits_query.reserve(rules.size() * 256);
+    hits_query = "INSERT INTO rule_hits ";
+    for (const Rule& rule : rules) {
+      hits_query += "(";
+      hits_query += qb.buildSqlQuery(rule);
+      hits_query += ") UNION ";
+    }
+
+    return dummy + hits_query.size();
+  };
+}
+
