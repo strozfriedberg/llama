@@ -99,6 +99,46 @@ TEST_CASE("parseExtents converts FIEMAP buffer to Extent records", "[posixreader
     REQUIRE(extents[1].Flags.find("SHARED") != std::string::npos);
 }
 
+TEST_CASE("statToInode converts stat struct to Inode", "[posixreader]") {
+    struct stat st = {};
+    st.st_ino = 12345;
+    st.st_mode = S_IFREG | 0644;
+    st.st_size = 1024;
+    st.st_uid = 1000;
+    st.st_gid = 1000;
+    st.st_nlink = 1;
+    st.st_mtim.tv_sec = 1705400000;
+    st.st_atim.tv_sec = 1705400001;
+    st.st_ctim.tv_sec = 1705400002;
+
+    Inode inode = PosixReader::statToInode(st, "/test/file.txt");
+
+    REQUIRE(inode.Addr == 12345);
+    REQUIRE(inode.Filesize == 1024);
+    REQUIRE(inode.Uid == 1000);
+    REQUIRE(inode.Gid == 1000);
+    REQUIRE(inode.NumLinks == 1);
+    REQUIRE(inode.Type == "file");
+}
+
+TEST_CASE("statToInode identifies directories", "[posixreader]") {
+    struct stat st = {};
+    st.st_mode = S_IFDIR | 0755;
+
+    Inode inode = PosixReader::statToInode(st, "/test/dir");
+
+    REQUIRE(inode.Type == "directory");
+}
+
+TEST_CASE("statToInode identifies symlinks", "[posixreader]") {
+    struct stat st = {};
+    st.st_mode = S_IFLNK | 0777;
+
+    Inode inode = PosixReader::statToInode(st, "/test/link");
+
+    REQUIRE(inode.Type == "symlink");
+}
+
 #else
 // Non-Linux placeholder
 TEST_CASE("PosixReader not available on this platform", "[posixreader]") {

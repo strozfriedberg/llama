@@ -59,10 +59,57 @@ std::string PosixReader::flagsToString(uint32_t flags) {
     return result;
 }
 
-// Placeholder implementations - filled in later tasks
 Inode PosixReader::statToInode(const struct stat& st, const std::string& path) {
     Inode inode;
-    // TODO: Implement in later task
+
+    inode.Addr = st.st_ino;
+    inode.FsOffset = 0;  // Set by caller if needed
+    inode.Filesize = st.st_size;
+    inode.Uid = st.st_uid;
+    inode.Gid = st.st_gid;
+    inode.NumLinks = st.st_nlink;
+    inode.SeqNum = 0;
+
+    // Determine type
+    if (S_ISREG(st.st_mode)) {
+        inode.Type = "file";
+    } else if (S_ISDIR(st.st_mode)) {
+        inode.Type = "directory";
+    } else if (S_ISLNK(st.st_mode)) {
+        inode.Type = "symlink";
+    } else if (S_ISBLK(st.st_mode)) {
+        inode.Type = "block";
+    } else if (S_ISCHR(st.st_mode)) {
+        inode.Type = "char";
+    } else if (S_ISFIFO(st.st_mode)) {
+        inode.Type = "fifo";
+    } else if (S_ISSOCK(st.st_mode)) {
+        inode.Type = "socket";
+    } else {
+        inode.Type = "unknown";
+    }
+
+    // Flags from mode
+    inode.Flags = "";
+
+    // Timestamps - convert to ISO8601 strings
+    auto formatTime = [](time_t t) -> std::string {
+        if (t == 0) return "";
+        char buf[32];
+        struct tm tm;
+        gmtime_r(&t, &tm);
+        strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", &tm);
+        return buf;
+    };
+
+    inode.Modified = formatTime(st.st_mtim.tv_sec);
+    inode.Accessed = formatTime(st.st_atim.tv_sec);
+    inode.Metadata = formatTime(st.st_ctim.tv_sec);
+    inode.Created = "";  // POSIX doesn't have birth time
+
+    inode.LinkTarget = "";  // Caller can fill if symlink
+    inode.Id = "";  // Caller can generate hash
+
     return inode;
 }
 
