@@ -1,7 +1,7 @@
 # ABOUTME: Dockerfile for building and running llama on Linux arm64
 # ABOUTME: Designed to mount ~/code for access to source repositories
 
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y \
     libboost-all-dev \
     libicu-dev \
     libarchive-dev \
+    libfuzzy-dev \
     libyara-dev \
     # Additional tools
     ninja-build \
@@ -53,8 +54,10 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 # Install cargo-c for pdf_extractor
 RUN cargo install cargo-c
 
-# Install meson (newer version than apt provides)
-RUN pip3 install meson
+# Install meson via pipx (Ubuntu 24.04 PEP 668 compliant)
+RUN apt-get update && apt-get install -y pipx && rm -rf /var/lib/apt/lists/*
+RUN pipx install meson
+ENV PATH="/root/.local/bin:${PATH}"
 
 # Create working directory for builds
 WORKDIR /build

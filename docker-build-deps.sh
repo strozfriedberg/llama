@@ -75,7 +75,8 @@ if ! pkg-config --exists duckdb; then
             echo "Building DuckDB from source..."
             cd /code/duckdb
             make -j$(nproc)
-            make install PREFIX=${PREFIX}
+            cd build/release
+            cmake --install . --prefix ${PREFIX}
             ldconfig
         else
             echo "WARNING: DuckDB not found in system or /code/duckdb"
@@ -84,7 +85,8 @@ if ! pkg-config --exists duckdb; then
             git clone https://github.com/duckdb/duckdb.git --depth 1
             cd duckdb
             make -j$(nproc)
-            make install PREFIX=${PREFIX}
+            cd build/release
+            cmake --install . --prefix ${PREFIX}
             ldconfig
         fi
     }
@@ -103,10 +105,20 @@ fi
 if [ -d /code/e01 ]; then
     echo "Building e01..."
     cd /code/e01
-    cargo build --release
-    echo "Building e01mount..."
-    cargo build --package e01mount --release
-    echo "e01mount built at: /code/e01/target/release/e01mount"
+    if cargo build --release; then
+        echo "e01 library built successfully"
+        # Try to build e01mount, but don't fail if it doesn't work
+        if [ -d /code/e01/fuse ]; then
+            echo "Building e01mount..."
+            if (cd /code/e01/fuse && cargo build --release); then
+                echo "e01mount built at: /code/e01/fuse/target/release/e01mount"
+            else
+                echo "WARNING: e01mount build failed, continuing without it"
+            fi
+        fi
+    else
+        echo "WARNING: e01 build failed, continuing without it"
+    fi
 else
     echo "WARNING: /code/e01 not found, skipping e01 build"
 fi
