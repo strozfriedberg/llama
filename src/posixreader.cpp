@@ -266,6 +266,7 @@ void PosixReader::walkFilesystem() {
                             if (ExtentsBatch.size() >= EXTENT_BATCH_FLUSH_SIZE) {
                                 if (ExtentAppender) {
                                     ExtentsBatch.copyToDB(ExtentAppender->get());
+                                    ExtentAppender->flush();
                                 }
                                 ExtentsBatch.clear();
                             }
@@ -283,6 +284,7 @@ void PosixReader::walkFilesystem() {
     if (ExtentsBatch.size() > 0 && ExtentAppender) {
         std::cerr << "[PosixReader] Flushing " << ExtentsBatch.size() << " remaining extents" << std::endl;
         ExtentsBatch.copyToDB(ExtentAppender->get());
+        ExtentAppender->flush();
         ExtentsBatch.clear();
     } else if (ExtentsBatch.size() > 0) {
         std::cerr << "[PosixReader] WARNING: " << ExtentsBatch.size() << " extents NOT flushed (no appender)" << std::endl;
