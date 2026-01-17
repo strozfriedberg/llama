@@ -29,6 +29,9 @@ public:
     virtual void setOutputHandler(const std::shared_ptr<OutputHandler>& out) override;
     virtual bool startReading() override;
 
+    // Set database appender for extent storage
+    void setExtentAppender(std::shared_ptr<LlamaDBAppender> appender);
+
     // --- Testable pure functions (public for unit testing) ---
 
     // Convert FIEMAP flags bitmask to comma-separated string

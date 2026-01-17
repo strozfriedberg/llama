@@ -32,7 +32,14 @@ void PosixReader::setOutputHandler(const std::shared_ptr<OutputHandler>& out) {
     Output = out;
 }
 
+void PosixReader::setExtentAppender(std::shared_ptr<LlamaDBAppender> appender) {
+    ExtentAppender = appender;
+}
+
 bool PosixReader::startReading() {
+    std::cerr << "[PosixReader] Starting filesystem walk of: " << Mountpoint << std::endl;
+    std::cerr << "[PosixReader] ExtentAppender is " << (ExtentAppender ? "SET" : "NOT SET") << std::endl;
+
     walkFilesystem();
 
     // Flush remaining dirents
@@ -41,6 +48,7 @@ bool PosixReader::startReading() {
     }
 
     Input->flush();
+    std::cerr << "[PosixReader] Filesystem walk complete" << std::endl;
     return true;
 }
 
@@ -250,6 +258,8 @@ void PosixReader::walkFilesystem() {
                         parseExtents(fiemapBuf.data(), fiemapBuf.size(),
                                      st.st_ino, pathStr, FsOffset, extents);
 
+                        std::cerr << "[PosixReader] File: " << pathStr << " has " << extents.size() << " extents" << std::endl;
+
                         // Add extents to batch and flush when needed
                         for (const auto& ext : extents) {
                             ExtentsBatch.add(ext);
@@ -260,6 +270,8 @@ void PosixReader::walkFilesystem() {
                                 ExtentsBatch.clear();
                             }
                         }
+                    } else {
+                        std::cerr << "[PosixReader] FIEMAP failed for: " << pathStr << std::endl;
                     }
                 }
                 close(fd);
@@ -269,8 +281,11 @@ void PosixReader::walkFilesystem() {
 
     // Flush remaining extents
     if (ExtentsBatch.size() > 0 && ExtentAppender) {
+        std::cerr << "[PosixReader] Flushing " << ExtentsBatch.size() << " remaining extents" << std::endl;
         ExtentsBatch.copyToDB(ExtentAppender->get());
         ExtentsBatch.clear();
+    } else if (ExtentsBatch.size() > 0) {
+        std::cerr << "[PosixReader] WARNING: " << ExtentsBatch.size() << " extents NOT flushed (no appender)" << std::endl;
     }
 }
 

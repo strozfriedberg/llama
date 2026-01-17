@@ -11,6 +11,9 @@
 #include "inputhandler.h"
 #include "inputreader.h"
 #include "llamaduck.h"
+#ifdef __linux__
+#include "posixreader.h"
+#endif
 #include "processor.h"
 #include "ruleengine.h"
 #include "throw.h"
@@ -74,6 +77,14 @@ void Llama::search() {
     auto inh = std::shared_ptr<InputHandler>(new BatchHandler(scheduler));
 
     Input->setInputHandler(inh);
+
+#ifdef __linux__
+    // Set up extent appender for PosixReader
+    if (auto posixReader = std::dynamic_pointer_cast<PosixReader>(Input)) {
+      auto extentAppender = std::make_shared<LlamaDBAppender>(DbConn.get(), "extents");
+      posixReader->setExtentAppender(extentAppender);
+    }
+#endif
 
     if (!Input->startReading()) {
       std::cerr << "startReading returned an error" << std::endl;
