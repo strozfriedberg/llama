@@ -6,6 +6,7 @@
 #include "duckinode.h"
 #include "duckhash.h"
 #include "easyfut.h"
+#include "extent.h"
 #include "filescheduler.h"
 #include "inputhandler.h"
 #include "inputreader.h"
@@ -150,9 +151,15 @@ bool Llama::readpatterns(const std::vector<std::string>& keyFiles) {
 
 bool Llama::openInput(const std::string& input) {
 // FIXME: is_directory can throw
-  Input = fs::is_directory(input) ?
-    InputReader::createDir(input) :
-    InputReader::createTSK(input);
+  if (fs::is_directory(input)) {
+#ifdef __linux__
+    Input = InputReader::createPosix(input);
+#else
+    Input = InputReader::createDir(input);
+#endif
+  } else {
+    Input = InputReader::createTSK(input);
+  }
   return bool(Input);
 }
 
@@ -160,6 +167,7 @@ bool Llama::dbInit() {
   DBType<Dirent>::createTable(DbConn.get(), "dirent");
   DBType<Inode>::createTable(DbConn.get(), "inode");
   DBType<HashRec>::createTable(DbConn.get(), "hash");
+  DBType<Extent>::createTable(DbConn.get(), "extents");
   return true;
 }
 

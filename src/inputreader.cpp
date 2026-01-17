@@ -2,6 +2,9 @@
 
 #include "dirreader.h"
 #include "tskreader.h"
+#ifdef __linux__
+#include "posixreader.h"
+#endif
 
 std::shared_ptr<InputReader>
 InputReader::createTSK(const std::string& imgName) {
@@ -18,3 +21,11 @@ InputReader::createDir(const std::string & dir) {
   auto ret = std::make_shared<DirReader>(dir);
   return std::static_pointer_cast<InputReader>(ret);
 }
+
+#ifdef __linux__
+std::shared_ptr<InputReader>
+InputReader::createPosix(const std::string& mountpoint) {
+  auto ret = std::make_shared<PosixReader>(mountpoint);
+  return std::static_pointer_cast<InputReader>(ret);
+}
+#endif

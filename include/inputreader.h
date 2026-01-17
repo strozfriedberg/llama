@@ -15,4 +15,7 @@ public:
 
   static std::shared_ptr<InputReader> createTSK(const std::string& imgName);
   static std::shared_ptr<InputReader> createDir(const std::string& dirPath);
+#ifdef __linux__
+  static std::shared_ptr<InputReader> createPosix(const std::string& mountpoint);
+#endif
 };
