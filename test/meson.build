@@ -131,5 +131,13 @@ if catch2_dep.found()
   )
   test('test_posixreader', test_posixreader)
 
+  # Disk map visualization test
+  test_diskmap = executable(
+      'test_diskmap',
+      ['test-diskmap-simple.cpp', '../src/diskmaphtml.cpp', '../src/direntbatch.cpp'],
+      include_directories: inc,
+      dependencies: llama_deps,
+  )
+
 endif
 

@@ -10,22 +10,23 @@ ORDER BY pos;
 
 -- Step 2: Create intervals from consecutive boundaries
 CREATE TEMP TABLE intervals AS
-SELECT
-    pos AS start,
-    LEAD(pos) OVER (ORDER BY pos) AS end
-FROM boundaries
-WHERE LEAD(pos) OVER (ORDER BY pos) IS NOT NULL;
+SELECT start, "end" FROM (
+  SELECT
+      pos AS start,
+      LEAD(pos) OVER (ORDER BY pos) AS "end"
+  FROM boundaries
+) WHERE "end" IS NOT NULL;
 
 -- Step 3: Create diskmap with claimants using sweep-line algorithm
 -- For each interval, find all extents that contain it
 CREATE TABLE diskmap AS
 SELECT
     i.start AS PhysicalStart,
-    i.end AS PhysicalEnd,
+    i."end" AS PhysicalEnd,
     LIST({inode: e.Inode, path: e.Path}) AS Claimants
 FROM intervals i
 LEFT JOIN extents e
     ON e.PhysicalStart <= i.start
-    AND e.PhysicalEnd >= i.end
-GROUP BY i.start, i.end
+    AND e.PhysicalEnd >= i."end"
+GROUP BY i.start, i."end"
 ORDER BY i.start;

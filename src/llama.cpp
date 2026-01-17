@@ -249,11 +249,12 @@ bool Llama::createDiskMap() {
   // Step 2: Create intervals table
   state = duckdb_query(DbConn.get(),
     "CREATE TEMP TABLE intervals AS "
-    "SELECT "
+    "SELECT start, \"end\" FROM ("
+    "  SELECT "
     "    pos AS start, "
-    "    LEAD(pos) OVER (ORDER BY pos) AS end "
-    "FROM boundaries "
-    "WHERE LEAD(pos) OVER (ORDER BY pos) IS NOT NULL;",
+    "    LEAD(pos) OVER (ORDER BY pos) AS \"end\" "
+    "  FROM boundaries"
+    ") WHERE \"end\" IS NOT NULL;",
     &result);
 
   if (state == DuckDBError) {
@@ -268,13 +269,13 @@ bool Llama::createDiskMap() {
     "CREATE TABLE diskmap AS "
     "SELECT "
     "    i.start AS PhysicalStart, "
-    "    i.end AS PhysicalEnd, "
+    "    i.\"end\" AS PhysicalEnd, "
     "    LIST({inode: e.Inode, path: e.Path}) AS Claimants "
     "FROM intervals i "
     "LEFT JOIN extents e "
     "    ON e.PhysicalStart <= i.start "
-    "    AND e.PhysicalEnd >= i.end "
-    "GROUP BY i.start, i.end "
+    "    AND e.PhysicalEnd >= i.\"end\" "
+    "GROUP BY i.start, i.\"end\" "
     "ORDER BY i.start;",
     &result);
 
