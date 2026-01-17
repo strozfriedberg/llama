@@ -7,6 +7,7 @@ llama_sources = [
   'direntbatch.cpp',
   'direntstack.cpp',
   'dirreader.cpp',
+  'diskmaphtml.cpp',
   'fieldhasher.cpp',
   'filerecord.cpp',
   'filescheduler.cpp',

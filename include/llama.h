@@ -32,6 +32,8 @@ private:
   bool dbInit();
 
   void writeDB(const std::string& outdir);
+  bool createDiskMap();
+  bool generateDiskMapVisualization(const std::string& outputDir);
 
   std::shared_ptr<Cli> CliParser;
 

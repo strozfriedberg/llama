@@ -3,6 +3,7 @@
 #include "batchhandler.h"
 #include "cli.h"
 #include "direntbatch.h"
+#include "diskmaphtml.h"
 #include "duckinode.h"
 #include "duckhash.h"
 #include "easyfut.h"
@@ -211,4 +212,76 @@ void Llama::writeDB(const std::string& outdir) {
   query += outdir;
   query += "' (FORMAT PARQUET);";
   duckdb_query(DbConn.get(), query.c_str(), nullptr);
+}
+
+bool Llama::createDiskMap() {
+  duckdb_result result;
+
+  // Step 1: Create boundaries table
+  auto state = duckdb_query(DbConn.get(),
+    "CREATE TEMP TABLE boundaries AS "
+    "SELECT DISTINCT PhysicalStart AS pos FROM extents "
+    "UNION "
+    "SELECT DISTINCT PhysicalEnd AS pos FROM extents "
+    "ORDER BY pos;",
+    &result);
+
+  if (state == DuckDBError) {
+    std::cerr << "Error creating boundaries table: " << duckdb_result_error(&result) << "\n";
+    duckdb_destroy_result(&result);
+    return false;
+  }
+  duckdb_destroy_result(&result);
+
+  // Step 2: Create intervals table
+  state = duckdb_query(DbConn.get(),
+    "CREATE TEMP TABLE intervals AS "
+    "SELECT "
+    "    pos AS start, "
+    "    LEAD(pos) OVER (ORDER BY pos) AS end "
+    "FROM boundaries "
+    "WHERE LEAD(pos) OVER (ORDER BY pos) IS NOT NULL;",
+    &result);
+
+  if (state == DuckDBError) {
+    std::cerr << "Error creating intervals table: " << duckdb_result_error(&result) << "\n";
+    duckdb_destroy_result(&result);
+    return false;
+  }
+  duckdb_destroy_result(&result);
+
+  // Step 3: Create diskmap table with claimants
+  state = duckdb_query(DbConn.get(),
+    "CREATE TABLE diskmap AS "
+    "SELECT "
+    "    i.start AS PhysicalStart, "
+    "    i.end AS PhysicalEnd, "
+    "    LIST({inode: e.Inode, path: e.Path}) AS Claimants "
+    "FROM intervals i "
+    "LEFT JOIN extents e "
+    "    ON e.PhysicalStart <= i.start "
+    "    AND e.PhysicalEnd >= i.end "
+    "GROUP BY i.start, i.end "
+    "ORDER BY i.start;",
+    &result);
+
+  if (state == DuckDBError) {
+    std::cerr << "Error creating diskmap table: " << duckdb_result_error(&result) << "\n";
+    duckdb_destroy_result(&result);
+    return false;
+  }
+  duckdb_destroy_result(&result);
+
+  std::cerr << "Disk map created successfully\n";
+  return true;
+}
+
+bool Llama::generateDiskMapVisualization(const std::string& outputDir) {
+  DiskMapHtmlGenerator generator(DbConn, 4096);
+  if (!generator.generate(outputDir)) {
+    std::cerr << "Error generating disk map visualization\n";
+    return false;
+  }
+  std::cerr << "Disk map visualization written to " << outputDir << "\n";
+  return true;
 }
