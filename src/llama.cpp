@@ -94,6 +94,19 @@ void Llama::search() {
     std::cerr << "Hashing Time: " << scheduler->getProcessorTime() << "s\n";
 
     RuleEngine->writeRulesToDb(DbConn);
+
+#ifdef __linux__
+    // Create disk map and visualization for PosixReader
+    if (std::dynamic_pointer_cast<PosixReader>(Input)) {
+      std::cerr << "Creating disk map from extents..." << std::endl;
+      if (createDiskMap()) {
+        std::string vizDir = outdir.string() + "/diskmap";
+        std::cerr << "Generating disk map visualization..." << std::endl;
+        generateDiskMapVisualization(vizDir);
+      }
+    }
+#endif
+
     writeDB(outdir.string());
   }
   else {
