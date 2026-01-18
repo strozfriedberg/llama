@@ -238,7 +238,7 @@ bool DiskMapHtmlGenerator::writeChunk(const std::string& dir, uint64_t chunkInde
         uint64_t physStart = duckdb_value_uint64(&result, 0, row);
         uint64_t physEnd = duckdb_value_uint64(&result, 1, row);
 
-        // Get claimants (DuckDB LIST type)
+        // Get claimants (comma-separated string from string_agg)
         auto claimantsStr = duckdb_value_varchar(&result, 2, row);
 
         out << "{\"start\":" << physStart
@@ -248,9 +248,25 @@ bool DiskMapHtmlGenerator::writeChunk(const std::string& dir, uint64_t chunkInde
         if (claimantsStr == nullptr || std::string(claimantsStr) == "NULL" || std::string(claimantsStr).empty()) {
             out << "[]";
         } else {
-            // Parse the DuckDB LIST format
-            // Format is like: [{inode: 123, path: '/foo'}, {inode: 456, path: '/bar'}]
-            out << claimantsStr;
+            // Parse comma-separated paths and output as JSON array
+            std::string paths(claimantsStr);
+            out << "[";
+            size_t start = 0;
+            bool firstPath = true;
+            while (start < paths.length()) {
+                size_t comma = paths.find(',', start);
+                std::string path = (comma == std::string::npos)
+                    ? paths.substr(start)
+                    : paths.substr(start, comma - start);
+
+                if (!firstPath) out << ",";
+                firstPath = false;
+                out << "\"" << path << "\"";
+
+                if (comma == std::string::npos) break;
+                start = comma + 1;
+            }
+            out << "]";
         }
 
         out << "}";

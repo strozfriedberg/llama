@@ -19,11 +19,12 @@ SELECT start, "end" FROM (
 
 -- Step 3: Create diskmap with claimants using sweep-line algorithm
 -- For each interval, find all extents that contain it
+-- Using string_agg instead of LIST for C API compatibility
 CREATE TABLE diskmap AS
 SELECT
     i.start AS PhysicalStart,
     i."end" AS PhysicalEnd,
-    LIST({inode: e.Inode, path: e.Path}) AS Claimants
+    string_agg(e.Path, ',') AS Claimants
 FROM intervals i
 LEFT JOIN extents e
     ON e.PhysicalStart <= i.start

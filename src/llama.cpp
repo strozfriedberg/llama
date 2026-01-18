@@ -270,7 +270,7 @@ bool Llama::createDiskMap() {
     "SELECT "
     "    i.start AS PhysicalStart, "
     "    i.\"end\" AS PhysicalEnd, "
-    "    LIST({inode: e.Inode, path: e.Path}) AS Claimants "
+    "    string_agg(e.Path, ',') AS Claimants "
     "FROM intervals i "
     "LEFT JOIN extents e "
     "    ON e.PhysicalStart <= i.start "

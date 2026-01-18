@@ -160,13 +160,35 @@ int main() {
         duckdb_destroy_result(&result);
     }
 
-    // Step 3: Create diskmap
+    // Debug: Test aggregation with COUNT
+    state = duckdb_query(conn.get(),
+        "SELECT i.start, i.\"end\", COUNT(e.Path) as cnt "
+        "FROM intervals i "
+        "LEFT JOIN extents e "
+        "    ON e.PhysicalStart <= i.start "
+        "    AND e.PhysicalEnd >= i.\"end\" "
+        "GROUP BY i.start, i.\"end\" "
+        "ORDER BY i.start;",
+        &result);
+    if (state != DuckDBError) {
+        uint64_t rowCount = duckdb_row_count(&result);
+        std::cout << "DEBUG: COUNT aggregation test:" << std::endl;
+        for (uint64_t row = 0; row < std::min(rowCount, 5ULL); ++row) {
+            uint64_t start = duckdb_value_uint64(&result, 0, row);
+            uint64_t end = duckdb_value_uint64(&result, 1, row);
+            uint64_t cnt = duckdb_value_uint64(&result, 2, row);
+            std::cout << "  " << start << " - " << end << " => count " << cnt << std::endl;
+        }
+        duckdb_destroy_result(&result);
+    }
+
+    // Step 3: Create diskmap - using string_agg for now as a workaround
     state = duckdb_query(conn.get(),
         "CREATE TABLE diskmap AS "
         "SELECT "
         "    i.start AS PhysicalStart, "
         "    i.\"end\" AS PhysicalEnd, "
-        "    COALESCE(LIST(e.Path), []) AS Claimants "
+        "    string_agg(e.Path, ',') AS Claimants "
         "FROM intervals i "
         "LEFT JOIN extents e "
         "    ON e.PhysicalStart <= i.start "
