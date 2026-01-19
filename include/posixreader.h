@@ -6,6 +6,7 @@
 #ifdef __linux__
 
 #include "inputreader.h"
+#include "dirconversion.h"
 #include "direntstack.h"
 #include "extent.h"
 #include "inode.h"
@@ -63,6 +64,7 @@ private:
     std::shared_ptr<InputHandler> Input;
     std::shared_ptr<OutputHandler> Output;
 
+    DirConverter Conv;
     RecordHasher RecHasher;
     DirentStack Dirents;
 

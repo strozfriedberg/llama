@@ -289,20 +289,37 @@ void PosixReader::walkFilesystem() {
     } else if (ExtentsBatch.size() > 0) {
         std::cerr << "[PosixReader] WARNING: " << ExtentsBatch.size() << " extents NOT flushed (no appender)" << std::endl;
     }
+
+    // Flush remaining dirents
+    while (!Dirents.empty()) {
+        Input->push(Dirents.pop());
+    }
 }
 
 void PosixReader::handleEntry(const std::filesystem::directory_entry& entry) {
-    std::error_code ec;
-    struct stat st;
+    namespace fs = std::filesystem;
 
-    if (lstat(entry.path().c_str(), &st) != 0) {
-        return;
+    const auto& p = entry.path().lexically_normal();
+    const std::string parent_path = p.parent_path().generic_string();
+
+    // Pop dirents when we've moved to a different directory
+    if (!Dirents.empty() && parent_path != Dirents.top().Path) {
+        do {
+            Input->push(Dirents.pop());
+        }
+        while (!Dirents.empty() && parent_path != Dirents.top().Path);
+        Input->maybeFlush();
     }
 
-    Inode inode = statToInode(st, entry.path().string());
-    Input->push(inode);
+    // Push dirent using DirConverter
+    Input->push(Conv.convertStdFsDEtoDirent(entry));
 
-    // TODO: Handle dirents similar to TskReader/DirReader
+    // Also push inode using stat() for accurate inode numbers
+    struct stat st;
+    if (lstat(entry.path().c_str(), &st) == 0) {
+        Inode inode = statToInode(st, entry.path().string());
+        Input->push(inode);
+    }
 }
 
 #endif // __linux__
