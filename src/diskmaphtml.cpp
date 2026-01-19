@@ -2,6 +2,7 @@
 // ABOUTME: Creates chunked JSON files for lazy-loading large disk maps
 
 #include "diskmaphtml.h"
+#include "jsoncons_wrapper.h"
 #include "llamaduck.h"
 #include "throw.h"
 
@@ -225,58 +226,49 @@ bool DiskMapHtmlGenerator::writeChunk(const std::string& dir, uint64_t chunkInde
         return false;
     }
 
-    out << "{\"blocks\":[";
+    // Build JSON structure using jsoncons
+    jsoncons::json chunk = jsoncons::json::object();
+    jsoncons::json blocks = jsoncons::json::array();
 
-    bool first = true;
     uint64_t rowCount = duckdb_row_count(&result);
     for (uint64_t row = 0; row < rowCount; ++row) {
-        if (!first) {
-            out << ",";
-        }
-        first = false;
-
         uint64_t physStart = duckdb_value_uint64(&result, 0, row);
         uint64_t physEnd = duckdb_value_uint64(&result, 1, row);
 
         // Get claimants (comma-separated string from string_agg)
         auto claimantsStr = duckdb_value_varchar(&result, 2, row);
 
-        out << "{\"start\":" << physStart
-            << ",\"end\":" << physEnd
-            << ",\"claimants\":";
+        jsoncons::json block = jsoncons::json::object();
+        block["start"] = physStart;
+        block["end"] = physEnd;
 
-        if (claimantsStr == nullptr || std::string(claimantsStr) == "NULL" || std::string(claimantsStr).empty()) {
-            out << "[]";
-        } else {
-            // Parse comma-separated paths and output as JSON array
+        jsoncons::json claimants = jsoncons::json::array();
+        if (claimantsStr != nullptr && std::string(claimantsStr) != "NULL" && std::string(claimantsStr).length() > 0) {
+            // Parse comma-separated paths
             std::string paths(claimantsStr);
-            out << "[";
             size_t start = 0;
-            bool firstPath = true;
             while (start < paths.length()) {
                 size_t comma = paths.find(',', start);
                 std::string path = (comma == std::string::npos)
                     ? paths.substr(start)
                     : paths.substr(start, comma - start);
-
-                if (!firstPath) out << ",";
-                firstPath = false;
-                out << "\"" << path << "\"";
-
+                claimants.push_back(path);
                 if (comma == std::string::npos) break;
                 start = comma + 1;
             }
-            out << "]";
         }
-
-        out << "}";
+        block["claimants"] = claimants;
+        blocks.push_back(block);
 
         if (claimantsStr) {
             duckdb_free(claimantsStr);
         }
     }
 
-    out << "]}";
+    chunk["blocks"] = blocks;
+
+    // Serialize to file
+    out << chunk;
 
     duckdb_destroy_result(&result);
     return true;
