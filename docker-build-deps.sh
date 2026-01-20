@@ -33,6 +33,11 @@ if [ -d /code/sleuthkit ]; then
     if [ ! -f configure ]; then
         ./bootstrap
     fi
+    # Clean source directory if already configured (required for out-of-tree builds)
+    if [ -f Makefile ]; then
+        echo "Cleaning previously configured source directory..."
+        make distclean || true
+    fi
     cd "$BUILD_LINUX/build/sleuthkit"
     /code/sleuthkit/configure --prefix="$PREFIX"
     make -j$(nproc)
@@ -50,6 +55,11 @@ if [ -d /code/lightgrep ]; then
     if [ ! -f configure ]; then
         autoreconf -fi
     fi
+    # Clean source directory if already configured (required for out-of-tree builds)
+    if [ -f Makefile ]; then
+        echo "Cleaning previously configured source directory..."
+        make distclean || true
+    fi
     cd "$BUILD_LINUX/build/lightgrep"
     /code/lightgrep/configure --prefix="$PREFIX"
     make -j$(nproc)
@@ -66,6 +76,11 @@ if [ -d /code/hasher ]; then
     cd /code/hasher
     if [ ! -f configure ]; then
         autoreconf -fi
+    fi
+    # Clean source directory if already configured (required for out-of-tree builds)
+    if [ -f Makefile ]; then
+        echo "Cleaning previously configured source directory..."
+        make distclean || true
     fi
     cd "$BUILD_LINUX/build/hasher"
     /code/hasher/configure --prefix="$PREFIX"
