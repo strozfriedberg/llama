@@ -67,9 +67,11 @@ ENV PREFIX=/usr/local
 ENV PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}
 ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH}
 
-# Copy build script
-COPY docker-build-deps.sh /build/build-all.sh
-RUN chmod +x /build/build-all.sh
+# Copy build scripts
+COPY docker-entrypoint.sh /build/docker-entrypoint.sh
+COPY docker-build-deps.sh /build/docker-build-deps.sh
+RUN chmod +x /build/docker-entrypoint.sh /build/docker-build-deps.sh && \
+    ln -s /build/docker-build-deps.sh /build/build-all.sh
 
 # Default command
 CMD ["/bin/bash"]
