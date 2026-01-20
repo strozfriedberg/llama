@@ -10,11 +10,17 @@ if [ ! -d ~/build-linux/lib ]; then
     exit 1
 fi
 
+# Detect if we're in an interactive terminal
+TTY_FLAG=""
+if [ -t 0 ] && [ -t 1 ]; then
+    TTY_FLAG="-it"
+fi
+
 # Common docker options
 DOCKER_OPTS=(
     --platform linux/arm64
     --rm
-    -it
+    $TTY_FLAG
     -v ~/code:/code
     -v ~/build-linux:/build-linux
     -v "${HOME}/ev:/ev:ro"
