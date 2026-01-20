@@ -19,13 +19,13 @@ fi
 # Create directory structure
 mkdir -p "$BUILD_LINUX"/{build,lib,bin,include}
 mkdir -p "$BUILD_LINUX/lib/pkgconfig"
-mkdir -p "$BUILD_LINUX/build"/{sleuthkit,lightgrep,hasher,rust,llama}
+mkdir -p "$BUILD_LINUX/build"/{rust,llama}
 
 echo "=== Building dependencies from /code ==="
 echo "PREFIX=$PREFIX"
 echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
 
-# Build Sleuth Kit (libtsk)
+# Build Sleuth Kit (libtsk) - in-tree build, install to PREFIX
 if [ -d /code/sleuthkit ]; then
     echo ""
     echo "=== Building sleuthkit ==="
@@ -33,13 +33,9 @@ if [ -d /code/sleuthkit ]; then
     if [ ! -f configure ]; then
         ./bootstrap
     fi
-    # Clean source directory if already configured (required for out-of-tree builds)
-    if [ -f Makefile ]; then
-        echo "Cleaning previously configured source directory..."
-        make distclean || true
+    if [ ! -f Makefile ]; then
+        ./configure --prefix="$PREFIX"
     fi
-    cd "$BUILD_LINUX/build/sleuthkit"
-    /code/sleuthkit/configure --prefix="$PREFIX"
     make -j$(nproc)
     make install
 else
@@ -47,7 +43,7 @@ else
     exit 1
 fi
 
-# Build lightgrep
+# Build lightgrep - in-tree build, install to PREFIX
 if [ -d /code/lightgrep ]; then
     echo ""
     echo "=== Building lightgrep ==="
@@ -55,13 +51,9 @@ if [ -d /code/lightgrep ]; then
     if [ ! -f configure ]; then
         autoreconf -fi
     fi
-    # Clean source directory if already configured (required for out-of-tree builds)
-    if [ -f Makefile ]; then
-        echo "Cleaning previously configured source directory..."
-        make distclean || true
+    if [ ! -f Makefile ]; then
+        ./configure --prefix="$PREFIX"
     fi
-    cd "$BUILD_LINUX/build/lightgrep"
-    /code/lightgrep/configure --prefix="$PREFIX"
     make -j$(nproc)
     make install
 else
@@ -69,7 +61,7 @@ else
     exit 1
 fi
 
-# Build hasher
+# Build hasher - in-tree build, install to PREFIX
 if [ -d /code/hasher ]; then
     echo ""
     echo "=== Building hasher ==="
@@ -77,13 +69,9 @@ if [ -d /code/hasher ]; then
     if [ ! -f configure ]; then
         autoreconf -fi
     fi
-    # Clean source directory if already configured (required for out-of-tree builds)
-    if [ -f Makefile ]; then
-        echo "Cleaning previously configured source directory..."
-        make distclean || true
+    if [ ! -f Makefile ]; then
+        ./configure --prefix="$PREFIX"
     fi
-    cd "$BUILD_LINUX/build/hasher"
-    /code/hasher/configure --prefix="$PREFIX"
     make -j$(nproc)
     make install
 else
