@@ -106,9 +106,12 @@ if ! pkg-config --exists duckdb; then
         if [ -d /code/duckdb ]; then
             echo "Building DuckDB from source..."
             cd /code/duckdb
-            make -j$(nproc)
+            rm -rf build/release
+            mkdir -p build/release
             cd build/release
-            cmake --install . --prefix "$PREFIX"
+            cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" -DCMAKE_BUILD_TYPE=Release ../..
+            make -j$(nproc)
+            make install
         else
             echo "WARNING: DuckDB not found in system or /code/duckdb"
             echo "Attempting to download and build..."
@@ -117,9 +120,12 @@ if ! pkg-config --exists duckdb; then
                 git clone https://github.com/duckdb/duckdb.git --depth 1
             fi
             cd duckdb
-            make -j$(nproc)
+            rm -rf build/release
+            mkdir -p build/release
             cd build/release
-            cmake --install . --prefix "$PREFIX"
+            cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" -DCMAKE_BUILD_TYPE=Release ../..
+            make -j$(nproc)
+            make install
         fi
     }
 fi
