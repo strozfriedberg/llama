@@ -33,9 +33,11 @@ if [ -d /code/sleuthkit ]; then
     if [ ! -f configure ]; then
         ./bootstrap
     fi
-    if [ ! -f Makefile ]; then
-        ./configure --prefix="$PREFIX"
+    # Always clean and reconfigure to ensure correct PREFIX
+    if [ -f Makefile ]; then
+        make distclean || true
     fi
+    ./configure --prefix="$PREFIX"
     make -j$(nproc)
     make install
 else
@@ -51,9 +53,11 @@ if [ -d /code/lightgrep ]; then
     if [ ! -f configure ]; then
         autoreconf -fi
     fi
-    if [ ! -f Makefile ]; then
-        ./configure --prefix="$PREFIX"
+    # Always clean and reconfigure to ensure correct PREFIX
+    if [ -f Makefile ]; then
+        make distclean || true
     fi
+    ./configure --prefix="$PREFIX"
     make -j$(nproc)
     make install
 else
@@ -69,9 +73,11 @@ if [ -d /code/hasher ]; then
     if [ ! -f configure ]; then
         autoreconf -fi
     fi
-    if [ ! -f Makefile ]; then
-        ./configure --prefix="$PREFIX"
+    # Always clean and reconfigure to ensure correct PREFIX
+    if [ -f Makefile ]; then
+        make distclean || true
     fi
+    ./configure --prefix="$PREFIX"
     make -j$(nproc)
     make install
 else
