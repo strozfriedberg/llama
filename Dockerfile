@@ -59,6 +59,13 @@ RUN apt-get update && apt-get install -y pipx && rm -rf /var/lib/apt/lists/*
 RUN pipx install meson
 ENV PATH="/root/.local/bin:${PATH}"
 
+# Install Catch2 v3 for unit tests
+RUN git clone --depth 1 --branch v3.5.3 https://github.com/catchorg/Catch2.git /tmp/Catch2 && \
+    cd /tmp/Catch2 && \
+    cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local && \
+    cmake --build build --target install && \
+    rm -rf /tmp/Catch2
+
 # Create working directory for builds
 WORKDIR /build
 
