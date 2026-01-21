@@ -6,6 +6,7 @@
 #include "extent.h"
 #include "llamaduck.h"
 
+#include <algorithm>
 #include <iostream>
 #include <filesystem>
 
