@@ -302,11 +302,14 @@ jsoncons::json TskUtils::convertRun(const TSK_FS_ATTR_RUN& run) {
 }
 
 jsoncons::json TskUtils::convertImg(const TSK_IMG_INFO& img) {
+  const char* type_name = tsk_img_type_toname(img.itype);
+  const char* type_desc = tsk_img_type_todesc(img.itype);
+
   return jsoncons::json(
     jsoncons::json_object_arg,
     {
-      { "type", tsk_img_type_toname(img.itype) },
-      { "description", tsk_img_type_todesc(img.itype) },
+      { "type", type_name ? type_name : "unknown" },
+      { "description", type_desc ? type_desc : "Unknown image type" },
       { "size", img.size },
       { "sectorSize", img.sector_size }
     }
