@@ -256,7 +256,8 @@ TEST_CASE("testTskConvertImg") {
   TSK_IMG_INFO img;
   std::memset(&img, 0, sizeof(img));
 
-  img.itype = TSK_IMG_TYPE_EWF_EWF;
+  img.tag = TSK_IMG_INFO_TAG;
+  img.itype = TSK_IMG_TYPE_RAW;
   img.size = 1;
   img.num_img = 2;
   img.sector_size = 3;
@@ -264,7 +265,7 @@ TEST_CASE("testTskConvertImg") {
   img.spare_size = 5;
 
   const jsoncons::json js = TskUtils::convertImg(img);
-  const std::string expected = "{\"description\":\"Expert Witness Format (EnCase)\",\"sectorSize\":3,\"size\":1,\"type\":\"ewf\"}";
+  const std::string expected = "{\"description\":\"Single or split raw file (dd)\",\"sectorSize\":3,\"size\":1,\"type\":\"raw\"}";
   const std::string actual = js.as<std::string>();
   REQUIRE(expected == actual);
 }
