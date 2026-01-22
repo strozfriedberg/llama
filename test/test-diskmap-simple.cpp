@@ -150,7 +150,7 @@ int main() {
     if (state != DuckDBError) {
         uint64_t rowCount = duckdb_row_count(&result);
         std::cout << "DEBUG: Join test has " << rowCount << " rows:" << std::endl;
-        for (uint64_t row = 0; row < std::min(rowCount, 5ULL); ++row) {
+        for (uint64_t row = 0; row < std::min(rowCount, static_cast<uint64_t>(5)); ++row) {
             uint64_t start = duckdb_value_uint64(&result, 0, row);
             uint64_t end = duckdb_value_uint64(&result, 1, row);
             uint64_t inode = duckdb_value_uint64(&result, 2, row);
@@ -174,7 +174,7 @@ int main() {
     if (state != DuckDBError) {
         uint64_t rowCount = duckdb_row_count(&result);
         std::cout << "DEBUG: COUNT aggregation test:" << std::endl;
-        for (uint64_t row = 0; row < std::min(rowCount, 5ULL); ++row) {
+        for (uint64_t row = 0; row < std::min(rowCount, static_cast<uint64_t>(5)); ++row) {
             uint64_t start = duckdb_value_uint64(&result, 0, row);
             uint64_t end = duckdb_value_uint64(&result, 1, row);
             uint64_t cnt = duckdb_value_uint64(&result, 2, row);
@@ -211,7 +211,7 @@ int main() {
     if (state != DuckDBError) {
         uint64_t rowCount = duckdb_row_count(&result);
         std::cout << "DEBUG: Diskmap has " << rowCount << " rows" << std::endl;
-        for (uint64_t row = 0; row < std::min(rowCount, 3ULL); ++row) {
+        for (uint64_t row = 0; row < std::min(rowCount, static_cast<uint64_t>(3)); ++row) {
             uint64_t start = duckdb_value_uint64(&result, 0, row);
             uint64_t end = duckdb_value_uint64(&result, 1, row);
             auto claimants = duckdb_value_varchar(&result, 2, row);
