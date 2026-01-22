@@ -17,6 +17,7 @@ llama_common_sources = [
   '../src/hex.cpp',
   '../src/inodeandblocktrackerimpl.cpp',
   '../src/inputreader.cpp',
+  '../src/posixreader.cpp',
   '../src/lexer.cpp',
   '../src/llama.cpp',
   '../src/outputtar.cpp',
@@ -125,9 +126,9 @@ if catch2_dep.found()
   # PosixReader test
   test_posixreader = executable(
       'test_posixreader',
-      'test_posixreader.cpp',
+      llama_common_sources + ['test_posixreader.cpp'],
       include_directories: inc,
-      dependencies: [catch2_dep],
+      dependencies: llama_deps + [catch2_dep],
   )
   test('test_posixreader', test_posixreader)
 
