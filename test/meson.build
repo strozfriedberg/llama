@@ -53,6 +53,7 @@ test_sources = [
   'test_direntstack.cpp',
   'test_dirreader.cpp',
   'test_duckdb.cpp',
+  'test_extent.cpp',
   'test_fieldhasher.cpp',
   'test_fileproxy.cpp',
   'test_filerecord.cpp',
@@ -65,6 +66,7 @@ test_sources = [
   'test_parser.cpp',
   'test_patternparser.cpp',
   'test_pdfreader.cpp',
+  'test_posixreader.cpp',
   'test_processor.cpp',
   'test_querybuilder.cpp',
   'test_readseek.cpp',
@@ -113,24 +115,6 @@ if catch2_dep.found()
               'UBSAN_OPTIONS=halt_on_error=0:abort_on_error=0:print_stacktrace=0:silence_unsigned_overflow=1',
               'MSAN_OPTIONS=halt_on_error=0:abort_on_error=0:exit_code=0',
               'MALLOC_CHECK_=0'])
-
-  # Extent struct test
-  test_extent = executable(
-      'test_extent',
-      'test_extent.cpp',
-      include_directories: inc,
-      dependencies: [catch2_dep, boost_dep],
-  )
-  test('test_extent', test_extent)
-
-  # PosixReader test
-  test_posixreader = executable(
-      'test_posixreader',
-      llama_common_sources + ['test_posixreader.cpp'],
-      include_directories: inc,
-      dependencies: llama_deps + [catch2_dep],
-  )
-  test('test_posixreader', test_posixreader)
 
   # Disk map visualization test
   test_diskmap = executable(
