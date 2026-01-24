@@ -165,3 +165,19 @@ TEST_CASE("formatTimestamp - zero handling") {
   // Only ns zero = normal timestamp
   REQUIRE("1970-01-01 00:00:01" == formatTimestamp(1, 0, buf));
 }
+
+TEST_CASE("formatTimestamp - negative timestamps") {
+  std::ostringstream buf;
+
+  // One second before epoch
+  REQUIRE("1969-12-31 23:59:59" == formatTimestamp(-1, 0, buf));
+
+  // NTFS epoch (1601-01-01 00:00:00 = -11644473600)
+  REQUIRE("1601-01-01 00:00:00" == formatTimestamp(-11644473600, 0, buf));
+
+  // Year 1900 (common in old filesystems)
+  REQUIRE("1900-01-01 00:00:00" == formatTimestamp(-2208988800, 0, buf));
+
+  // Negative with fractional seconds
+  REQUIRE("1969-12-31 23:59:59.5" == formatTimestamp(-1, 500000000, buf));
+}
