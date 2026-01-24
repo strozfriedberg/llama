@@ -44,7 +44,7 @@ PKG_PROG_PKG_CONFIG
 AS_IF([test "x$enable_shared" != "xyes"], [PKG_CONFIG="$PKG_CONFIG --static"])
 
 AC_LANG([C++])
-AX_CXX_COMPILE_STDCXX_17([noext], [mandatory])
+AX_CXX_COMPILE_STDCXX_20([noext], [mandatory])
 AX_APPEND_COMPILE_FLAGS([-W -Wall -Wextra -Wnon-virtual-dtor -pedantic -pipe], [LLAMA_CXXFLAGS])
 
 AC_ARG_ENABLE([debug],
