@@ -223,3 +223,21 @@ TEST_CASE("formatTimestamp - fractional seconds") {
   // Single nanosecond
   REQUIRE("2020-01-01 00:00:00.000000001" == formatTimestamp(1577836800, 1, buf));
 }
+
+TEST_CASE("formatTimestamp - leap years") {
+  std::ostringstream buf;
+
+  // 2000 is a leap year (divisible by 400)
+  REQUIRE("2000-02-29 12:00:00" == formatTimestamp(951825600, 0, buf));
+
+  // 2020 is a leap year
+  REQUIRE("2020-02-29 12:00:00" == formatTimestamp(1582977600, 0, buf));
+
+  // 1900 is NOT a leap year (divisible by 100 but not 400)
+  // Feb 28, 1900 = -2203977600, Mar 1, 1900 = -2203891200
+  REQUIRE("1900-02-28 12:00:00" == formatTimestamp(-2203934400, 0, buf));
+  REQUIRE("1900-03-01 12:00:00" == formatTimestamp(-2203848000, 0, buf));
+
+  // 2024 is a leap year
+  REQUIRE("2024-02-29 12:00:00" == formatTimestamp(1709208000, 0, buf));
+}
