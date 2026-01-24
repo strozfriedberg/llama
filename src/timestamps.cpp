@@ -5,6 +5,8 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #pragma GCC diagnostic pop
 
+#include <iomanip>
+
 // TODO: we know the precision, so we should print fractional seconds that way
 // TODO: add direct tests of this
 // TODO: use std::to_chars, get rid of std::ostringstream?
@@ -55,10 +57,11 @@ std::string formatTimestamp(int64_t unix_time, uint32_t ns, std::ostringstream& 
 
   // fractional seconds
   if (0 < ns && ns < 1000000000) {
-    buf << double(ns) / 1000000000;
+    buf << std::fixed << std::setprecision(9) << double(ns) / 1000000000;
     auto frac = buf.str();
     ret.append(frac.substr(1, frac.find_last_not_of('0'))); // no leading or trailing zeroes
     buf.str("");
+    buf.unsetf(std::ios_base::floatfield); // restore default float formatting
   }
   return ret;
 }
