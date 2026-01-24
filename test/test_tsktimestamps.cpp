@@ -198,3 +198,28 @@ TEST_CASE("formatTimestamp - year boundaries") {
   REQUIRE("2038-01-19 03:14:07" == formatTimestamp(2147483647, 0, buf));
   REQUIRE("2038-01-19 03:14:08" == formatTimestamp(2147483648, 0, buf));
 }
+
+TEST_CASE("formatTimestamp - fractional seconds") {
+  std::ostringstream buf;
+
+  // Trailing zero trimming
+  REQUIRE("2020-01-01 00:00:00.1" == formatTimestamp(1577836800, 100000000, buf));
+  REQUIRE("2020-01-01 00:00:00.12" == formatTimestamp(1577836800, 120000000, buf));
+  REQUIRE("2020-01-01 00:00:00.123" == formatTimestamp(1577836800, 123000000, buf));
+  REQUIRE("2020-01-01 00:00:00.1234" == formatTimestamp(1577836800, 123400000, buf));
+  REQUIRE("2020-01-01 00:00:00.12345" == formatTimestamp(1577836800, 123450000, buf));
+  REQUIRE("2020-01-01 00:00:00.123456" == formatTimestamp(1577836800, 123456000, buf));
+  REQUIRE("2020-01-01 00:00:00.1234567" == formatTimestamp(1577836800, 123456700, buf));
+  REQUIRE("2020-01-01 00:00:00.12345678" == formatTimestamp(1577836800, 123456780, buf));
+  REQUIRE("2020-01-01 00:00:00.123456789" == formatTimestamp(1577836800, 123456789, buf));
+
+  // Maximum valid nanoseconds (999999999)
+  REQUIRE("2020-01-01 00:00:00.999999999" == formatTimestamp(1577836800, 999999999, buf));
+
+  // Invalid nanoseconds >= 1000000000 = ignore fractional
+  REQUIRE("2020-01-01 00:00:00" == formatTimestamp(1577836800, 1000000000, buf));
+  REQUIRE("2020-01-01 00:00:00" == formatTimestamp(1577836800, 9999999999, buf));
+
+  // Single nanosecond
+  REQUIRE("2020-01-01 00:00:00.000000001" == formatTimestamp(1577836800, 1, buf));
+}
