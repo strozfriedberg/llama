@@ -181,3 +181,20 @@ TEST_CASE("formatTimestamp - negative timestamps") {
   // Negative with fractional seconds
   REQUIRE("1969-12-31 23:59:59.5" == formatTimestamp(-1, 500000000, buf));
 }
+
+TEST_CASE("formatTimestamp - year boundaries") {
+  std::ostringstream buf;
+
+  // 1969 → 1970 transition
+  REQUIRE("1969-12-31 23:59:59" == formatTimestamp(-1, 0, buf));
+  REQUIRE("1970-01-01 00:00:00.000000001" == formatTimestamp(0, 1, buf));
+  REQUIRE("1970-01-01 00:00:01" == formatTimestamp(1, 0, buf));
+
+  // Y2K transition
+  REQUIRE("1999-12-31 23:59:59" == formatTimestamp(946684799, 0, buf));
+  REQUIRE("2000-01-01 00:00:00" == formatTimestamp(946684800, 0, buf));
+
+  // 32-bit overflow (2038-01-19 03:14:07)
+  REQUIRE("2038-01-19 03:14:07" == formatTimestamp(2147483647, 0, buf));
+  REQUIRE("2038-01-19 03:14:08" == formatTimestamp(2147483648, 0, buf));
+}
