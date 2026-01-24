@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include "timestamps.h"
 #include "tsktimestamps.h"
 
 TEST_CASE("testTskConvertTimestamps") {
@@ -149,4 +150,18 @@ TEST_CASE("testTskConvertLinuxTimestamps") {
   REQUIRE(ts.fn_created(meta).is_null());
   REQUIRE(ts.fn_metadata(meta).is_null());
   REQUIRE(ts.fn_modified(meta).is_null());
+}
+
+TEST_CASE("formatTimestamp - zero handling") {
+  std::ostringstream buf;
+
+  // Both zero = empty string
+  REQUIRE("" == formatTimestamp(0, 0, buf));
+
+  // Only unix_time zero with ns > 0 = epoch with fractional
+  REQUIRE("1970-01-01 00:00:00.000000001" == formatTimestamp(0, 1, buf));
+  REQUIRE("1970-01-01 00:00:00.1" == formatTimestamp(0, 100000000, buf));
+
+  // Only ns zero = normal timestamp
+  REQUIRE("1970-01-01 00:00:01" == formatTimestamp(1, 0, buf));
 }
