@@ -457,7 +457,7 @@ expected<bool> FileSigAnalyzer::getSignature(const fs::directory_entry &de,
   }
   std::ifstream ifs(de.path(), std::ios::binary);
   if (ifs) {
-    auto ext = de.path().extension().u8string();
+    auto ext = de.path().extension().string();
     if (!ext.empty()) {
       boost::algorithm::to_upper(ext);
       if (ext.length() > 1) {

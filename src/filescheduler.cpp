@@ -29,7 +29,7 @@ void FileScheduler::scheduleFileBatch(const DirentBatch& dirents,
   auto iPtr = std::make_shared<InodeBatch>(inodes);
   boost::asio::post(
     Strand,
-    [=]() {
+    [=, this]() {
       performScheduling(*dPtr, *iPtr, entries);
     }
   );
@@ -75,7 +75,7 @@ void FileScheduler::performScheduling(DirentBatch& dirents,
 
   // post for multithreaded processing
   auto proc = popProc(); // blocks
-  boost::asio::post(Pool, [=]() {
+  boost::asio::post(Pool, [=, this]() {
     proc->processBatch(entries);
     this->pushProc(proc);
   });

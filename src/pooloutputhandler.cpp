@@ -35,7 +35,7 @@ void PoolOutputHandler::outputDirent(const Dirent& rec) {
 }
 
 void PoolOutputHandler::outputInode(const FileRecord& rec) {
-  boost::asio::post(RecStrand, [=]() {
+  boost::asio::post(RecStrand, [=, this]() {
     InodesRecBuf.write(rec.str());
   });
 }
@@ -51,7 +51,7 @@ void PoolOutputHandler::outputInode(const Inode& rec) {
 }
 */
 void PoolOutputHandler::outputInodes(const std::shared_ptr<std::vector<FileRecord>>& batch) {
-  boost::asio::post(RecStrand, [=]() {
+  boost::asio::post(RecStrand, [=, this]() {
     for (const auto& rec: *batch) {
       InodesRecBuf.write(rec.str());
       // FileRecBuf.get() << rec.Doc << '\n';

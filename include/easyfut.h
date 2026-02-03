@@ -21,7 +21,7 @@ struct easy_fut {
 
   template <typename ExecutorType, typename Callable>
   void run(ExecutorType& exec, Callable functor) {
-    boost::asio::post(exec, [=]() {
+    boost::asio::post(exec, [=, this]() {
       try {
         this->Promise.set_value(functor());
       }
