@@ -94,8 +94,11 @@ if catch2_dep.found()
     build_by_default: false
   )
 
-  # Benchmarks (always includes parser, adds YARA if available)
-  benchmark_sources = ['benchmarks/parser_bench.cpp']
+  # Benchmarks (always includes parser and timestamp, adds YARA if available)
+  benchmark_sources = [
+    'benchmarks/parser_bench.cpp',
+    'benchmarks/timestamp_bench.cpp'
+  ]
 
   if yara_dep.found()
     benchmark_sources += 'benchmarks/yara_bench.cpp'
