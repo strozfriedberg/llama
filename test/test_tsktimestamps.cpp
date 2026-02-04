@@ -153,91 +153,81 @@ TEST_CASE("testTskConvertLinuxTimestamps") {
 }
 
 TEST_CASE("formatTimestamp - zero handling") {
-  std::ostringstream buf;
-
   // Both zero = empty string
-  REQUIRE("" == formatTimestamp(0, 0, buf));
+  REQUIRE("" == formatTimestamp(0, 0));
 
   // Only unix_time zero with ns > 0 = epoch with fractional
-  REQUIRE("1970-01-01 00:00:00.000000001" == formatTimestamp(0, 1, buf));
-  REQUIRE("1970-01-01 00:00:00.1" == formatTimestamp(0, 100000000, buf));
+  REQUIRE("1970-01-01 00:00:00.000000001" == formatTimestamp(0, 1));
+  REQUIRE("1970-01-01 00:00:00.1" == formatTimestamp(0, 100000000));
 
   // Only ns zero = normal timestamp
-  REQUIRE("1970-01-01 00:00:01" == formatTimestamp(1, 0, buf));
+  REQUIRE("1970-01-01 00:00:01" == formatTimestamp(1, 0));
 }
 
 TEST_CASE("formatTimestamp - negative timestamps") {
-  std::ostringstream buf;
-
   // One second before epoch
-  REQUIRE("1969-12-31 23:59:59" == formatTimestamp(-1, 0, buf));
+  REQUIRE("1969-12-31 23:59:59" == formatTimestamp(-1, 0));
 
   // NTFS epoch (1601-01-01 00:00:00 = -11644473600)
-  REQUIRE("1601-01-01 00:00:00" == formatTimestamp(-11644473600, 0, buf));
+  REQUIRE("1601-01-01 00:00:00" == formatTimestamp(-11644473600, 0));
 
   // Year 1900 (common in old filesystems)
-  REQUIRE("1900-01-01 00:00:00" == formatTimestamp(-2208988800, 0, buf));
+  REQUIRE("1900-01-01 00:00:00" == formatTimestamp(-2208988800, 0));
 
   // Negative with fractional seconds
-  REQUIRE("1969-12-31 23:59:59.5" == formatTimestamp(-1, 500000000, buf));
+  REQUIRE("1969-12-31 23:59:59.5" == formatTimestamp(-1, 500000000));
 }
 
 TEST_CASE("formatTimestamp - year boundaries") {
-  std::ostringstream buf;
-
   // 1969 → 1970 transition
-  REQUIRE("1969-12-31 23:59:59" == formatTimestamp(-1, 0, buf));
-  REQUIRE("1970-01-01 00:00:00.000000001" == formatTimestamp(0, 1, buf));
-  REQUIRE("1970-01-01 00:00:01" == formatTimestamp(1, 0, buf));
+  REQUIRE("1969-12-31 23:59:59" == formatTimestamp(-1, 0));
+  REQUIRE("1970-01-01 00:00:00.000000001" == formatTimestamp(0, 1));
+  REQUIRE("1970-01-01 00:00:01" == formatTimestamp(1, 0));
 
   // Y2K transition
-  REQUIRE("1999-12-31 23:59:59" == formatTimestamp(946684799, 0, buf));
-  REQUIRE("2000-01-01 00:00:00" == formatTimestamp(946684800, 0, buf));
+  REQUIRE("1999-12-31 23:59:59" == formatTimestamp(946684799, 0));
+  REQUIRE("2000-01-01 00:00:00" == formatTimestamp(946684800, 0));
 
   // 32-bit overflow (2038-01-19 03:14:07)
-  REQUIRE("2038-01-19 03:14:07" == formatTimestamp(2147483647, 0, buf));
-  REQUIRE("2038-01-19 03:14:08" == formatTimestamp(2147483648, 0, buf));
+  REQUIRE("2038-01-19 03:14:07" == formatTimestamp(2147483647, 0));
+  REQUIRE("2038-01-19 03:14:08" == formatTimestamp(2147483648, 0));
 }
 
 TEST_CASE("formatTimestamp - fractional seconds") {
-  std::ostringstream buf;
-
   // Trailing zero trimming
-  REQUIRE("2020-01-01 00:00:00.1" == formatTimestamp(1577836800, 100000000, buf));
-  REQUIRE("2020-01-01 00:00:00.12" == formatTimestamp(1577836800, 120000000, buf));
-  REQUIRE("2020-01-01 00:00:00.123" == formatTimestamp(1577836800, 123000000, buf));
-  REQUIRE("2020-01-01 00:00:00.1234" == formatTimestamp(1577836800, 123400000, buf));
-  REQUIRE("2020-01-01 00:00:00.12345" == formatTimestamp(1577836800, 123450000, buf));
-  REQUIRE("2020-01-01 00:00:00.123456" == formatTimestamp(1577836800, 123456000, buf));
-  REQUIRE("2020-01-01 00:00:00.1234567" == formatTimestamp(1577836800, 123456700, buf));
-  REQUIRE("2020-01-01 00:00:00.12345678" == formatTimestamp(1577836800, 123456780, buf));
-  REQUIRE("2020-01-01 00:00:00.123456789" == formatTimestamp(1577836800, 123456789, buf));
+  REQUIRE("2020-01-01 00:00:00.1" == formatTimestamp(1577836800, 100000000));
+  REQUIRE("2020-01-01 00:00:00.12" == formatTimestamp(1577836800, 120000000));
+  REQUIRE("2020-01-01 00:00:00.123" == formatTimestamp(1577836800, 123000000));
+  REQUIRE("2020-01-01 00:00:00.1234" == formatTimestamp(1577836800, 123400000));
+  REQUIRE("2020-01-01 00:00:00.12345" == formatTimestamp(1577836800, 123450000));
+  REQUIRE("2020-01-01 00:00:00.123456" == formatTimestamp(1577836800, 123456000));
+  REQUIRE("2020-01-01 00:00:00.1234567" == formatTimestamp(1577836800, 123456700));
+  REQUIRE("2020-01-01 00:00:00.12345678" == formatTimestamp(1577836800, 123456780));
+  REQUIRE("2020-01-01 00:00:00.123456789" == formatTimestamp(1577836800, 123456789));
 
   // Maximum valid nanoseconds (999999999)
-  REQUIRE("2020-01-01 00:00:00.999999999" == formatTimestamp(1577836800, 999999999, buf));
+  REQUIRE("2020-01-01 00:00:00.999999999" == formatTimestamp(1577836800, 999999999));
 
   // Invalid nanoseconds >= 1000000000 = ignore fractional
-  REQUIRE("2020-01-01 00:00:00" == formatTimestamp(1577836800, 1000000000, buf));
-  REQUIRE("2020-01-01 00:00:00" == formatTimestamp(1577836800, 9999999999, buf));
+  REQUIRE("2020-01-01 00:00:00" == formatTimestamp(1577836800, 1000000000));
+  REQUIRE("2020-01-01 00:00:00" == formatTimestamp(1577836800, 9999999999));
 
   // Single nanosecond
-  REQUIRE("2020-01-01 00:00:00.000000001" == formatTimestamp(1577836800, 1, buf));
+  REQUIRE("2020-01-01 00:00:00.000000001" == formatTimestamp(1577836800, 1));
 }
 
 TEST_CASE("formatTimestamp - leap years") {
-  std::ostringstream buf;
-
   // 2000 is a leap year (divisible by 400)
-  REQUIRE("2000-02-29 12:00:00" == formatTimestamp(951825600, 0, buf));
+  REQUIRE("2000-02-29 12:00:00" == formatTimestamp(951825600, 0));
 
   // 2020 is a leap year
-  REQUIRE("2020-02-29 12:00:00" == formatTimestamp(1582977600, 0, buf));
+  REQUIRE("2020-02-29 12:00:00" == formatTimestamp(1582977600, 0));
 
   // 1900 is NOT a leap year (divisible by 100 but not 400)
   // Feb 28, 1900 = -2203977600, Mar 1, 1900 = -2203891200
-  REQUIRE("1900-02-28 12:00:00" == formatTimestamp(-2203934400, 0, buf));
-  REQUIRE("1900-03-01 12:00:00" == formatTimestamp(-2203848000, 0, buf));
+  REQUIRE("1900-02-28 12:00:00" == formatTimestamp(-2203934400, 0));
+  REQUIRE("1900-03-01 12:00:00" == formatTimestamp(-2203848000, 0));
 
   // 2024 is a leap year
-  REQUIRE("2024-02-29 12:00:00" == formatTimestamp(1709208000, 0, buf));
+  REQUIRE("2024-02-29 12:00:00" == formatTimestamp(1709208000, 0));
 }

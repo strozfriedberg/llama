@@ -8,7 +8,6 @@
 
 #include <random>
 #include <vector>
-#include <sstream>
 
 namespace {
   // Generate test timestamps within the past year
@@ -45,12 +44,11 @@ namespace {
 
 TEST_CASE("formatTimestamp benchmarks") {
   const auto& data = getTestData();
-  std::ostringstream buf;
 
   BENCHMARK("formatTimestamp - with nanoseconds (1000 timestamps)") {
     std::string result;
     for (size_t i = 0; i < data.unix_times.size(); ++i) {
-      result = formatTimestamp(data.unix_times[i], data.nanoseconds[i], buf);
+      formatTimestamp(data.unix_times[i], data.nanoseconds[i], result);
     }
     return result;
   };
@@ -58,7 +56,7 @@ TEST_CASE("formatTimestamp benchmarks") {
   BENCHMARK("formatTimestamp - without nanoseconds (1000 timestamps)") {
     std::string result;
     for (size_t i = 0; i < data.unix_times.size(); ++i) {
-      result = formatTimestamp(data.unix_times[i], 0, buf);
+      formatTimestamp(data.unix_times[i], 0, result);
     }
     return result;
   };

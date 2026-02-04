@@ -1,68 +1,79 @@
+// ABOUTME: Formats Unix timestamps as human-readable "YYYY-MM-DD HH:MM:SS[.nnnnnnnnn]" strings
+// ABOUTME: Uses C++20 chrono for date decomposition and fixed-point integer arithmetic for fractional seconds
+
 #include "timestamps.h"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#include <boost/date_time/posix_time/posix_time.hpp>
-#pragma GCC diagnostic pop
+#include <chrono>
 
-#include <iomanip>
+void formatTimestamp(int64_t unix_time, uint64_t ns, std::string& out) {
+  out.clear();
 
-// TODO: we know the precision, so we should print fractional seconds that way
-// TODO: add direct tests of this
-// TODO: use std::to_chars, get rid of std::ostringstream?
+  // (0, 0) is the null timestamp sentinel: "timestamp not set"
+  if (unix_time == 0 && ns == 0) {
+    return;
+  }
 
-namespace {
-  static const auto UNIX_BIRTHDAY = boost::gregorian::date(1970, 1, 1);
-  static const boost::posix_time::ptime START_TIME(UNIX_BIRTHDAY);
+  out.reserve(30); // max: "YYYY-MM-DD HH:MM:SS.nnnnnnnnn"
+
+  // Decompose into calendar date and time-of-day
+  const auto sys_time = std::chrono::sys_seconds{std::chrono::seconds{unix_time}};
+  const auto dp = std::chrono::floor<std::chrono::days>(sys_time);
+  const auto ymd = std::chrono::year_month_day{dp};
+  const auto tod = std::chrono::hh_mm_ss<std::chrono::seconds>{sys_time - dp};
+
+  const int year   = static_cast<int>(ymd.year());
+  const unsigned month = static_cast<unsigned>(ymd.month());
+  const unsigned day   = static_cast<unsigned>(ymd.day());
+  const unsigned hour  = tod.hours().count();
+  const unsigned min   = tod.minutes().count();
+  const unsigned sec   = tod.seconds().count();
+
+  // Format "YYYY-MM-DD HH:MM:SS" directly into a stack buffer
+  char buf[19];
+  buf[ 0] = '0' + year / 1000;
+  buf[ 1] = '0' + (year / 100) % 10;
+  buf[ 2] = '0' + (year / 10) % 10;
+  buf[ 3] = '0' + year % 10;
+  buf[ 4] = '-';
+  buf[ 5] = '0' + month / 10;
+  buf[ 6] = '0' + month % 10;
+  buf[ 7] = '-';
+  buf[ 8] = '0' + day / 10;
+  buf[ 9] = '0' + day % 10;
+  buf[10] = ' ';
+  buf[11] = '0' + hour / 10;
+  buf[12] = '0' + hour % 10;
+  buf[13] = ':';
+  buf[14] = '0' + min / 10;
+  buf[15] = '0' + min % 10;
+  buf[16] = ':';
+  buf[17] = '0' + sec / 10;
+  buf[18] = '0' + sec % 10;
+  out.append(buf, 19);
+
+  // Fractional seconds: fixed-point integer arithmetic, no floating point
+  if (ns > 0 && ns < 1000000000) {
+    // Decompose ns into 9 decimal digits
+    char frac[9];
+    uint32_t val = ns;
+    for (int i = 8; i >= 0; --i) {
+      frac[i] = '0' + val % 10;
+      val /= 10;
+    }
+
+    // Trim trailing zeros
+    int last = 8;
+    while (last > 0 && frac[last] == '0') {
+      --last;
+    }
+
+    out.push_back('.');
+    out.append(frac, last + 1);
+  }
 }
 
-std::string formatTimestamp(int64_t unix_time, uint32_t ns, std::ostringstream& buf) {
-  std::string ret;
-  ret.reserve(30);
-
-  if (0 == unix_time) {
-    if (0 == ns) {
-      return "";
-    }
-    // some C libs will otherwise print an empty string with strftime
-    ret.append("1970-01-01 00:00:00");
-  }
-  else {
-    // Boost, you tried.
-    //const boost::posix_time::ptime pt = boost::posix_time::from_time_t(unix_time);
-    try {
-      const int64_t min = unix_time / 60;
-      // Boost Date-Time has a maximum year of around 10000,
-      // Which means the number of _hours_ since 1970 will fit in a int32_t
-      // (In some versions of Boost (1_64), the time_duration takes an int32_t hours param,
-      //  While in others it takes a std::time_t hours)
-      boost::posix_time::time_duration duration(
-        static_cast<boost::posix_time::time_res_traits::hour_type>(min / 60),
-        static_cast<boost::posix_time::time_res_traits::min_type>(min % 60),
-        static_cast<boost::posix_time::time_res_traits::sec_type>(unix_time % 60)
-      );
-      const boost::posix_time::ptime pt = START_TIME + duration;
-      const tm pt_tm = boost::posix_time::to_tm(pt);
-      char tbuf[100];
-      const size_t len = strftime(tbuf, 100, "%Y-%m-%d %H:%M:%S", &pt_tm);
-      if (len) {
-        ret.append(tbuf);
-      } // else error??? [a greybeard once said, do not test for errors you can't handle... -- jls]
-    }
-    catch (const std::exception&) {
-      // FIXME: Under what conditions can this happen? Should we clear ret
-      // if it does?
-    }
-  }
-
-  // fractional seconds
-  if (0 < ns && ns < 1000000000) {
-    buf << std::fixed << std::setprecision(9) << double(ns) / 1000000000;
-    auto frac = buf.str();
-    ret.append(frac.substr(1, frac.find_last_not_of('0'))); // no leading or trailing zeroes
-    buf.str("");
-    buf.unsetf(std::ios_base::floatfield); // restore default float formatting
-  }
-  return ret;
+std::string formatTimestamp(int64_t unix_time, uint64_t ns) {
+  std::string result;
+  formatTimestamp(unix_time, ns, result);
+  return result;
 }
-
