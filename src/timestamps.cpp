@@ -6,10 +6,9 @@
 #include <chrono>
 
 void formatTimestamp(int64_t unix_time, uint64_t ns, std::string& out) {
-  out.clear();
-
   // (0, 0) is the null timestamp sentinel: "timestamp not set"
   if (unix_time == 0 && ns == 0) {
+    out.clear();
     return;
   }
 
@@ -28,8 +27,9 @@ void formatTimestamp(int64_t unix_time, uint64_t ns, std::string& out) {
   const unsigned min   = tod.minutes().count();
   const unsigned sec   = tod.seconds().count();
 
+
   // Format "YYYY-MM-DD HH:MM:SS" directly into a stack buffer
-  char buf[19];
+  char buf[29];
   buf[ 0] = '0' + year / 1000;
   buf[ 1] = '0' + (year / 100) % 10;
   buf[ 2] = '0' + (year / 10) % 10;
@@ -49,27 +49,24 @@ void formatTimestamp(int64_t unix_time, uint64_t ns, std::string& out) {
   buf[16] = ':';
   buf[17] = '0' + sec / 10;
   buf[18] = '0' + sec % 10;
-  out.append(buf, 19);
+
+  int num = 19;
 
   // Fractional seconds: fixed-point integer arithmetic, no floating point
   if (ns > 0 && ns < 1000000000) {
     // Decompose ns into 9 decimal digits
-    char frac[9];
+    buf[19] = '.';
+    num = 29;
     uint32_t val = ns;
-    for (int i = 8; i >= 0; --i) {
-      frac[i] = '0' + val % 10;
+    for (int i = 28; i >= 20; --i) {
+      buf[i] = '0' + val % 10;
       val /= 10;
     }
-
-    // Trim trailing zeros
-    int last = 8;
-    while (last > 0 && frac[last] == '0') {
-      --last;
+    while (num > 20 && buf[num - 1] == '0') {
+      --num; // trim trailing zeros
     }
-
-    out.push_back('.');
-    out.append(frac, last + 1);
   }
+  out.assign(buf, num);
 }
 
 std::string formatTimestamp(int64_t unix_time, uint64_t ns) {
