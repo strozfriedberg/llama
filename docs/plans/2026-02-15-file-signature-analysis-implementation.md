@@ -350,21 +350,38 @@ git commit -m "Add signatures and file_signatures table creation to startup"
 
 ---
 
-### Task 5: Load signatures in `Llama::init()` and populate reference table
+### Task 5: Add `--signatures` CLI option and load signatures in `Llama::init()`
 
-Parse `magics.json` and compile the Lightgrep program during `init()`. Populate the `signatures` reference table in `search()` before processing begins.
+Add a CLI option for the signatures file path (defaulting to `./magics.json`).
+Parse the file and compile the Lightgrep program during `init()`. Populate the
+`signatures` reference table in `search()` before processing begins.
 
 **Files:**
-- Modify: `include/llama.h` (add `MagicsType` and sig program members)
+- Modify: `include/options.h` (add `SignaturesPath` field)
+- Modify: `src/cli.cpp` (add `--signatures` option)
+- Modify: `include/llama.h` (add `MagicsType` member)
 - Modify: `src/llama.cpp` (add async init future, populate reference table)
+- Test: `test/test_llama.cpp`
+- Test: `test/test_cli.cpp`
 - Reference: `include/filesignatures.h`
 - Reference: `include/easyfut.h`
 
 **Step 1: Write the failing test**
 
-In `test/test_llama.cpp`, verify that after init the signature data is available. Check what tests already exist there first and follow the pattern. If `test_llama.cpp` doesn't have a pattern for testing init internals, a simpler approach is to test the round-trip: parse magics, populate DB, verify rows.
+In `test/test_cli.cpp`, add a test for the new option (follow existing patterns
+in that file). In `test/test_llama.cpp`, test the round-trip: parse magics,
+populate DB, verify rows.
 
 ```cpp
+// test_cli.cpp
+TEST_CASE("signatures path defaults to ./magics.json") {
+  // Parse with no --signatures flag, verify default
+  // (adapt to existing test patterns in test_cli.cpp)
+}
+```
+
+```cpp
+// test_llama.cpp
 TEST_CASE("Signature reference table is populated from magics") {
   LlamaDB db;
   LlamaDBConnection conn(db);
@@ -399,15 +416,24 @@ TEST_CASE("Signature reference table is populated from magics") {
 Run: `meson compile -C builddir && builddir/llama_test "Signature reference table is populated from magics"`
 Expected: Should pass once `ducksig.h` and `readMagics()` changes from prior tasks are in place. If it passes, good — it validates the integration path. If not, fix.
 
-**Step 3: Implement init and search changes**
+**Step 3: Implement CLI option, init, and search changes**
+
+In `include/options.h`:
+- Add field: `std::string SignaturesPath;`
+
+In `src/cli.cpp`:
+- Add to `configOpts`:
+  ```cpp
+  ("signatures",
+    po::value<std::string>(&Opts->SignaturesPath)
+    ->default_value("./magics.json")
+    ->value_name("SIGNATURES_FILE"),
+    "Path to file signature definitions (magics.json)")
+  ```
 
 In `include/llama.h`:
 - Add `#include "filesignatures.h"` and `#include "ducksig.h"`
-- Add members:
-  ```cpp
-  FileSignatures::MagicsType SigMagics;
-  std::shared_ptr<ProgramHandle> SigProg;  // compiled LG program for signatures
-  ```
+- Add member: `FileSignatures::MagicsType SigMagics;`
 - Add private method: `bool loadSignatures();`
 
 In `src/llama.cpp`:
@@ -415,9 +441,9 @@ In `src/llama.cpp`:
 Add `loadSignatures()`:
 ```cpp
 bool Llama::loadSignatures() {
-  auto result = FileSignatures::FileSigAnalyzer::readMagics("./magics.json");
+  auto result = FileSignatures::FileSigAnalyzer::readMagics(Opts->SignaturesPath);
   if (result.has_error()) {
-    std::cerr << "Error loading magics.json: " << result.error() << std::endl;
+    std::cerr << "Error loading signatures: " << result.error() << std::endl;
     return false;
   }
   SigMagics = std::move(result.value());
@@ -456,8 +482,8 @@ Expected: PASS
 **Step 5: Commit**
 
 ```bash
-git add include/llama.h src/llama.cpp test/test_llama.cpp
-git commit -m "Load and compile signatures in init(), populate reference table"
+git add include/options.h src/cli.cpp include/llama.h src/llama.cpp test/test_llama.cpp test/test_cli.cpp
+git commit -m "Add --signatures CLI option, load signatures in init()"
 ```
 
 ---
@@ -725,4 +751,170 @@ Expected: Both build systems compile and tests pass.
 ```bash
 git add Makefile.am src/meson.build test/meson.build
 git commit -m "Update build system for file signature analysis"
+```
+
+---
+
+### Task 10: Cache compiled Lightgrep program to disk
+
+Serialize the compiled Lightgrep signature program after first compilation.
+On subsequent runs, load the cached binary if it's newer than `magics.json`,
+skipping JSON parsing and pattern compilation entirely.
+
+The cache file is stored alongside `magics.json` in the same directory, e.g.,
+if `--signatures` points to `/path/to/magics.json`, the cache is
+`/path/to/magics.lgp`.
+
+**Files:**
+- Modify: `src/filesignatures.cpp`
+- Modify: `include/filesignatures.h`
+- Modify: `src/llama.cpp` (update `loadSignatures()`)
+- Test: `test/test_filesignatures.cpp`
+- Reference: Lightgrep API — `lg_write_program()`, `lg_read_program()`
+
+**Step 1: Write the failing test**
+
+```cpp
+TEST_CASE("FileSigAnalyzer writes and reads cached program") {
+  auto magicsResult = FileSignatures::FileSigAnalyzer::readMagics("./magics.json");
+  REQUIRE(magicsResult.has_value());
+  auto& magics = magicsResult.value();
+
+  // Build analyzer (compiles program)
+  FileSignatures::FileSigAnalyzer analyzer(magics);
+
+  // Write cache
+  std::string cachePath = "./test_magics_cache.lgp";
+  auto writeOk = analyzer.writeProgram(cachePath);
+  REQUIRE(writeOk.has_value());
+
+  // Read cache into a new analyzer
+  auto readResult = FileSignatures::FileSigAnalyzer::fromCachedProgram(cachePath, magics);
+  REQUIRE(readResult.has_value());
+  auto& cachedAnalyzer = readResult.value();
+
+  // Verify the cached analyzer detects the same signatures
+  std::vector<uint8_t> pdfBytes = {0x25, 0x50, 0x44, 0x46, 0x2D};
+  ReadSeekBuf rs(pdfBytes);
+
+  std::vector<FileSignatures::MagicPtr> results;
+  cachedAnalyzer.getSignatures(rs, results);
+  REQUIRE_FALSE(results.empty());
+
+  std::filesystem::remove(cachePath);
+}
+```
+
+**Step 2: Run test to verify it fails**
+
+Run: `meson compile -C builddir && builddir/llama_test "FileSigAnalyzer writes and reads cached program"`
+Expected: Compilation fails — `writeProgram()` and `fromCachedProgram()` don't exist.
+
+**Step 3: Implement**
+
+In `include/filesignatures.h`, add to `FileSigAnalyzer`:
+```cpp
+// Write the compiled program to disk for caching.
+expected<bool> writeProgram(const std::string& path) const;
+
+// Construct from a previously cached program file.
+// Still needs MagicsType to map hit indices back to signatures.
+static expected<FileSigAnalyzer> fromCachedProgram(
+    const std::string& path, const MagicsType& magics);
+```
+
+In `include/filesignatures.h`, add to `LightGrep`:
+```cpp
+expected<bool> writeProgram(const std::string& path) const;
+static expected<LG_HPROGRAM> readProgram(const std::string& path);
+```
+
+In `src/filesignatures.cpp`:
+
+```cpp
+expected<bool> LightGrep::writeProgram(const std::string& path) const {
+  // Use lg_write_program(Prog, path.c_str())
+  // Return error if it fails
+}
+
+expected<LG_HPROGRAM> LightGrep::readProgram(const std::string& path) {
+  // Use lg_read_program(path.c_str())
+  // Return error if it fails
+}
+
+expected<bool> FileSigAnalyzer::writeProgram(const std::string& path) const {
+  return Lg.writeProgram(path);
+}
+
+expected<FileSigAnalyzer> FileSigAnalyzer::fromCachedProgram(
+    const std::string& path, const MagicsType& magics) {
+  // Read program from cache, construct analyzer with it + magics
+  // (skip pattern compilation, just wire up the lookup structures)
+}
+```
+
+In `src/llama.cpp`, update `loadSignatures()`:
+```cpp
+bool Llama::loadSignatures() {
+  std::filesystem::path sigPath(Opts->SignaturesPath);
+  std::filesystem::path cachePath = sigPath.parent_path() / (sigPath.stem().string() + ".lgp");
+
+  // Parse magics (always needed for index-to-signature mapping)
+  auto magicsResult = FileSignatures::FileSigAnalyzer::readMagics(Opts->SignaturesPath);
+  if (magicsResult.has_error()) {
+    std::cerr << "Error loading signatures: " << magicsResult.error() << std::endl;
+    return false;
+  }
+  SigMagics = std::move(magicsResult.value());
+
+  // Try loading cached program if it's newer than magics.json
+  std::error_code ec;
+  if (std::filesystem::exists(cachePath, ec) &&
+      std::filesystem::last_write_time(cachePath, ec) >
+      std::filesystem::last_write_time(sigPath, ec)) {
+    auto cached = FileSignatures::FileSigAnalyzer::fromCachedProgram(
+        cachePath.string(), SigMagics);
+    if (cached.has_value()) {
+      // Cache hit — store the analyzer for ProcessorContext
+      return true;
+    }
+    // Cache read failed, fall through to recompile
+    std::cerr << "Warning: cached signature program invalid, recompiling\n";
+  }
+
+  // Compile from scratch and write cache
+  // (FileSigAnalyzer construction compiles the program)
+  // After construction, write the cache for next time
+  FileSignatures::FileSigAnalyzer analyzer(SigMagics);
+  auto writeOk = analyzer.writeProgram(cachePath.string());
+  if (writeOk.has_error()) {
+    std::cerr << "Warning: could not cache signature program: "
+              << writeOk.error() << std::endl;
+    // Non-fatal — we still have the compiled program
+  }
+  return true;
+}
+```
+
+Note: The exact mechanism for passing the compiled program (or cached analyzer)
+to `ProcessorContext` depends on whether the program lives on `FileSigAnalyzer`
+or is extracted separately. The key architectural constraint is that the program
+is immutable and shared, while each `Processor` creates its own search context
+from it. Adapt the storage as needed — the program handle may need to be
+extractable from the analyzer.
+
+**Step 4: Run tests to verify they pass**
+
+Run: `meson compile -C builddir && builddir/llama_test "FileSigAnalyzer writes and reads cached program"`
+Expected: PASS
+
+Also run the full suite to verify no regressions:
+Run: `meson compile -C builddir && builddir/llama_test`
+Expected: All PASS
+
+**Step 5: Commit**
+
+```bash
+git add include/filesignatures.h src/filesignatures.cpp src/llama.cpp test/test_filesignatures.cpp
+git commit -m "Cache compiled signature program to disk for fast startup"
 ```
