@@ -5,6 +5,7 @@
 #include "duckhash.h"
 #include "duckinode.h"
 #include "duckextent.h"
+#include "ducksig.h"
 #include "inode.h"
 #include "llamaduck.h"
 #include "llamabatch.h"
@@ -303,4 +304,23 @@ TEST_CASE("ExtentBatch can add and retrieve extents", "[duckdb]") {
 
     batch.clear();
     REQUIRE(batch.size() == 0);
+}
+
+TEST_CASE("SigRecBatch") {
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+  DBType<SigRec>::createTable(conn.get(), "signatures");
+
+  LlamaDBAppender appender(conn.get(), "signatures");
+  SigBatch batch;
+  batch.add(SigRec{"id-1", "PDF", "Portable Document Format"});
+  batch.add(SigRec{"id-2", "JPEG", "JPEG image"});
+  REQUIRE(batch.size() == 2);
+  batch.copyToDB(appender.get());
+  appender.flush();
+
+  duckdb_result result;
+  duckdb_query(conn.get(), "SELECT count(*) FROM signatures", &result);
+  REQUIRE(duckdb_value_int64(&result, 0, 0) == 2);
+  duckdb_destroy_result(&result);
 }
