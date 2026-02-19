@@ -16,6 +16,7 @@
 #include "posixreader.h"
 #endif
 #include "processor.h"
+#include "readseek_impl.h"
 #include "ruleengine.h"
 #include "throw.h"
 #include "timer.h"
@@ -69,6 +70,16 @@ void Llama::search() {
     std::filesystem::create_directories(outdir);
 
     RuleEngine->createTables(DbConn);
+
+    {
+      LlamaDBAppender sigAppender(DbConn.get(), "signatures");
+      SigBatch sigBatch;
+      for (const auto& m : SigMagics) {
+        sigBatch.add(SigRec{m->Id, m->Name, m->Description});
+      }
+      sigBatch.copyToDB(sigAppender.get());
+      sigAppender.flush();
+    }
 
     LG_ProgramOptions opts{10};
     LgProg.reset(lg_create_program(RuleEngine->buildFsm().getFsm(), &opts), lg_destroy_program);
@@ -196,6 +207,22 @@ bool Llama::dbInit() {
   return true;
 }
 
+bool Llama::loadSignatures() {
+  std::shared_ptr<FILE> sigFilePtr(std::fopen(Opts->SignaturesPath.c_str(), "rb"), std::fclose);
+  if (!sigFilePtr) {
+    std::cerr << "Error opening signatures file: " << Opts->SignaturesPath << std::endl;
+    return false;
+  }
+  ReadSeekFile sigFile(sigFilePtr);
+  auto result = FileSignatures::FileSigAnalyzer::readMagics(sigFile);
+  if (result.has_error()) {
+    std::cerr << "Error loading signatures: " << result.error() << std::endl;
+    return false;
+  }
+  SigMagics = std::move(result.value());
+  return true;
+}
+
 bool Llama::init() {
   Timer initTime(&std::cerr, "Init time: ");
   auto readPats = make_future(Pool, [this]() {
@@ -206,7 +233,7 @@ bool Llama::init() {
   auto open = make_future(Pool, [this]() {
     return openInput(this->Opts->Input);
   });
-  
+
   auto db = make_future(Pool, [this]() {
     return dbInit();
   });
@@ -216,7 +243,11 @@ bool Llama::init() {
            (this->Opts->RuleDir.empty() || readRulesFromDir(RuleEngine, this->Opts->RuleDir));
   });
 
-  return readPats.get() && open.get() && db.get() && rules.get();
+  auto sigs = make_future(Pool, [this]() {
+    return loadSignatures();
+  });
+
+  return readPats.get() && open.get() && db.get() && rules.get() && sigs.get();
 }
 
 void Llama::writeDB(const std::string& outdir) {

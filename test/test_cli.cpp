@@ -189,3 +189,17 @@ TEST_CASE("testPrintHelp") {
   auto outStr = output.str();
   REQUIRE(outStr.find("Usage: llama") != std::string::npos);
 }
+
+TEST_CASE("testCLISignaturesPath") {
+  Cli cli;
+
+  // Test with explicit path
+  const char* args1[] = {"llama", "--signatures", "custom/magics.json", "output", "nosnits_workstation.E01"};
+  auto opts = cli.parse(5, args1);
+  REQUIRE("custom/magics.json" == opts->SignaturesPath);
+
+  // Test default
+  const char* args2[] = {"llama", "output", "nosnits_workstation.E01"};
+  opts = cli.parse(3, args2);
+  REQUIRE("./magics.json" == opts->SignaturesPath);
+}

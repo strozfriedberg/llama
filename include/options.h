@@ -14,6 +14,7 @@ struct Options {
   std::string MatchSet;
   std::string ExclusionHashset;
   std::string InclusionHashset;
+  std::string SignaturesPath;
   std::vector<std::string> KeyFiles;
   unsigned int NumThreads;
   Codec OutputCodec;

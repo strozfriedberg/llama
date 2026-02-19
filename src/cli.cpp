@@ -42,6 +42,11 @@ Cli::Cli() : All(), Opts(new Options) {
         ->composing()
         ->value_name("KEY_FILE"),
         "File containing newline-separated patterns to search")
+      ("signatures",
+        po::value<std::string>(&Opts->SignaturesPath)
+        ->default_value("./magics.json")
+        ->value_name("SIGNATURES_FILE"),
+        "Path to file signature definitions (magics.json)")
       ("exclusion-hashset",
         po::value<std::string>(&Opts->ExclusionHashset)
         ->default_value("")

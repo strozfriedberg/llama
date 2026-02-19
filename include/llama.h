@@ -1,6 +1,8 @@
 #pragma once
 
 #include "boost_asio.h"
+#include "ducksig.h"
+#include "filesignatures.h"
 #include "llamaduck.h"
 #include "options.h"
 #include "rulereader.h"
@@ -30,6 +32,7 @@ private:
   bool readpatterns(const std::vector<std::string>& keyFiles);
   bool openInput(const std::string& input);
   bool dbInit();
+  bool loadSignatures();
 
   void writeDB(const std::string& outdir);
   bool createDiskMap();
@@ -43,6 +46,7 @@ private:
   std::shared_ptr<ProgramHandle> LgProg;
   std::shared_ptr<InputReader> Input;
   std::shared_ptr<LlamaRuleEngine> RuleEngine;
+  FileSignatures::MagicsType SigMagics;
   // LlamaRuleEngine RuleEngine;
   LlamaDB Db;
   LlamaDBConnection DbConn;
