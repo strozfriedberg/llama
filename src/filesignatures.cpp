@@ -27,7 +27,7 @@ namespace fs = std::filesystem;
 
 namespace FileSignatures {
 
-LightGrep::LightGrep() {}
+LightGrep::LightGrep() : Prog(nullptr) {}
 
 LightGrep::~LightGrep() {
   if (Prog) {
@@ -284,6 +284,11 @@ FileSigAnalyzer::FileSigAnalyzer(const MagicsType& magics) {
 
   this->Magics = std::move(sorted_magics);
 
+  // Skip Lightgrep setup if there are no signatures
+  if (this->Magics.empty()) {
+    return;
+  }
+
   auto r = Lg.setup(this->Magics);
   if (r.has_failure()) {
     throw std::runtime_error("LightGrep::setup failed: " + r.error());
@@ -294,6 +299,11 @@ FileSigAnalyzer::FileSigAnalyzer(const MagicsType& magics) {
 }
 
 expected<bool> FileSigAnalyzer::getSignatures(ReadSeek& rs, std::vector<MagicPtr>& results) const {
+  // If no signatures loaded, return early
+  if (Magics.empty()) {
+    return false;
+  }
+
   // Seek to beginning of stream
   rs.seek(0);
 

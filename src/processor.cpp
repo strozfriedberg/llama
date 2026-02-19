@@ -40,7 +40,9 @@ ProcessorContext::ProcessorContext(LlamaDB* db,
                                    const std::shared_ptr<ProgramHandle>& prog,
                                    const std::shared_ptr<LlamaRuleEngine> ruleEngine,
                                    const std::string& exclusionHsetPath,
-                                   const std::string& inclusionHsetPath) : Db(db), Prog(prog), RuleEngine(ruleEngine) {
+                                   const std::string& inclusionHsetPath,
+                                   const FileSignatures::MagicsType& sigMagics) :
+  Db(db), Prog(prog), RuleEngine(ruleEngine), SigMagics(sigMagics) {
   if (!exclusionHsetPath.empty()) {
     ExclusionHashset.reset(new LlamaHashset(exclusionHsetPath.c_str()));
   }
@@ -72,11 +74,14 @@ Processor::Processor(std::shared_ptr<ProcessorContext> procContext):
   HashAppender(DbConn.get(), "hash"),
   SearchHitAppender(DbConn.get(), "search_hits"),
   RuleMatchAppender(DbConn.get(), "rule_hits"),
+  FileSigAppender(DbConn.get(), "file_signatures"),
   LgCtx(Context->Prog.get() ? lg_create_context(Context->Prog.get(), &ctxOpts) : nullptr, lg_destroy_context),
   Hasher(sfhash_create_hasher(Context->getSupportedHashAlgsFromContext()), sfhash_destroy_hasher),
   HashRecord(),
   Hashes(std::make_unique<HashBatch>()),
   SearchHits(std::make_unique<DBBatch<SearchHit>>()),
+  FileSigs(std::make_unique<FileSigBatch>()),
+  SigAnalyzer(Context->SigMagics),
   ProcTimeTotal(0)
 {
   Buf.reserve(1 << 20);
@@ -104,6 +109,16 @@ void Processor::process(Entry& entry) {
 
   // write hash record to database
   Hashes->add(HashRecord);
+
+  // Detect file signatures
+  {
+    std::vector<FileSignatures::MagicPtr> sigResults;
+    entry.getStream().seek(0);
+    SigAnalyzer.getSignatures(entry.getStream(), sigResults);
+    for (const auto& sig : sigResults) {
+      FileSigs->add(FileSigResult{HashRecord.Blake3, sig->Id});
+    }
+  }
 
   {
     Timer procTime;
@@ -143,8 +158,10 @@ void Processor::flush(void) {
   if (Hashes->size()) {
     Hashes->copyToDB(HashAppender.get());
     SearchHits->copyToDB(SearchHitAppender.get());
+    FileSigs->copyToDB(FileSigAppender.get());
     HashAppender.flush();
     SearchHitAppender.flush();
+    FileSigAppender.flush();
   }
 }
 

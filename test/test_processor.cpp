@@ -2,6 +2,8 @@
 
 #include "processor.h"
 
+#include "ducksig.h"
+#include "filesignatures.h"
 #include "lightgrep/api.h"
 #include "filerecord.h"
 #include "mockoutputhandler.h"
@@ -86,8 +88,9 @@ private:
     // duckdb setup
     DBType<SearchHit>::createTable(DbConn.get(), "search_hits");
     DBType<HashRec>::createTable(DbConn.get(), "hash");
+    DBType<FileSigResult>::createTable(DbConn.get(), "file_signatures");
 
-    auto procContext = std::make_shared<ProcessorContext>(&Db, pHandle, RuleEngine, "", "");
+    auto procContext = std::make_shared<ProcessorContext>(&Db, pHandle, RuleEngine, "", "", FileSignatures::MagicsType{});
     return Processor(procContext);
   }
   std::shared_ptr<LlamaRuleEngine> RuleEngine;
@@ -162,6 +165,7 @@ TEST_CASE("testProcessorContextGetSupportedHashAlgsDiffAlgs") {
     ruleEngine,
     "test/hsets/md5.hset",
     "test/hsets/sha1.hset",
+    FileSignatures::MagicsType{}
   };
 
   REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_BLAKE3 | SFHASH_MD5 | SFHASH_SHA_1));
@@ -175,6 +179,7 @@ TEST_CASE("testProcessorContextGetSupportedHashAlgsSameAlgs") {
     ruleEngine,
     "test/hsets/md5.hset",
     "test/hsets/md5.hset",
+    FileSignatures::MagicsType{}
   };
 
   REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_BLAKE3 | SFHASH_MD5));
@@ -191,7 +196,39 @@ TEST_CASE("testProcessorContextGetSupportedHashAlgsMultipleAlgs") {
     ruleEngine,
     "test/hsets/md5.hset",
     "test/hsets/sha1_md5.hset",
+    FileSignatures::MagicsType{}
   };
 
   REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_BLAKE3 | SFHASH_MD5));
+}
+
+TEST_CASE("ProcessorContext can be constructed with SigMagics") {
+  // Load magics
+  std::shared_ptr<FILE> magicsFile(std::fopen("./magics.json", "rb"), std::fclose);
+  REQUIRE(magicsFile);
+  ReadSeekFile magicsRs(magicsFile);
+  auto magicsResult = FileSignatures::FileSigAnalyzer::readMagics(magicsRs);
+  REQUIRE(magicsResult.has_value());
+
+  // Create ProcessorContext with SigMagics
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+  DBType<HashRec>::createTable(conn.get(), "hash");
+  DBType<SearchHit>::createTable(conn.get(), "search_hits");
+  DBType<RuleMatch>::createTable(conn.get(), "rule_hits");
+  DBType<FileSigResult>::createTable(conn.get(), "file_signatures");
+
+  auto ruleEngine = std::make_shared<LlamaRuleEngine>();
+  auto procContext = std::make_shared<ProcessorContext>(
+    &db, nullptr, ruleEngine, "", "", magicsResult.value()
+  );
+
+  // Verify SigMagics were stored
+  REQUIRE(procContext->SigMagics.size() > 0);
+  REQUIRE(procContext->SigMagics.size() == magicsResult.value().size());
+
+  // Create a Processor from the context
+  Processor proc(procContext);
+  // If we got here without crashing, construction succeeded
+  REQUIRE(true);
 }

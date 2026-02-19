@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ducksig.h"
+#include "filesignatures.h"
 #include "llamaduck.h"
 #include "duckhash.h"
 #include "llamabatch.h"
@@ -25,7 +27,8 @@ struct ProcessorContext {
     const std::shared_ptr<ProgramHandle>& prog,
     const std::shared_ptr<LlamaRuleEngine> ruleEngine,
     const std::string& exclusionHsetPath,
-    const std::string& inclusionHsetPath
+    const std::string& inclusionHsetPath,
+    const FileSignatures::MagicsType& sigMagics
   );
 
   // Returns hash flag to be used when initializing a SFHASH_Hasher, based
@@ -37,6 +40,7 @@ struct ProcessorContext {
   const std::shared_ptr<LlamaRuleEngine> RuleEngine;
   std::unique_ptr<LlamaHashset> ExclusionHashset;
   std::unique_ptr<LlamaHashset> InclusionHashset;
+  FileSignatures::MagicsType SigMagics;
 };
 
 class Processor {
@@ -73,6 +77,7 @@ private:
   LlamaDBAppender   HashAppender;
   LlamaDBAppender   SearchHitAppender;
   LlamaDBAppender   RuleMatchAppender;
+  LlamaDBAppender   FileSigAppender;
 
   std::shared_ptr<ContextHandle> LgCtx; // not shared, could be unique_ptr
   std::shared_ptr<SFHASH_Hasher> Hasher; // not shared, could be unique_ptr
@@ -81,6 +86,9 @@ private:
 
   std::unique_ptr<HashBatch> Hashes;
   std::unique_ptr<DBBatch<SearchHit>> SearchHits;
+  std::unique_ptr<FileSigBatch> FileSigs;
+
+  FileSignatures::FileSigAnalyzer SigAnalyzer;
 
   double ProcTimeTotal;
 };
