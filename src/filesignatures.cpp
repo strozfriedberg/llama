@@ -203,14 +203,19 @@ void readSpecs(jsoncons::json const &magic_json, Magic &m) {
 }
 } // namespace
 
-expected<MagicsType> FileSigAnalyzer::readMagics(std::string_view path) {
+expected<MagicsType> FileSigAnalyzer::readMagics(ReadSeek& rs) {
   try {
-    std::ifstream is(path.data());
-    if (is.fail()) {
-      return makeUnexpected(String("Error: bad path ") + String(path));
+    // Read entire stream into a string
+    rs.seek(0);
+    size_t fileSize = rs.size();
+    std::vector<uint8_t> buffer(fileSize);
+    int64_t bytesRead = rs.read(fileSize, buffer.data());
+    if (bytesRead < 0) {
+      return makeUnexpected("Error reading from stream");
     }
 
-    auto json(jsoncons::json::parse(is));
+    std::string jsonStr(buffer.begin(), buffer.begin() + bytesRead);
+    auto json(jsoncons::json::parse(jsonStr));
 
     MagicsType magics;
     for (const auto &magic_json : json.array_range()) {
@@ -236,22 +241,23 @@ expected<MagicsType> FileSigAnalyzer::readMagics(std::string_view path) {
 
 struct lg_callback_context {
   const FileSigAnalyzer *self;
-  size_t min_hit_index;
+  std::vector<size_t>* hit_indices;
 };
 
 void FileSigAnalyzer::lgCallbackfn(void *userData,
                                    const LG_SearchHit *const hit) {
   auto ctx = (lg_callback_context *)userData;
   auto hit_info = lg_prog_pattern_info(ctx->self->Lg.get_lg_prog(), hit->KeywordIndex);
-  if (hit_info && hit_info->UserIndex < ctx->min_hit_index) {
-    ctx->min_hit_index = hit_info->UserIndex;
+  if (hit_info) {
+    ctx->hit_indices->push_back(hit_info->UserIndex);
   }
 }
 
 expected<bool> FileSigAnalyzer::lgSearch(const uint8_t *start,
                                          const uint8_t *end,
-                                         MagicPtr &result) const {
-  lg_callback_context ctx{this, std::numeric_limits<size_t>::max()};
+                                         std::vector<MagicPtr> &results) const {
+  std::vector<size_t> hit_indices;
+  lg_callback_context ctx{this, &hit_indices};
 
   auto lg_err = Lg.search(start, end, &ctx, &FileSigAnalyzer::lgCallbackfn);
 
@@ -259,55 +265,24 @@ expected<bool> FileSigAnalyzer::lgSearch(const uint8_t *start,
     return makeUnexpected("Lg.search() error: " + lg_err.error());
   }
 
-  if (ctx.min_hit_index != std::numeric_limits<size_t>::max()) {
-    // hit
-    result = this->Magics[ctx.min_hit_index];
-    return true;
+  // Collect all matching signatures
+  for (auto idx : hit_indices) {
+    results.push_back(this->Magics[idx]);
   }
 
-  return false;
+  return !results.empty();
 }
 
-expected<bool> FileSigAnalyzer::getSignature(const fs::directory_entry &de,
-                                             MagicPtr &result) const {
-  std::error_code ec;
-  if (!de.is_regular_file(ec) || ec) {
-    return makeUnexpected("FileSigAnalyzer is working with regular files only");
-  }
-  std::ifstream ifs(de.path(), std::ios::binary);
-  if (ifs) {
-    auto streamData = ifs.read((char *)ReadBuf.data(), ReadBuf.size()).gcount();
-    if (streamData == 0) {
-      return makeUnexpected("read zero bytes from " + de.path().string());
-    }
-
-    if (auto lg_result = lgSearch(ReadBuf.data(), ReadBuf.data() + streamData, result); !lg_result) {
-      return makeUnexpected(lg_result.error() + "on file: " + de.path().string());
-    }
-    else if (lg_result.value()) {
-      return true;
-    }
-  }
-  return false;
-}
-
-FileSigAnalyzer::FileSigAnalyzer() {
-  String magics_file("./magics.json");
-  auto result = readMagics(magics_file);
-  if (result.has_error()) {
-    throw std::runtime_error("Couldn't open file: " + magics_file +
-                             std::string(", ") + result.error());
-  }
-
-  auto magics = result.value();
+FileSigAnalyzer::FileSigAnalyzer(const MagicsType& magics) {
+  auto sorted_magics = magics;
 
   // resort magics by pattern size in descending order ('bigger' patterns first)
-  std::sort(begin(magics), end(magics),
+  std::sort(begin(sorted_magics), end(sorted_magics),
             [](MagicPtr const &a, MagicPtr const &b) -> bool {
               return a->getPatternLength(true) > b->getPatternLength(true);
             });
 
-  this->Magics = std::move(magics);
+  this->Magics = std::move(sorted_magics);
 
   auto r = Lg.setup(this->Magics);
   if (r.has_failure()) {
@@ -316,6 +291,25 @@ FileSigAnalyzer::FileSigAnalyzer() {
 
   auto max_read = r.value();
   ReadBuf.resize(max_read);
+}
+
+expected<bool> FileSigAnalyzer::getSignatures(ReadSeek& rs, std::vector<MagicPtr>& results) const {
+  // Seek to beginning of stream
+  rs.seek(0);
+
+  // Read up to ReadBuf.size() bytes
+  int64_t bytes_read = rs.read(ReadBuf.size(), ReadBuf.data());
+  if (bytes_read < 0) {
+    return makeUnexpected("Failed to read from stream");
+  }
+
+  if (bytes_read == 0) {
+    // Empty file - no signatures to detect
+    return false;
+  }
+
+  // Search for signatures
+  return lgSearch(ReadBuf.data(), ReadBuf.data() + bytes_read, results);
 }
 
 } // namespace FileSignatures

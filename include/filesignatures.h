@@ -8,6 +8,8 @@
 #include <boost/outcome.hpp>
 #include <lightgrep/api.h>
 
+#include "readseek.h"
+
 namespace FileSignatures {
 
 template <typename T>
@@ -59,17 +61,23 @@ public:
 class FileSigAnalyzer {
   MagicsType Magics;
   LightGrep Lg;
-  // size of the buffer - max value of getPatternLength(false)
-  Binary ReadBuf;
+  mutable std::vector<uint8_t> ReadBuf;
 
-  expected<bool> lgSearch(const uint8_t *start, const uint8_t *end, MagicPtr &result) const;
-  static void lgCallbackfn(void *userData, const LG_SearchHit *const hit);
+  // Each instance has its own LG context for thread safety
+  // (LG program is compiled once and shared, but search context is per-instance)
+
+  expected<bool> lgSearch(const uint8_t* start, const uint8_t* end,
+                          std::vector<MagicPtr>& results) const;
+  static void lgCallbackfn(void* userData, const LG_SearchHit* const hit);
 
 public:
-  FileSigAnalyzer();
+  // Takes pre-parsed signatures. Compiles Lightgrep program and allocates read buffer.
+  FileSigAnalyzer(const MagicsType& magics);
 
-  static expected<MagicsType> readMagics(std::string_view path);
-  expected<bool> getSignature(const std::filesystem::directory_entry &de, MagicPtr &result) const;
+  static expected<MagicsType> readMagics(ReadSeek& rs);
+
+  // Detect signatures in a ReadSeek stream. Populates results with all matches.
+  expected<bool> getSignatures(ReadSeek& rs, std::vector<MagicPtr>& results) const;
 };
 
 inline bool startsWith(const std::string &s, const std::string &prefix) {
