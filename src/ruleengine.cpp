@@ -48,6 +48,10 @@ void LlamaRuleEngine::createTables(LlamaDBConnection& dbConn) {
   THROW_IF(!ruleMatch.createTable(dbConn.get(), "rule_hits"), "Error creating rule hits table");
   DBType<SearchHit> searchHit;
   THROW_IF(!searchHit.createTable(dbConn.get(), "search_hits"), "Error creating search hit table");
+  DBType<SigRec> sigRec;
+  THROW_IF(!sigRec.createTable(dbConn.get(), "signatures"), "Error creating signatures table");
+  DBType<FileSigResult> fileSigResult;
+  THROW_IF(!fileSigResult.createTable(dbConn.get(), "file_signatures"), "Error creating file_signatures table");
 }
 
 LgFsmHolder LlamaRuleEngine::buildFsm() {

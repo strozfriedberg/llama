@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ducksig.h"
 #include "fsm.h"
 #include "llamabatch.h"
 #include "querybuilder.h"

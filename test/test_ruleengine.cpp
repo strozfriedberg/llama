@@ -79,3 +79,22 @@ TEST_CASE("getFsm") {
   REQUIRE(patToRuleId[0] == patToRuleId[1]);
   REQUIRE(patToRuleId[1] != patToRuleId[2]);
 }
+
+TEST_CASE("createTables creates signature tables") {
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+  LlamaRuleEngine engine;
+  engine.createTables(conn);
+
+  // Verify signature tables exist by inserting into them
+  duckdb_result result;
+  auto state = duckdb_query(conn.get(),
+    "INSERT INTO signatures VALUES ('id-1', 'PDF', 'Portable Document Format')", &result);
+  REQUIRE(state != DuckDBError);
+  duckdb_destroy_result(&result);
+
+  state = duckdb_query(conn.get(),
+    "INSERT INTO file_signatures VALUES ('hash-1', 'id-1')", &result);
+  REQUIRE(state != DuckDBError);
+  duckdb_destroy_result(&result);
+}
