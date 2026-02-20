@@ -18,5 +18,8 @@ private:
   void buildSqlClauseImpl(const PropertyNode* pn, std::string& out);
   void buildSqlClauseImpl(const BoolNode* bn, std::string& out);
 
+  void buildSignatureClauseImpl(const Node* n, std::string& out);
+  void buildSignaturePropertyImpl(const PropertyNode* pn, std::string& out);
+
   const LlamaParser& Parser;
 };

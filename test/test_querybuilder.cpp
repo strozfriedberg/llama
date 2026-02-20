@@ -131,3 +131,42 @@ all
 offset
 count_has_hits
 */
+
+TEST_CASE("buildSqlQueryFromRuleWithSignatureName") {
+  std::string input = R"(rule SigRule { signature: name == "PDF" })";
+  LlamaParser parser(input, LlamaLexer::getTokens(input, "test"));
+  QueryBuilder qb(parser);
+  std::vector<Rule> rules = parser.parseRules({0});
+  FieldHasher hasher;
+  FieldHash hash = rules.at(0).getHash(parser, hasher);
+  REQUIRE(rules.at(0).Name == "SigRule");
+  auto query = qb.buildSqlQuery(hash, rules.at(0));
+  // Should contain JOIN to file_signatures and signatures tables
+  REQUIRE(query.find("file_signatures") != std::string::npos);
+  REQUIRE(query.find("signatures") != std::string::npos);
+  REQUIRE(query.find("Name == 'PDF'") != std::string::npos);
+}
+
+TEST_CASE("buildSqlQueryFromRuleWithSignatureId") {
+  std::string input = R"(rule SigRule { signature: id == "b9523fad-6835-403f-9be6-91fd678b473f" })";
+  LlamaParser parser(input, LlamaLexer::getTokens(input, "test"));
+  QueryBuilder qb(parser);
+  std::vector<Rule> rules = parser.parseRules({0});
+  FieldHasher hasher;
+  FieldHash hash = rules.at(0).getHash(parser, hasher);
+  auto query = qb.buildSqlQuery(hash, rules.at(0));
+  REQUIRE(query.find("Id == 'b9523fad-6835-403f-9be6-91fd678b473f'") != std::string::npos);
+}
+
+TEST_CASE("buildSqlQueryFromRuleWithCompoundSignature") {
+  std::string input = R"(rule SigRule { signature: name == "PDF" or name == "JPEG" })";
+  LlamaParser parser(input, LlamaLexer::getTokens(input, "test"));
+  QueryBuilder qb(parser);
+  std::vector<Rule> rules = parser.parseRules({0});
+  FieldHasher hasher;
+  FieldHash hash = rules.at(0).getHash(parser, hasher);
+  auto query = qb.buildSqlQuery(hash, rules.at(0));
+  REQUIRE(query.find("Name == 'PDF'") != std::string::npos);
+  REQUIRE(query.find("OR") != std::string::npos);
+  REQUIRE(query.find("Name == 'JPEG'") != std::string::npos);
+}

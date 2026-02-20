@@ -8,6 +8,11 @@ const static std::unordered_map<std::string_view, std::string> FileMetadataPrope
   {"filename", "Name"}
 };
 
+const static std::unordered_map<std::string_view, std::string> SignaturePropertySqlLookup {
+  {"name", "Name"},
+  {"id", "Id"}
+};
+
 void QueryBuilder::buildSqlClauseImpl(const Node* n, std::string& out) {
   switch (n->Type) {
     case NodeType::PROP: {
@@ -70,6 +75,44 @@ std::string QueryBuilder::buildSqlClause(const BoolNode* bn) {
   return result;
 }
 
+void QueryBuilder::buildSignaturePropertyImpl(const PropertyNode* pn, std::string& out) {
+  std::string_view propertyName = Parser.lexemeAt(pn->Value.Name);
+  out += SignaturePropertySqlLookup.find(propertyName)->second;
+  out += " ";
+  out += Parser.lexemeAt(pn->Value.Op);
+  out += " ";
+  std::string_view val = Parser.lexemeAt(pn->Value.Val);
+  if (Parser.Tokens[pn->Value.Val].Type == LlamaTokenType::DOUBLE_QUOTED_STRING) {
+    out += "'";
+    out += val;
+    out += "'";
+  }
+  else {
+    out += val;
+  }
+}
+
+void QueryBuilder::buildSignatureClauseImpl(const Node* n, std::string& out) {
+  switch (n->Type) {
+    case NodeType::PROP: {
+      buildSignaturePropertyImpl(static_cast<const PropertyNode*>(n), out);
+      break;
+    }
+    case NodeType::BOOL: {
+      const BoolNode* bn = static_cast<const BoolNode*>(n);
+      out += "(";
+      buildSignatureClauseImpl(bn->Left, out);
+      out += bn->Operation == BoolNode::Op::AND ? " AND " : " OR ";
+      buildSignatureClauseImpl(bn->Right, out);
+      out += ")";
+      break;
+    }
+    default: {
+      throw std::runtime_error("Invalid node type " + std::to_string(static_cast<int>(n->Type)));
+    }
+  }
+}
+
 std::string QueryBuilder::buildSqlQuery(const FieldHash& hash, const Rule& rule) {
   std::string query;
   query.reserve(256);
@@ -80,6 +123,13 @@ std::string QueryBuilder::buildSqlQuery(const FieldHash& hash, const Rule& rule)
   if (rule.FileMetadata) {
     query += " AND ";
     buildSqlClauseImpl(rule.FileMetadata, query);
+  }
+
+  if (rule.Signature) {
+    query += " AND hash.Blake3 IN (SELECT fs.FileHash FROM file_signatures fs"
+             " JOIN signatures s ON fs.SigId = s.Id WHERE ";
+    buildSignatureClauseImpl(rule.Signature, query);
+    query += ")";
   }
 
   return query;
