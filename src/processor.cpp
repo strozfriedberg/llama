@@ -114,9 +114,11 @@ void Processor::process(Entry& entry) {
   {
     std::vector<FileSignatures::MagicPtr> sigResults;
     entry.getStream().seek(0);
-    SigAnalyzer.getSignatures(entry.getStream(), sigResults);
-    for (const auto& sig : sigResults) {
-      FileSigs->add(FileSigResult{HashRecord.Blake3, sig->Id});
+    auto result = SigAnalyzer.getSignatures(entry.getStream(), sigResults);
+    if (result.has_value()) {
+      for (const auto& sig : sigResults) {
+        FileSigs->add(FileSigResult{HashRecord.Blake3, sig->Id});
+      }
     }
   }
 
