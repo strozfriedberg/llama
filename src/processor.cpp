@@ -164,6 +164,9 @@ void Processor::flush(void) {
     HashAppender.flush();
     SearchHitAppender.flush();
     FileSigAppender.flush();
+    Hashes->clear();
+    SearchHits->clear();
+    FileSigs->clear();
   }
 }
 

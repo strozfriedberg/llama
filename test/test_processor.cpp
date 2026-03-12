@@ -202,6 +202,47 @@ TEST_CASE("testProcessorContextGetSupportedHashAlgsMultipleAlgs") {
   REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_BLAKE3 | SFHASH_MD5));
 }
 
+TEST_CASE("Processor::flush clears batches to prevent duplicates") {
+  // When a Processor is reused from the FileScheduler pool, flush() must
+  // clear its batches. Otherwise each subsequent flush re-writes all
+  // previously accumulated records, producing duplicates.
+
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+
+  auto ruleEngine = std::make_shared<LlamaRuleEngine>();
+  ruleEngine->createTables(conn);
+  DBType<HashRec>::createTable(conn.get(), "hash");
+  DBType<SearchHit>::createTable(conn.get(), "search_hits");
+  DBType<FileSigResult>::createTable(conn.get(), "file_signatures");
+
+  auto procContext = std::make_shared<ProcessorContext>(
+    &db, nullptr, ruleEngine, "", "",
+    FileSignatures::MagicsType{}
+  );
+  Processor proc(procContext);
+
+  // First batch: add 2 hash records and flush
+  proc.hashBatch()->add(HashRec{1, "md5_1", "sha1_1", "sha256_1", "blake3_1", "ssdeep_1"});
+  proc.hashBatch()->add(HashRec{2, "md5_2", "sha1_2", "sha256_2", "blake3_2", "ssdeep_2"});
+  proc.flush();
+
+  // Second batch: add 1 more hash record and flush (same Processor, reused)
+  proc.hashBatch()->add(HashRec{3, "md5_3", "sha1_3", "sha256_3", "blake3_3", "ssdeep_3"});
+  proc.flush();
+
+  // Query the database for total hash row count
+  duckdb_result result;
+  duckdb_query(conn.get(), "SELECT count(*) FROM hash", &result);
+  auto rowCount = duckdb_value_int64(&result, 0, 0);
+  duckdb_destroy_result(&result);
+
+  // Without clear() in flush(), the second flush re-writes all 3 accumulated
+  // rows, giving 5 total (2 from first flush + 3 from second).
+  // Correct behavior: exactly 3 rows.
+  REQUIRE(rowCount == 3);
+}
+
 TEST_CASE("ProcessorContext can be constructed with SigMagics") {
   // Load magics
   std::shared_ptr<FILE> magicsFile(std::fopen("./magics.json", "rb"), std::fclose);

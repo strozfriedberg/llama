@@ -66,6 +66,7 @@ public:
   void setBlake3(const std::string& hash) { HashRecord.Blake3 = hash; }
 
   DBBatch<SearchHit>* searchHits() { return SearchHits.get(); }
+  HashBatch* hashBatch() { return Hashes.get(); }
 
   HashRec hashRecord() { return HashRecord; }
 
