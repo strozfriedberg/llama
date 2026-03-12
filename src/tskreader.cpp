@@ -97,6 +97,7 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
   if (!InodeTracker[meta.addr - fs_file->fs_info->first_inum]) {
     Inode inode;
     TskUtils::convertMetaToInode(meta, *Tsg, inode);
+    inode.FsOffset = CurFsOffset;
 
     // handle the attrs
     Tsk->populateAttrs(fs_file);

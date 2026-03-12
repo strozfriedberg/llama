@@ -390,6 +390,7 @@ void TskUtils::convertNameToDirent(const std::string& path, const TSK_FS_NAME& n
 
 void TskUtils::convertMetaToInode(const TSK_FS_META &meta, TimestampGetter& tsg, Inode &n) {
   n.Addr = meta.addr;
+  n.Filesize = meta.size;
 
   n.Flags = metaFlags(meta.flags);
   n.Type = metaType(meta.type);

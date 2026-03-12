@@ -504,6 +504,7 @@ void initTskFsMeta(TSK_FS_META& meta) {
   meta.addr = 7;
   meta.flags = TSK_FS_META_FLAG_UNALLOC;
   meta.type = TSK_FS_META_TYPE_REG;
+  meta.size = 12345;
 
   meta.uid = 21;
   meta.gid = 1026;
@@ -534,6 +535,7 @@ TEST_CASE("testConvertTskMetaToInode") {
   REQUIRE(7 == n.Addr);
   REQUIRE("Deleted" == n.Flags);
   REQUIRE("File" == n.Type);
+  REQUIRE(12345 == n.Filesize);
 
   REQUIRE(21 == n.Uid);
   REQUIRE(1026 == n.Gid);
