@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <stack>
 #include <string>
 
@@ -18,8 +19,9 @@ public:
   // Hashes the current dirent, adds that hash to the parent, then pops it
   Dirent pop();
 
-  // Makes this dirent current
-  void push(Dirent&& dirent);
+  // Makes this dirent current. Returns the dirent immediately for "." and
+  // ".." entries without modifying the path or stack.
+  std::optional<Dirent> push(Dirent&& dirent);
 
 private:
   struct Element {

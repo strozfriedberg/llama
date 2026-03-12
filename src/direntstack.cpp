@@ -32,7 +32,12 @@ Dirent DirentStack::pop() {
   return rec;
 }
 
-void DirentStack::push(Dirent&& rec) {
+std::optional<Dirent> DirentStack::push(Dirent&& rec) {
+  if (rec.Name == "." || rec.Name == "..") {
+    rec.Path = Path;
+    return rec;
+  }
+
   const size_t len = Path.length();
   if (len > 0) {
     Path.append("/");
@@ -42,4 +47,5 @@ void DirentStack::push(Dirent&& rec) {
   rec.Path = Path;
 
   Stack.push({std::move(rec), len});
+  return std::nullopt;
 }

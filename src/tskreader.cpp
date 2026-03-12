@@ -125,7 +125,10 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
     }
     // std::cerr << par_addr << " -> " << fs_file->meta->addr << '\n';
     TskUtils::convertNameToDirent("", *fs_file->name, dirent);
-    Dirents.push(std::move(dirent));
+    auto immediate = Dirents.push(std::move(dirent));
+    if (immediate) {
+      Input->push(*immediate);
+    }
   }
 
   return true;

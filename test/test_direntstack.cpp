@@ -97,3 +97,40 @@ TEST_CASE("testDirentStackPushPushPopPop") {
   REQUIRE(dirents.empty());
 }
 
+TEST_CASE("DirentStack dot and dotdot do not pollute paths") {
+  RecordHasher rh;
+  DirentStack dirents(rh);
+
+  // Push a normal directory
+  dirents.push(makeDirent("", "Users"));
+  REQUIRE("Users" == dirents.top().Path);
+
+  // Push "." — should not change path or stack depth
+  Dirent dot(makeDirent("", "."));
+  auto dotResult = dirents.push(std::move(dot));
+  REQUIRE(dotResult.has_value());
+  REQUIRE("Users" == dotResult->Path);
+  REQUIRE("." == dotResult->Name);
+  // Stack should still have just "Users"
+  REQUIRE("Users" == dirents.top().Path);
+
+  // Push ".." — should not change path or stack depth
+  Dirent dotdot(makeDirent("", ".."));
+  auto dotdotResult = dirents.push(std::move(dotdot));
+  REQUIRE(dotdotResult.has_value());
+  REQUIRE("Users" == dotdotResult->Path);
+  REQUIRE(".." == dotdotResult->Name);
+  // Stack should still have just "Users"
+  REQUIRE("Users" == dirents.top().Path);
+
+  // Push a normal child — path should be clean
+  dirents.push(makeDirent("", "Default"));
+  REQUIRE("Users/Default" == dirents.top().Path);
+
+  // Pop back and verify paths are not polluted
+  dirents.pop();
+  REQUIRE("Users" == dirents.top().Path);
+  dirents.pop();
+  REQUIRE(dirents.empty());
+}
+
