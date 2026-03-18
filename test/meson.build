@@ -26,6 +26,7 @@ llama_common_sources = [
   '../src/pooloutputhandler.cpp',
   '../src/processor.cpp',
   '../src/progressinfo.cpp',
+  '../src/progressthread.cpp',
   '../src/querybuilder.cpp',
   '../src/readseek_c_api.cpp',
   '../src/readseek_impl.cpp',
@@ -82,7 +83,8 @@ test_sources = [
   'test_tsktimestamps.cpp',
   'test_util.cpp',
   'test_filesignatures.cpp',
-  'test_progressinfo.cpp'
+  'test_progressinfo.cpp',
+  'test_progressthread.cpp'
 ]
 
 # Only build tests if Catch2 is available

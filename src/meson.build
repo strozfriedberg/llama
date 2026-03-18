@@ -26,6 +26,7 @@ llama_sources = [
   'pooloutputhandler.cpp',
   'processor.cpp',
   'progressinfo.cpp',
+  'progressthread.cpp',
   'querybuilder.cpp',
   'readseek_c_api.cpp',
   'readseek_impl.cpp',

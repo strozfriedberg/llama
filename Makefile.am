@@ -32,6 +32,7 @@ src_llama_common = \
 	src/pooloutputhandler.cpp \
 	src/processor.cpp \
 	src/progressinfo.cpp \
+	src/progressthread.cpp \
 	src/querybuilder.cpp \
 	src/readseek_c_api.cpp \
 	src/readseek_impl.cpp \
@@ -106,7 +107,8 @@ test_test_SOURCES = \
 	test/test_tsktimestamps.cpp \
 	test/test_util.cpp \
 	test/test_filesignatures.cpp \
-	test/test_progressinfo.cpp
+	test/test_progressinfo.cpp \
+	test/test_progressthread.cpp
 
 test_test_CPPFLAGS = -I$(srcdir)/src $(AM_CPPFLAGS) $(CATCH2_CPPFLAGS) $(PDFEXTRACTOR_CPPFLAGS)
 test_test_LDADD = $(CATCH2_LIBS) $(LLAMA_LIBS) $(LG_LIBS) $(PDFEXTRACTOR_LIBS) $(TSK_LIBS) $(LIBARCHIVE_LIBS) $(YARA_LIBS) $(HASHER_LIBS) $(BOOST_PROGRAM_OPTIONS_LIB) $(BOOST_ASIO_LIB) $(DUCKDB_LIBS) $(STDCXX_LIB)
