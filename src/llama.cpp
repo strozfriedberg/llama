@@ -16,6 +16,8 @@
 #include "posixreader.h"
 #endif
 #include "processor.h"
+#include "progressinfo.h"
+#include "progressthread.h"
 #include "readseek_impl.h"
 #include "ruleengine.h"
 #include "throw.h"
@@ -24,6 +26,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <unistd.h>
 
 #include <hasher/api.h>
 
@@ -81,14 +84,17 @@ void Llama::search() {
       sigAppender.flush();
     }
 
+    ProgressInfo progressInfo;
+
     LG_ProgramOptions opts{10};
     LgProg.reset(lg_create_program(RuleEngine->buildFsm().getFsm(), &opts), lg_destroy_program);
-    auto procContext = std::make_shared<ProcessorContext>(&Db, LgProg, RuleEngine, Opts->ExclusionHashset, Opts->InclusionHashset, SigMagics, SigProg);
+    auto procContext = std::make_shared<ProcessorContext>(&Db, LgProg, RuleEngine, Opts->ExclusionHashset, Opts->InclusionHashset, SigMagics, SigProg, &progressInfo);
     auto protoProc = std::make_shared<Processor>(procContext);
     auto scheduler = std::make_shared<FileScheduler>(Db, Pool, protoProc, Opts);
     auto inh = std::shared_ptr<InputHandler>(new BatchHandler(scheduler));
 
     Input->setInputHandler(inh);
+    Input->setProgressInfo(&progressInfo);
 
 #ifdef __linux__
     // Set up extent appender for PosixReader
@@ -98,10 +104,17 @@ void Llama::search() {
     }
 #endif
 
+    ProgressThread progressThread(progressInfo, isatty(STDERR_FILENO));
+    progressThread.start();
+
     if (!Input->startReading()) {
       std::cerr << "startReading returned an error" << std::endl;
     }
     Pool.join();
+
+    progressInfo.setDone();
+    progressThread.stop();
+
     std::cerr << "Hashing Time: " << scheduler->getProcessorTime() << "s\n";
 
     RuleEngine->writeRulesToDb(DbConn);
