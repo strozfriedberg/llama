@@ -51,8 +51,8 @@ void ProgressThread::run() {
     uint64_t curInodes = Info.inodesProcessed();
     uint64_t curBytes = Info.bytesProcessed();
 
-    double inodesPerSec = (dt > 0) ? (curInodes - prevInodes) / dt : 0;
-    double bytesPerSec = (dt > 0) ? (curBytes - prevBytes) / dt : 0;
+    double inodesPerSec = (dt > 0 && curInodes >= prevInodes) ? (curInodes - prevInodes) / dt : 0;
+    double bytesPerSec = (dt > 0 && curBytes >= prevBytes) ? (curBytes - prevBytes) / dt : 0;
 
     std::string line = Info.formatLine(elapsed, inodesPerSec, bytesPerSec);
     std::cerr << "\r\033[K" << line << std::flush;
