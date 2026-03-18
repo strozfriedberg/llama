@@ -8,6 +8,7 @@
 #include "recordhasher.h"
 
 class InputHandler;
+class ProgressInfo;
 
 class DirReader: public InputReader {
 public:
@@ -19,6 +20,10 @@ public:
 
   virtual void setOutputHandler(const std::shared_ptr<OutputHandler>& out) override;
 
+  virtual void setProgressInfo(ProgressInfo* progress) override {
+    Progress = progress;
+  }
+
   virtual bool startReading() override;
 
   void handleFile(const std::filesystem::directory_entry& de);
@@ -28,6 +33,8 @@ private:
 
   std::shared_ptr<InputHandler> Input;
   std::shared_ptr<OutputHandler> Output;
+
+  ProgressInfo* Progress = nullptr;
 
   DirConverter Conv;
 

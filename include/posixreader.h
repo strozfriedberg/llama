@@ -20,6 +20,7 @@
 
 class InputHandler;
 class OutputHandler;
+class ProgressInfo;
 
 class PosixReader : public InputReader {
 public:
@@ -28,6 +29,9 @@ public:
 
     virtual void setInputHandler(const std::shared_ptr<InputHandler>& in) override;
     virtual void setOutputHandler(const std::shared_ptr<OutputHandler>& out) override;
+    virtual void setProgressInfo(ProgressInfo* progress) override {
+        Progress = progress;
+    }
     virtual bool startReading() override;
 
     // Set database appender for extent storage
@@ -63,6 +67,8 @@ private:
 
     std::shared_ptr<InputHandler> Input;
     std::shared_ptr<OutputHandler> Output;
+
+    ProgressInfo* Progress = nullptr;
 
     DirConverter Conv;
     RecordHasher RecHasher;

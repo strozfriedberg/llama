@@ -5,12 +5,14 @@
 
 class InputHandler;
 class OutputHandler;
+class ProgressInfo;
 
 class InputReader {
 public:
   virtual ~InputReader() {}
   virtual void setInputHandler(const std::shared_ptr<InputHandler>& in) = 0;
   virtual void setOutputHandler(const std::shared_ptr<OutputHandler>& out) = 0;
+  virtual void setProgressInfo(ProgressInfo*) {}
   virtual bool startReading() = 0;
 
   static std::shared_ptr<InputReader> createTSK(const std::string& imgName);

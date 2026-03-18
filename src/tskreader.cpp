@@ -7,6 +7,7 @@
 #include "inodeandblocktrackerimpl.h"
 #include "inputhandler.h"
 #include "outputhandler.h"
+#include "progressinfo.h"
 #include "readseek_impl.h"
 
 #include "tskconversion.h"
@@ -76,6 +77,9 @@ TSK_FILTER_ENUM TskReader::filterFs(TSK_FS_INFO* fs_info) {
   CurFsBlockSize = fs_info->block_size;
   InodeTracker.clear();
   InodeTracker.resize(fs_info->last_inum - fs_info->first_inum, false);
+  if (Progress) {
+    Progress->setFilesystem(++FsIndex, 0, fs_info->inum_count);
+  }
   return TSK_FILTER_CONT;
 }
 

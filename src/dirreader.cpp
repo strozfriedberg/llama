@@ -5,6 +5,7 @@
 #include "hex.h"
 #include "inputhandler.h"
 #include "outputhandler.h"
+#include "progressinfo.h"
 
 #include <filesystem>
 #include <iostream>
@@ -41,6 +42,9 @@ bool push_it(std::stack<fs::directory_iterator>* dirStack, const std::string& pa
 }
 
 bool DirReader::startReading() {
+  if (Progress) {
+    Progress->setFilesystem(1, 1, 0);
+  }
   bool hadError = false;
   std::stack<fs::directory_iterator> dirStack;
   std::error_code err;

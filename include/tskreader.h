@@ -21,6 +21,7 @@
 class BlockSequence;
 class InputHandler;
 class OutputHandler;
+class ProgressInfo;
 class TimestampGetter;
 
 class TskReader: public InputReader {
@@ -36,6 +37,10 @@ public:
   }
 
   virtual void setOutputHandler(const std::shared_ptr<OutputHandler>&) override {
+  }
+
+  virtual void setProgressInfo(ProgressInfo* progress) override {
+    Progress = progress;
   }
 
   virtual bool startReading() override;
@@ -67,7 +72,10 @@ private:
   RecordHasher RecHasher;
   DirentStack Dirents;
 
+  ProgressInfo* Progress = nullptr;
+
   uint64_t CurFsOffset;
   uint64_t CurFsBlockSize;
+  uint32_t FsIndex = 0;
 };
 

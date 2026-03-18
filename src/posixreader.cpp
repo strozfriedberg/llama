@@ -5,6 +5,7 @@
 
 #include "posixreader.h"
 #include "inputhandler.h"
+#include "progressinfo.h"
 
 #include <linux/fiemap.h>
 #include <linux/fs.h>
@@ -37,6 +38,9 @@ void PosixReader::setExtentAppender(std::shared_ptr<LlamaDBAppender> appender) {
 }
 
 bool PosixReader::startReading() {
+    if (Progress) {
+        Progress->setFilesystem(1, 1, 0);
+    }
     std::cerr << "[PosixReader] Starting filesystem walk of: " << Mountpoint << std::endl;
     std::cerr << "[PosixReader] ExtentAppender is " << (ExtentAppender ? "SET" : "NOT SET") << std::endl;
 
