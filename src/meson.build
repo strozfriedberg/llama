@@ -25,6 +25,7 @@ llama_sources = [
   'pdfreader.cpp',
   'pooloutputhandler.cpp',
   'processor.cpp',
+  'progressinfo.cpp',
   'querybuilder.cpp',
   'readseek_c_api.cpp',
   'readseek_impl.cpp',
