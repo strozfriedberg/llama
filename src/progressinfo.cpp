@@ -12,44 +12,44 @@ ProgressInfo::ProgressInfo()
     InodeCount(0), Done(false) {}
 
 void ProgressInfo::update(uint64_t inodes, uint64_t bytes) {
-  InodesProcessed.fetch_add(inodes, std::memory_order_relaxed);
-  BytesProcessed.fetch_add(bytes, std::memory_order_relaxed);
+  InodesProcessed.fetch_add(inodes);
+  BytesProcessed.fetch_add(bytes);
 }
 
 void ProgressInfo::setFilesystem(uint32_t index, uint32_t total, uint64_t inodeCount) {
-  InodesProcessed.store(0, std::memory_order_relaxed);
-  BytesProcessed.store(0, std::memory_order_relaxed);
-  FilesystemIndex.store(index, std::memory_order_relaxed);
-  FilesystemCount.store(total, std::memory_order_relaxed);
-  InodeCount.store(inodeCount, std::memory_order_relaxed);
+  InodesProcessed.store(0);
+  BytesProcessed.store(0);
+  FilesystemIndex.store(index);
+  FilesystemCount.store(total);
+  InodeCount.store(inodeCount);
 }
 
 void ProgressInfo::setDone() {
-  Done.store(true, std::memory_order_release);
+  Done.store(true);
 }
 
 uint64_t ProgressInfo::inodesProcessed() const {
-  return InodesProcessed.load(std::memory_order_relaxed);
+  return InodesProcessed.load();
 }
 
 uint64_t ProgressInfo::bytesProcessed() const {
-  return BytesProcessed.load(std::memory_order_relaxed);
+  return BytesProcessed.load();
 }
 
 uint32_t ProgressInfo::filesystemIndex() const {
-  return FilesystemIndex.load(std::memory_order_relaxed);
+  return FilesystemIndex.load();
 }
 
 uint32_t ProgressInfo::filesystemCount() const {
-  return FilesystemCount.load(std::memory_order_relaxed);
+  return FilesystemCount.load();
 }
 
 uint64_t ProgressInfo::inodeCount() const {
-  return InodeCount.load(std::memory_order_relaxed);
+  return InodeCount.load();
 }
 
 bool ProgressInfo::isDone() const {
-  return Done.load(std::memory_order_acquire);
+  return Done.load();
 }
 
 namespace {
