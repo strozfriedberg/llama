@@ -27,16 +27,50 @@ namespace fs = std::filesystem;
 
 namespace FileSignatures {
 
-LightGrep::LightGrep() : Prog(nullptr) {}
+Lightgrep::Lightgrep() : Prog(nullptr), Ctx(nullptr) {}
 
-LightGrep::~LightGrep() {
+Lightgrep::Lightgrep(std::shared_ptr<::ProgramHandle> prog)
+  : Prog(std::move(prog)), Ctx(nullptr)
+{
   if (Prog) {
-    lg_destroy_program(Prog);
+    createContext();
+  }
+}
+
+Lightgrep::~Lightgrep() {
+  if (Ctx) {
+    lg_destroy_context(Ctx);
+  }
+}
+
+Lightgrep::Lightgrep(Lightgrep&& other) noexcept
+  : Prog(std::move(other.Prog)), Ctx(other.Ctx)
+{
+  other.Ctx = nullptr;
+}
+
+Lightgrep& Lightgrep::operator=(Lightgrep&& other) noexcept {
+  if (this != &other) {
+    if (Ctx) {
+      lg_destroy_context(Ctx);
+    }
+    Prog = std::move(other.Prog);
+    Ctx = other.Ctx;
+    other.Ctx = nullptr;
+  }
+  return *this;
+}
+
+void Lightgrep::createContext() {
+  LG_ContextOptions ctxOpts = {0, 0};
+  Ctx = lg_create_context(Prog.get(), &ctxOpts);
+  if (!Ctx) {
+    throw std::runtime_error("lg_create_context() failed");
   }
 }
 
 // return max_read
-expected<size_t> LightGrep::setup(MagicsType const &m) {
+expected<size_t> Lightgrep::setup(MagicsType const &m) {
   using namespace boost;
 
   size_t max_read = 0;
@@ -83,9 +117,12 @@ expected<size_t> LightGrep::setup(MagicsType const &m) {
     }
 
     LG_ProgramOptions opts = {0};
-    if (!(Prog = lg_create_program(fsm, &opts))) {
+    LG_HPROGRAM rawProg = lg_create_program(fsm, &opts);
+    if (!rawProg) {
       return makeUnexpected("lg_create_program() failed");
     }
+    Prog = std::shared_ptr<ProgramHandle>(rawProg, lg_destroy_program);
+    createContext();
   }
   catch (std::exception const &ex) {
     return makeUnexpected(ex.what());
@@ -94,21 +131,65 @@ expected<size_t> LightGrep::setup(MagicsType const &m) {
   return max_read;
 }
 
-expected<bool> LightGrep::search(const uint8_t *start, const uint8_t *end,
+expected<bool> Lightgrep::search(const uint8_t *start, const uint8_t *end,
                                  void *user_data,
-                                 LG_HITCALLBACK_FN callback_fn) const {
+                                 LG_HITCALLBACK_FN callback_fn) {
   try {
-    LG_ContextOptions ctxOpts = {0, 0};
-    LG_HCONTEXT searcher = lg_create_context(Prog, &ctxOpts);
-    lg_reset_context(searcher);
-    lg_starts_with(searcher, (const char *)start, (const char *)end, 0,
+    lg_reset_context(Ctx);
+    lg_starts_with(Ctx, (const char *)start, (const char *)end, 0,
                    user_data, callback_fn);
-    lg_destroy_context(searcher);
   }
   catch (std::exception const &ex) {
     return makeUnexpected(ex.what());
   }
   return true;
+}
+
+expected<bool> Lightgrep::writeProgram(const std::shared_ptr<::ProgramHandle>& prog, const std::string& path) {
+  try {
+    unsigned int size = lg_program_size(prog.get());
+    std::vector<char> buffer(size);
+    lg_write_program(prog.get(), buffer.data());
+
+    std::ofstream out(path, std::ios::binary);
+    if (!out) {
+      return makeUnexpected("Failed to open file for writing: " + path);
+    }
+    out.write(buffer.data(), size);
+    if (!out) {
+      return makeUnexpected("Failed to write program to: " + path);
+    }
+  }
+  catch (std::exception const& ex) {
+    return makeUnexpected(ex.what());
+  }
+  return true;
+}
+
+expected<std::shared_ptr<::ProgramHandle>> Lightgrep::readProgram(const std::string& path) {
+  try {
+    std::ifstream in(path, std::ios::binary | std::ios::ate);
+    if (!in) {
+      return makeUnexpected("Failed to open file for reading: " + path);
+    }
+
+    auto size = in.tellg();
+    in.seekg(0);
+    std::vector<char> buffer(size);
+    in.read(buffer.data(), size);
+    if (!in) {
+      return makeUnexpected("Failed to read program from: " + path);
+    }
+
+    LG_HPROGRAM rawProg = lg_read_program(buffer.data(), static_cast<int>(size));
+    if (!rawProg) {
+      return makeUnexpected("lg_read_program() failed");
+    }
+    return std::shared_ptr<ProgramHandle>(rawProg, lg_destroy_program);
+  }
+  catch (std::exception const& ex) {
+    return makeUnexpected(ex.what());
+  }
 }
 
 size_t getPatternLength(String const &pattern, bool only_significant) {
@@ -255,7 +336,7 @@ void FileSigAnalyzer::lgCallbackfn(void *userData,
 
 expected<bool> FileSigAnalyzer::lgSearch(const uint8_t *start,
                                          const uint8_t *end,
-                                         std::vector<MagicPtr> &results) const {
+                                         std::vector<MagicPtr> &results) {
   std::vector<size_t> hit_indices;
   lg_callback_context ctx{this, &hit_indices};
 
@@ -273,32 +354,54 @@ expected<bool> FileSigAnalyzer::lgSearch(const uint8_t *start,
   return !results.empty();
 }
 
-FileSigAnalyzer::FileSigAnalyzer(const MagicsType& magics) {
-  auto sorted_magics = magics;
-
-  // resort magics by pattern size in descending order ('bigger' patterns first)
-  std::sort(begin(sorted_magics), end(sorted_magics),
+namespace {
+MagicsType sortMagics(const MagicsType& magics) {
+  auto sorted = magics;
+  std::sort(begin(sorted), end(sorted),
             [](MagicPtr const &a, MagicPtr const &b) -> bool {
               return a->getPatternLength(true) > b->getPatternLength(true);
             });
+  return sorted;
+}
 
-  this->Magics = std::move(sorted_magics);
+size_t maxReadSize(const MagicsType& magics) {
+  size_t max_read = 0;
+  for (const auto& m : magics) {
+    auto len = m->getPatternLength(false);
+    if (len > max_read) {
+      max_read = len;
+    }
+  }
+  return max_read;
+}
+} // namespace
 
-  // Skip Lightgrep setup if there are no signatures
-  if (this->Magics.empty()) {
+FileSigAnalyzer::FileSigAnalyzer(const MagicsType& magics)
+  : Magics(sortMagics(magics))
+{
+  if (Magics.empty()) {
     return;
   }
 
-  auto r = Lg.setup(this->Magics);
+  auto r = Lg.setup(Magics);
   if (r.has_failure()) {
-    throw std::runtime_error("LightGrep::setup failed: " + r.error());
+    throw std::runtime_error("Lightgrep::setup failed: " + r.error());
   }
 
-  auto max_read = r.value();
-  ReadBuf.resize(max_read);
+  ReadBuf.resize(r.value());
 }
 
-expected<bool> FileSigAnalyzer::getSignatures(ReadSeek& rs, std::vector<MagicPtr>& results) const {
+FileSigAnalyzer::FileSigAnalyzer(std::shared_ptr<::ProgramHandle> sharedProg, const MagicsType& magics)
+  : Magics(sortMagics(magics)), Lg(std::move(sharedProg))
+{
+  if (Magics.empty()) {
+    return;
+  }
+
+  ReadBuf.resize(maxReadSize(Magics));
+}
+
+expected<bool> FileSigAnalyzer::getSignatures(ReadSeek& rs, std::vector<MagicPtr>& results) {
   // If no signatures loaded, return early
   if (Magics.empty()) {
     return false;

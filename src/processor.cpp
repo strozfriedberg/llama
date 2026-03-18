@@ -41,8 +41,9 @@ ProcessorContext::ProcessorContext(LlamaDB* db,
                                    const std::shared_ptr<LlamaRuleEngine> ruleEngine,
                                    const std::string& exclusionHsetPath,
                                    const std::string& inclusionHsetPath,
-                                   const FileSignatures::MagicsType& sigMagics) :
-  Db(db), Prog(prog), RuleEngine(ruleEngine), SigMagics(sigMagics) {
+                                   const FileSignatures::MagicsType& sigMagics,
+                                   const std::shared_ptr<ProgramHandle>& sigProg) :
+  Db(db), Prog(prog), RuleEngine(ruleEngine), SigMagics(sigMagics), SigProg(sigProg) {
   if (!exclusionHsetPath.empty()) {
     ExclusionHashset.reset(new LlamaHashset(exclusionHsetPath.c_str()));
   }
@@ -81,7 +82,8 @@ Processor::Processor(std::shared_ptr<ProcessorContext> procContext):
   Hashes(std::make_unique<HashBatch>()),
   SearchHits(std::make_unique<DBBatch<SearchHit>>()),
   FileSigs(std::make_unique<FileSigBatch>()),
-  SigAnalyzer(Context->SigMagics),
+  SigAnalyzer(Context->SigProg ? FileSignatures::FileSigAnalyzer(Context->SigProg, Context->SigMagics)
+                               : FileSignatures::FileSigAnalyzer(Context->SigMagics)),
   ProcTimeTotal(0)
 {
   Buf.reserve(1 << 20);

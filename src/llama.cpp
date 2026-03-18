@@ -83,7 +83,7 @@ void Llama::search() {
 
     LG_ProgramOptions opts{10};
     LgProg.reset(lg_create_program(RuleEngine->buildFsm().getFsm(), &opts), lg_destroy_program);
-    auto procContext = std::make_shared<ProcessorContext>(&Db, LgProg, RuleEngine, Opts->ExclusionHashset, Opts->InclusionHashset, SigMagics);
+    auto procContext = std::make_shared<ProcessorContext>(&Db, LgProg, RuleEngine, Opts->ExclusionHashset, Opts->InclusionHashset, SigMagics, SigProg);
     auto protoProc = std::make_shared<Processor>(procContext);
     auto scheduler = std::make_shared<FileScheduler>(Db, Pool, protoProc, Opts);
     auto inh = std::shared_ptr<InputHandler>(new BatchHandler(scheduler));
@@ -220,6 +220,46 @@ bool Llama::loadSignatures() {
     return false;
   }
   SigMagics = std::move(result.value());
+
+  if (SigMagics.empty()) {
+    return true;
+  }
+
+  // Try to load cached compiled program if it's newer than the signatures file
+  namespace fs = std::filesystem;
+  auto homeDir = std::getenv("HOME");
+  std::string cachePath;
+  if (homeDir) {
+    cachePath = std::string(homeDir) + "/.llama/cache/magics.lgp";
+  }
+
+  if (!cachePath.empty() && fs::exists(cachePath)) {
+    auto sigsMtime = fs::last_write_time(Opts->SignaturesPath);
+    auto cacheMtime = fs::last_write_time(cachePath);
+    if (cacheMtime > sigsMtime) {
+      auto cached = FileSignatures::Lightgrep::readProgram(cachePath);
+      if (cached.has_value()) {
+        SigProg = std::move(cached.value());
+        return true;
+      }
+      // Cache read failed — fall through to recompile
+    }
+  }
+
+  // Compile the Lightgrep program once for sharing across Processors
+  FileSignatures::FileSigAnalyzer compiler(SigMagics);
+  SigProg = compiler.getProgram();
+
+  // Write cache (failure is non-fatal)
+  if (!cachePath.empty() && SigProg) {
+    std::error_code ec;
+    fs::create_directories(std::string(homeDir) + "/.llama/cache", ec);
+    auto writeResult = FileSignatures::Lightgrep::writeProgram(SigProg, cachePath);
+    if (writeResult.has_error()) {
+      std::cerr << "Warning: failed to cache compiled signatures: " << writeResult.error() << std::endl;
+    }
+  }
+
   return true;
 }
 

@@ -28,7 +28,8 @@ struct ProcessorContext {
     const std::shared_ptr<LlamaRuleEngine> ruleEngine,
     const std::string& exclusionHsetPath,
     const std::string& inclusionHsetPath,
-    const FileSignatures::MagicsType& sigMagics
+    const FileSignatures::MagicsType& sigMagics,
+    const std::shared_ptr<ProgramHandle>& sigProg = nullptr
   );
 
   // Returns hash flag to be used when initializing a SFHASH_Hasher, based
@@ -41,6 +42,7 @@ struct ProcessorContext {
   std::unique_ptr<LlamaHashset> ExclusionHashset;
   std::unique_ptr<LlamaHashset> InclusionHashset;
   FileSignatures::MagicsType SigMagics;
+  std::shared_ptr<ProgramHandle> SigProg;
 };
 
 class Processor {

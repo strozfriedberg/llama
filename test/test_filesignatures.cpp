@@ -78,6 +78,99 @@ TEST_CASE("readMagics skips entries without patterns") {
   REQUIRE(magics[0]->Name == "With Pattern");
 }
 
+TEST_CASE("FileSigAnalyzer detects signatures with shared program") {
+  const char* testMagics = R"([
+    {
+      "name": "Test PDF",
+      "description": "PDF test signature",
+      "id": "test-pdf-001",
+      "pattern": "%PDF",
+      "encoding": "ISO-8859-1"
+    }
+  ])";
+
+  std::string magicsStr(testMagics);
+  ReadSeekBuf magicsRs(magicsStr);
+  auto magicsResult = FileSignatures::FileSigAnalyzer::readMagics(magicsRs);
+  REQUIRE(magicsResult.has_value());
+  auto& magics = magicsResult.value();
+
+  // Compile program once via the original constructor
+  FileSignatures::FileSigAnalyzer original(magics);
+  auto sharedProg = original.getProgram();
+  REQUIRE(sharedProg);
+
+  // Create a second analyzer from the shared program (no recompilation)
+  FileSignatures::FileSigAnalyzer fromShared(sharedProg, magics);
+
+  // Both should detect PDF
+  std::vector<uint8_t> pdfBytes = {0x25, 0x50, 0x44, 0x46}; // %PDF
+  {
+    ReadSeekBuf rs(pdfBytes);
+    std::vector<FileSignatures::MagicPtr> results;
+    auto ok = fromShared.getSignatures(rs, results);
+    REQUIRE(ok.has_value());
+    REQUIRE(results.size() == 1);
+    REQUIRE(results[0]->Name == "Test PDF");
+  }
+
+  // Unrecognized data should return empty
+  {
+    std::vector<uint8_t> garbage = {0x00, 0x01, 0x02, 0x03};
+    ReadSeekBuf rs(garbage);
+    std::vector<FileSignatures::MagicPtr> results;
+    auto ok = fromShared.getSignatures(rs, results);
+    REQUIRE(ok.has_value());
+    REQUIRE(results.empty());
+  }
+}
+
+TEST_CASE("Lightgrep program round-trips through serialization") {
+  const char* testMagics = R"([
+    {
+      "name": "Test PDF",
+      "description": "PDF test signature",
+      "id": "test-pdf-001",
+      "pattern": "%PDF",
+      "encoding": "ISO-8859-1"
+    }
+  ])";
+
+  std::string magicsStr(testMagics);
+  ReadSeekBuf magicsRs(magicsStr);
+  auto magicsResult = FileSignatures::FileSigAnalyzer::readMagics(magicsRs);
+  REQUIRE(magicsResult.has_value());
+  auto& magics = magicsResult.value();
+
+  // Compile program
+  FileSignatures::FileSigAnalyzer original(magics);
+  auto prog = original.getProgram();
+  REQUIRE(prog);
+
+  // Write to temp file
+  std::string tmpPath = "/tmp/test_magics_roundtrip.lgp";
+  auto writeResult = FileSignatures::Lightgrep::writeProgram(prog, tmpPath);
+  REQUIRE(writeResult.has_value());
+
+  // Read back from file
+  auto readResult = FileSignatures::Lightgrep::readProgram(tmpPath);
+  REQUIRE(readResult.has_value());
+  auto deserializedProg = readResult.value();
+
+  // Construct analyzer from deserialized program and verify it detects PDF
+  FileSignatures::FileSigAnalyzer fromDeserialized(deserializedProg, magics);
+  std::vector<uint8_t> pdfBytes = {0x25, 0x50, 0x44, 0x46}; // %PDF
+  ReadSeekBuf rs(pdfBytes);
+  std::vector<FileSignatures::MagicPtr> results;
+  auto ok = fromDeserialized.getSignatures(rs, results);
+  REQUIRE(ok.has_value());
+  REQUIRE(results.size() == 1);
+  REQUIRE(results[0]->Name == "Test PDF");
+
+  // Clean up
+  std::remove(tmpPath.c_str());
+}
+
 TEST_CASE("FileSigAnalyzer detects signatures via ReadSeek") {
   const char* testMagics = R"([
     {

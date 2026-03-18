@@ -251,7 +251,11 @@ TEST_CASE("ProcessorContext can be constructed with SigMagics") {
   auto magicsResult = FileSignatures::FileSigAnalyzer::readMagics(magicsRs);
   REQUIRE(magicsResult.has_value());
 
-  // Create ProcessorContext with SigMagics
+  // Compile the program once
+  FileSignatures::FileSigAnalyzer compiler(magicsResult.value());
+  auto sigProg = compiler.getProgram();
+
+  // Create ProcessorContext with shared program
   LlamaDB db;
   LlamaDBConnection conn(db);
   DBType<HashRec>::createTable(conn.get(), "hash");
@@ -261,15 +265,15 @@ TEST_CASE("ProcessorContext can be constructed with SigMagics") {
 
   auto ruleEngine = std::make_shared<LlamaRuleEngine>();
   auto procContext = std::make_shared<ProcessorContext>(
-    &db, nullptr, ruleEngine, "", "", magicsResult.value()
+    &db, nullptr, ruleEngine, "", "", magicsResult.value(), sigProg
   );
 
-  // Verify SigMagics were stored
+  // Verify SigMagics and SigProg were stored
   REQUIRE(procContext->SigMagics.size() > 0);
   REQUIRE(procContext->SigMagics.size() == magicsResult.value().size());
+  REQUIRE(procContext->SigProg);
 
-  // Create a Processor from the context
+  // Create a Processor from the context — should use shared program, not recompile
   Processor proc(procContext);
-  // If we got here without crashing, construction succeeded
   REQUIRE(true);
 }

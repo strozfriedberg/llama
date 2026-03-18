@@ -91,7 +91,7 @@ if catch2_dep.found()
     llama_common_sources + test_sources,
     include_directories: [inc, include_directories('../src')],
     dependencies: llama_deps + [catch2_dep],
-    build_by_default: false
+    build_by_default: true
   )
 
   # Benchmarks (always includes parser and timestamp, adds YARA if available)
