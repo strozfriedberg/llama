@@ -1,4 +1,5 @@
 #include "processor.h"
+#include "progressinfo.h"
 
 #include <hasher/api.h>
 
@@ -42,8 +43,9 @@ ProcessorContext::ProcessorContext(LlamaDB* db,
                                    const std::string& exclusionHsetPath,
                                    const std::string& inclusionHsetPath,
                                    const FileSignatures::MagicsType& sigMagics,
-                                   const std::shared_ptr<ProgramHandle>& sigProg) :
-  Db(db), Prog(prog), RuleEngine(ruleEngine), SigMagics(sigMagics), SigProg(sigProg) {
+                                   const std::shared_ptr<ProgramHandle>& sigProg,
+                                   ProgressInfo* progress) :
+  Db(db), Prog(prog), RuleEngine(ruleEngine), SigMagics(sigMagics), SigProg(sigProg), Progress(progress) {
   if (!exclusionHsetPath.empty()) {
     ExclusionHashset.reset(new LlamaHashset(exclusionHsetPath.c_str()));
   }
@@ -149,13 +151,20 @@ void Processor::process(Entry& entry) {
 }
 
 void Processor::processBatch(const std::shared_ptr<std::vector<std::unique_ptr<Entry>>>& entries) {
+  uint64_t batchInodes = 0;
+  uint64_t batchBytes = 0;
   for (auto& entry : *entries) {
     if (entry->getStream().open()) {
+      batchBytes += entry->getStream().size();
       process(*entry);
       entry->getStream().close();
+      ++batchInodes;
     }
   }
   flush();
+  if (Context->Progress) {
+    Context->Progress->update(batchInodes, batchBytes);
+  }
 }
 
 void Processor::flush(void) {

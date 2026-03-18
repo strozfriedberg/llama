@@ -17,6 +17,7 @@ struct ProgramHandle;
 struct ContextHandle;
 struct FileRecord;
 class OutputHandler;
+class ProgressInfo;
 class ReadSeek;
 class Entry;
 
@@ -29,7 +30,8 @@ struct ProcessorContext {
     const std::string& exclusionHsetPath,
     const std::string& inclusionHsetPath,
     const FileSignatures::MagicsType& sigMagics,
-    const std::shared_ptr<ProgramHandle>& sigProg = nullptr
+    const std::shared_ptr<ProgramHandle>& sigProg = nullptr,
+    ProgressInfo* progress = nullptr
   );
 
   // Returns hash flag to be used when initializing a SFHASH_Hasher, based
@@ -43,6 +45,7 @@ struct ProcessorContext {
   std::unique_ptr<LlamaHashset> InclusionHashset;
   FileSignatures::MagicsType SigMagics;
   std::shared_ptr<ProgramHandle> SigProg;
+  ProgressInfo* Progress;
 };
 
 class Processor {
