@@ -90,7 +90,7 @@ private:
     DBType<HashRec>::createTable(DbConn.get(), "hash");
     DBType<FileSigResult>::createTable(DbConn.get(), "file_signatures");
 
-    auto procContext = std::make_shared<ProcessorContext>(&Db, pHandle, RuleEngine, "", "", FileSignatures::MagicsType{});
+    auto procContext = std::make_shared<ProcessorContext>(&Db, pHandle, RuleEngine, "", "", MagicsType{});
     return Processor(procContext);
   }
   std::shared_ptr<LlamaRuleEngine> RuleEngine;
@@ -165,7 +165,7 @@ TEST_CASE("testProcessorContextGetSupportedHashAlgsDiffAlgs") {
     ruleEngine,
     "test/hsets/md5.hset",
     "test/hsets/sha1.hset",
-    FileSignatures::MagicsType{}
+    MagicsType{}
   };
 
   REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_BLAKE3 | SFHASH_MD5 | SFHASH_SHA_1));
@@ -179,7 +179,7 @@ TEST_CASE("testProcessorContextGetSupportedHashAlgsSameAlgs") {
     ruleEngine,
     "test/hsets/md5.hset",
     "test/hsets/md5.hset",
-    FileSignatures::MagicsType{}
+    MagicsType{}
   };
 
   REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_BLAKE3 | SFHASH_MD5));
@@ -196,7 +196,7 @@ TEST_CASE("testProcessorContextGetSupportedHashAlgsMultipleAlgs") {
     ruleEngine,
     "test/hsets/md5.hset",
     "test/hsets/sha1_md5.hset",
-    FileSignatures::MagicsType{}
+    MagicsType{}
   };
 
   REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_BLAKE3 | SFHASH_MD5));
@@ -218,7 +218,7 @@ TEST_CASE("Processor::flush clears batches to prevent duplicates") {
 
   auto procContext = std::make_shared<ProcessorContext>(
     &db, nullptr, ruleEngine, "", "",
-    FileSignatures::MagicsType{}
+    MagicsType{}
   );
   Processor proc(procContext);
 
@@ -248,12 +248,13 @@ TEST_CASE("ProcessorContext can be constructed with SigMagics") {
   std::shared_ptr<FILE> magicsFile(std::fopen("./magics.json", "rb"), std::fclose);
   REQUIRE(magicsFile);
   ReadSeekFile magicsRs(magicsFile);
-  auto magicsResult = FileSignatures::FileSigAnalyzer::readMagics(magicsRs);
+  auto magicsResult = FileSigAnalyzer::readMagics(magicsRs);
   REQUIRE(magicsResult.has_value());
 
   // Compile the program once
-  FileSignatures::FileSigAnalyzer compiler(magicsResult.value());
-  auto sigProg = compiler.getProgram();
+  auto compileResult = Lightgrep::compile(magicsResult.value());
+  REQUIRE(compileResult.has_value());
+  auto sigProg = compileResult.value();
 
   // Create ProcessorContext with shared program
   LlamaDB db;

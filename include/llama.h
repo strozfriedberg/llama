@@ -46,7 +46,7 @@ private:
   std::shared_ptr<ProgramHandle> LgProg;
   std::shared_ptr<InputReader> Input;
   std::shared_ptr<LlamaRuleEngine> RuleEngine;
-  FileSignatures::MagicsType SigMagics;
+  MagicsType SigMagics;
   std::shared_ptr<ProgramHandle> SigProg;
   // LlamaRuleEngine RuleEngine;
   LlamaDB Db;

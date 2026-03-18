@@ -29,7 +29,7 @@ struct ProcessorContext {
     const std::shared_ptr<LlamaRuleEngine> ruleEngine,
     const std::string& exclusionHsetPath,
     const std::string& inclusionHsetPath,
-    const FileSignatures::MagicsType& sigMagics,
+    const MagicsType& sigMagics,
     const std::shared_ptr<ProgramHandle>& sigProg = nullptr,
     ProgressInfo* progress = nullptr
   );
@@ -43,7 +43,7 @@ struct ProcessorContext {
   const std::shared_ptr<LlamaRuleEngine> RuleEngine;
   std::unique_ptr<LlamaHashset> ExclusionHashset;
   std::unique_ptr<LlamaHashset> InclusionHashset;
-  FileSignatures::MagicsType SigMagics;
+  MagicsType SigMagics;
   std::shared_ptr<ProgramHandle> SigProg;
   ProgressInfo* Progress;
 };
@@ -94,7 +94,7 @@ private:
   std::unique_ptr<DBBatch<SearchHit>> SearchHits;
   std::unique_ptr<FileSigBatch> FileSigs;
 
-  FileSignatures::FileSigAnalyzer SigAnalyzer;
+  FileSigAnalyzer SigAnalyzer;
 
   double ProcTimeTotal;
 };

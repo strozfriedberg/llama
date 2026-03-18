@@ -11,8 +11,6 @@
 
 #include "readseek.h"
 
-namespace FileSignatures {
-
 template <typename T>
 using expected = boost::outcome_v2::result<T, std::string>;
 
@@ -54,8 +52,7 @@ class Lightgrep {
   void createContext();
 
 public:
-  Lightgrep();
-  explicit Lightgrep(std::shared_ptr<::ProgramHandle> prog);
+  explicit Lightgrep(std::shared_ptr<::ProgramHandle> prog = nullptr);
   ~Lightgrep();
 
   Lightgrep(const Lightgrep&) = delete;
@@ -63,12 +60,12 @@ public:
   Lightgrep(Lightgrep&& other) noexcept;
   Lightgrep& operator=(Lightgrep&& other) noexcept;
 
-  expected<size_t> setup(MagicsType const &m);
   expected<bool> search(const uint8_t *start, const uint8_t *end, void *user_data, LG_HITCALLBACK_FN callback_fn);
 
   std::shared_ptr<::ProgramHandle> getProgram() const { return Prog; }
   LG_HPROGRAM get_lg_prog() const { return Prog.get(); }
 
+  static expected<std::shared_ptr<::ProgramHandle>> compile(const MagicsType& magics);
   static expected<bool> writeProgram(const std::shared_ptr<::ProgramHandle>& prog, const std::string& path);
   static expected<std::shared_ptr<::ProgramHandle>> readProgram(const std::string& path);
 };
@@ -86,15 +83,9 @@ class FileSigAnalyzer {
   static void lgCallbackfn(void* userData, const LG_SearchHit* const hit);
 
 public:
-  // Takes pre-parsed signatures. Compiles Lightgrep program and allocates read buffer.
-  FileSigAnalyzer(const MagicsType& magics);
-
-  // Takes a pre-compiled program and pre-parsed signatures. Skips compilation.
-  FileSigAnalyzer(std::shared_ptr<::ProgramHandle> sharedProg, const MagicsType& magics);
+  FileSigAnalyzer(std::shared_ptr<::ProgramHandle> prog, const MagicsType& magics);
 
   static expected<MagicsType> readMagics(ReadSeek& rs);
-
-  std::shared_ptr<::ProgramHandle> getProgram() const { return Lg.getProgram(); }
 
   // Detect signatures in a ReadSeek stream. Populates results with all matches.
   expected<bool> getSignatures(ReadSeek& rs, std::vector<MagicPtr>& results);
@@ -104,4 +95,3 @@ inline bool startsWith(const std::string &s, const std::string &prefix) {
   return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
 }
 
-} // namespace FileSignatures

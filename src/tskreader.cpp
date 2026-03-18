@@ -76,7 +76,7 @@ TSK_FILTER_ENUM TskReader::filterFs(TSK_FS_INFO* fs_info) {
   CurFsOffset = fs_info->offset;
   CurFsBlockSize = fs_info->block_size;
   InodeTracker.clear();
-  InodeTracker.resize(fs_info->last_inum - fs_info->first_inum, false);
+  InodeTracker.resize(fs_info->last_inum - fs_info->first_inum + 1, false);
   if (Progress) {
     Progress->setFilesystem(++FsIndex, 0, fs_info->inum_count);
   }
@@ -98,7 +98,7 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
     return false;
   }
   const TSK_FS_META& meta = *fs_file->meta;
-  if (!InodeTracker[meta.addr - fs_file->fs_info->first_inum]) {
+  if (!InodeTracker.at(meta.addr - fs_file->fs_info->first_inum)) {
     Inode inode;
     TskUtils::convertMetaToInode(meta, *Tsg, inode);
     inode.FsOffset = CurFsOffset;
@@ -114,7 +114,7 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
 
     Input->push(inode);
     Input->push(std::make_unique<Entry>(meta.addr, makeReadSeek(fs_file)));
-    InodeTracker[meta.addr - fs_file->fs_info->first_inum] = true;
+    InodeTracker.at(meta.addr - fs_file->fs_info->first_inum) = true;
   }
   // handle the name
   if (fs_file->name) {

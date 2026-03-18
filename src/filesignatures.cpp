@@ -16,7 +16,6 @@
   #pragma GCC diagnostic ignored "-Wdeprecated-builtins"
 #endif
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 #pragma GCC diagnostic pop
 
 #include "filesignatures.h"
@@ -24,10 +23,6 @@
 #include "util.h"
 
 namespace fs = std::filesystem;
-
-namespace FileSignatures {
-
-Lightgrep::Lightgrep() : Prog(nullptr), Ctx(nullptr) {}
 
 Lightgrep::Lightgrep(std::shared_ptr<::ProgramHandle> prog)
   : Prog(std::move(prog)), Ctx(nullptr)
@@ -69,11 +64,9 @@ void Lightgrep::createContext() {
   }
 }
 
-// return max_read
-expected<size_t> Lightgrep::setup(MagicsType const &m) {
+expected<std::shared_ptr<::ProgramHandle>> Lightgrep::compile(const MagicsType& m) {
   using namespace boost;
 
-  size_t max_read = 0;
   try {
     LG_Error *err = 0;
     LG_HFSM fsm = lg_create_fsm(0, 0);
@@ -100,11 +93,6 @@ expected<size_t> Lightgrep::setup(MagicsType const &m) {
         }
       }
 
-      auto pattern_len = p->getPatternLength(false);
-      if (pattern_len > max_read) {
-        max_read = pattern_len;
-      }
-
       for (auto const &encoding : p->Encodings) {
         if (!lg_add_pattern(fsm, pattern, encoding.c_str(), i, &err)) {
           if (err) {
@@ -121,14 +109,11 @@ expected<size_t> Lightgrep::setup(MagicsType const &m) {
     if (!rawProg) {
       return makeUnexpected("lg_create_program() failed");
     }
-    Prog = std::shared_ptr<ProgramHandle>(rawProg, lg_destroy_program);
-    createContext();
+    return std::shared_ptr<ProgramHandle>(rawProg, lg_destroy_program);
   }
   catch (std::exception const &ex) {
     return makeUnexpected(ex.what());
   }
-
-  return max_read;
 }
 
 expected<bool> Lightgrep::search(const uint8_t *start, const uint8_t *end,
@@ -239,7 +224,7 @@ size_t getPatternLength(String const &pattern, bool only_significant) {
 }
 
 size_t Magic::getPatternLength(bool only_significant) const {
-  return FileSignatures::getPatternLength(Pattern, only_significant);
+  return ::getPatternLength(Pattern, only_significant);
 }
 
 namespace {
@@ -376,23 +361,8 @@ size_t maxReadSize(const MagicsType& magics) {
 }
 } // namespace
 
-FileSigAnalyzer::FileSigAnalyzer(const MagicsType& magics)
-  : Magics(sortMagics(magics))
-{
-  if (Magics.empty()) {
-    return;
-  }
-
-  auto r = Lg.setup(Magics);
-  if (r.has_failure()) {
-    throw std::runtime_error("Lightgrep::setup failed: " + r.error());
-  }
-
-  ReadBuf.resize(r.value());
-}
-
-FileSigAnalyzer::FileSigAnalyzer(std::shared_ptr<::ProgramHandle> sharedProg, const MagicsType& magics)
-  : Magics(sortMagics(magics)), Lg(std::move(sharedProg))
+FileSigAnalyzer::FileSigAnalyzer(std::shared_ptr<::ProgramHandle> prog, const MagicsType& magics)
+  : Magics(sortMagics(magics)), Lg(std::move(prog))
 {
   if (Magics.empty()) {
     return;
@@ -425,4 +395,3 @@ expected<bool> FileSigAnalyzer::getSignatures(ReadSeek& rs, std::vector<MagicPtr
   return lgSearch(ReadBuf.data(), ReadBuf.data() + bytes_read, results);
 }
 
-} // namespace FileSignatures

@@ -42,7 +42,7 @@ ProcessorContext::ProcessorContext(LlamaDB* db,
                                    const std::shared_ptr<LlamaRuleEngine> ruleEngine,
                                    const std::string& exclusionHsetPath,
                                    const std::string& inclusionHsetPath,
-                                   const FileSignatures::MagicsType& sigMagics,
+                                   const MagicsType& sigMagics,
                                    const std::shared_ptr<ProgramHandle>& sigProg,
                                    ProgressInfo* progress) :
   Db(db), Prog(prog), RuleEngine(ruleEngine), SigMagics(sigMagics), SigProg(sigProg), Progress(progress) {
@@ -84,8 +84,7 @@ Processor::Processor(std::shared_ptr<ProcessorContext> procContext):
   Hashes(std::make_unique<HashBatch>()),
   SearchHits(std::make_unique<DBBatch<SearchHit>>()),
   FileSigs(std::make_unique<FileSigBatch>()),
-  SigAnalyzer(Context->SigProg ? FileSignatures::FileSigAnalyzer(Context->SigProg, Context->SigMagics)
-                               : FileSignatures::FileSigAnalyzer(Context->SigMagics)),
+  SigAnalyzer(Context->SigProg, Context->SigMagics),
   ProcTimeTotal(0)
 {
   Buf.reserve(1 << 20);
@@ -116,7 +115,7 @@ void Processor::process(Entry& entry) {
 
   // Detect file signatures
   {
-    std::vector<FileSignatures::MagicPtr> sigResults;
+    std::vector<MagicPtr> sigResults;
     entry.getStream().seek(0);
     auto result = SigAnalyzer.getSignatures(entry.getStream(), sigResults);
     if (result.has_value()) {

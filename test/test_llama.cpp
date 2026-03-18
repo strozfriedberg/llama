@@ -25,7 +25,7 @@ TEST_CASE("Signature reference table is populated from magics") {
   std::shared_ptr<FILE> magicsFile(std::fopen("./magics.json", "rb"), std::fclose);
   REQUIRE(magicsFile);
   ReadSeekFile rs(magicsFile);
-  auto magicsResult = FileSignatures::FileSigAnalyzer::readMagics(rs);
+  auto magicsResult = FileSigAnalyzer::readMagics(rs);
   REQUIRE(magicsResult.has_value());
   auto& magics = magicsResult.value();
 
