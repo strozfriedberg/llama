@@ -4,16 +4,9 @@
 #include "progressthread.h"
 #include "progressinfo.h"
 
+#include <algorithm>
 #include <chrono>
 #include <iostream>
-
-#ifdef _WIN32
-#include <io.h>
-#define isatty _isatty
-#define STDERR_FILENO 2
-#else
-#include <unistd.h>
-#endif
 
 ProgressThread::ProgressThread(ProgressInfo& info, bool isTty)
   : Info(info), IsTty(isTty) {}
@@ -26,6 +19,7 @@ void ProgressThread::start() {
 }
 
 void ProgressThread::stop() {
+  Info.setDone();
   if (Thread.joinable()) {
     Thread.join();
     // Clear the progress line
@@ -51,10 +45,11 @@ void ProgressThread::run() {
     uint64_t curInodes = Info.inodesProcessed();
     uint64_t curBytes = Info.bytesProcessed();
 
-    double inodesPerSec = (dt > 0 && curInodes >= prevInodes) ? (curInodes - prevInodes) / dt : 0;
-    double bytesPerSec = (dt > 0 && curBytes >= prevBytes) ? (curBytes - prevBytes) / dt : 0;
+    // std::max clamps to 0 when counters reset at filesystem boundaries
+    double inodeDelta = static_cast<double>(std::max(curInodes, prevInodes) - prevInodes);
+    double bytesDelta = static_cast<double>(std::max(curBytes, prevBytes) - prevBytes);
 
-    std::string line = Info.formatLine(elapsed, inodesPerSec, bytesPerSec);
+    std::string line = Info.formatLine(elapsed, inodeDelta / dt, bytesDelta / dt);
     std::cerr << "\r\033[K" << line << std::flush;
 
     prevInodes = curInodes;

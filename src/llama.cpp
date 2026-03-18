@@ -112,7 +112,6 @@ void Llama::search() {
     }
     Pool.join();
 
-    progressInfo.setDone();
     progressThread.stop();
 
     std::cerr << "Hashing Time: " << scheduler->getProcessorTime() << "s\n";
