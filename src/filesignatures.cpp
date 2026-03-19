@@ -1,14 +1,9 @@
 // ABOUTME: File signature detection using Lightgrep pattern matching
 // ABOUTME: Compiles magic byte patterns and searches file headers for matches
 
-#include <algorithm>
-#include <cctype>
-#include <exception>
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <string>
-#include <string_view>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -152,56 +147,6 @@ std::shared_ptr<::ProgramHandle> Lightgrep::readProgram(const std::string& path)
   return std::shared_ptr<ProgramHandle>(rawProg, lg_destroy_program);
 }
 
-size_t getPatternLength(std::string const &pattern, bool only_significant) {
-  std::size_t i = 0;
-  size_t count = 0;
-  char prev_c = 0;
-
-  while (i < pattern.size()) {
-    auto c = pattern[i];
-    if (c == '\\') {
-      if (pattern[i + 1] == 'x') {
-        count += 1;
-        i += 4;
-      }
-      else { // \\u0000
-        count += 1;
-        i += 6;
-      }
-    }
-    else if (c == '{') {
-      auto j = pattern.find('}', i + 1);
-      auto i2 = pattern.find(',', i + 1);
-
-      if (i2 < j) { i = i2; }
-
-      auto x = std::stoi(pattern.substr(i + 1, j));
-      i = j + 1;
-      count += only_significant && prev_c == '.' ? 0 : x;
-    }
-    else if (c == '[') {
-      auto j = pattern.find(']', i + 1);
-      i = j + 1;
-      count += 1;
-    }
-    else if (c == '.') {
-      i += 1;
-      count += only_significant ? 0 : 1;
-    }
-    else {
-      count += 1;
-      i += 1;
-    }
-    prev_c = c;
-  }
-
-  return count * 4;
-}
-
-size_t Magic::getPatternLength(bool only_significant) const {
-  return ::getPatternLength(Pattern, only_significant);
-}
-
 namespace {
 void readPatterns(jsoncons::json const &magic_json, Magic &m) {
   if (magic_json.contains("pattern")) {
@@ -307,36 +252,9 @@ void FileSigAnalyzer::lgSearch(const uint8_t *start,
   }
 }
 
-namespace {
-MagicsType sortMagics(const MagicsType& magics) {
-  auto sorted = magics;
-  std::sort(begin(sorted), end(sorted),
-            [](MagicPtr const &a, MagicPtr const &b) -> bool {
-              return a->getPatternLength(true) > b->getPatternLength(true);
-            });
-  return sorted;
-}
-
-size_t maxReadSize(const MagicsType& magics) {
-  size_t max_read = 0;
-  for (const auto& m : magics) {
-    auto len = m->getPatternLength(false);
-    if (len > max_read) {
-      max_read = len;
-    }
-  }
-  return max_read;
-}
-} // namespace
-
 FileSigAnalyzer::FileSigAnalyzer(std::shared_ptr<::ProgramHandle> prog, const MagicsType& magics)
-  : Magics(sortMagics(magics)), Lg(std::move(prog))
+  : Magics(magics), Lg(std::move(prog)), ReadBuf(4096)
 {
-  if (Magics.empty()) {
-    return;
-  }
-
-  ReadBuf.resize(maxReadSize(Magics));
 }
 
 bool FileSigAnalyzer::getSignatures(ReadSeek& rs, std::vector<MagicPtr>& results) {
