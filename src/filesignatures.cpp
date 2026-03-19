@@ -177,7 +177,7 @@ expected<std::shared_ptr<::ProgramHandle>> Lightgrep::readProgram(const std::str
   }
 }
 
-size_t getPatternLength(String const &pattern, bool only_significant) {
+size_t getPatternLength(std::string const &pattern, bool only_significant) {
   std::size_t i = 0;
   size_t count = 0;
   char prev_c = 0;

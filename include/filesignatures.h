@@ -20,30 +20,24 @@ inline auto makeUnexpected(const std::string &s) {
 
 inline auto makeOk() { return boost::outcome_v2::success(); }
 
-using Binary = std::vector<uint8_t>;
-using String = std::string;
-using Strings = std::vector<String>;
-using String2StringMap = std::unordered_map<String, String>;
-
 struct Magic {
-  String Name;
-  String Description;
-  String Id;
-  String2StringMap Extensions;
-  String Pattern;
+  std::string Name;
+  std::string Description;
+  std::string Id;
+  std::unordered_map<std::string, std::string> Extensions;
+  std::string Pattern;
   bool FixedString;
   bool CaseInsensitive;
-  Strings Encodings;
-  Strings Tags;
+  std::vector<std::string> Encodings;
+  std::vector<std::string> Tags;
 
   size_t getPatternLength(bool only_significant = false) const;
 };
 
 using MagicPtr = std::shared_ptr<Magic>;
 using MagicsType = std::vector<MagicPtr>;
-using String2MagicMap = std::unordered_map<String, MagicPtr>;
 
-size_t getPatternLength(String const &pattern, bool only_significant);
+size_t getPatternLength(std::string const &pattern, bool only_significant);
 
 class Lightgrep {
   std::shared_ptr<::ProgramHandle> Prog;
