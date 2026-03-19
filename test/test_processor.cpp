@@ -248,13 +248,10 @@ TEST_CASE("ProcessorContext can be constructed with SigMagics") {
   std::shared_ptr<FILE> magicsFile(std::fopen("./magics.json", "rb"), std::fclose);
   REQUIRE(magicsFile);
   ReadSeekFile magicsRs(magicsFile);
-  auto magicsResult = FileSigAnalyzer::readMagics(magicsRs);
-  REQUIRE(magicsResult.has_value());
+  auto magics = FileSigAnalyzer::readMagics(magicsRs);
 
   // Compile the program once
-  auto compileResult = Lightgrep::compile(magicsResult.value());
-  REQUIRE(compileResult.has_value());
-  auto sigProg = compileResult.value();
+  auto sigProg = Lightgrep::compile(magics);
 
   // Create ProcessorContext with shared program
   LlamaDB db;
@@ -266,12 +263,12 @@ TEST_CASE("ProcessorContext can be constructed with SigMagics") {
 
   auto ruleEngine = std::make_shared<LlamaRuleEngine>();
   auto procContext = std::make_shared<ProcessorContext>(
-    &db, nullptr, ruleEngine, "", "", magicsResult.value(), sigProg
+    &db, nullptr, ruleEngine, "", "", magics, sigProg
   );
 
   // Verify SigMagics and SigProg were stored
   REQUIRE(procContext->SigMagics.size() > 0);
-  REQUIRE(procContext->SigMagics.size() == magicsResult.value().size());
+  REQUIRE(procContext->SigMagics.size() == magics.size());
   REQUIRE(procContext->SigProg);
 
   // Create a Processor from the context — should use shared program, not recompile

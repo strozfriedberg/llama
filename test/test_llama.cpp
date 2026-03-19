@@ -25,9 +25,7 @@ TEST_CASE("Signature reference table is populated from magics") {
   std::shared_ptr<FILE> magicsFile(std::fopen("./magics.json", "rb"), std::fclose);
   REQUIRE(magicsFile);
   ReadSeekFile rs(magicsFile);
-  auto magicsResult = FileSigAnalyzer::readMagics(rs);
-  REQUIRE(magicsResult.has_value());
-  auto& magics = magicsResult.value();
+  auto magics = FileSigAnalyzer::readMagics(rs);
 
   // Populate the signatures table
   LlamaDBAppender appender(conn.get(), "signatures");

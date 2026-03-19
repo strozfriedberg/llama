@@ -226,12 +226,7 @@ bool Llama::loadSignatures() {
     return false;
   }
   ReadSeekFile sigFile(sigFilePtr);
-  auto result = FileSigAnalyzer::readMagics(sigFile);
-  if (result.has_error()) {
-    std::cerr << "Error loading signatures: " << result.error() << std::endl;
-    return false;
-  }
-  SigMagics = std::move(result.value());
+  SigMagics = FileSigAnalyzer::readMagics(sigFile);
 
   if (SigMagics.empty()) {
     return true;
@@ -249,30 +244,28 @@ bool Llama::loadSignatures() {
     auto sigsMtime = fs::last_write_time(Opts->SignaturesPath);
     auto cacheMtime = fs::last_write_time(cachePath);
     if (cacheMtime > sigsMtime) {
-      auto cached = Lightgrep::readProgram(cachePath);
-      if (cached.has_value()) {
-        SigProg = std::move(cached.value());
+      try {
+        SigProg = Lightgrep::readProgram(cachePath);
         return true;
       }
-      // Cache read failed — fall through to recompile
+      catch (const std::exception& e) {
+        std::cerr << "Warning: failed to read cached signatures: " << e.what() << std::endl;
+        // Fall through to recompile
+      }
     }
   }
 
-  // Compile the Lightgrep program once for sharing across Processors
-  auto compileResult = Lightgrep::compile(SigMagics);
-  if (compileResult.has_error()) {
-    std::cerr << "Error compiling signatures: " << compileResult.error() << std::endl;
-    return false;
-  }
-  SigProg = std::move(compileResult.value());
+  SigProg = Lightgrep::compile(SigMagics);
 
   // Write cache (failure is non-fatal)
   if (!cachePath.empty() && SigProg) {
     std::error_code ec;
     fs::create_directories(std::string(homeDir) + "/.llama/cache", ec);
-    auto writeResult = Lightgrep::writeProgram(SigProg, cachePath);
-    if (writeResult.has_error()) {
-      std::cerr << "Warning: failed to cache compiled signatures: " << writeResult.error() << std::endl;
+    try {
+      Lightgrep::writeProgram(SigProg, cachePath);
+    }
+    catch (const std::exception& e) {
+      std::cerr << "Warning: failed to cache compiled signatures: " << e.what() << std::endl;
     }
   }
 

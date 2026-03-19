@@ -1,5 +1,5 @@
-// file_signatures.cpp
-//
+// ABOUTME: File signature detection using Lightgrep pattern matching
+// ABOUTME: Compiles magic byte patterns and searches file headers for matches
 
 #include <algorithm>
 #include <cctype>
@@ -64,117 +64,92 @@ void Lightgrep::createContext() {
   }
 }
 
-expected<std::shared_ptr<::ProgramHandle>> Lightgrep::compile(const MagicsType& m) {
-  using namespace boost;
+std::shared_ptr<::ProgramHandle> Lightgrep::compile(const MagicsType& m) {
+  LG_Error *err = nullptr;
+  LG_HFSM fsm = lg_create_fsm(0, 0);
+  destroy_guard fsm_guard([&fsm]() { lg_destroy_fsm(fsm); });
 
-  try {
-    LG_Error *err = 0;
-    LG_HFSM fsm = lg_create_fsm(0, 0);
-    destroy_guard fsm_guard([&fsm]() { lg_destroy_fsm(fsm); });
+  for (std::size_t i = 0; i < m.size(); i++) {
+    auto &p = m[i];
 
-    for (std::size_t i = 0; i < m.size(); i++) {
+    if (p->Pattern.empty()) {
+      continue;
+    }
 
-      auto &p = m[i];
+    LG_KeyOptions opt = {p->FixedString, p->CaseInsensitive, false};
 
-      if (p->Pattern.empty()) {
-        continue;
+    auto pattern = lg_create_pattern();
+    destroy_guard pattern_guard(
+        [&pattern]() { lg_destroy_pattern(pattern); });
+    if (!lg_parse_pattern(pattern, p->Pattern.c_str(), &opt, &err)) {
+      if (err) {
+        std::string msg(err->Message);
+        lg_free_error(err);
+        throw std::runtime_error("lg_parse_pattern failed: " + msg);
       }
+    }
 
-      LG_KeyOptions opt = {p->FixedString, p->CaseInsensitive, false};
-
-      auto pattern = lg_create_pattern();
-      destroy_guard pattern_guard(
-          [&pattern]() { lg_destroy_pattern(pattern); });
-      if (!lg_parse_pattern(pattern, p->Pattern.c_str(), &opt, &err)) {
+    for (auto const &encoding : p->Encodings) {
+      if (!lg_add_pattern(fsm, pattern, encoding.c_str(), i, &err)) {
         if (err) {
-          auto r = makeUnexpected(err->Message);
+          std::string msg(err->Message);
           lg_free_error(err);
-          return r;
-        }
-      }
-
-      for (auto const &encoding : p->Encodings) {
-        if (!lg_add_pattern(fsm, pattern, encoding.c_str(), i, &err)) {
-          if (err) {
-            auto r = makeUnexpected(err->Message);
-            lg_free_error(err);
-            return r;
-          }
+          throw std::runtime_error("lg_add_pattern failed: " + msg);
         }
       }
     }
+  }
 
-    LG_ProgramOptions opts = {0};
-    LG_HPROGRAM rawProg = lg_create_program(fsm, &opts);
-    if (!rawProg) {
-      return makeUnexpected("lg_create_program() failed");
-    }
-    return std::shared_ptr<ProgramHandle>(rawProg, lg_destroy_program);
+  LG_ProgramOptions opts = {0};
+  LG_HPROGRAM rawProg = lg_create_program(fsm, &opts);
+  if (!rawProg) {
+    throw std::runtime_error("lg_create_program() failed");
   }
-  catch (std::exception const &ex) {
-    return makeUnexpected(ex.what());
-  }
+  return std::shared_ptr<ProgramHandle>(rawProg, lg_destroy_program);
 }
 
-expected<bool> Lightgrep::search(const uint8_t *start, const uint8_t *end,
+void Lightgrep::search(const uint8_t *start, const uint8_t *end,
                                  void *user_data,
                                  LG_HITCALLBACK_FN callback_fn) {
-  try {
-    lg_reset_context(Ctx);
-    lg_starts_with(Ctx, (const char *)start, (const char *)end, 0,
-                   user_data, callback_fn);
-  }
-  catch (std::exception const &ex) {
-    return makeUnexpected(ex.what());
-  }
-  return true;
+  lg_reset_context(Ctx);
+  lg_starts_with(Ctx, (const char *)start, (const char *)end, 0,
+                 user_data, callback_fn);
 }
 
-expected<bool> Lightgrep::writeProgram(const std::shared_ptr<::ProgramHandle>& prog, const std::string& path) {
-  try {
-    unsigned int size = lg_program_size(prog.get());
-    std::vector<char> buffer(size);
-    lg_write_program(prog.get(), buffer.data());
+void Lightgrep::writeProgram(const std::shared_ptr<::ProgramHandle>& prog, const std::string& path) {
+  unsigned int size = lg_program_size(prog.get());
+  std::vector<char> buffer(size);
+  lg_write_program(prog.get(), buffer.data());
 
-    std::ofstream out(path, std::ios::binary);
-    if (!out) {
-      return makeUnexpected("Failed to open file for writing: " + path);
-    }
-    out.write(buffer.data(), size);
-    if (!out) {
-      return makeUnexpected("Failed to write program to: " + path);
-    }
+  std::ofstream out(path, std::ios::binary);
+  if (!out) {
+    throw std::runtime_error("Failed to open file for writing: " + path);
   }
-  catch (std::exception const& ex) {
-    return makeUnexpected(ex.what());
+  out.write(buffer.data(), size);
+  if (!out) {
+    throw std::runtime_error("Failed to write program to: " + path);
   }
-  return true;
 }
 
-expected<std::shared_ptr<::ProgramHandle>> Lightgrep::readProgram(const std::string& path) {
-  try {
-    std::ifstream in(path, std::ios::binary | std::ios::ate);
-    if (!in) {
-      return makeUnexpected("Failed to open file for reading: " + path);
-    }
-
-    auto size = in.tellg();
-    in.seekg(0);
-    std::vector<char> buffer(size);
-    in.read(buffer.data(), size);
-    if (!in) {
-      return makeUnexpected("Failed to read program from: " + path);
-    }
-
-    LG_HPROGRAM rawProg = lg_read_program(buffer.data(), static_cast<int>(size));
-    if (!rawProg) {
-      return makeUnexpected("lg_read_program() failed");
-    }
-    return std::shared_ptr<ProgramHandle>(rawProg, lg_destroy_program);
+std::shared_ptr<::ProgramHandle> Lightgrep::readProgram(const std::string& path) {
+  std::ifstream in(path, std::ios::binary | std::ios::ate);
+  if (!in) {
+    throw std::runtime_error("Failed to open file for reading: " + path);
   }
-  catch (std::exception const& ex) {
-    return makeUnexpected(ex.what());
+
+  auto size = in.tellg();
+  in.seekg(0);
+  std::vector<char> buffer(size);
+  in.read(buffer.data(), size);
+  if (!in) {
+    throw std::runtime_error("Failed to read program from: " + path);
   }
+
+  LG_HPROGRAM rawProg = lg_read_program(buffer.data(), static_cast<int>(size));
+  if (!rawProg) {
+    throw std::runtime_error("lg_read_program() failed");
+  }
+  return std::shared_ptr<ProgramHandle>(rawProg, lg_destroy_program);
 }
 
 size_t getPatternLength(std::string const &pattern, bool only_significant) {
@@ -269,40 +244,34 @@ void readSpecs(jsoncons::json const &magic_json, Magic &m) {
 }
 } // namespace
 
-expected<MagicsType> FileSigAnalyzer::readMagics(ReadSeek& rs) {
-  try {
-    // Read entire stream into a string
-    rs.seek(0);
-    size_t fileSize = rs.size();
-    std::vector<uint8_t> buffer(fileSize);
-    int64_t bytesRead = rs.read(fileSize, buffer.data());
-    if (bytesRead < 0) {
-      return makeUnexpected("Error reading from stream");
+MagicsType FileSigAnalyzer::readMagics(ReadSeek& rs) {
+  rs.seek(0);
+  size_t fileSize = rs.size();
+  std::vector<uint8_t> buffer(fileSize);
+  int64_t bytesRead = rs.read(fileSize, buffer.data());
+  if (bytesRead < 0) {
+    throw std::runtime_error("Error reading from stream");
+  }
+
+  std::string jsonStr(buffer.begin(), buffer.begin() + bytesRead);
+  auto json(jsoncons::json::parse(jsonStr));
+
+  MagicsType magics;
+  for (const auto &magic_json : json.array_range()) {
+    Magic m;
+
+    readPatterns(magic_json, m);
+    readSpecs(magic_json, m);
+
+    // Skip entries without patterns
+    if (m.Pattern.empty()) {
+      continue;
     }
 
-    std::string jsonStr(buffer.begin(), buffer.begin() + bytesRead);
-    auto json(jsoncons::json::parse(jsonStr));
-
-    MagicsType magics;
-    for (const auto &magic_json : json.array_range()) {
-      Magic m;
-
-      readPatterns(magic_json, m);
-      readSpecs(magic_json, m);
-
-      // Skip entries without patterns
-      if (m.Pattern.empty()) {
-        continue;
-      }
-
-      magics.push_back(std::make_shared<Magic>(m));
-    }
-
-    return magics;
+    magics.push_back(std::make_shared<Magic>(m));
   }
-  catch (std::exception &e) {
-    return makeUnexpected(e.what());
-  }
+
+  return magics;
 }
 
 struct lg_callback_context {
@@ -319,24 +288,23 @@ void FileSigAnalyzer::lgCallbackfn(void *userData,
   }
 }
 
-expected<bool> FileSigAnalyzer::lgSearch(const uint8_t *start,
-                                         const uint8_t *end,
-                                         std::vector<MagicPtr> &results) {
+void FileSigAnalyzer::lgSearch(const uint8_t *start,
+                               const uint8_t *end,
+                               std::vector<MagicPtr> &results) {
   std::vector<size_t> hit_indices;
   lg_callback_context ctx{this, &hit_indices};
 
-  auto lg_err = Lg.search(start, end, &ctx, &FileSigAnalyzer::lgCallbackfn);
-
-  if (lg_err.has_error()) {
-    return makeUnexpected("Lg.search() error: " + lg_err.error());
+  try {
+    Lg.search(start, end, &ctx, &FileSigAnalyzer::lgCallbackfn);
+  }
+  catch (const std::exception& e) {
+    std::cerr << "Signature search error: " << e.what() << std::endl;
+    return;
   }
 
-  // Collect all matching signatures
   for (auto idx : hit_indices) {
     results.push_back(this->Magics[idx]);
   }
-
-  return !results.empty();
 }
 
 namespace {
@@ -371,27 +339,22 @@ FileSigAnalyzer::FileSigAnalyzer(std::shared_ptr<::ProgramHandle> prog, const Ma
   ReadBuf.resize(maxReadSize(Magics));
 }
 
-expected<bool> FileSigAnalyzer::getSignatures(ReadSeek& rs, std::vector<MagicPtr>& results) {
-  // If no signatures loaded, return early
+bool FileSigAnalyzer::getSignatures(ReadSeek& rs, std::vector<MagicPtr>& results) {
   if (Magics.empty()) {
     return false;
   }
 
-  // Seek to beginning of stream
   rs.seek(0);
 
-  // Read up to ReadBuf.size() bytes
   int64_t bytes_read = rs.read(ReadBuf.size(), ReadBuf.data());
   if (bytes_read < 0) {
-    return makeUnexpected("Failed to read from stream");
+    throw std::runtime_error("Failed to read from stream for signature detection");
   }
 
   if (bytes_read == 0) {
-    // Empty file - no signatures to detect
     return false;
   }
 
-  // Search for signatures
-  return lgSearch(ReadBuf.data(), ReadBuf.data() + bytes_read, results);
+  lgSearch(ReadBuf.data(), ReadBuf.data() + bytes_read, results);
+  return !results.empty();
 }
-
