@@ -12,7 +12,7 @@ public:
   ProgressInfo();
 
   void update(uint64_t inodes, uint64_t bytes);
-  void setFilesystem(uint32_t index, uint32_t total, uint64_t inodeCount);
+  void setFilesystem(uint32_t index, uint32_t total, uint64_t inodeCount, uint64_t totalBytes);
   void setDone();
 
   uint64_t inodesProcessed() const;
@@ -20,12 +20,12 @@ public:
   uint32_t filesystemIndex() const;
   uint32_t filesystemCount() const;
   uint64_t inodeCount() const;
+  uint64_t totalBytes() const;
   bool isDone() const;
 
   // Format the progress line for display.
-  // inodesPerSec and bytesPerSec are rates computed by the caller.
-  // elapsedSecs is wall-clock time since processing started.
-  std::string formatLine(double elapsedSecs, double inodesPerSec, double bytesPerSec) const;
+  // Rates are computed as cumulative averages from elapsed time.
+  std::string formatLine(double elapsedSecs) const;
 
 private:
   std::atomic<uint64_t> InodesProcessed;
@@ -33,5 +33,6 @@ private:
   std::atomic<uint32_t> FilesystemIndex;
   std::atomic<uint32_t> FilesystemCount;
   std::atomic<uint64_t> InodeCount;
+  std::atomic<uint64_t> TotalBytes;
   std::atomic<bool> Done;
 };

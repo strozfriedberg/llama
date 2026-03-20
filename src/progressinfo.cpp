@@ -4,24 +4,24 @@
 #include "progressinfo.h"
 
 #include <cstdio>
-#include <sstream>
 
 ProgressInfo::ProgressInfo()
   : InodesProcessed(0), BytesProcessed(0),
     FilesystemIndex(0), FilesystemCount(0),
-    InodeCount(0), Done(false) {}
+    InodeCount(0), TotalBytes(0), Done(false) {}
 
 void ProgressInfo::update(uint64_t inodes, uint64_t bytes) {
   InodesProcessed.fetch_add(inodes);
   BytesProcessed.fetch_add(bytes);
 }
 
-void ProgressInfo::setFilesystem(uint32_t index, uint32_t total, uint64_t inodeCount) {
+void ProgressInfo::setFilesystem(uint32_t index, uint32_t total, uint64_t inodeCount, uint64_t totalBytes) {
   InodesProcessed.store(0);
   BytesProcessed.store(0);
   FilesystemIndex.store(index);
   FilesystemCount.store(total);
   InodeCount.store(inodeCount);
+  TotalBytes.store(totalBytes);
 }
 
 void ProgressInfo::setDone() {
@@ -48,6 +48,10 @@ uint64_t ProgressInfo::inodeCount() const {
   return InodeCount.load();
 }
 
+uint64_t ProgressInfo::totalBytes() const {
+  return TotalBytes.load();
+}
+
 bool ProgressInfo::isDone() const {
   return Done.load();
 }
@@ -63,14 +67,37 @@ namespace {
     return s;
   }
 
-  std::string formatBytes(double bytes) {
-    if (bytes >= 1024.0 * 1024.0 * 1024.0) {
-      char buf[32];
-      std::snprintf(buf, sizeof(buf), "%.1f GB/s", bytes / (1024.0 * 1024.0 * 1024.0));
-      return buf;
-    }
+  // Format a byte count as a human-readable size (KB, MB, GB, TB)
+  std::string formatSize(uint64_t bytes) {
     char buf[32];
-    std::snprintf(buf, sizeof(buf), "%.1f MB/s", bytes / (1024.0 * 1024.0));
+    double val = static_cast<double>(bytes);
+    if (val >= 1024.0 * 1024.0 * 1024.0 * 1024.0) {
+      std::snprintf(buf, sizeof(buf), "%.1f TB", val / (1024.0 * 1024.0 * 1024.0 * 1024.0));
+    }
+    else if (val >= 1024.0 * 1024.0 * 1024.0) {
+      std::snprintf(buf, sizeof(buf), "%.1f GB", val / (1024.0 * 1024.0 * 1024.0));
+    }
+    else if (val >= 1024.0 * 1024.0) {
+      std::snprintf(buf, sizeof(buf), "%.1f MB", val / (1024.0 * 1024.0));
+    }
+    else if (val >= 1024.0) {
+      std::snprintf(buf, sizeof(buf), "%.1f KB", val / 1024.0);
+    }
+    else {
+      std::snprintf(buf, sizeof(buf), "%llu B", static_cast<unsigned long long>(bytes));
+    }
+    return buf;
+  }
+
+  // Format a byte rate as human-readable (MB/s, GB/s, etc.)
+  std::string formatRate(double bytesPerSec) {
+    char buf[32];
+    if (bytesPerSec >= 1024.0 * 1024.0 * 1024.0) {
+      std::snprintf(buf, sizeof(buf), "%.1f GB/s", bytesPerSec / (1024.0 * 1024.0 * 1024.0));
+    }
+    else {
+      std::snprintf(buf, sizeof(buf), "%.1f MB/s", bytesPerSec / (1024.0 * 1024.0));
+    }
     return buf;
   }
 
@@ -85,28 +112,59 @@ namespace {
   }
 }
 
-std::string ProgressInfo::formatLine(double elapsedSecs, double inodesPerSec, double bytesPerSec) const {
-  std::ostringstream oss;
+std::string ProgressInfo::formatLine(double elapsedSecs) const {
   uint64_t inodes = inodesProcessed();
   uint64_t total = inodeCount();
+  uint64_t procBytes = bytesProcessed();
+  uint64_t totBytes = totalBytes();
+  uint32_t fsIdx = filesystemIndex();
   uint32_t fsCount = filesystemCount();
 
+  double inodesPerSec = (elapsedSecs > 0) ? static_cast<double>(inodes) / elapsedSecs : 0;
+  double bytesPerSec = (elapsedSecs > 0) ? static_cast<double>(procBytes) / elapsedSecs : 0;
+
+  char buf[256];
+  char* p = buf;
+  char* end = buf + sizeof(buf);
+
+  // Filesystem header with percentage
   if (total > 0) {
     uint32_t pct = static_cast<uint32_t>(inodes * 100 / total);
-    oss << "Filesystem " << filesystemIndex();
     if (fsCount > 0) {
-      oss << "/" << fsCount;
+      p += std::snprintf(p, end - p, "Filesystem %u/%u: %3u%% | ", fsIdx, fsCount, pct);
     }
-    oss << ": " << pct << "% | ";
+    else {
+      p += std::snprintf(p, end - p, "Filesystem %u: %3u%% | ", fsIdx, pct);
+    }
   }
 
-  char rateStr[32];
-  std::snprintf(rateStr, sizeof(rateStr), "%.0f", inodesPerSec);
+  // Inodes: processed/total
+  if (total > 0) {
+    p += std::snprintf(p, end - p, "%11s/%s inodes | ",
+                       formatWithCommas(inodes).c_str(),
+                       formatWithCommas(total).c_str());
+  }
+  else {
+    p += std::snprintf(p, end - p, "%11s inodes | ",
+                       formatWithCommas(inodes).c_str());
+  }
 
-  oss << formatWithCommas(inodes) << " inodes | "
-      << rateStr << " files/s | "
-      << formatBytes(bytesPerSec) << " | "
-      << formatElapsed(elapsedSecs);
+  // Bytes: processed/total
+  if (totBytes > 0) {
+    p += std::snprintf(p, end - p, "%9s/%s | ",
+                       formatSize(procBytes).c_str(),
+                       formatSize(totBytes).c_str());
+  }
+  else {
+    p += std::snprintf(p, end - p, "%9s | ",
+                       formatSize(procBytes).c_str());
+  }
 
-  return oss.str();
+  // Rates and elapsed
+  p += std::snprintf(p, end - p, "%7s files/s | %10s | %s",
+                     formatWithCommas(static_cast<uint64_t>(inodesPerSec)).c_str(),
+                     formatRate(bytesPerSec).c_str(),
+                     formatElapsed(elapsedSecs).c_str());
+
+  return std::string(buf);
 }

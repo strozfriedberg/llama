@@ -78,7 +78,8 @@ TSK_FILTER_ENUM TskReader::filterFs(TSK_FS_INFO* fs_info) {
   InodeTracker.clear();
   InodeTracker.resize(fs_info->last_inum - fs_info->first_inum + 1, false);
   if (Progress) {
-    Progress->setFilesystem(++FsIndex, 0, fs_info->inum_count);
+    Progress->setFilesystem(++FsIndex, 0, fs_info->inum_count,
+                            static_cast<uint64_t>(fs_info->block_count) * fs_info->block_size);
   }
   return TSK_FILTER_CONT;
 }

@@ -43,7 +43,7 @@ bool push_it(std::stack<fs::directory_iterator>* dirStack, const std::string& pa
 
 bool DirReader::startReading() {
   if (Progress) {
-    Progress->setFilesystem(1, 1, 0);
+    Progress->setFilesystem(1, 1, 0, 0);
   }
   bool hadError = false;
   std::stack<fs::directory_iterator> dirStack;
