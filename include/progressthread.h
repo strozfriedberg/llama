@@ -3,12 +3,15 @@
 
 #pragma once
 
+#include <chrono>
 #include <thread>
 
 class ProgressInfo;
 
 class ProgressThread {
 public:
+  using Clock = std::chrono::steady_clock;
+
   // If isTty is true, the thread will print progress to stderr.
   // If false, the thread does nothing (for non-terminal or testing).
   ProgressThread(ProgressInfo& info, bool isTty);
@@ -24,5 +27,6 @@ private:
 
   ProgressInfo& Info;
   bool IsTty;
+  Clock::time_point StartTime;
   std::thread Thread;
 };

@@ -1,5 +1,5 @@
-// ABOUTME: Polls ProgressInfo every 200ms and writes a progress line to stderr
-// ABOUTME: Computes rates from deltas between ticks and clears the line on shutdown
+// ABOUTME: Polls ProgressInfo every 500ms and writes a progress line to stderr
+// ABOUTME: Prints final stats on shutdown so they persist in the terminal
 
 #include "progressthread.h"
 #include "progressinfo.h"
@@ -21,20 +21,19 @@ void ProgressThread::stop() {
   Info.setDone();
   if (Thread.joinable()) {
     Thread.join();
-    // Clear the progress line
-    std::cerr << "\r\033[K" << std::flush;
+    // Print final stats with newline so they persist
+    double elapsed = std::chrono::duration<double>(Clock::now() - StartTime).count();
+    std::cerr << "\r\033[K" << Info.formatLine(elapsed) << std::endl;
   }
 }
 
 void ProgressThread::run() {
-  using Clock = std::chrono::steady_clock;
   const auto interval = std::chrono::milliseconds(500);
-  auto startTime = Clock::now();
+  StartTime = Clock::now();
 
   while (!Info.isDone()) {
     std::this_thread::sleep_for(interval);
-    double elapsed = std::chrono::duration<double>(Clock::now() - startTime).count();
-    std::string line = Info.formatLine(elapsed);
-    std::cerr << "\r\033[K" << line << std::flush;
+    double elapsed = std::chrono::duration<double>(Clock::now() - StartTime).count();
+    std::cerr << "\r\033[K" << Info.formatLine(elapsed) << std::flush;
   }
 }
