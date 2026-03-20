@@ -149,19 +149,26 @@ void Processor::process(Entry& entry) {
 }
 
 void Processor::processBatch(const std::shared_ptr<std::vector<std::unique_ptr<Entry>>>& entries) {
-  uint64_t batchInodes = 0;
-  uint64_t batchBytes = 0;
+  uint64_t pendingInodes = 0;
+  uint64_t pendingBytes = 0;
   for (auto& entry : *entries) {
     if (entry->getStream().open()) {
-      batchBytes += entry->getStream().size();
+      pendingBytes += entry->getStream().size();
       process(*entry);
       entry->getStream().close();
-      ++batchInodes;
+      ++pendingInodes;
+      if (pendingBytes >= 128 * 1024) {
+        if (Context->Progress) {
+          Context->Progress->update(pendingInodes, pendingBytes);
+        }
+        pendingInodes = 0;
+        pendingBytes = 0;
+      }
     }
   }
   flush();
-  if (Context->Progress) {
-    Context->Progress->update(batchInodes, batchBytes);
+  if (Context->Progress && (pendingInodes > 0 || pendingBytes > 0)) {
+    Context->Progress->update(pendingInodes, pendingBytes);
   }
 }
 

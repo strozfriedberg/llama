@@ -1,4 +1,4 @@
-// ABOUTME: Polls ProgressInfo every 500ms and writes a progress line to stderr
+// ABOUTME: Polls ProgressInfo every 200ms and writes a progress line to stderr
 // ABOUTME: Prints final stats on shutdown so they persist in the terminal
 
 #include "progressthread.h"
@@ -28,7 +28,7 @@ void ProgressThread::stop() {
 }
 
 void ProgressThread::run() {
-  const auto interval = std::chrono::milliseconds(500);
+  const auto interval = std::chrono::milliseconds(200);
   StartTime = Clock::now();
 
   while (!Info.isDone()) {
