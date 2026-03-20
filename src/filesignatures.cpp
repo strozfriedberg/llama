@@ -27,9 +27,19 @@ Lightgrep::Lightgrep(std::shared_ptr<::ProgramHandle> prog)
   }
 }
 
+namespace {
+void destroyProgram(ProgramHandle* prog) {
+  lg_destroy_program(prog);
+}
+
+void destroyContext(ContextHandle* ctx) {
+  lg_destroy_context(ctx);
+}
+}
+
 Lightgrep::~Lightgrep() {
   if (Ctx) {
-    lg_destroy_context(Ctx);
+    destroyContext(Ctx);
   }
 }
 
@@ -42,7 +52,7 @@ Lightgrep::Lightgrep(Lightgrep&& other) noexcept
 Lightgrep& Lightgrep::operator=(Lightgrep&& other) noexcept {
   if (this != &other) {
     if (Ctx) {
-      lg_destroy_context(Ctx);
+      destroyContext(Ctx);
     }
     Prog = std::move(other.Prog);
     Ctx = other.Ctx;
@@ -100,7 +110,7 @@ std::shared_ptr<::ProgramHandle> Lightgrep::compile(const MagicsType& m) {
   if (!rawProg) {
     throw std::runtime_error("lg_create_program() failed");
   }
-  return std::shared_ptr<ProgramHandle>(rawProg, lg_destroy_program);
+  return std::shared_ptr<ProgramHandle>(rawProg, destroyProgram);
 }
 
 void Lightgrep::search(const uint8_t *start, const uint8_t *end,
@@ -134,17 +144,22 @@ std::shared_ptr<::ProgramHandle> Lightgrep::readProgram(const std::string& path)
 
   auto size = in.tellg();
   in.seekg(0);
-  std::vector<char> buffer(size);
-  in.read(buffer.data(), size);
+  auto buffer = std::make_shared<std::vector<char>>(size);
+  in.read(buffer->data(), size);
   if (!in) {
     throw std::runtime_error("Failed to read program from: " + path);
   }
 
-  LG_HPROGRAM rawProg = lg_read_program(buffer.data(), static_cast<int>(size));
+  LG_HPROGRAM rawProg = lg_read_program(buffer->data(), static_cast<int>(size));
   if (!rawProg) {
     throw std::runtime_error("lg_read_program() failed");
   }
-  return std::shared_ptr<ProgramHandle>(rawProg, lg_destroy_program);
+  // The buffer must outlive the program — lg_read_program aliases the buffer
+  // rather than copying it. Capture the buffer in the deleter so it's freed
+  // after the program is destroyed.
+  return std::shared_ptr<ProgramHandle>(rawProg, [buffer](ProgramHandle* prog) {
+    destroyProgram(prog);
+  });
 }
 
 namespace {

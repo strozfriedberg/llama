@@ -114,31 +114,32 @@ void Processor::process(Entry& entry) {
   Hashes->add(HashRecord);
 
   // Detect file signatures
+  bool hasPdfSig = false;
   {
     std::vector<MagicPtr> sigResults;
     entry.getStream().seek(0);
     SigAnalyzer.getSignatures(entry.getStream(), sigResults);
     for (const auto& sig : sigResults) {
       FileSigs->add(FileSigResult{HashRecord.Blake3, sig->Id});
+      if (sig->Id == "8343f9e2-601f-4e88-8a78-09a3b5f906eb") {
+        hasPdfSig = true;
+      }
     }
   }
 
   {
     Timer procTime;
-    if (isPDF(entry.getStream())) {
+    if (hasPdfSig) {
       PDFReader reader;
       reader.readTextFromPDF(entry.getStream());
-      ReadSeekBuf rs(reader.getExtractedText());
-      // should this call process again? should we call process recursively for archives, for example?
-      // what to do about the ReadSeek ID? ReadSeekBuf getID just returns 0...
-      // what is the ID for the extracted text from a PDF? From a file within an archive?
-      // for archive, is the ID of the file the same as the ID of the parent archive?
-      // once process takes an Entry instead of a ReadSeek, we can add member attrs to 
-      // the Entry class to differentiate different streams that comes from the same inode
-      // maybe Entries can have their own unique IDs that are a function of the Addr, MetaAddr, and 
-      // hash of the stream?
-      // How do we handle duplicate archives in different locations?
-      search(rs);
+      char* text = reader.getExtractedText();
+      if (text) {
+        ReadSeekBuf rs(text);
+        search(rs);
+      }
+      else {
+        search(entry.getStream());
+      }
     }
     else {
       search(entry.getStream());
