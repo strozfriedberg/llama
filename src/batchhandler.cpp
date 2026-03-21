@@ -4,7 +4,7 @@
 #include "duckinode.h"
 
 namespace {
-  const unsigned int BATCH_SIZE = 5000;
+  const unsigned int BATCH_SIZE = 50;
 }
 
 BatchHandler::BatchHandler(std::shared_ptr<FileScheduler> sink):
