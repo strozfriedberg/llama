@@ -14,6 +14,7 @@ void ProgressThread::start() {
   if (!IsTty) {
     return;
   }
+  StartTime = Clock::now();
   Thread = std::thread(&ProgressThread::run, this);
 }
 
@@ -29,7 +30,6 @@ void ProgressThread::stop() {
 
 void ProgressThread::run() {
   const auto interval = std::chrono::milliseconds(200);
-  StartTime = Clock::now();
 
   while (!Info.isDone()) {
     std::this_thread::sleep_for(interval);
