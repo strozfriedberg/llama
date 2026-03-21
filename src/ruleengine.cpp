@@ -38,6 +38,7 @@ void LlamaRuleEngine::writeRulesToDb(LlamaDBConnection& dbConn) {
   appender.flush();
 
   auto state = duckdb_query(dbConn.get(), hits_query.c_str(), &result);
+  duckdb_destroy_result(&result);
   THROW_IF(state == DuckDBError, "Error inserting into rule matches table");
 }
 
