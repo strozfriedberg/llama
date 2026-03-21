@@ -755,166 +755,133 @@ git commit -m "Update build system for file signature analysis"
 
 ---
 
-### Task 10: Cache compiled Lightgrep program to disk
+### Task 10: Share compiled program across Processors and cache to disk
 
-Serialize the compiled Lightgrep signature program after first compilation.
-On subsequent runs, load the cached binary if it's newer than `magics.json`,
-skipping JSON parsing and pattern compilation entirely.
+Two problems to fix: (a) each `Processor` recompiles the Lightgrep signature
+program from scratch, and (b) `LightGrep::search()` creates and destroys an
+`LG_HCONTEXT` on every call. Additionally, the compiled program should be
+cached to disk so subsequent runs skip compilation entirely.
 
-The cache file is stored alongside `magics.json` in the same directory, e.g.,
-if `--signatures` points to `/path/to/magics.json`, the cache is
-`/path/to/magics.lgp`.
+**Design:**
+- An `LG_HPROGRAM` is immutable and can be shared across threads.
+- An `LG_HCONTEXT` is NOT threadsafe and must be per-Processor.
+- This mirrors the existing grep pattern: shared `LgProg`, per-Processor `LgCtx`.
+
+**Architecture changes:**
+1. `Llama::loadSignatures()` compiles the program once (or loads from cache),
+   stores it as a shared `LG_HPROGRAM` on `Llama`.
+2. `ProcessorContext` stores the shared `LG_HPROGRAM` (replaces `MagicsType`
+   for program compilation; still needs `MagicsType` for index-to-signature mapping).
+3. Each `Processor`'s `FileSigAnalyzer` creates its own `LG_HCONTEXT` from the
+   shared program, rather than recompiling.
+4. `LightGrep::search()` uses a persistent `LG_HCONTEXT` member instead of
+   creating/destroying one per call.
+
+**Disk caching:**
+- Cache location: `~/.llama/cache/magics.lgp`
+- `lg_write_program()` and `lg_read_program()` work with **buffers**, not file
+  paths. Use `lg_program_size()` to allocate, then read/write the buffer to disk.
+- Cache invalidation: compare `magics.json` mtime against cache file mtime.
+- Cache write failure is non-fatal (program still works, just slower next time).
 
 **Files:**
-- Modify: `src/filesignatures.cpp`
 - Modify: `include/filesignatures.h`
-- Modify: `src/llama.cpp` (update `loadSignatures()`)
+- Modify: `src/filesignatures.cpp`
+- Modify: `include/processor.h`
+- Modify: `src/processor.cpp`
+- Modify: `include/llama.h`
+- Modify: `src/llama.cpp`
 - Test: `test/test_filesignatures.cpp`
-- Reference: Lightgrep API — `lg_write_program()`, `lg_read_program()`
+- Reference: `../lightgrep/include/lightgrep/api.h` — `lg_write_program()`,
+  `lg_read_program()`, `lg_program_size()`
 
-**Step 1: Write the failing test**
+**Sub-task 10a: Refactor LightGrep to hold a persistent LG_HCONTEXT**
+
+Currently `LightGrep::search()` creates and destroys an `LG_HCONTEXT` per call.
+Change it to hold a persistent context as a member, created once from the program.
+
+Step 1: Write failing test — test that `LightGrep` can be constructed with
+an external `LG_HPROGRAM` and search correctly.
+
+Step 2: Implement:
+- Add a constructor `LightGrep(LG_HPROGRAM prog)` that takes a shared program
+  (does not own it — no destroy in destructor for this case).
+- Add `LG_HCONTEXT Ctx` member, created in a new `createContext()` method.
+- Change `search()` to use `Ctx` instead of creating/destroying per call.
+  Call `lg_reset_context()` before each search.
+- Existing `setup()` calls `createContext()` after compiling.
+
+Step 3: Run tests to verify.
+
+**Sub-task 10b: Refactor FileSigAnalyzer to accept a shared program**
+
+Add a constructor that takes a pre-compiled `LG_HPROGRAM` + `MagicsType`,
+skipping compilation. The existing constructor still compiles for standalone use.
+
+Step 1: Write failing test — construct `FileSigAnalyzer` with a shared program,
+verify it detects signatures.
+
+Step 2: Implement:
+- Add constructor `FileSigAnalyzer(LG_HPROGRAM sharedProg, const MagicsType& magics)`
+- This constructor sorts magics (same as existing), creates `LightGrep` from
+  the shared program, sizes `ReadBuf`.
+- `lgCallbackfn` and `lgSearch` work unchanged.
+
+Step 3: Run tests to verify.
+
+**Sub-task 10c: Wire shared program through ProcessorContext**
+
+Step 1: Write failing test — construct `ProcessorContext` with a shared program,
+verify `Processor` can detect signatures.
+
+Step 2: Implement:
+- Add `LG_HPROGRAM SigProg` to `ProcessorContext` (the shared compiled program).
+- Keep `MagicsType SigMagics` on `ProcessorContext` (needed for index mapping).
+- `Processor` constructs `FileSigAnalyzer(Context->SigProg, Context->SigMagics)`
+  instead of `FileSigAnalyzer(Context->SigMagics)`.
+- `Llama::loadSignatures()` compiles the program and stores it on `Llama`.
+- `Llama::search()` passes the shared program to `ProcessorContext`.
+
+Step 3: Run full test suite.
+
+**Sub-task 10d: Add program serialization and disk caching**
+
+Step 1: Write failing test:
 
 ```cpp
-TEST_CASE("FileSigAnalyzer writes and reads cached program") {
-  auto magicsResult = FileSignatures::FileSigAnalyzer::readMagics("./magics.json");
-  REQUIRE(magicsResult.has_value());
-  auto& magics = magicsResult.value();
-
-  // Build analyzer (compiles program)
-  FileSignatures::FileSigAnalyzer analyzer(magics);
-
-  // Write cache
-  std::string cachePath = "./test_magics_cache.lgp";
-  auto writeOk = analyzer.writeProgram(cachePath);
-  REQUIRE(writeOk.has_value());
-
-  // Read cache into a new analyzer
-  auto readResult = FileSignatures::FileSigAnalyzer::fromCachedProgram(cachePath, magics);
-  REQUIRE(readResult.has_value());
-  auto& cachedAnalyzer = readResult.value();
-
-  // Verify the cached analyzer detects the same signatures
-  std::vector<uint8_t> pdfBytes = {0x25, 0x50, 0x44, 0x46, 0x2D};
-  ReadSeekBuf rs(pdfBytes);
-
-  std::vector<FileSignatures::MagicPtr> results;
-  cachedAnalyzer.getSignatures(rs, results);
-  REQUIRE_FALSE(results.empty());
-
-  std::filesystem::remove(cachePath);
+TEST_CASE("LightGrep program round-trips through serialization") {
+  // readMagics, setup LightGrep, get program
+  // writeProgram to a temp file
+  // readProgram from that file
+  // Construct a new FileSigAnalyzer from the deserialized program
+  // Verify it detects PDF signatures
+  // Clean up temp file
 }
 ```
 
-**Step 2: Run test to verify it fails**
+Step 2: Implement:
+- Add to `LightGrep`:
+  ```cpp
+  expected<bool> writeProgram(const std::string& path) const;
+  static expected<LG_HPROGRAM> readProgram(const std::string& path);
+  ```
+- `writeProgram()`: call `lg_program_size(Prog)` to get size, allocate buffer,
+  call `lg_write_program(Prog, buffer)`, write buffer to file.
+- `readProgram()`: read file into buffer, call `lg_read_program(buffer, size)`.
+- Update `Llama::loadSignatures()`:
+  - Always parse `magics.json` (needed for index mapping).
+  - Cache path: `~/.llama/cache/magics.lgp`. Create `~/.llama/cache/` if needed.
+  - If cache exists and is newer than `magics.json`, load from cache.
+  - Otherwise compile and write cache (failure is non-fatal).
 
-Run: `meson compile -C builddir && builddir/llama_test "FileSigAnalyzer writes and reads cached program"`
-Expected: Compilation fails — `writeProgram()` and `fromCachedProgram()` don't exist.
+Step 3: Run tests to verify.
 
-**Step 3: Implement**
-
-In `include/filesignatures.h`, add to `FileSigAnalyzer`:
-```cpp
-// Write the compiled program to disk for caching.
-expected<bool> writeProgram(const std::string& path) const;
-
-// Construct from a previously cached program file.
-// Still needs MagicsType to map hit indices back to signatures.
-static expected<FileSigAnalyzer> fromCachedProgram(
-    const std::string& path, const MagicsType& magics);
-```
-
-In `include/filesignatures.h`, add to `LightGrep`:
-```cpp
-expected<bool> writeProgram(const std::string& path) const;
-static expected<LG_HPROGRAM> readProgram(const std::string& path);
-```
-
-In `src/filesignatures.cpp`:
-
-```cpp
-expected<bool> LightGrep::writeProgram(const std::string& path) const {
-  // Use lg_write_program(Prog, path.c_str())
-  // Return error if it fails
-}
-
-expected<LG_HPROGRAM> LightGrep::readProgram(const std::string& path) {
-  // Use lg_read_program(path.c_str())
-  // Return error if it fails
-}
-
-expected<bool> FileSigAnalyzer::writeProgram(const std::string& path) const {
-  return Lg.writeProgram(path);
-}
-
-expected<FileSigAnalyzer> FileSigAnalyzer::fromCachedProgram(
-    const std::string& path, const MagicsType& magics) {
-  // Read program from cache, construct analyzer with it + magics
-  // (skip pattern compilation, just wire up the lookup structures)
-}
-```
-
-In `src/llama.cpp`, update `loadSignatures()`:
-```cpp
-bool Llama::loadSignatures() {
-  std::filesystem::path sigPath(Opts->SignaturesPath);
-  std::filesystem::path cachePath = sigPath.parent_path() / (sigPath.stem().string() + ".lgp");
-
-  // Parse magics (always needed for index-to-signature mapping)
-  auto magicsResult = FileSignatures::FileSigAnalyzer::readMagics(Opts->SignaturesPath);
-  if (magicsResult.has_error()) {
-    std::cerr << "Error loading signatures: " << magicsResult.error() << std::endl;
-    return false;
-  }
-  SigMagics = std::move(magicsResult.value());
-
-  // Try loading cached program if it's newer than magics.json
-  std::error_code ec;
-  if (std::filesystem::exists(cachePath, ec) &&
-      std::filesystem::last_write_time(cachePath, ec) >
-      std::filesystem::last_write_time(sigPath, ec)) {
-    auto cached = FileSignatures::FileSigAnalyzer::fromCachedProgram(
-        cachePath.string(), SigMagics);
-    if (cached.has_value()) {
-      // Cache hit — store the analyzer for ProcessorContext
-      return true;
-    }
-    // Cache read failed, fall through to recompile
-    std::cerr << "Warning: cached signature program invalid, recompiling\n";
-  }
-
-  // Compile from scratch and write cache
-  // (FileSigAnalyzer construction compiles the program)
-  // After construction, write the cache for next time
-  FileSignatures::FileSigAnalyzer analyzer(SigMagics);
-  auto writeOk = analyzer.writeProgram(cachePath.string());
-  if (writeOk.has_error()) {
-    std::cerr << "Warning: could not cache signature program: "
-              << writeOk.error() << std::endl;
-    // Non-fatal — we still have the compiled program
-  }
-  return true;
-}
-```
-
-Note: The exact mechanism for passing the compiled program (or cached analyzer)
-to `ProcessorContext` depends on whether the program lives on `FileSigAnalyzer`
-or is extracted separately. The key architectural constraint is that the program
-is immutable and shared, while each `Processor` creates its own search context
-from it. Adapt the storage as needed — the program handle may need to be
-extractable from the analyzer.
-
-**Step 4: Run tests to verify they pass**
-
-Run: `meson compile -C builddir && builddir/llama_test "FileSigAnalyzer writes and reads cached program"`
-Expected: PASS
-
-Also run the full suite to verify no regressions:
-Run: `meson compile -C builddir && builddir/llama_test`
-Expected: All PASS
+Step 4: Run full test suite.
 
 **Step 5: Commit**
 
+Commit after each sub-task passes, or as a single commit if done atomically:
+
 ```bash
-git add include/filesignatures.h src/filesignatures.cpp src/llama.cpp test/test_filesignatures.cpp
-git commit -m "Cache compiled signature program to disk for fast startup"
+git commit -m "Share compiled signature program across Processors and cache to disk"
 ```
