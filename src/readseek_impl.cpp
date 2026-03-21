@@ -103,6 +103,10 @@ int64_t ReadSeekTSK::read(size_t len, std::vector<uint8_t>& buf) {
   if (FilePtr && Pos < size_t(FilePtr->meta->size)) {
     buf.resize(len);
     auto bytesRead = tsk_fs_file_read(FilePtr, Pos, (char*)buf.data(), len, TSK_FS_FILE_READ_FLAG_NONE);
+    if (bytesRead < 0) {
+      buf.resize(0);
+      return 0;
+    }
     buf.resize(bytesRead);
     Pos += bytesRead;
     return bytesRead;
@@ -115,6 +119,9 @@ int64_t ReadSeekTSK::read(size_t len, uint8_t* buf) {
     return 0;
   }
   auto bytesRead = tsk_fs_file_read(FilePtr, Pos, (char*)buf, len, TSK_FS_FILE_READ_FLAG_NONE);
+  if (bytesRead < 0) {
+    return 0;
+  }
   Pos += bytesRead;
   return bytesRead;
 }
