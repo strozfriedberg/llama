@@ -1,7 +1,7 @@
 #pragma once
 
 #include <filesystem>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -53,7 +53,7 @@ public:
 class FileSigAnalyzer {
   MagicsType Magics;
   Lightgrep Lg;
-  mutable std::vector<uint8_t> ReadBuf;
+  std::vector<uint8_t> ReadBuf;
 
   void lgSearch(const uint8_t* start, const uint8_t* end,
                 std::vector<MagicPtr>& results);
@@ -67,7 +67,3 @@ public:
   // Detect signatures in a ReadSeek stream. Populates results with all matches.
   bool getSignatures(ReadSeek& rs, std::vector<MagicPtr>& results);
 };
-
-inline bool startsWith(const std::string &s, const std::string &prefix) {
-  return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
-}
