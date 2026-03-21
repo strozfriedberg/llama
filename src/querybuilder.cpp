@@ -38,7 +38,11 @@ std::string QueryBuilder::buildSqlClause(const Node* n) {
 
 void QueryBuilder::buildSqlClauseImpl(const PropertyNode* pn, std::string& out) {
   std::string_view propertyName = Parser.lexemeAt(pn->Value.Name);
-  out += FileMetadataPropertySqlLookup.find(propertyName)->second;
+  auto it = FileMetadataPropertySqlLookup.find(propertyName);
+  if (it == FileMetadataPropertySqlLookup.end()) {
+    throw std::runtime_error("Unknown file_metadata property: " + std::string(propertyName));
+  }
+  out += it->second;
   out += " ";
   out += Parser.lexemeAt(pn->Value.Op);
   out += " ";
@@ -77,7 +81,11 @@ std::string QueryBuilder::buildSqlClause(const BoolNode* bn) {
 
 void QueryBuilder::buildSignaturePropertyImpl(const PropertyNode* pn, std::string& out) {
   std::string_view propertyName = Parser.lexemeAt(pn->Value.Name);
-  out += SignaturePropertySqlLookup.find(propertyName)->second;
+  auto it = SignaturePropertySqlLookup.find(propertyName);
+  if (it == SignaturePropertySqlLookup.end()) {
+    throw std::runtime_error("Unknown signature property: " + std::string(propertyName));
+  }
+  out += it->second;
   out += " ";
   out += Parser.lexemeAt(pn->Value.Op);
   out += " ";
@@ -126,7 +134,8 @@ std::string QueryBuilder::buildSqlQuery(const FieldHash& hash, const Rule& rule)
   }
 
   if (rule.Signature) {
-    query += " AND hash.Blake3 IN (SELECT fs.FileHash FROM file_signatures fs"
+    query += " AND inode.Addr IN (SELECT h.MetaAddr FROM hash h"
+             " JOIN file_signatures fs ON h.Blake3 = fs.FileHash"
              " JOIN signatures s ON fs.SigId = s.Id WHERE ";
     buildSignatureClauseImpl(rule.Signature, query);
     query += ")";

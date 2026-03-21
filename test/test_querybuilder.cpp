@@ -141,9 +141,10 @@ TEST_CASE("buildSqlQueryFromRuleWithSignatureName") {
   FieldHash hash = rules.at(0).getHash(parser, hasher);
   REQUIRE(rules.at(0).Name == "SigRule");
   auto query = qb.buildSqlQuery(hash, rules.at(0));
-  // Should contain JOIN to file_signatures and signatures tables
-  REQUIRE(query.find("file_signatures") != std::string::npos);
-  REQUIRE(query.find("signatures") != std::string::npos);
+  // Should join through hash, file_signatures, and signatures tables
+  REQUIRE(query.find("inode.Addr IN (SELECT h.MetaAddr FROM hash h") != std::string::npos);
+  REQUIRE(query.find("JOIN file_signatures fs ON h.Blake3 = fs.FileHash") != std::string::npos);
+  REQUIRE(query.find("JOIN signatures s ON fs.SigId = s.Id") != std::string::npos);
   REQUIRE(query.find("Name == 'PDF'") != std::string::npos);
 }
 
