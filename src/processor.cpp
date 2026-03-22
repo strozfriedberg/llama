@@ -2,8 +2,7 @@
 #include "progressinfo.h"
 #include "tskconversion.h"
 
-#include <chrono>
-#include <ctime>
+#include "timestamps.h"
 #include <hasher/api.h>
 
 #include <lightgrep/api.h>
@@ -211,11 +210,6 @@ void Processor::flush(void) {
 }
 
 void Processor::logException(const Entry& entry, const char* operation, const char* message) {
-  auto now = std::chrono::system_clock::now();
-  auto time_t_now = std::chrono::system_clock::to_time_t(now);
-  char timebuf[32];
-  std::strftime(timebuf, sizeof(timebuf), "%Y-%m-%dT%H:%M:%S", std::gmtime(&time_t_now));
-
   ExceptionRecord rec;
   rec.EvidenceFile = entry.EvidenceFile;
   rec.FsIndex = entry.FsIndex;
@@ -225,7 +219,7 @@ void Processor::logException(const Entry& entry, const char* operation, const ch
   rec.Path = entry.Path;
   rec.FileSize = entry.FileSize;
   rec.Operation = operation;
-  rec.Timestamp = timebuf;
+  rec.Timestamp = nowISO();
   rec.Message = message;
 
   Exceptions->add(rec);

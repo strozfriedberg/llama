@@ -4,6 +4,7 @@
 #include "timestamps.h"
 
 #include <chrono>
+#include <format>
 
 namespace {
   // Lookup table for two-digit ASCII conversion (00-99)
@@ -103,4 +104,9 @@ std::string formatTimestamp(int64_t unix_time, uint64_t ns) {
   std::string result;
   formatTimestamp(unix_time, ns, result);
   return result;
+}
+
+std::string nowISO() {
+  auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
+  return std::format("{:%FT%T}", now);
 }

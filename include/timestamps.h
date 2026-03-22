@@ -11,3 +11,6 @@ void formatTimestamp(int64_t unix_time, uint64_t ns, std::string& out);
 
 // Convenience: returns a new string
 std::string formatTimestamp(int64_t unix_time, uint64_t ns);
+
+// Returns the current UTC time as an ISO 8601 string (e.g., "2026-03-22T15:30:45")
+std::string nowISO();
