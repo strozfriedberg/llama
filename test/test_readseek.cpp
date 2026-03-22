@@ -389,7 +389,7 @@ TEST_CASE("readSeekTSK_readFullVectorChecksTellg") {
   REQUIRE(buf[1] == 0x51);
   REQUIRE(buf[2] == 0xb4);
   REQUIRE(buf[3] == 0x77);
-  REQUIRE(rs.tellg() == rs.size());  // This will FAIL — tellg() returns 0
+  REQUIRE(rs.tellg() == rs.size());
   rs.close();
 }
 
