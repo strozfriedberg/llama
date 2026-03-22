@@ -8,7 +8,7 @@
 ProgressInfo::ProgressInfo()
   : InodesProcessed(0), BytesProcessed(0),
     FilesystemIndex(0), FilesystemCount(0),
-    InodeCount(0), TotalBytes(0), Done(false) {}
+    InodeCount(0), TotalBytes(0), Done(false), ExceptionCount(0) {}
 
 void ProgressInfo::update(uint64_t inodes, uint64_t bytes) {
   InodesProcessed.fetch_add(inodes);
@@ -54,6 +54,14 @@ uint64_t ProgressInfo::totalBytes() const {
 
 bool ProgressInfo::isDone() const {
   return Done.load();
+}
+
+void ProgressInfo::addException() {
+  ExceptionCount.fetch_add(1);
+}
+
+uint64_t ProgressInfo::exceptionCount() const {
+  return ExceptionCount.load();
 }
 
 namespace {
@@ -165,6 +173,12 @@ std::string ProgressInfo::formatLine(double elapsedSecs) const {
                      formatWithCommas(static_cast<uint64_t>(inodesPerSec)).c_str(),
                      formatRate(bytesPerSec).c_str(),
                      formatElapsed(elapsedSecs).c_str());
+
+  uint64_t exceptions = exceptionCount();
+  if (exceptions > 0) {
+    p += std::snprintf(p, end - p, " | %s exceptions",
+                       formatWithCommas(exceptions).c_str());
+  }
 
   return std::string(buf);
 }

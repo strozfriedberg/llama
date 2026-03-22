@@ -87,3 +87,29 @@ TEST_CASE("ProgressInfo formatLine shows zero rates at zero elapsed") {
   std::string line = pi.formatLine(0.0);
   REQUIRE(line.find("0 files/s") != std::string::npos);
 }
+
+TEST_CASE("progressInfoExceptionCount") {
+  ProgressInfo info;
+  REQUIRE(info.exceptionCount() == 0);
+  info.addException();
+  REQUIRE(info.exceptionCount() == 1);
+  info.addException();
+  info.addException();
+  REQUIRE(info.exceptionCount() == 3);
+}
+
+TEST_CASE("progressInfoFormatLineShowsExceptions") {
+  ProgressInfo info;
+  info.setFilesystem(1, 0, 100, 1024);
+  info.update(10, 512);
+
+  // No exceptions — should not contain "exception"
+  std::string line = info.formatLine(1.0);
+  REQUIRE(line.find("exception") == std::string::npos);
+
+  // With exceptions — should contain count
+  info.addException();
+  info.addException();
+  line = info.formatLine(1.0);
+  REQUIRE(line.find("2 exceptions") != std::string::npos);
+}

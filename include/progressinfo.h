@@ -14,6 +14,7 @@ public:
   void update(uint64_t inodes, uint64_t bytes);
   void setFilesystem(uint32_t index, uint32_t total, uint64_t inodeCount, uint64_t totalBytes);
   void setDone();
+  void addException();
 
   uint64_t inodesProcessed() const;
   uint64_t bytesProcessed() const;
@@ -22,6 +23,7 @@ public:
   uint64_t inodeCount() const;
   uint64_t totalBytes() const;
   bool isDone() const;
+  uint64_t exceptionCount() const;
 
   // Format the progress line for display.
   // Rates are computed as cumulative averages from elapsed time.
@@ -35,4 +37,5 @@ private:
   std::atomic<uint64_t> InodeCount;
   std::atomic<uint64_t> TotalBytes;
   std::atomic<bool> Done;
+  std::atomic<uint64_t> ExceptionCount;
 };
