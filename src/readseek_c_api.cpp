@@ -1,12 +1,20 @@
 #include "readseek_c_api.h"
 #include "readseek.h"
 
+#include <cstdio>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 int64_t readseek_read(void* obj, size_t len, uint8_t* buf) {
-    return ((ReadSeek*)obj)->read(len, buf);
+    try {
+        return ((ReadSeek*)obj)->read(len, buf);
+    }
+    catch (const std::exception& e) {
+        std::fprintf(stderr, "readseek_read: %s\n", e.what());
+        return -1;
+    }
 }
 
 size_t readseek_tellg(void* obj) {

@@ -208,10 +208,7 @@ MagicsType FileSigAnalyzer::readMagics(ReadSeek& rs) {
   rs.seek(0);
   size_t fileSize = rs.size();
   std::vector<uint8_t> buffer(fileSize);
-  int64_t bytesRead = rs.read(fileSize, buffer.data());
-  if (bytesRead < 0) {
-    throw std::runtime_error("Error reading from stream");
-  }
+  size_t bytesRead = rs.read(fileSize, buffer.data());
 
   std::string jsonStr(buffer.begin(), buffer.begin() + bytesRead);
   auto json(jsoncons::json::parse(jsonStr));
@@ -279,10 +276,7 @@ bool FileSigAnalyzer::getSignatures(ReadSeek& rs, std::vector<MagicPtr>& results
 
   rs.seek(0);
 
-  int64_t bytes_read = rs.read(ReadBuf.size(), ReadBuf.data());
-  if (bytes_read < 0) {
-    throw std::runtime_error("Failed to read from stream for signature detection");
-  }
+  size_t bytes_read = rs.read(ReadBuf.size(), ReadBuf.data());
 
   if (bytes_read == 0) {
     return false;
