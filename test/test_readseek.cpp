@@ -12,6 +12,31 @@ namespace {
     return ReadSeekBuf(SRCBUF);
   }
 
+  struct TSKTestFixture {
+    std::unique_ptr<TSK_IMG_INFO, decltype(&tsk_img_close)> img;
+    std::shared_ptr<TSK_FS_INFO> fs;
+
+    TSKTestFixture():
+      img(nullptr, tsk_img_close)
+    {
+      const char* path = "test/data/ntfs-img-kw-1.dd";
+      img.reset(tsk_img_open_utf8(1, &path, TSK_IMG_TYPE_DETECT, 0));
+      if (img) {
+        fs = std::shared_ptr<TSK_FS_INFO>(
+          tsk_fs_open_img(img.get(), 0, TSK_FS_TYPE_DETECT),
+          tsk_fs_close
+        );
+      }
+    }
+
+    ReadSeekTSK makeRS(uint64_t inum) {
+      return ReadSeekTSK(fs, inum);
+    }
+  };
+
+  const uint64_t TSK_TEST_INUM = 33;  // file-n-1.dat
+  const size_t TSK_TEST_SIZE = 2000;
+
   ReadSeekFile makeFileRS(std::shared_ptr<FILE>& f) {
     f.reset(std::tmpfile(), std::fclose);
     for (uint8_t b: SRCBUF) {
@@ -339,4 +364,31 @@ TEST_CASE("readSeekFile_chunkedReadMatchesFullContent") {
   std::shared_ptr<FILE> f;
   auto rs = makeFileRS(f);
   testChunkedReadMatchesFullContent(rs);
+}
+
+// --- ReadSeekTSK TEST_CASEs ---
+
+TEST_CASE("readSeekTSK_initialState") {
+  TSKTestFixture fix;
+  REQUIRE(fix.fs);
+  auto rs = fix.makeRS(TSK_TEST_INUM);
+  REQUIRE(rs.open());
+  testInitialState(rs, TSK_TEST_SIZE);
+  rs.close();
+}
+
+TEST_CASE("readSeekTSK_readFullVectorChecksTellg") {
+  TSKTestFixture fix;
+  REQUIRE(fix.fs);
+  auto rs = fix.makeRS(TSK_TEST_INUM);
+  REQUIRE(rs.open());
+  std::vector<uint8_t> buf;
+  REQUIRE(rs.read(TSK_TEST_SIZE, buf) == TSK_TEST_SIZE);
+  REQUIRE(buf.size() == TSK_TEST_SIZE);
+  REQUIRE(buf[0] == 0xb1);
+  REQUIRE(buf[1] == 0x51);
+  REQUIRE(buf[2] == 0xb4);
+  REQUIRE(buf[3] == 0x77);
+  REQUIRE(rs.tellg() == rs.size());  // This will FAIL — tellg() returns 0
+  rs.close();
 }
