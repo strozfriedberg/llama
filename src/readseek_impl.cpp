@@ -1,6 +1,7 @@
 #include "readseek_impl.h"
 
 #include <algorithm>
+#include <cassert>
 #include <cstdio>
 #include <cstring>
 
@@ -16,6 +17,8 @@ size_t ReadSeekBuf::read(size_t len, std::vector<uint8_t>& buf) {
     buf[i] = Buf[cur];
   }
   Pos += toRead;
+  assert(toRead <= len && "read returned more bytes than requested");
+  assert(buf.size() == toRead && "vector size must match bytes read");
   return toRead;
 }
 
@@ -26,6 +29,7 @@ size_t ReadSeekBuf::read(size_t len, uint8_t* buf) {
   size_t toRead = std::min(len, Buf.size() - Pos);
   std::memcpy(buf, Buf.data() + Pos, toRead);
   Pos += toRead;
+  assert(toRead <= len && "read returned more bytes than requested");
   return toRead;
 }
 
@@ -48,6 +52,8 @@ size_t ReadSeekFile::read(size_t len, std::vector<uint8_t>& buf) {
   buf.resize(ret);
   Pos = std::min(Size, Pos + ret);
   THROW_IF(ret < len && std::ferror(FilePtr.get()), "call to fread() had error");
+  assert(ret <= len && "read returned more bytes than requested");
+  assert(buf.size() == ret && "vector size must match bytes read");
   return ret;
 };
 
@@ -58,6 +64,7 @@ size_t ReadSeekFile::read(size_t len, uint8_t* buf) {
   size_t ret = std::fread(buf, 1, len, FilePtr.get());
   Pos = std::min(Size, Pos + ret);
   THROW_IF(ret < len && std::ferror(FilePtr.get()), "call to fread() had error");
+  assert(ret <= len && "read returned more bytes than requested");
   return ret;
 }
 
@@ -112,6 +119,8 @@ size_t ReadSeekTSK::read(size_t len, std::vector<uint8_t>& buf) {
   THROW_IF(bytesRead < 0, "tsk_fs_file_read() failed for inode " << Inum);
   buf.resize(bytesRead);
   Pos += bytesRead;
+  assert(static_cast<size_t>(bytesRead) <= len && "read returned more bytes than requested");
+  assert(buf.size() == static_cast<size_t>(bytesRead) && "vector size must match bytes read");
   return bytesRead;
 }
 
@@ -124,6 +133,7 @@ size_t ReadSeekTSK::read(size_t len, uint8_t* buf) {
   auto bytesRead = tsk_fs_file_read(FilePtr, Pos, (char*)buf, toRead, TSK_FS_FILE_READ_FLAG_NONE);
   THROW_IF(bytesRead < 0, "tsk_fs_file_read() failed for inode " << Inum);
   Pos += bytesRead;
+  assert(static_cast<size_t>(bytesRead) <= len && "read returned more bytes than requested");
   return bytesRead;
 }
 
