@@ -50,9 +50,9 @@ private:
   TSK_FILTER_ENUM filterVs(const TSK_VS_INFO* vs_info);
   TSK_FILTER_ENUM filterVol(const TSK_VS_PART_INFO* vs_part);
   TSK_FILTER_ENUM filterFs(TSK_FS_INFO* fs_info);
-  TSK_RETVAL_ENUM processFile(TSK_FS_FILE* fs_file, const char* /* path */);
+  TSK_RETVAL_ENUM processFile(TSK_FS_FILE* fs_file, const char* path);
 
-  bool addToBatch(TSK_FS_FILE* fs_file);
+  bool addToBatch(TSK_FS_FILE* fs_file, const char* path);
 
   std::shared_ptr<BlockSequence> makeBlockSequence(TSK_FS_FILE* fs_file);
   std::unique_ptr<ReadSeek> makeReadSeek(TSK_FS_FILE* fs_file);

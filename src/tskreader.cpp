@@ -84,13 +84,12 @@ TSK_FILTER_ENUM TskReader::filterFs(TSK_FS_INFO* fs_info) {
   return TSK_FILTER_CONT;
 }
 
-TSK_RETVAL_ENUM TskReader::processFile(TSK_FS_FILE* fs_file, const char* /* path */) {
-  // path is constructed by DirentStack, but passed here to match func signature for TSK callback
-  addToBatch(fs_file);
+TSK_RETVAL_ENUM TskReader::processFile(TSK_FS_FILE* fs_file, const char* path) {
+  addToBatch(fs_file, path);
   return TSK_OK;
 }
 
-bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
+bool TskReader::addToBatch(TSK_FS_FILE* fs_file, const char* path) {
   if (!fs_file || !fs_file->meta) {
     // TODO: Can we have a nonull fs_file->name in this case?
     // nothing to process
@@ -114,7 +113,14 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file) {
     //Input->push({std::move(jmeta), makeBlockSequence(fs_file)});
 
     Input->push(inode);
-    Input->push(std::make_unique<Entry>(meta.addr, makeReadSeek(fs_file)));
+    auto entry = std::make_unique<Entry>(meta.addr, makeReadSeek(fs_file));
+    entry->EvidenceFile = ImgPath;
+    entry->FsIndex = FsIndex;
+    entry->FsOffset = CurFsOffset;
+    entry->AddrFlags = meta.flags;
+    entry->Path = path ? path : "";
+    entry->FileSize = meta.size;
+    Input->push(std::move(entry));
     InodeTracker.at(meta.addr - fs_file->fs_info->first_inum) = true;
   }
   // handle the name
