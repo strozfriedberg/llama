@@ -2,6 +2,7 @@
 
 #include <cstring>
 
+#include "entry.h"
 #include "evidenceioerror.h"
 #include "readseek_impl.h"
 #include "tsk.h"
@@ -506,4 +507,24 @@ TEST_CASE("readSeekTSK_throwsEvidenceIOError") {
   EvidenceIOError err("test error");
   REQUIRE(dynamic_cast<const std::runtime_error*>(&err) != nullptr);
   REQUIRE(std::string(err.what()).find("test error") != std::string::npos);
+}
+
+TEST_CASE("entryCarriesEvidenceContext") {
+  std::vector<uint8_t> buf{1, 2, 3};
+  auto rs = std::make_unique<ReadSeekBuf>(buf);
+  Entry entry(42, std::move(rs));
+  entry.EvidenceFile = "test.E01";
+  entry.FsIndex = 1;
+  entry.FsOffset = 32256;
+  entry.AddrFlags = 0x05;
+  entry.Path = "/Users/test/file.txt";
+  entry.FileSize = 1024;
+
+  REQUIRE(entry.Addr == 42);
+  REQUIRE(entry.EvidenceFile == "test.E01");
+  REQUIRE(entry.FsIndex == 1);
+  REQUIRE(entry.FsOffset == 32256);
+  REQUIRE(entry.AddrFlags == 0x05);
+  REQUIRE(entry.Path == "/Users/test/file.txt");
+  REQUIRE(entry.FileSize == 1024);
 }

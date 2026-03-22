@@ -8,9 +8,12 @@ public:
   ReadSeek& getStream() { return *stream; }
 
   uint64_t Addr;
-
-  // TODO: Add an attribute enum to signify different stream types
-  // E.g., alternate data streams, extracted PDF text, archive files
+  std::string EvidenceFile;
+  uint32_t    FsIndex = 0;
+  uint64_t    FsOffset = 0;
+  uint32_t    AddrFlags = 0;
+  std::string Path;
+  uint64_t    FileSize = 0;
 
 private:
   std::unique_ptr<ReadSeek> stream;
