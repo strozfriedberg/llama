@@ -1,6 +1,8 @@
 #pragma once
 
+#include "duckexception.h"
 #include "ducksig.h"
+#include "evidenceioerror.h"
 #include "filesignatures.h"
 #include "llamaduck.h"
 #include "duckhash.h"
@@ -84,6 +86,7 @@ private:
   LlamaDBAppender   SearchHitAppender;
   LlamaDBAppender   RuleMatchAppender;
   LlamaDBAppender   FileSigAppender;
+  LlamaDBAppender   ExceptionAppender;
 
   std::shared_ptr<ContextHandle> LgCtx; // not shared, could be unique_ptr
   std::shared_ptr<SFHASH_Hasher> Hasher; // not shared, could be unique_ptr
@@ -93,9 +96,12 @@ private:
   std::unique_ptr<HashBatch> Hashes;
   std::unique_ptr<DBBatch<SearchHit>> SearchHits;
   std::unique_ptr<FileSigBatch> FileSigs;
+  std::unique_ptr<ExceptionBatch> Exceptions;
 
   FileSigAnalyzer SigAnalyzer;
 
   double ProcTimeTotal;
+
+  void logException(const Entry& entry, const char* operation, const char* message);
 };
 

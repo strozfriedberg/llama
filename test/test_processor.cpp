@@ -2,6 +2,7 @@
 
 #include "processor.h"
 
+#include "duckexception.h"
 #include "ducksig.h"
 #include "filesignatures.h"
 #include "lightgrep/api.h"
@@ -89,6 +90,7 @@ private:
     DBType<SearchHit>::createTable(DbConn.get(), "search_hits");
     DBType<HashRec>::createTable(DbConn.get(), "hash");
     DBType<FileSigResult>::createTable(DbConn.get(), "file_signatures");
+    DBType<ExceptionRecord>::createTable(DbConn.get(), "exception_log");
 
     auto procContext = std::make_shared<ProcessorContext>(&Db, pHandle, RuleEngine, "", "", MagicsType{});
     return Processor(procContext);
@@ -215,6 +217,7 @@ TEST_CASE("Processor::flush clears batches to prevent duplicates") {
   DBType<HashRec>::createTable(conn.get(), "hash");
   DBType<SearchHit>::createTable(conn.get(), "search_hits");
   DBType<FileSigResult>::createTable(conn.get(), "file_signatures");
+  DBType<ExceptionRecord>::createTable(conn.get(), "exception_log");
 
   auto procContext = std::make_shared<ProcessorContext>(
     &db, nullptr, ruleEngine, "", "",
@@ -260,6 +263,7 @@ TEST_CASE("ProcessorContext can be constructed with SigMagics") {
   DBType<SearchHit>::createTable(conn.get(), "search_hits");
   DBType<RuleMatch>::createTable(conn.get(), "rule_hits");
   DBType<FileSigResult>::createTable(conn.get(), "file_signatures");
+  DBType<ExceptionRecord>::createTable(conn.get(), "exception_log");
 
   auto ruleEngine = std::make_shared<LlamaRuleEngine>();
   auto procContext = std::make_shared<ProcessorContext>(

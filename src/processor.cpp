@@ -1,6 +1,9 @@
 #include "processor.h"
 #include "progressinfo.h"
+#include "tskconversion.h"
 
+#include <chrono>
+#include <ctime>
 #include <hasher/api.h>
 
 #include <lightgrep/api.h>
@@ -78,12 +81,14 @@ Processor::Processor(std::shared_ptr<ProcessorContext> procContext):
   SearchHitAppender(DbConn.get(), "search_hits"),
   RuleMatchAppender(DbConn.get(), "rule_hits"),
   FileSigAppender(DbConn.get(), "file_signatures"),
+  ExceptionAppender(DbConn.get(), "exception_log"),
   LgCtx(Context->Prog.get() ? lg_create_context(Context->Prog.get(), &ctxOpts) : nullptr, lg_destroy_context),
   Hasher(sfhash_create_hasher(Context->getSupportedHashAlgsFromContext()), sfhash_destroy_hasher),
   HashRecord(),
   Hashes(std::make_unique<HashBatch>()),
   SearchHits(std::make_unique<DBBatch<SearchHit>>()),
   FileSigs(std::make_unique<FileSigBatch>()),
+  Exceptions(std::make_unique<ExceptionBatch>()),
   SigAnalyzer(Context->SigProg, Context->SigMagics),
   ProcTimeTotal(0)
 {
@@ -98,7 +103,13 @@ void Processor::process(Entry& entry) {
   SFHASH_HashValues h;
   {
     Timer procTime;
-    hashFile(Hasher.get(), entry.getStream(), Buf, h);
+    try {
+      hashFile(Hasher.get(), entry.getStream(), Buf, h);
+    } catch (const EvidenceIOError& e) {
+      logException(entry, "hash", e.what());
+      ProcTimeTotal += procTime.elapsed();
+      return;
+    }
     ProcTimeTotal += procTime.elapsed();
   }
   HashRecord.set(h, entry.Addr);
@@ -116,33 +127,41 @@ void Processor::process(Entry& entry) {
   // Detect file signatures
   bool hasPdfSig = false;
   {
-    std::vector<MagicPtr> sigResults;
-    entry.getStream().seek(0);
-    SigAnalyzer.getSignatures(entry.getStream(), sigResults);
-    for (const auto& sig : sigResults) {
-      FileSigs->add(FileSigResult{HashRecord.Blake3, sig->Id});
-      if (sig->Id == "8343f9e2-601f-4e88-8a78-09a3b5f906eb") {
-        hasPdfSig = true;
+    try {
+      std::vector<MagicPtr> sigResults;
+      entry.getStream().seek(0);
+      SigAnalyzer.getSignatures(entry.getStream(), sigResults);
+      for (const auto& sig : sigResults) {
+        FileSigs->add(FileSigResult{HashRecord.Blake3, sig->Id});
+        if (sig->Id == "8343f9e2-601f-4e88-8a78-09a3b5f906eb") {
+          hasPdfSig = true;
+        }
       }
+    } catch (const EvidenceIOError& e) {
+      logException(entry, "signature", e.what());
     }
   }
 
   {
     Timer procTime;
-    if (hasPdfSig) {
-      PDFReader reader;
-      reader.readTextFromPDF(entry.getStream());
-      char* text = reader.getExtractedText();
-      if (text) {
-        ReadSeekBuf rs(text);
-        search(rs);
+    try {
+      if (hasPdfSig) {
+        PDFReader reader;
+        reader.readTextFromPDF(entry.getStream());
+        char* text = reader.getExtractedText();
+        if (text) {
+          ReadSeekBuf rs(text);
+          search(rs);
+        }
+        else {
+          search(entry.getStream());
+        }
       }
       else {
         search(entry.getStream());
       }
-    }
-    else {
-      search(entry.getStream());
+    } catch (const EvidenceIOError& e) {
+      logException(entry, "search", e.what());
     }
     ProcTimeTotal += procTime.elapsed();
   }
@@ -183,6 +202,36 @@ void Processor::flush(void) {
     Hashes->clear();
     SearchHits->clear();
     FileSigs->clear();
+  }
+  if (Exceptions->size()) {
+    Exceptions->copyToDB(ExceptionAppender.get());
+    ExceptionAppender.flush();
+    Exceptions->clear();
+  }
+}
+
+void Processor::logException(const Entry& entry, const char* operation, const char* message) {
+  auto now = std::chrono::system_clock::now();
+  auto time_t_now = std::chrono::system_clock::to_time_t(now);
+  char timebuf[32];
+  std::strftime(timebuf, sizeof(timebuf), "%Y-%m-%dT%H:%M:%S", std::gmtime(&time_t_now));
+
+  ExceptionRecord rec;
+  rec.EvidenceFile = entry.EvidenceFile;
+  rec.FsIndex = entry.FsIndex;
+  rec.FsOffset = entry.FsOffset;
+  rec.Addr = entry.Addr;
+  rec.AddrFlags = TskUtils::metaFlags(entry.AddrFlags);
+  rec.Path = entry.Path;
+  rec.FileSize = entry.FileSize;
+  rec.Operation = operation;
+  rec.Timestamp = timebuf;
+  rec.Message = message;
+
+  Exceptions->add(rec);
+
+  if (Context->Progress) {
+    Context->Progress->addException();
   }
 }
 
