@@ -51,7 +51,7 @@ size_t ReadSeekFile::read(size_t len, std::vector<uint8_t>& buf) {
   size_t ret = std::fread(buf.data(), 1, len, FilePtr.get());
   buf.resize(ret);
   Pos = std::min(Size, Pos + ret);
-  THROW_IF(ret < len && std::ferror(FilePtr.get()), "call to fread() had error");
+  THROW_EVIDENCE_IF(ret < len && std::ferror(FilePtr.get()), "call to fread() had error");
   assert(ret <= len && "read returned more bytes than requested");
   assert(buf.size() == ret && "vector size must match bytes read");
   return ret;
@@ -63,7 +63,7 @@ size_t ReadSeekFile::read(size_t len, uint8_t* buf) {
   }
   size_t ret = std::fread(buf, 1, len, FilePtr.get());
   Pos = std::min(Size, Pos + ret);
-  THROW_IF(ret < len && std::ferror(FilePtr.get()), "call to fread() had error");
+  THROW_EVIDENCE_IF(ret < len && std::ferror(FilePtr.get()), "call to fread() had error");
   assert(ret <= len && "read returned more bytes than requested");
   return ret;
 }
