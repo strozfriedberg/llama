@@ -392,3 +392,111 @@ TEST_CASE("readSeekTSK_readFullVectorChecksTellg") {
   REQUIRE(rs.tellg() == rs.size());  // This will FAIL — tellg() returns 0
   rs.close();
 }
+
+TEST_CASE("readSeekTSK_readFullRawPtr") {
+  TSKTestFixture fix;
+  REQUIRE(fix.fs);
+  auto rs = fix.makeRS(TSK_TEST_INUM);
+  REQUIRE(rs.open());
+  testReadFullRawPtr(rs);
+  rs.close();
+}
+
+TEST_CASE("readSeekTSK_readAtEOFReturnsZero") {
+  TSKTestFixture fix;
+  REQUIRE(fix.fs);
+  auto rs = fix.makeRS(TSK_TEST_INUM);
+  REQUIRE(rs.open());
+  testReadAtEOFReturnsZero(rs);
+  rs.close();
+}
+
+TEST_CASE("readSeekTSK_readPastEOFRawPtrReturnsZero") {
+  TSKTestFixture fix;
+  REQUIRE(fix.fs);
+  auto rs = fix.makeRS(TSK_TEST_INUM);
+  REQUIRE(rs.open());
+  testReadPastEOFRawPtrReturnsZero(rs);
+  rs.close();
+}
+
+TEST_CASE("readSeekTSK_partialReadAtEnd") {
+  TSKTestFixture fix;
+  REQUIRE(fix.fs);
+  auto rs = fix.makeRS(TSK_TEST_INUM);
+  REQUIRE(rs.open());
+  testPartialReadAtEnd(rs);
+  rs.close();
+}
+
+TEST_CASE("readSeekTSK_partialReadAtEndRawPtr") {
+  TSKTestFixture fix;
+  REQUIRE(fix.fs);
+  auto rs = fix.makeRS(TSK_TEST_INUM);
+  REQUIRE(rs.open());
+  testPartialReadAtEndRawPtr(rs);
+  rs.close();
+}
+
+TEST_CASE("readSeekTSK_seekAndRead") {
+  TSKTestFixture fix;
+  REQUIRE(fix.fs);
+  auto rs = fix.makeRS(TSK_TEST_INUM);
+  REQUIRE(rs.open());
+  testSeekAndRead(rs);
+  rs.close();
+}
+
+TEST_CASE("readSeekTSK_seekPastEndClampsToSize") {
+  TSKTestFixture fix;
+  REQUIRE(fix.fs);
+  auto rs = fix.makeRS(TSK_TEST_INUM);
+  REQUIRE(rs.open());
+  testSeekPastEndClampsToSize(rs);
+  rs.close();
+}
+
+TEST_CASE("readSeekTSK_zeroLengthReadVector") {
+  TSKTestFixture fix;
+  REQUIRE(fix.fs);
+  auto rs = fix.makeRS(TSK_TEST_INUM);
+  REQUIRE(rs.open());
+  testZeroLengthReadVector(rs);
+  rs.close();
+}
+
+TEST_CASE("readSeekTSK_zeroLengthReadRawPtr") {
+  TSKTestFixture fix;
+  REQUIRE(fix.fs);
+  auto rs = fix.makeRS(TSK_TEST_INUM);
+  REQUIRE(rs.open());
+  testZeroLengthReadRawPtr(rs);
+  rs.close();
+}
+
+TEST_CASE("readSeekTSK_chunkedReadMatchesFullContent") {
+  TSKTestFixture fix;
+  REQUIRE(fix.fs);
+  auto rs = fix.makeRS(TSK_TEST_INUM);
+  REQUIRE(rs.open());
+  testChunkedReadMatchesFullContent(rs);
+  rs.close();
+}
+
+TEST_CASE("readSeekTSK_rewindAndReread") {
+  TSKTestFixture fix;
+  REQUIRE(fix.fs);
+  auto rs = fix.makeRS(TSK_TEST_INUM);
+  REQUIRE(rs.open());
+  testRewindAndReread(rs);
+  rs.close();
+}
+
+TEST_CASE("readSeekTSK_vectorAndRawPtrReturnSameData") {
+  TSKTestFixture fix;
+  REQUIRE(fix.fs);
+  auto rs = fix.makeRS(TSK_TEST_INUM);
+  REQUIRE(rs.open());
+  testVectorAndRawPtrReturnSameData(rs);
+  rs.close();
+}

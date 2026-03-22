@@ -105,8 +105,10 @@ size_t ReadSeekTSK::read(size_t len, std::vector<uint8_t>& buf) {
   if (!FilePtr || len == 0 || Pos >= size_t(FilePtr->meta->size)) {
     return 0;
   }
-  buf.resize(len);
-  auto bytesRead = tsk_fs_file_read(FilePtr, Pos, (char*)buf.data(), len, TSK_FS_FILE_READ_FLAG_NONE);
+  size_t remaining = static_cast<size_t>(FilePtr->meta->size - Pos);
+  size_t toRead = std::min(len, remaining);
+  buf.resize(toRead);
+  auto bytesRead = tsk_fs_file_read(FilePtr, Pos, (char*)buf.data(), toRead, TSK_FS_FILE_READ_FLAG_NONE);
   THROW_IF(bytesRead < 0, "tsk_fs_file_read() failed for inode " << Inum);
   buf.resize(bytesRead);
   Pos += bytesRead;
@@ -114,10 +116,12 @@ size_t ReadSeekTSK::read(size_t len, std::vector<uint8_t>& buf) {
 }
 
 size_t ReadSeekTSK::read(size_t len, uint8_t* buf) {
-  if (!(FilePtr) || Pos >= size_t(FilePtr->meta->size) || len == 0) {
+  if (!FilePtr || Pos >= size_t(FilePtr->meta->size) || len == 0) {
     return 0;
   }
-  auto bytesRead = tsk_fs_file_read(FilePtr, Pos, (char*)buf, len, TSK_FS_FILE_READ_FLAG_NONE);
+  size_t remaining = static_cast<size_t>(FilePtr->meta->size - Pos);
+  size_t toRead = std::min(len, remaining);
+  auto bytesRead = tsk_fs_file_read(FilePtr, Pos, (char*)buf, toRead, TSK_FS_FILE_READ_FLAG_NONE);
   THROW_IF(bytesRead < 0, "tsk_fs_file_read() failed for inode " << Inum);
   Pos += bytesRead;
   return bytesRead;
