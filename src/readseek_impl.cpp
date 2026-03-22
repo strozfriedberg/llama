@@ -6,7 +6,7 @@
 
 #include "throw.h"
 
-int64_t ReadSeekBuf::read(size_t len, std::vector<uint8_t>& buf) {
+size_t ReadSeekBuf::read(size_t len, std::vector<uint8_t>& buf) {
   if (Pos >= Buf.size()) {
     return 0;
   }
@@ -19,7 +19,7 @@ int64_t ReadSeekBuf::read(size_t len, std::vector<uint8_t>& buf) {
   return toRead;
 }
 
-int64_t ReadSeekBuf::read(size_t len, uint8_t* buf) {
+size_t ReadSeekBuf::read(size_t len, uint8_t* buf) {
   if (Pos >= Buf.size()) {
     return 0;
   }
@@ -39,7 +39,7 @@ ReadSeekFile::ReadSeekFile(std::shared_ptr<FILE> fileptr):
   std::fseek(FilePtr.get(), 0, SEEK_SET);
 }
 
-int64_t ReadSeekFile::read(size_t len, std::vector<uint8_t>& buf) {
+size_t ReadSeekFile::read(size_t len, std::vector<uint8_t>& buf) {
   if (len == 0 || std::feof(FilePtr.get())) {
     return 0;
   }
@@ -51,7 +51,7 @@ int64_t ReadSeekFile::read(size_t len, std::vector<uint8_t>& buf) {
   return ret;
 };
 
-int64_t ReadSeekFile::read(size_t len, uint8_t* buf) {
+size_t ReadSeekFile::read(size_t len, uint8_t* buf) {
   if (len == 0 || std::feof(FilePtr.get())) {
     return 0;
   }
@@ -101,7 +101,7 @@ void ReadSeekTSK::close(void) {
   }
 }
 
-int64_t ReadSeekTSK::read(size_t len, std::vector<uint8_t>& buf) {
+size_t ReadSeekTSK::read(size_t len, std::vector<uint8_t>& buf) {
   if (FilePtr && Pos < size_t(FilePtr->meta->size)) {
     buf.resize(len);
     auto bytesRead = tsk_fs_file_read(FilePtr, Pos, (char*)buf.data(), len, TSK_FS_FILE_READ_FLAG_NONE);
@@ -116,7 +116,7 @@ int64_t ReadSeekTSK::read(size_t len, std::vector<uint8_t>& buf) {
   return 0;
 }
 
-int64_t ReadSeekTSK::read(size_t len, uint8_t* buf) {
+size_t ReadSeekTSK::read(size_t len, uint8_t* buf) {
   if (!(FilePtr) || Pos >= size_t(FilePtr->meta->size) || len == 0) {
     return 0;
   }

@@ -13,8 +13,8 @@ public:
 
   virtual uint64_t getID() const = 0;
 
-  virtual int64_t read(size_t len, std::vector<uint8_t>& buf) = 0;
-  virtual int64_t read(size_t len, uint8_t* buf) = 0;
+  virtual size_t read(size_t len, std::vector<uint8_t>& buf) = 0;
+  virtual size_t read(size_t len, uint8_t* buf) = 0;
 
   virtual size_t tellg() const = 0;
   virtual size_t seek(size_t pos) = 0;
