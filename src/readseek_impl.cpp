@@ -40,11 +40,12 @@ ReadSeekFile::ReadSeekFile(std::shared_ptr<FILE> fileptr):
 }
 
 int64_t ReadSeekFile::read(size_t len, std::vector<uint8_t>& buf) {
-  if (std::feof(FilePtr.get()) || len == 0) {
+  if (len == 0 || std::feof(FilePtr.get())) {
     return 0;
   }
   buf.resize(len);
   size_t ret = std::fread(buf.data(), 1, len, FilePtr.get());
+  buf.resize(ret);
   Pos = std::min(Size, Pos + ret);
   THROW_IF(ret < len && std::ferror(FilePtr.get()), "call to fread() had error");
   return ret;

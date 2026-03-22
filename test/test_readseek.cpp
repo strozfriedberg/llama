@@ -119,6 +119,21 @@ void testRewindAndReread(ReadSeek& rs) {
   REQUIRE(buf1 == buf2);
 }
 
+void testPartialReadAtEnd(ReadSeek& rs) {
+  // Read full content to get the last byte
+  rs.seek(0);
+  std::vector<uint8_t> full(rs.size());
+  rs.read(rs.size(), full.data());
+  uint8_t lastByte = full.back();
+
+  rs.seek(rs.size() - 1);
+  std::vector<uint8_t> buf;
+  REQUIRE(rs.read(100, buf) == 1);
+  REQUIRE(buf.size() == 1);
+  REQUIRE(buf[0] == lastByte);
+  REQUIRE(rs.tellg() == rs.size());
+}
+
 void testVectorAndRawPtrReturnSameData(ReadSeek& rs) {
   size_t sz = rs.size();
   std::vector<uint8_t> vecBuf;
@@ -191,6 +206,11 @@ TEST_CASE("readSeekBuf_rewindAndReread") {
 TEST_CASE("readSeekBuf_vectorAndRawPtrReturnSameData") {
   auto rs = makeBufRS();
   testVectorAndRawPtrReturnSameData(rs);
+}
+
+TEST_CASE("readSeekBuf_partialReadAtEnd") {
+  auto rs = makeBufRS();
+  testPartialReadAtEnd(rs);
 }
 
 TEST_CASE("readSeekBuf_emptyBuffer") {
@@ -282,4 +302,10 @@ TEST_CASE("readSeekFile_vectorAndRawPtrReturnSameData") {
   std::shared_ptr<FILE> f;
   auto rs = makeFileRS(f);
   testVectorAndRawPtrReturnSameData(rs);
+}
+
+TEST_CASE("readSeekFile_partialReadAtEnd") {
+  std::shared_ptr<FILE> f;
+  auto rs = makeFileRS(f);
+  testPartialReadAtEnd(rs);
 }
