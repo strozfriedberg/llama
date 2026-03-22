@@ -134,6 +134,26 @@ void testPartialReadAtEnd(ReadSeek& rs) {
   REQUIRE(rs.tellg() == rs.size());
 }
 
+void testChunkedReadMatchesFullContent(ReadSeek& rs) {
+  // Read full content for comparison
+  rs.seek(0);
+  std::vector<uint8_t> fullContent(rs.size());
+  rs.read(rs.size(), fullContent.data());
+
+  // Rewind and read in chunks via vector overload
+  rs.seek(0);
+  std::vector<uint8_t> buf;
+  std::vector<uint8_t> accumulated;
+  while (true) {
+    size_t n = rs.read(2, buf);
+    if (n == 0) break;
+    REQUIRE(buf.size() == n);
+    accumulated.insert(accumulated.end(), buf.begin(), buf.end());
+  }
+  REQUIRE(accumulated == fullContent);
+  REQUIRE(rs.tellg() == rs.size());
+}
+
 void testVectorAndRawPtrReturnSameData(ReadSeek& rs) {
   size_t sz = rs.size();
   std::vector<uint8_t> vecBuf;
@@ -211,6 +231,11 @@ TEST_CASE("readSeekBuf_vectorAndRawPtrReturnSameData") {
 TEST_CASE("readSeekBuf_partialReadAtEnd") {
   auto rs = makeBufRS();
   testPartialReadAtEnd(rs);
+}
+
+TEST_CASE("readSeekBuf_chunkedReadMatchesFullContent") {
+  auto rs = makeBufRS();
+  testChunkedReadMatchesFullContent(rs);
 }
 
 TEST_CASE("readSeekBuf_emptyBuffer") {
@@ -308,4 +333,10 @@ TEST_CASE("readSeekFile_partialReadAtEnd") {
   std::shared_ptr<FILE> f;
   auto rs = makeFileRS(f);
   testPartialReadAtEnd(rs);
+}
+
+TEST_CASE("readSeekFile_chunkedReadMatchesFullContent") {
+  std::shared_ptr<FILE> f;
+  auto rs = makeFileRS(f);
+  testChunkedReadMatchesFullContent(rs);
 }
