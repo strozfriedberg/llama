@@ -115,6 +115,11 @@ void Llama::search() {
 
     progressThread.stop();
 
+    if (progressInfo.exceptionCount() > 0) {
+      std::cerr << progressInfo.exceptionCount()
+                << " evidence I/O exceptions encountered -- see exception_log table\n";
+    }
+
     std::cerr << "Hashing Time: " << scheduler->getProcessorTime() << "s\n";
 
     RuleEngine->writeRulesToDb(DbConn);
