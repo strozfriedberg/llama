@@ -116,7 +116,7 @@ size_t ReadSeekTSK::read(size_t len, std::vector<uint8_t>& buf) {
   size_t toRead = std::min(len, remaining);
   buf.resize(toRead);
   auto bytesRead = tsk_fs_file_read(FilePtr, Pos, (char*)buf.data(), toRead, TSK_FS_FILE_READ_FLAG_NONE);
-  THROW_IF(bytesRead < 0, "tsk_fs_file_read() failed for inode " << Inum);
+  THROW_EVIDENCE_IF(bytesRead < 0, "tsk_fs_file_read() failed for inode " << Inum);
   buf.resize(bytesRead);
   Pos += bytesRead;
   assert(static_cast<size_t>(bytesRead) <= len && "read returned more bytes than requested");
@@ -131,7 +131,7 @@ size_t ReadSeekTSK::read(size_t len, uint8_t* buf) {
   size_t remaining = static_cast<size_t>(FilePtr->meta->size - Pos);
   size_t toRead = std::min(len, remaining);
   auto bytesRead = tsk_fs_file_read(FilePtr, Pos, (char*)buf, toRead, TSK_FS_FILE_READ_FLAG_NONE);
-  THROW_IF(bytesRead < 0, "tsk_fs_file_read() failed for inode " << Inum);
+  THROW_EVIDENCE_IF(bytesRead < 0, "tsk_fs_file_read() failed for inode " << Inum);
   Pos += bytesRead;
   assert(static_cast<size_t>(bytesRead) <= len && "read returned more bytes than requested");
   return bytesRead;

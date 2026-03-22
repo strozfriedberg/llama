@@ -2,6 +2,7 @@
 
 #include <cstring>
 
+#include "evidenceioerror.h"
 #include "readseek_impl.h"
 #include "tsk.h"
 
@@ -499,4 +500,10 @@ TEST_CASE("readSeekTSK_vectorAndRawPtrReturnSameData") {
   REQUIRE(rs.open());
   testVectorAndRawPtrReturnSameData(rs);
   rs.close();
+}
+
+TEST_CASE("readSeekTSK_throwsEvidenceIOError") {
+  EvidenceIOError err("test error");
+  REQUIRE(dynamic_cast<const std::runtime_error*>(&err) != nullptr);
+  REQUIRE(std::string(err.what()).find("test error") != std::string::npos);
 }
