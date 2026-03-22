@@ -52,11 +52,12 @@ int64_t ReadSeekFile::read(size_t len, std::vector<uint8_t>& buf) {
 };
 
 int64_t ReadSeekFile::read(size_t len, uint8_t* buf) {
-  if (std::feof(FilePtr.get()) || len == 0) {
+  if (len == 0 || std::feof(FilePtr.get())) {
     return 0;
   }
   size_t ret = std::fread(buf, 1, len, FilePtr.get());
   Pos = std::min(Size, Pos + ret);
+  THROW_IF(ret < len && std::ferror(FilePtr.get()), "call to fread() had error");
   return ret;
 }
 
