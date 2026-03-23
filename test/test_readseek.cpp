@@ -4,6 +4,7 @@
 
 #include "entry.h"
 #include "evidenceioerror.h"
+#include "processor.h"
 #include "readseek_impl.h"
 #include "tsk.h"
 
@@ -546,4 +547,29 @@ TEST_CASE("entryStreamCanBeSetAfterConstruction") {
 
   REQUIRE(entry.getStream().open());
   REQUIRE(entry.getStream().size() == 3);
+}
+
+TEST_CASE("processorCreatesReadSeekFromEntry") {
+  Entry entry(TSK_TEST_INUM);
+  entry.EvidenceFile = "test/data/ntfs-img-kw-1.dd";
+  entry.FsOffset = 0;
+  entry.FsType = TSK_FS_TYPE_DETECT;
+
+  // Set up database with required tables
+  LlamaDB db;
+  LlamaDBConnection dbConn(db);
+  auto ruleEngine = std::make_shared<LlamaRuleEngine>();
+  ruleEngine->createTables(dbConn);
+  DBType<HashRec>::createTable(dbConn.get(), "hash");
+  DBType<ExceptionRecord>::createTable(dbConn.get(), "exception_log");
+
+  auto ctx = std::make_shared<ProcessorContext>(
+    &db, nullptr, ruleEngine, "", "", MagicsType{}
+  );
+  Processor proc(ctx);
+
+  proc.createReadSeek(entry);
+  REQUIRE(entry.getStream().open());
+  REQUIRE(entry.getStream().size() == TSK_TEST_SIZE);
+  entry.getStream().close();
 }

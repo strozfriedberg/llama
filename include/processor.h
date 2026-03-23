@@ -10,9 +10,11 @@
 #include "hashset.h"
 #include "pdfreader.h"
 #include "ruleengine.h"
+#include "tsk.h"
 #include <lightgrep/search_hit.h>
 
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 struct ProgramHandle;
@@ -59,6 +61,8 @@ public:
   void process(Entry& entry);
   void processBatch(const std::shared_ptr<std::vector<std::unique_ptr<Entry>>>& entries);
 
+  void createReadSeek(Entry& entry);
+
   void flush(void);
 
   Processor(const Processor&) = delete;
@@ -101,6 +105,9 @@ private:
   FileSigAnalyzer SigAnalyzer;
 
   double ProcTimeTotal;
+
+  std::unique_ptr<TSK_IMG_INFO, void(*)(TSK_IMG_INFO*)> Img;
+  std::unordered_map<TSK_OFF_T, std::shared_ptr<TSK_FS_INFO>> FsHandles;
 
   void logException(const Entry& entry, const char* operation, const char* message);
 };

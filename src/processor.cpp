@@ -89,13 +89,36 @@ Processor::Processor(std::shared_ptr<ProcessorContext> procContext):
   FileSigs(std::make_unique<FileSigBatch>()),
   Exceptions(std::make_unique<ExceptionBatch>()),
   SigAnalyzer(Context->SigProg, Context->SigMagics),
-  ProcTimeTotal(0)
+  ProcTimeTotal(0),
+  Img(nullptr, tsk_img_close)
 {
   Buf.reserve(1 << 20);
 }
 
 std::shared_ptr<Processor> Processor::clone() const {
   return std::make_shared<Processor>(Context);
+}
+
+void Processor::createReadSeek(Entry& entry) {
+  if (!Img) {
+    const char* path = entry.EvidenceFile.c_str();
+    Img.reset(tsk_img_open_utf8(1, &path, TSK_IMG_TYPE_DETECT, 0));
+    if (!Img) {
+      throw std::runtime_error("Failed to open image: " + entry.EvidenceFile);
+    }
+  }
+  auto [itr, absent] = FsHandles.try_emplace(entry.FsOffset, nullptr);
+  if (absent) {
+    itr->second = std::shared_ptr<TSK_FS_INFO>(
+      tsk_fs_open_img(Img.get(), entry.FsOffset, entry.FsType),
+      tsk_fs_close
+    );
+    if (!itr->second) {
+      FsHandles.erase(itr);
+      throw std::runtime_error("Failed to open filesystem at offset " + std::to_string(entry.FsOffset));
+    }
+  }
+  entry.setStream(std::make_unique<ReadSeekTSK>(itr->second, entry.Addr));
 }
 
 void Processor::process(Entry& entry) {
