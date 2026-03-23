@@ -113,10 +113,11 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file, const char* path) {
     //Input->push({std::move(jmeta), makeBlockSequence(fs_file)});
 
     Input->push(inode);
-    auto entry = std::make_unique<Entry>(meta.addr, makeReadSeek(fs_file));
+    auto entry = std::make_unique<Entry>(meta.addr);
     entry->EvidenceFile = ImgPath;
     entry->FsIndex = FsIndex;
     entry->FsOffset = CurFsOffset;
+    entry->FsType = fs_file->fs_info->ftype;
     entry->AddrFlags = meta.flags;
     entry->Path = path ? path : "";
     entry->FileSize = meta.size;
