@@ -536,3 +536,14 @@ TEST_CASE("entryConstructsWithAddrOnly") {
   REQUIRE(entry.FsOffset == 0);
   REQUIRE(entry.FsType == TSK_FS_TYPE_DETECT);
 }
+
+TEST_CASE("entryStreamCanBeSetAfterConstruction") {
+  Entry entry(42);
+
+  std::vector<uint8_t> buf{1, 2, 3};
+  auto rs = std::make_unique<ReadSeekBuf>(buf);
+  entry.setStream(std::move(rs));
+
+  REQUIRE(entry.getStream().open());
+  REQUIRE(entry.getStream().size() == 3);
+}
