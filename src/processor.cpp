@@ -193,6 +193,9 @@ void Processor::processBatch(const std::shared_ptr<std::vector<std::unique_ptr<E
   uint64_t pendingInodes = 0;
   uint64_t pendingBytes = 0;
   for (auto& entry : *entries) {
+    if (!entry->hasStream()) {
+      createReadSeek(*entry);
+    }
     if (entry->getStream().open()) {
       pendingBytes += entry->getStream().size();
       process(*entry);

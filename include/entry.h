@@ -9,6 +9,7 @@ public:
   Entry(uint64_t addr, std::unique_ptr<ReadSeek> rs) : Addr(addr), stream(std::move(rs)) {}
   ReadSeek& getStream() { return *stream; }
   void setStream(std::unique_ptr<ReadSeek> rs) { stream = std::move(rs); }
+  bool hasStream() const { return stream != nullptr; }
 
   uint64_t Addr;
   std::string EvidenceFile;

@@ -574,6 +574,39 @@ TEST_CASE("processorCreatesReadSeekFromEntry") {
   entry.getStream().close();
 }
 
+TEST_CASE("processBatchCreatesReadSeekWhenMissing") {
+  // Set up database with required tables
+  LlamaDB db;
+  LlamaDBConnection dbConn(db);
+  auto ruleEngine = std::make_shared<LlamaRuleEngine>();
+  ruleEngine->createTables(dbConn);
+  DBType<HashRec>::createTable(dbConn.get(), "hash");
+  DBType<ExceptionRecord>::createTable(dbConn.get(), "exception_log");
+
+  auto ctx = std::make_shared<ProcessorContext>(
+    &db, nullptr, ruleEngine, "", "", MagicsType{}
+  );
+  Processor proc(ctx);
+
+  auto entries = std::make_shared<std::vector<std::unique_ptr<Entry>>>();
+  auto entry = std::make_unique<Entry>(TSK_TEST_INUM);
+  entry->EvidenceFile = "test/data/ntfs-img-kw-1.dd";
+  entry->FsOffset = 0;
+  entry->FsType = TSK_FS_TYPE_DETECT;
+  entries->push_back(std::move(entry));
+
+  // processBatch should create the ReadSeek itself and process the entry
+  proc.processBatch(entries);
+
+  // Verify a hash was produced (entry was processed)
+  // processBatch calls flush(), which moves hashes to DB and clears the batch,
+  // so we query the DB directly
+  duckdb_result result;
+  duckdb_query(dbConn.get(), "SELECT count(*) FROM hash", &result);
+  REQUIRE(duckdb_value_int64(&result, 0, 0) == 1);
+  duckdb_destroy_result(&result);
+}
+
 TEST_CASE("clonedProcessorOpensIndependentHandles") {
   // Set up database with required tables
   LlamaDB db;
