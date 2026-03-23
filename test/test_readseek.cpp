@@ -528,3 +528,11 @@ TEST_CASE("entryCarriesEvidenceContext") {
   REQUIRE(entry.Path == "/Users/test/file.txt");
   REQUIRE(entry.FileSize == 1024);
 }
+
+TEST_CASE("entryConstructsWithAddrOnly") {
+  Entry entry(42);
+  REQUIRE(entry.Addr == 42);
+  REQUIRE(entry.FileSize == 0);
+  REQUIRE(entry.FsOffset == 0);
+  REQUIRE(entry.FsType == TSK_FS_TYPE_DETECT);
+}

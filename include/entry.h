@@ -1,9 +1,11 @@
 #pragma once
 
 #include "readseek.h"
+#include "tsk.h"
 
 class Entry {
 public:
+  Entry(uint64_t addr) : Addr(addr) {}
   Entry(uint64_t addr, std::unique_ptr<ReadSeek> rs) : Addr(addr), stream(std::move(rs)) {}
   ReadSeek& getStream() { return *stream; }
 
@@ -14,6 +16,7 @@ public:
   uint32_t    AddrFlags = 0;
   std::string Path;
   uint64_t    FileSize = 0;
+  TSK_FS_TYPE_ENUM FsType = TSK_FS_TYPE_DETECT;
 
 private:
   std::unique_ptr<ReadSeek> stream;
