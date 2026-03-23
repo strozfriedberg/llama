@@ -1,10 +1,9 @@
-// ABOUTME: Formats Unix timestamps as human-readable "YYYY-MM-DD HH:MM:SS[.nnnnnnnnn]" strings
-// ABOUTME: Uses C++20 chrono for date decomposition and fixed-point integer arithmetic for fractional seconds
+// ABOUTME: Formats timestamps as human-readable strings using C++20 chrono
+// ABOUTME: Uses digit lookup table and fixed-point arithmetic for speed; no locale dependency
 
 #include "timestamps.h"
 
 #include <chrono>
-#include <cstdio>
 
 namespace {
   // Lookup table for two-digit ASCII conversion (00-99)
@@ -20,6 +19,43 @@ namespace {
     {'8','0'}, {'8','1'}, {'8','2'}, {'8','3'}, {'8','4'}, {'8','5'}, {'8','6'}, {'8','7'}, {'8','8'}, {'8','9'},
     {'9','0'}, {'9','1'}, {'9','2'}, {'9','3'}, {'9','4'}, {'9','5'}, {'9','6'}, {'9','7'}, {'9','8'}, {'9','9'}
   };
+
+  // Writes "YYYY-MM-DD{sep}HH:MM:SS" (19 chars) into buf using the digit lookup table.
+  // buf must have room for at least 19 bytes.
+  static void formatDateTimeTo(std::chrono::sys_seconds tp, char sep, char* buf) {
+    const auto dp = std::chrono::floor<std::chrono::days>(tp);
+    const auto ymd = std::chrono::year_month_day{dp};
+    const auto tod = std::chrono::hh_mm_ss<std::chrono::seconds>{tp - dp};
+
+    const int year   = static_cast<int>(ymd.year());
+    const unsigned month = static_cast<unsigned>(ymd.month());
+    const unsigned day   = static_cast<unsigned>(ymd.day());
+    const unsigned hour  = tod.hours().count();
+    const unsigned min   = tod.minutes().count();
+    const unsigned sec   = tod.seconds().count();
+
+    const unsigned year_high = year / 100;
+    const unsigned year_low = year % 100;
+    buf[0] = digits[year_high][0];
+    buf[1] = digits[year_high][1];
+    buf[2] = digits[year_low][0];
+    buf[3] = digits[year_low][1];
+    buf[4] = '-';
+    buf[5] = digits[month][0];
+    buf[6] = digits[month][1];
+    buf[7] = '-';
+    buf[8] = digits[day][0];
+    buf[9] = digits[day][1];
+    buf[10] = sep;
+    buf[11] = digits[hour][0];
+    buf[12] = digits[hour][1];
+    buf[13] = ':';
+    buf[14] = digits[min][0];
+    buf[15] = digits[min][1];
+    buf[16] = ':';
+    buf[17] = digits[sec][0];
+    buf[18] = digits[sec][1];
+  }
 }
 
 void formatTimestamp(int64_t unix_time, uint64_t ns, std::string& out) {
@@ -31,47 +67,8 @@ void formatTimestamp(int64_t unix_time, uint64_t ns, std::string& out) {
 
   out.reserve(30); // max: "YYYY-MM-DD HH:MM:SS.nnnnnnnnn"
 
-  // Decompose into calendar date and time-of-day
-  const auto sys_time = std::chrono::sys_seconds{std::chrono::seconds{unix_time}};
-  const auto dp = std::chrono::floor<std::chrono::days>(sys_time);
-  const auto ymd = std::chrono::year_month_day{dp};
-  const auto tod = std::chrono::hh_mm_ss<std::chrono::seconds>{sys_time - dp};
-
-  const int year   = static_cast<int>(ymd.year());
-  const unsigned month = static_cast<unsigned>(ymd.month());
-  const unsigned day   = static_cast<unsigned>(ymd.day());
-  const unsigned hour  = tod.hours().count();
-  const unsigned min   = tod.minutes().count();
-  const unsigned sec   = tod.seconds().count();
-
-
-  // Format "YYYY-MM-DD HH:MM:SS" directly into a stack buffer
   char buf[29];
-
-  // Year: split into two 2-digit pairs
-  const unsigned year_high = year / 100;
-  const unsigned year_low = year % 100;
-  buf[0] = digits[year_high][0];
-  buf[1] = digits[year_high][1];
-  buf[2] = digits[year_low][0];
-  buf[3] = digits[year_low][1];
-  buf[4] = '-';
-
-  // Month, day, hour, min, sec: direct 2-digit lookups
-  buf[5] = digits[month][0];
-  buf[6] = digits[month][1];
-  buf[7] = '-';
-  buf[8] = digits[day][0];
-  buf[9] = digits[day][1];
-  buf[10] = ' ';
-  buf[11] = digits[hour][0];
-  buf[12] = digits[hour][1];
-  buf[13] = ':';
-  buf[14] = digits[min][0];
-  buf[15] = digits[min][1];
-  buf[16] = ':';
-  buf[17] = digits[sec][0];
-  buf[18] = digits[sec][1];
+  formatDateTimeTo(std::chrono::sys_seconds{std::chrono::seconds{unix_time}}, ' ', buf);
 
   int num = 19;
 
@@ -107,18 +104,7 @@ std::string formatTimestamp(int64_t unix_time, uint64_t ns) {
 }
 
 std::string nowISO() {
-  auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
-  auto dp = std::chrono::floor<std::chrono::days>(now);
-  auto ymd = std::chrono::year_month_day{dp};
-  auto tod = std::chrono::hh_mm_ss<std::chrono::seconds>{now - dp};
-
-  char buf[20];
-  std::snprintf(buf, sizeof(buf), "%04d-%02u-%02uT%02u:%02u:%02u",
-    static_cast<int>(ymd.year()),
-    static_cast<unsigned>(ymd.month()),
-    static_cast<unsigned>(ymd.day()),
-    static_cast<unsigned>(tod.hours().count()),
-    static_cast<unsigned>(tod.minutes().count()),
-    static_cast<unsigned>(tod.seconds().count()));
-  return std::string(buf);
+  char buf[19];
+  formatDateTimeTo(std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()), 'T', buf);
+  return std::string(buf, 19);
 }
