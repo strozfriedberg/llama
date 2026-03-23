@@ -4,7 +4,7 @@
 #include "timestamps.h"
 
 #include <chrono>
-#include <format>
+#include <cstdio>
 
 namespace {
   // Lookup table for two-digit ASCII conversion (00-99)
@@ -108,5 +108,17 @@ std::string formatTimestamp(int64_t unix_time, uint64_t ns) {
 
 std::string nowISO() {
   auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
-  return std::format("{:%FT%T}", now);
+  auto dp = std::chrono::floor<std::chrono::days>(now);
+  auto ymd = std::chrono::year_month_day{dp};
+  auto tod = std::chrono::hh_mm_ss<std::chrono::seconds>{now - dp};
+
+  char buf[20];
+  std::snprintf(buf, sizeof(buf), "%04d-%02u-%02uT%02u:%02u:%02u",
+    static_cast<int>(ymd.year()),
+    static_cast<unsigned>(ymd.month()),
+    static_cast<unsigned>(ymd.day()),
+    static_cast<unsigned>(tod.hours().count()),
+    static_cast<unsigned>(tod.minutes().count()),
+    static_cast<unsigned>(tod.seconds().count()));
+  return std::string(buf);
 }
