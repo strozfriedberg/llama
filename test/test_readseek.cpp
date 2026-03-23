@@ -573,3 +573,47 @@ TEST_CASE("processorCreatesReadSeekFromEntry") {
   REQUIRE(entry.getStream().size() == TSK_TEST_SIZE);
   entry.getStream().close();
 }
+
+TEST_CASE("clonedProcessorOpensIndependentHandles") {
+  // Set up database with required tables
+  LlamaDB db;
+  LlamaDBConnection dbConn(db);
+  auto ruleEngine = std::make_shared<LlamaRuleEngine>();
+  ruleEngine->createTables(dbConn);
+  DBType<HashRec>::createTable(dbConn.get(), "hash");
+  DBType<ExceptionRecord>::createTable(dbConn.get(), "exception_log");
+
+  auto ctx = std::make_shared<ProcessorContext>(
+    &db, nullptr, ruleEngine, "", "", MagicsType{}
+  );
+  Processor proc(ctx);
+
+  // Open handles on the original
+  Entry entry1(TSK_TEST_INUM);
+  entry1.EvidenceFile = "test/data/ntfs-img-kw-1.dd";
+  entry1.FsOffset = 0;
+  entry1.FsType = TSK_FS_TYPE_DETECT;
+  proc.createReadSeek(entry1);
+
+  // Clone and verify the clone can independently open the same file
+  auto cloned = proc.clone();
+  Entry entry2(TSK_TEST_INUM);
+  entry2.EvidenceFile = "test/data/ntfs-img-kw-1.dd";
+  entry2.FsOffset = 0;
+  entry2.FsType = TSK_FS_TYPE_DETECT;
+  cloned->createReadSeek(entry2);
+
+  // Both should be able to read independently
+  REQUIRE(entry1.getStream().open());
+  REQUIRE(entry2.getStream().open());
+
+  // Read from both — they should get the same content
+  std::vector<uint8_t> buf1, buf2;
+  size_t n1 = entry1.getStream().read(256, buf1);
+  size_t n2 = entry2.getStream().read(256, buf2);
+  REQUIRE(n1 == n2);
+  REQUIRE(buf1 == buf2);
+
+  entry1.getStream().close();
+  entry2.getStream().close();
+}
