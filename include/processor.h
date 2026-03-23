@@ -74,7 +74,7 @@ public:
   void addToSearchHitBatch(const LG_SearchHit* const hit);
 
   // for testing purposes
-  void setBlake3(const std::string& hash) { HashRecord.Blake3 = hash; }
+  void setSHA256(const std::string& hash) { HashRecord.SHA256 = hash; }
 
   DBBatch<SearchHit>* searchHits() { return SearchHits.get(); }
   HashBatch* hashBatch() { return Hashes.get(); }

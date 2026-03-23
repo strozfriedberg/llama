@@ -135,7 +135,7 @@ std::string QueryBuilder::buildSqlQuery(const FieldHash& hash, const Rule& rule)
 
   if (rule.Signature) {
     query += " AND inode.Addr IN (SELECT h.MetaAddr FROM hash h"
-             " JOIN file_signatures fs ON h.Blake3 = fs.FileHash"
+             " JOIN file_signatures fs ON h.SHA256 = fs.FileHash"
              " JOIN signatures s ON fs.SigId = s.Id WHERE ";
     buildSignatureClauseImpl(rule.Signature, query);
     query += ")";

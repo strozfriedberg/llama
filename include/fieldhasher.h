@@ -99,7 +99,7 @@ public:
 
 private:
   std::unique_ptr<SFHASH_Hasher, void(*)(SFHASH_Hasher*)> Hasher{
-    sfhash_create_hasher(SFHASH_BLAKE3), sfhash_destroy_hasher
+    sfhash_create_hasher(SFHASH_SHA_2_256), sfhash_destroy_hasher
   };
   SFHASH_HashValues Hashes;
 };

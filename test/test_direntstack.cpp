@@ -57,7 +57,7 @@ TEST_CASE("testDirentStackPushPop") {
   REQUIRE("the name" == dirents.top().Path);
 
   Dirent out(makeDirent("the name", "the name"));
-  out.Id = "9725ac83ec80648192377bba20be829f7532953f50bfd735808ecc92a63ad011";
+  out.Id = "7819afd1142de937ea94fa2b34f53860a823c31447155a748b85f36a53191dfd";
 
   REQUIRE(out == dirents.pop());
 }
@@ -83,7 +83,7 @@ TEST_CASE("testDirentStackPushPushPopPop") {
   REQUIRE("a/b" == dirents.top().Path);
 
   Dirent outB(makeDirent("a/b", "b"));
-  outB.Id = "43255526405934bbcf8c6b90f4f02d82e3e74e028b02942701be6354bf27677d";
+  outB.Id = "4e4a548f1801a79393f9bc25baee4c2209cfee3f558c3ca254688f147b2f6bb5";
 
   REQUIRE(outB == dirents.pop());
 
@@ -91,7 +91,7 @@ TEST_CASE("testDirentStackPushPushPopPop") {
   REQUIRE("a" == dirents.top().Path);
 
   Dirent outA(makeDirent("a", "a"));
-  outA.Id = "fd88d31d3ec3b285f33ba011fe96290bd05d5272a9ef50ddae020c13ebe5319a";
+  outA.Id = "24e3bc15a787cbd19448a7e3ea0ba762bc50115f121c8e3261dbb023c9245eea";
 
   REQUIRE(outA == dirents.pop());
   REQUIRE(dirents.empty());

@@ -21,7 +21,7 @@ void FieldHasher::reset() {
 FieldHash FieldHasher::get_hash() {
   sfhash_get_hashes(Hasher.get(), &Hashes);
   FieldHash h;
-  std::memcpy(&h.hash, &Hashes.Blake3, sizeof(h.hash));
+  std::memcpy(&h.hash, &Hashes.Sha2_256, sizeof(h.hash));
   return h;
 }
 

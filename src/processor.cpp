@@ -59,8 +59,7 @@ ProcessorContext::ProcessorContext(LlamaDB* db,
 }
 
 uint32_t ProcessorContext::getSupportedHashAlgsFromContext() {
-  // We always want to calculate the Blake3 hash because we use it for mapping files -> rule hits
-  uint32_t hashAlgs = SFHASH_BLAKE3;
+  uint32_t hashAlgs = SFHASH_SHA_2_256;
 
   if (ExclusionHashset) {
     hashAlgs |= ExclusionHashset->supportedHashAlg();
@@ -154,7 +153,7 @@ void Processor::process(Entry& entry) {
       entry.getStream().seek(0);
       SigAnalyzer.getSignatures(entry.getStream(), sigResults);
       for (const auto& sig : sigResults) {
-        FileSigs->add(FileSigResult{HashRecord.Blake3, sig->Id});
+        FileSigs->add(FileSigResult{HashRecord.SHA256, sig->Id});
         if (sig->Id == "8343f9e2-601f-4e88-8a78-09a3b5f906eb") {
           hasPdfSig = true;
         }
@@ -262,7 +261,7 @@ void handleSearchHit(void* userData, const LG_SearchHit* const hit) {
 void Processor::addToSearchHitBatch(const LG_SearchHit* const hit) {
   LG_PatternInfo* info = lg_prog_pattern_info(Context->Prog.get(), hit->KeywordIndex);
   std::string pat(info->Pattern);
-  SearchHits->add(SearchHit{pat, hit->Start, hit->End, Context->RuleEngine->patternToRuleId()[hit->KeywordIndex], HashRecord.Blake3, hit->End - hit->Start});
+  SearchHits->add(SearchHit{pat, hit->Start, hit->End, Context->RuleEngine->patternToRuleId()[hit->KeywordIndex], HashRecord.SHA256, hit->End - hit->Start});
 }
 
 void Processor::search(ReadSeek& rs) {

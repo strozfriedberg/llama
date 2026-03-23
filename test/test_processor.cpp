@@ -37,7 +37,7 @@ class ProcessorSearchTester {
 public:
   ProcessorSearchTester(std::string needle, std::string haystack, uint64_t numExpectedHits) 
   : RuleEngine(new LlamaRuleEngine()), RsBuf(haystack), Db(), DbConn(Db), Proc(createProcessor(needle)) {
-    Proc.setBlake3("file_hash");
+    Proc.setSHA256("file_hash");
     RuleEngine->setPatternToRuleId(std::vector<std::string>(numExpectedHits, "rule_id"));
   }
 
@@ -170,7 +170,7 @@ TEST_CASE("testProcessorContextGetSupportedHashAlgsDiffAlgs") {
     MagicsType{}
   };
 
-  REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_BLAKE3 | SFHASH_MD5 | SFHASH_SHA_1));
+  REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_SHA_2_256 | SFHASH_MD5 | SFHASH_SHA_1));
 }
 
 TEST_CASE("testProcessorContextGetSupportedHashAlgsSameAlgs") {
@@ -184,7 +184,7 @@ TEST_CASE("testProcessorContextGetSupportedHashAlgsSameAlgs") {
     MagicsType{}
   };
 
-  REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_BLAKE3 | SFHASH_MD5));
+  REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_SHA_2_256 | SFHASH_MD5));
 }
 
 TEST_CASE("testProcessorContextGetSupportedHashAlgsMultipleAlgs") {
@@ -201,7 +201,7 @@ TEST_CASE("testProcessorContextGetSupportedHashAlgsMultipleAlgs") {
     MagicsType{}
   };
 
-  REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_BLAKE3 | SFHASH_MD5));
+  REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_SHA_2_256 | SFHASH_MD5));
 }
 
 TEST_CASE("Processor::flush clears batches to prevent duplicates") {
