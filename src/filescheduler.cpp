@@ -77,13 +77,17 @@ void FileScheduler::writeDirentsAndInodes(DirentBatch& dirents, InodeBatch& inod
 
   duckdb_result result;
   auto state = duckdb_query(DBConn.get(), "INSERT INTO dirent SELECT * FROM _temp_dirent;", &result);
+  duckdb_destroy_result(&result);
   THROW_IF(state == DuckDBError, "Error inserting into dirent table");
   state = duckdb_query(DBConn.get(), "INSERT INTO inode SELECT * FROM _temp_inode;", &result);
+  duckdb_destroy_result(&result);
   THROW_IF(state == DuckDBError, "Error inserting into inode table");
 
   state = duckdb_query(DBConn.get(), "DROP TABLE _temp_dirent;", &result);
+  duckdb_destroy_result(&result);
   THROW_IF(state == DuckDBError, "Error dropping _temp_dirent table");
   state = duckdb_query(DBConn.get(), "DROP TABLE _temp_inode;", &result);
+  duckdb_destroy_result(&result);
   THROW_IF(state == DuckDBError, "Error dropping _temp_inode table");
 }
 
@@ -145,20 +149,6 @@ void FileScheduler::flushAllBuckets() {
   });
 }
 
-std::shared_ptr<Processor> FileScheduler::popProc() {
-  // Having a fixed number of Processor objects adds back pressure to
-  // FileScheduler here -- it cannot dispatch more batches beyond the
-  // size of the Processor pool.
-  std::unique_lock<std::mutex> lock(ProcMutex);
-  while (Processors.empty()) {
-    // Releases mutex inside wait(), but reacquires before returning
-    ProcCV.wait(lock);
-  }
-  auto batterUp = Processors.back();
-  Processors.pop_back();
-  return batterUp;
-}
-
 void FileScheduler::pushProc(const std::shared_ptr<Processor>& proc) {
   {
     std::unique_lock<std::mutex> lock(ProcMutex);
@@ -184,6 +174,13 @@ void FileScheduler::BucketState::startFilesystem(uint64_t fsSize) {
 
 void FileScheduler::BucketState::addToBucket(std::unique_ptr<Entry> entry) {
   if (entry->DiskOffset == 0) {
+    ResidentBucket.TotalBytes += entry->FileSize;
+    ResidentBucket.Entries.push_back(std::move(entry));
+    maybePushBucket(ResidentBucket);
+    return;
+  }
+
+  if (Buckets.empty()) {
     ResidentBucket.TotalBytes += entry->FileSize;
     ResidentBucket.Entries.push_back(std::move(entry));
     maybePushBucket(ResidentBucket);
@@ -218,6 +215,8 @@ void FileScheduler::BucketState::flushAllBuckets() {
   if (!ResidentBucket.empty()) {
     DispatchQueue.push(makeBatch(ResidentBucket));
   }
+  ResidentBucket = Bucket{};
+  ResidentBucket.BucketIndex = RESIDENT_BUCKET_INDEX;
 }
 
 bool FileScheduler::BucketState::hasPendingBatches() const {

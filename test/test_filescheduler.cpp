@@ -166,6 +166,16 @@ TEST_CASE("popBatchReturnsBucketIndex") {
   REQUIRE(batch.BucketIndex == 1);
 }
 
+TEST_CASE("addToBucketWithNoBucketsGoesToResident") {
+  FileScheduler::BucketState buckets;
+  // No startFilesystem called — Buckets vector is empty
+
+  buckets.addToBucket(makeEntry(1, 500 * 1024 * 1024, 1000));
+  buckets.addToBucket(makeEntry(2, 100 * 1024 * 1024, 2000));
+
+  REQUIRE(buckets.residentEntryCount() == 2);
+}
+
 TEST_CASE("residentBucketHasSentinelIndex") {
   FileScheduler::BucketState buckets;
   buckets.startFilesystem(1024 * 1024 * 1024);

@@ -100,7 +100,6 @@ private:
   void writeDirentsAndInodes(DirentBatch& dirents, InodeBatch& inodes);
   void dispatchIfReady();
 
-  std::shared_ptr<Processor> popProc();
   void pushProc(const std::shared_ptr<Processor>& proc);
 
   LlamaDBConnection DBConn;
