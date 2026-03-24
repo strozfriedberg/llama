@@ -1,0 +1,52 @@
+rule AvengersArtifacts {
+  meta:
+    author = "DFIR Team"
+    description = "Detects references to Marvel Avengers characters and themes"
+
+  grep:
+    patterns:
+      s1 = "stark" nocase
+      s2 = "avenger" nocase
+      s3 = "hulk" nocase
+      s4 = "thor" nocase
+      s5 = "natasha" nocase
+      s6 = "romanoff" nocase
+      s7 = "fury" nocase
+      s8 = "shield" nocase
+      s9 = "iron man" nocase
+      s10 = "tesseract" nocase
+    condition:
+      count_has_hits() >= 2
+}
+
+rule WindowsPersistence {
+  meta:
+    author = "DFIR Team"
+    description = "Detects artifacts associated with Windows persistence mechanisms"
+
+  grep:
+    patterns:
+      s1 = "CurrentVersion\\Run" fixed nocase
+      s2 = "CurrentVersion\\RunOnce" fixed nocase
+      s3 = "\\Startup\\" fixed nocase
+      s4 = "schtasks" nocase
+      s5 = "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion" fixed nocase
+    condition:
+      any()
+}
+
+rule WebActivity {
+  meta:
+    author = "DFIR Team"
+    description = "Detects web browsing and download artifacts"
+
+  grep:
+    patterns:
+      s1 = "http://" fixed
+      s2 = "https://" fixed
+      s3 = "Zone.Identifier" fixed
+      s4 = "ZoneTransfer" fixed
+      s5 = ":Zone.Identifier" fixed
+    condition:
+      count_has_hits() >= 2
+}
