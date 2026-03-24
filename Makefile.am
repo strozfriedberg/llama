@@ -107,6 +107,7 @@ test_test_SOURCES = \
 	test/test_tsktimestamps.cpp \
 	test/test_util.cpp \
 	test/test_filesignatures.cpp \
+	test/test_filescheduler.cpp \
 	test/test_progressinfo.cpp \
 	test/test_progressthread.cpp
 

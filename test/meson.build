@@ -83,6 +83,7 @@ test_sources = [
   'test_tsktimestamps.cpp',
   'test_util.cpp',
   'test_filesignatures.cpp',
+  'test_filescheduler.cpp',
   'test_progressinfo.cpp',
   'test_progressthread.cpp'
 ]

@@ -1,3 +1,6 @@
+// ABOUTME: Implements FileScheduler batch dispatch and BucketState disk-locality bucketing.
+// ABOUTME: Distributes entries into 256MB disk-region buckets with priority queue dispatch.
+
 #include "filescheduler.h"
 
 #include "direntbatch.h"
@@ -99,5 +102,92 @@ void FileScheduler::pushProc(const std::shared_ptr<Processor>& proc) {
   std::unique_lock<std::mutex> lock(ProcMutex);
   Processors.push_back(proc);
   ProcCV.notify_one();
+}
+
+// BucketState implementation
+
+void FileScheduler::BucketState::startFilesystem(uint64_t fsSize) {
+  flushAllBuckets();
+  size_t numBuckets = (fsSize + BUCKET_SPAN - 1) / BUCKET_SPAN;
+  Buckets.clear();
+  Buckets.resize(numBuckets);
+  for (size_t i = 0; i < numBuckets; ++i) {
+    Buckets[i].BucketIndex = i;
+  }
+  ResidentBucket = Bucket{};
+  ResidentBucket.BucketIndex = RESIDENT_BUCKET_INDEX;
+}
+
+void FileScheduler::BucketState::addToBucket(std::unique_ptr<Entry> entry) {
+  if (entry->DiskOffset == 0) {
+    ResidentBucket.TotalBytes += entry->FileSize;
+    ResidentBucket.Entries.push_back(std::move(entry));
+    maybePushBucket(ResidentBucket);
+    return;
+  }
+
+  size_t idx = entry->DiskOffset / BUCKET_SPAN;
+  if (idx >= Buckets.size()) {
+    idx = Buckets.size() - 1;
+  }
+  auto& bucket = Buckets[idx];
+  bucket.TotalBytes += entry->FileSize;
+  bucket.Entries.push_back(std::move(entry));
+  maybePushBucket(bucket);
+}
+
+void FileScheduler::BucketState::addLargeFile(std::unique_ptr<Entry> entry) {
+  DispatchBatch batch;
+  batch.TotalBytes = entry->FileSize;
+  batch.BucketIndex = LARGE_FILE_BUCKET_INDEX;
+  batch.Entries.push_back(std::move(entry));
+  DispatchQueue.push(std::move(batch));
+}
+
+void FileScheduler::BucketState::flushAllBuckets() {
+  for (auto& bucket : Buckets) {
+    if (!bucket.empty()) {
+      DispatchQueue.push(makeBatch(bucket));
+    }
+  }
+  Buckets.clear();
+  if (!ResidentBucket.empty()) {
+    DispatchQueue.push(makeBatch(ResidentBucket));
+  }
+}
+
+bool FileScheduler::BucketState::hasPendingBatches() const {
+  return !DispatchQueue.empty();
+}
+
+FileScheduler::DispatchBatch FileScheduler::BucketState::popBatch() {
+  auto batch = std::move(const_cast<DispatchBatch&>(DispatchQueue.top()));
+  DispatchQueue.pop();
+  return batch;
+}
+
+size_t FileScheduler::BucketState::bucketEntryCount(size_t idx) const {
+  if (idx >= Buckets.size()) return 0;
+  return Buckets[idx].Entries.size();
+}
+
+size_t FileScheduler::BucketState::residentEntryCount() const {
+  return ResidentBucket.Entries.size();
+}
+
+void FileScheduler::BucketState::maybePushBucket(Bucket& bucket) {
+  if (bucket.ready()) {
+    DispatchQueue.push(makeBatch(bucket));
+  }
+}
+
+FileScheduler::DispatchBatch FileScheduler::BucketState::makeBatch(Bucket& bucket) {
+  DispatchBatch batch;
+  batch.TotalBytes = bucket.TotalBytes;
+  batch.BucketIndex = bucket.BucketIndex;
+  batch.Entries = std::move(bucket.Entries);
+  bucket.Entries.clear();
+  bucket.TotalBytes = 0;
+  return batch;
 }
 
