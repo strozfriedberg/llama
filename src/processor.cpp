@@ -61,7 +61,7 @@ ProcessorContext::ProcessorContext(LlamaDB* db,
 }
 
 uint32_t ProcessorContext::getSupportedHashAlgsFromContext() {
-  uint32_t hashAlgs = SFHASH_SHA_2_256;
+  uint32_t hashAlgs = SFHASH_SHA_2_256 | SFHASH_MD5 | SFHASH_SHA_1;;
 
   if (ExclusionHashset) {
     hashAlgs |= ExclusionHashset->supportedHashAlg();
@@ -90,8 +90,9 @@ Processor::Processor(std::shared_ptr<ProcessorContext> procContext):
   FileSigs(std::make_unique<FileSigBatch>()),
   Exceptions(std::make_unique<ExceptionBatch>()),
   SigAnalyzer(Context->SigProg, Context->SigMagics),
+  Img(nullptr, tsk_img_close),
   ProcTimeTotal(0),
-  Img(nullptr, tsk_img_close)
+  HashAlgs(Context->getSupportedHashAlgsFromContext())
 {
   Buf.reserve(1 << 20);
 }
@@ -135,7 +136,7 @@ void Processor::process(Entry& entry) {
     }
     ProcTimeTotal += procTime.elapsed();
   }
-  HashRecord.set(h, entry.Addr);
+  HashRecord.set(h, entry.Addr, HashAlgs);
 
   if (Context->ExclusionHashset && Context->ExclusionHashset->lookup(h)) {
     // do something here if hash is in exclusion hset

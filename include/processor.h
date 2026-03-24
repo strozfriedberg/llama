@@ -104,10 +104,12 @@ private:
 
   FileSigAnalyzer SigAnalyzer;
 
-  double ProcTimeTotal;
-
   std::unique_ptr<TSK_IMG_INFO, void(*)(TSK_IMG_INFO*)> Img;
   std::unordered_map<TSK_OFF_T, std::shared_ptr<TSK_FS_INFO>> FsHandles;
+
+  double ProcTimeTotal;
+
+  uint32_t HashAlgs;
 
   void logException(const Entry& entry, const char* operation, const char* message);
 };
