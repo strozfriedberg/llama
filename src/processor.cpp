@@ -7,6 +7,8 @@
 
 #include <lightgrep/api.h>
 
+#include <algorithm>
+
 #include "blocksequence.h"
 #include "entry.h"
 #include "filerecord.h"
@@ -189,6 +191,11 @@ void Processor::process(Entry& entry) {
 }
 
 void Processor::processBatch(const std::shared_ptr<std::vector<std::unique_ptr<Entry>>>& entries) {
+  std::sort(entries->begin(), entries->end(),
+    [](const std::unique_ptr<Entry>& a, const std::unique_ptr<Entry>& b) {
+      return a->DiskOffset < b->DiskOffset;
+    });
+
   uint64_t pendingInodes = 0;
   uint64_t pendingBytes = 0;
   for (auto& entry : *entries) {

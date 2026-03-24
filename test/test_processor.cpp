@@ -3,6 +3,7 @@
 #include "processor.h"
 
 #include "duckexception.h"
+#include "entry.h"
 #include "ducksig.h"
 #include "filesignatures.h"
 #include "lightgrep/api.h"
@@ -278,4 +279,53 @@ TEST_CASE("ProcessorContext can be constructed with SigMagics") {
   // Create a Processor from the context — should use shared program, not recompile
   Processor proc(procContext);
   REQUIRE(true);
+}
+
+TEST_CASE("processBatch sorts entries by DiskOffset for sequential I/O") {
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+
+  auto ruleEngine = std::make_shared<LlamaRuleEngine>();
+  ruleEngine->createTables(conn);
+  DBType<HashRec>::createTable(conn.get(), "hash");
+  DBType<SearchHit>::createTable(conn.get(), "search_hits");
+  DBType<FileSigResult>::createTable(conn.get(), "file_signatures");
+  DBType<ExceptionRecord>::createTable(conn.get(), "exception_log");
+
+  auto procContext = std::make_shared<ProcessorContext>(
+    &db, nullptr, ruleEngine, "", "",
+    MagicsType{}
+  );
+  Processor proc(procContext);
+
+  // Create entries in reverse DiskOffset order: 3000, 2000, 1000
+  // Each entry gets a unique Addr so we can verify order from hash table
+  auto entries = std::make_shared<std::vector<std::unique_ptr<Entry>>>();
+
+  auto e1 = std::make_unique<Entry>(100, std::make_unique<ReadSeekBuf>("aaa"));
+  e1->DiskOffset = 3000;
+  entries->push_back(std::move(e1));
+
+  auto e2 = std::make_unique<Entry>(200, std::make_unique<ReadSeekBuf>("bbb"));
+  e2->DiskOffset = 1000;
+  entries->push_back(std::move(e2));
+
+  auto e3 = std::make_unique<Entry>(300, std::make_unique<ReadSeekBuf>("ccc"));
+  e3->DiskOffset = 2000;
+  entries->push_back(std::move(e3));
+
+  proc.processBatch(entries);
+
+  // Query the hash table; rows are inserted in processing order
+  duckdb_result result;
+  duckdb_query(conn.get(), "SELECT MetaAddr FROM hash", &result);
+  auto rowCount = duckdb_row_count(&result);
+  REQUIRE(rowCount == 3);
+
+  // If sorted by DiskOffset, processing order should be: 1000, 2000, 3000
+  // which corresponds to Addr values: 200, 300, 100
+  REQUIRE(duckdb_value_int64(&result, 0, 0) == 200);
+  REQUIRE(duckdb_value_int64(&result, 0, 1) == 300);
+  REQUIRE(duckdb_value_int64(&result, 0, 2) == 100);
+  duckdb_destroy_result(&result);
 }
