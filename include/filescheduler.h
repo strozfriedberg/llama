@@ -14,6 +14,7 @@
 
 #include "entry.h"
 #include "llamaduck.h"
+#include "duckbatch.h"
 #include "direntbatch.h"
 #include "duckinode.h"
 #include "readseek.h"
@@ -82,12 +83,22 @@ public:
                          const InodeBatch& inodes,
                          const std::shared_ptr<std::vector<std::unique_ptr<Entry>>>& entries);
 
+  void scheduleLargeFile(const DirentBatch& dirents,
+                         const InodeBatch& inodes,
+                         std::unique_ptr<Entry> entry);
+
+  void startFilesystem(uint64_t fsSize);
+  void flushAllBuckets();
+
   double getProcessorTime();
 
 private:
   void performScheduling(DirentBatch& dirents,
                          InodeBatch& inodes,
                          const std::shared_ptr<std::vector<std::unique_ptr<Entry>>>& entries);
+
+  void writeDirentsAndInodes(DirentBatch& dirents, InodeBatch& inodes);
+  void dispatchIfReady();
 
   std::shared_ptr<Processor> popProc();
   void pushProc(const std::shared_ptr<Processor>& proc);
@@ -101,4 +112,10 @@ private:
 
   std::mutex ProcMutex;
   std::condition_variable ProcCV;
+
+  BucketState Buckets;
+
+  uint64_t NextBatchId = 0;
+  BatchRecBatch BatchLog;
+  LlamaDBAppender BatchAppender;
 };

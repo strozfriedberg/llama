@@ -17,4 +17,7 @@ public:
 
   virtual void maybeFlush() = 0;
   virtual void flush() = 0;
+
+  virtual void startFilesystem(uint64_t fsSize) = 0;
+  virtual void flushAllBuckets() = 0;
 };

@@ -54,6 +54,7 @@ bool TskReader::startReading() {
 
     // teardown
     Input->flush();
+    Input->flushAllBuckets();
   }
   return ret;
 }
@@ -81,6 +82,7 @@ TSK_FILTER_ENUM TskReader::filterFs(TSK_FS_INFO* fs_info) {
     Progress->setFilesystem(++FsIndex, 0, fs_info->inum_count,
                             static_cast<uint64_t>(fs_info->block_count) * fs_info->block_size);
   }
+  Input->startFilesystem(static_cast<uint64_t>(fs_info->block_count) * fs_info->block_size);
   return TSK_FILTER_CONT;
 }
 

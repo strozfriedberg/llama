@@ -25,6 +25,9 @@ public:
   virtual void maybeFlush() override; // flushes only if the batch is full
   virtual void flush() override; // always flushes
 
+  virtual void startFilesystem(uint64_t fsSize) override;
+  virtual void flushAllBuckets() override;
+
 private:
   std::shared_ptr<FileScheduler> Sink;
 

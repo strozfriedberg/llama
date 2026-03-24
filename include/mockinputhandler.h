@@ -21,6 +21,9 @@ public:
 
   virtual void flush() override {}
 
+  virtual void startFilesystem(uint64_t) override {}
+  virtual void flushAllBuckets() override {}
+
   std::vector<Dirent> Dirents;
   std::vector<Inode> Inodes;
 };

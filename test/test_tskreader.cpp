@@ -21,6 +21,8 @@ namespace {
     void push(std::unique_ptr<Entry> e) override { Entries.push_back(std::move(e)); }
     void maybeFlush() override {}
     void flush() override {}
+    void startFilesystem(uint64_t) override {}
+    void flushAllBuckets() override {}
   };
 }
 

@@ -16,7 +16,8 @@ FileScheduler::FileScheduler(LlamaDB& db,
                              const std::shared_ptr<Processor>& protoProc,
                              const std::shared_ptr<Options>& opts)
     : DBConn(db), Pool(pool), Strand(Pool.get_executor()),
-      ProcMutex(), ProcCV() {
+      ProcMutex(), ProcCV(),
+      NextBatchId(0), BatchAppender(DBConn.get(), "batches") {
   for (unsigned int i = 0; i < opts->NumThreads; ++i) {
     Processors.push_back(protoProc->clone());
   }
@@ -50,9 +51,18 @@ void FileScheduler::performScheduling(DirentBatch& dirents,
                                       InodeBatch& inodes,
                                       const std::shared_ptr<std::vector<std::unique_ptr<Entry>>>& entries)
 {
+  writeDirentsAndInodes(dirents, inodes);
+
+  for (auto& entry : *entries) {
+    Buckets.addToBucket(std::move(entry));
+  }
+
+  dispatchIfReady();
+}
+
+void FileScheduler::writeDirentsAndInodes(DirentBatch& dirents, InodeBatch& inodes) {
   std::string tmpDents = "_temp_dirent";
   std::string tmpInodes = "_temp_inode";
-  //std::string batchTbl = "_temp_batch_" + randomNumString();
 
   DBType<Dirent>::createTable(DBConn.get(), tmpDents);
   DBType<Inode>::createTable(DBConn.get(), tmpInodes);
@@ -75,12 +85,63 @@ void FileScheduler::performScheduling(DirentBatch& dirents,
   THROW_IF(state == DuckDBError, "Error dropping _temp_dirent table");
   state = duckdb_query(DBConn.get(), "DROP TABLE _temp_inode;", &result);
   THROW_IF(state == DuckDBError, "Error dropping _temp_inode table");
+}
 
-  // post for multithreaded processing
-  auto proc = popProc(); // blocks
-  boost::asio::post(Pool, [=, this]() {
-    proc->processBatch(entries);
-    this->pushProc(proc);
+void FileScheduler::dispatchIfReady() {
+  while (Buckets.hasPendingBatches()) {
+    std::unique_lock<std::mutex> lock(ProcMutex);
+    if (Processors.empty()) {
+      return; // No Processors available; try again when one returns
+    }
+    auto proc = Processors.back();
+    Processors.pop_back();
+    lock.unlock();
+
+    auto batch = Buckets.popBatch();
+
+    BatchLog.add(BatchRec{NextBatchId++, batch.BucketIndex,
+                          batch.Entries.size(), batch.TotalBytes});
+    BatchLog.copyToDB(BatchAppender.get());
+    BatchAppender.flush();
+    BatchLog.clear();
+
+    auto entries = std::make_shared<std::vector<std::unique_ptr<Entry>>>(
+      std::move(batch.Entries));
+    boost::asio::post(Pool, [=, this]() {
+      proc->processBatch(entries);
+      this->pushProc(proc);
+    });
+  }
+}
+
+void FileScheduler::scheduleLargeFile(const DirentBatch& dirents,
+                                      const InodeBatch& inodes,
+                                      std::unique_ptr<Entry> entry)
+{
+  auto dPtr = std::make_shared<DirentBatch>(dirents);
+  auto iPtr = std::make_shared<InodeBatch>(inodes);
+  auto ePtr = std::make_shared<std::unique_ptr<Entry>>(std::move(entry));
+  boost::asio::post(
+    Strand,
+    [=, this]() mutable {
+      writeDirentsAndInodes(*dPtr, *iPtr);
+      Buckets.addLargeFile(std::move(*ePtr));
+      dispatchIfReady();
+    }
+  );
+}
+
+void FileScheduler::startFilesystem(uint64_t fsSize) {
+  boost::asio::post(Strand, [this, fsSize]() {
+    Buckets.startFilesystem(fsSize);
+    dispatchIfReady();
+  });
+}
+
+void FileScheduler::flushAllBuckets() {
+  boost::asio::post(Strand, [this]() {
+    Buckets.flushAllBuckets();
+    dispatchIfReady();
   });
 }
 
@@ -99,9 +160,12 @@ std::shared_ptr<Processor> FileScheduler::popProc() {
 }
 
 void FileScheduler::pushProc(const std::shared_ptr<Processor>& proc) {
-  std::unique_lock<std::mutex> lock(ProcMutex);
-  Processors.push_back(proc);
-  ProcCV.notify_one();
+  {
+    std::unique_lock<std::mutex> lock(ProcMutex);
+    Processors.push_back(proc);
+    ProcCV.notify_one();
+  }
+  boost::asio::post(Strand, [this]() { dispatchIfReady(); });
 }
 
 // BucketState implementation
