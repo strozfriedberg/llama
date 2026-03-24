@@ -29,6 +29,7 @@ public:
   static constexpr uint64_t BUCKET_SPAN = 256ULL * 1024 * 1024;
   static constexpr uint64_t BUCKET_BYTE_LIMIT = BUCKET_SPAN;
   static constexpr uint64_t LARGE_FILE_THRESHOLD = BUCKET_SPAN;
+  static constexpr size_t   BUCKET_ENTRY_LIMIT = 10000;
   static constexpr uint64_t RESIDENT_BUCKET_INDEX = UINT64_MAX;
   static constexpr uint64_t LARGE_FILE_BUCKET_INDEX = UINT64_MAX - 1;
 
@@ -57,7 +58,7 @@ public:
       uint64_t TotalBytes = 0;
       uint64_t BucketIndex = 0;
 
-      bool ready() const { return TotalBytes >= BUCKET_BYTE_LIMIT; }
+      bool ready() const { return TotalBytes >= BUCKET_BYTE_LIMIT || Entries.size() >= BUCKET_ENTRY_LIMIT; }
       bool empty() const { return Entries.empty(); }
     };
 

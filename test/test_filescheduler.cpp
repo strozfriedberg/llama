@@ -60,6 +60,26 @@ TEST_CASE("bucketDispatchesWhenByteThresholdReached") {
   REQUIRE(buckets.hasPendingBatches());
 }
 
+TEST_CASE("bucketDispatchesWhenEntryCountReached") {
+  FileScheduler::BucketState buckets;
+  buckets.startFilesystem(1024 * 1024 * 1024);
+
+  REQUIRE(!buckets.hasPendingBatches());
+
+  // Add entries with tiny sizes — won't hit byte threshold
+  for (size_t i = 0; i < FileScheduler::BUCKET_ENTRY_LIMIT - 1; ++i) {
+    buckets.addToBucket(makeEntry(i, 10, 1));
+  }
+  REQUIRE(!buckets.hasPendingBatches());
+
+  // One more tips it over
+  buckets.addToBucket(makeEntry(99999, 10, 1));
+  REQUIRE(buckets.hasPendingBatches());
+
+  auto batch = buckets.popBatch();
+  REQUIRE(batch.Entries.size() == FileScheduler::BUCKET_ENTRY_LIMIT);
+}
+
 TEST_CASE("priorityQueueDispatchesLargestFirst") {
   FileScheduler::BucketState buckets;
   buckets.startFilesystem(2ULL * 1024 * 1024 * 1024); // 2GB
