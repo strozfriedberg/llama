@@ -1,7 +1,47 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include <memory>
+#include <vector>
+
+#include "direntbatch.h"
+#include "entry.h"
+#include "inode.h"
+#include "inputhandler.h"
 #include "tskreader.h"
 
+namespace {
+  class CollectingInputHandler: public InputHandler {
+  public:
+    std::vector<Dirent> Dirents;
+    std::vector<Inode> Inodes;
+    std::vector<std::unique_ptr<Entry>> Entries;
+
+    void push(const Dirent& d) override { Dirents.push_back(d); }
+    void push(const Inode& i) override { Inodes.push_back(i); }
+    void push(std::unique_ptr<Entry> e) override { Entries.push_back(std::move(e)); }
+    void maybeFlush() override {}
+    void flush() override {}
+  };
+}
+
+TEST_CASE("addToBatchPopulatesDiskOffsetForNonResidentFiles") {
+  TskReader reader("test/data/ntfs-img-kw-1.dd");
+  auto handler = std::make_shared<CollectingInputHandler>();
+  reader.setInputHandler(handler);
+  REQUIRE(reader.open());
+  REQUIRE(reader.startReading());
+
+  REQUIRE(!handler->Entries.empty());
+
+  size_t nonZeroOffsetCount = 0;
+  for (const auto& entry : handler->Entries) {
+    if (entry->DiskOffset > 0) {
+      ++nonZeroOffsetCount;
+    }
+  }
+  // NTFS test image has files with non-resident data runs
+  REQUIRE(nonZeroOffsetCount > 0);
+}
 
 /***********************
  * 

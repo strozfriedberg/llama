@@ -121,6 +121,19 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file, const char* path) {
     entry->AddrFlags = meta.flags;
     entry->Path = path ? path : "";
     entry->FileSize = meta.size;
+
+    // Extract first non-resident data run offset for disk-locality bucketing
+    if (meta.attr) {
+      for (const TSK_FS_ATTR* attr = meta.attr->head; attr; attr = attr->next) {
+        if ((attr->type == TSK_FS_ATTR_TYPE_NTFS_DATA ||
+             attr->type == TSK_FS_ATTR_TYPE_DEFAULT) &&
+            (attr->flags & TSK_FS_ATTR_NONRES) && attr->nrd.run) {
+          entry->DiskOffset = attr->nrd.run->addr * CurFsBlockSize;
+          break;
+        }
+      }
+    }
+
     Input->push(std::move(entry));
     InodeTracker.at(meta.addr - fs_file->fs_info->first_inum) = true;
   }
