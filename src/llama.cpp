@@ -138,6 +138,7 @@ void Llama::search() {
 #endif
 
     writeDB(outdir.string());
+    writeReports(outdir.string());
   }
   else {
     std::cerr << "init returned false!" << std::endl;
@@ -306,6 +307,83 @@ bool Llama::init() {
   });
 
   return readPats.get() && open.get() && db.get() && rules.get() && sigs.get();
+}
+
+void Llama::writeReports(const std::string& outdir) {
+  auto writeFile = [](const std::string& path, const std::string& content) {
+    std::ofstream f(path);
+    f << content;
+  };
+
+  // File inventory: one row per file with aggregated signatures
+  writeFile(outdir + "/file_inventory.sql",
+    "INSTALL spatial;\nLOAD spatial;\n"
+    "COPY (\n"
+    "  SELECT\n"
+    "    d.Path || d.Name AS FullPath,\n"
+    "    d.Name,\n"
+    "    d.Type AS DirentType,\n"
+    "    d.Flags AS DirentFlags,\n"
+    "    i.Type AS InodeType,\n"
+    "    i.Flags AS InodeFlags,\n"
+    "    CAST(i.Filesize AS BIGINT) AS Filesize,\n"
+    "    i.Created,\n"
+    "    i.Modified,\n"
+    "    i.Accessed,\n"
+    "    i.Metadata AS MetadataChanged,\n"
+    "    h.MD5,\n"
+    "    h.SHA1,\n"
+    "    h.SHA256,\n"
+    "    STRING_AGG(DISTINCT s.Name, ', ' ORDER BY s.Name) AS Signatures,\n"
+    "    CAST(d.MetaAddr AS BIGINT) AS MetaAddr,\n"
+    "    CAST(d.ParentAddr AS BIGINT) AS ParentAddr\n"
+    "  FROM '" + outdir + "/dirent.parquet' d\n"
+    "  JOIN '" + outdir + "/inode.parquet' i ON d.MetaAddr = i.Addr\n"
+    "  LEFT JOIN '" + outdir + "/hash.parquet' h ON d.MetaAddr = h.MetaAddr\n"
+    "  LEFT JOIN '" + outdir + "/file_signatures.parquet' fs ON h.SHA256 = fs.FileHash\n"
+    "  LEFT JOIN '" + outdir + "/signatures.parquet' s ON fs.SigId = s.Id\n"
+    "  GROUP BY ALL\n"
+    "  ORDER BY FullPath\n"
+    ") TO '" + outdir + "/file_inventory.xlsx'\n"
+    "WITH (FORMAT GDAL, DRIVER 'xlsx');\n"
+  );
+
+  // Rule hits: which rules matched which files
+  writeFile(outdir + "/rule_hits_report.sql",
+    "INSTALL spatial;\nLOAD spatial;\n"
+    "COPY (\n"
+    "  SELECT\n"
+    "    r.name AS RuleName,\n"
+    "    rh.path || rh.name AS FullPath,\n"
+    "    rh.name AS FileName,\n"
+    "    CAST(rh.addr AS BIGINT) AS MetaAddr\n"
+    "  FROM '" + outdir + "/rule_hits.parquet' rh\n"
+    "  JOIN '" + outdir + "/rules.parquet' r ON rh.id = r.id\n"
+    "  ORDER BY r.name, rh.path, rh.name\n"
+    ") TO '" + outdir + "/rule_hits.xlsx'\n"
+    "WITH (FORMAT GDAL, DRIVER 'xlsx');\n"
+  );
+
+  // Search hits: pattern matches with file context
+  writeFile(outdir + "/search_hits_report.sql",
+    "INSTALL spatial;\nLOAD spatial;\n"
+    "COPY (\n"
+    "  SELECT\n"
+    "    r.name AS RuleName,\n"
+    "    d.Path || d.Name AS FullPath,\n"
+    "    d.Name AS FileName,\n"
+    "    sh.pattern AS Pattern,\n"
+    "    CAST(sh.start_offset AS BIGINT) AS StartOffset,\n"
+    "    CAST(sh.end_offset AS BIGINT) AS EndOffset,\n"
+    "    CAST(sh.length AS BIGINT) AS Length\n"
+    "  FROM '" + outdir + "/search_hits.parquet' sh\n"
+    "  JOIN '" + outdir + "/hash.parquet' h ON sh.file_hash = h.SHA256\n"
+    "  JOIN '" + outdir + "/dirent.parquet' d ON h.MetaAddr = d.MetaAddr\n"
+    "  LEFT JOIN '" + outdir + "/rules.parquet' r ON sh.rule_id = r.id\n"
+    "  ORDER BY r.name, d.Path, d.Name, sh.start_offset\n"
+    ") TO '" + outdir + "/search_hits.xlsx'\n"
+    "WITH (FORMAT GDAL, DRIVER 'xlsx');\n"
+  );
 }
 
 void Llama::writeDB(const std::string& outdir) {

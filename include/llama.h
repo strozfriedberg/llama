@@ -35,6 +35,7 @@ private:
   bool loadSignatures();
 
   void writeDB(const std::string& outdir);
+  void writeReports(const std::string& outdir);
   bool createDiskMap();
   bool generateDiskMapVisualization(const std::string& outputDir);
 
