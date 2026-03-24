@@ -2,6 +2,7 @@
 
 
 #include "direntbatch.h"
+#include "duckbatch.h"
 #include "duckhash.h"
 #include "duckinode.h"
 #include "duckextent.h"
@@ -322,5 +323,47 @@ TEST_CASE("SigRecBatch") {
   duckdb_result result;
   duckdb_query(conn.get(), "SELECT count(*) FROM signatures", &result);
   REQUIRE(duckdb_value_int64(&result, 0, 0) == 2);
+  duckdb_destroy_result(&result);
+}
+
+TEST_CASE("testDuckBatch") {
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+
+  using DuckBatchRec = DBType<BatchRec>;
+
+  static_assert(DuckBatchRec::ColNames.size() == 4);
+  REQUIRE(DuckBatchRec::createTable(conn.get(), "batches"));
+
+  BatchRec b1{1, 0, 10, 1048576};
+  BatchRec b2{2, 3, 25, 5242880};
+
+  BatchRecBatch batch;
+  batch.add(b1);
+  REQUIRE(batch.size() == 1);
+  batch.add(b2);
+  REQUIRE(batch.size() == 2);
+
+  LlamaDBAppender appender(conn.get(), "batches");
+  REQUIRE(2 == batch.copyToDB(appender.get()));
+  REQUIRE(appender.flush());
+
+  duckdb_result result;
+  auto state = duckdb_query(conn.get(), "SELECT * FROM batches;", &result);
+  CHECK(state != DuckDBError);
+  CHECK(duckdb_result_error(&result) == nullptr);
+  CHECK(duckdb_row_count(&result) == 2);
+  REQUIRE(duckdb_column_count(&result) == 4);
+  unsigned int i = 0;
+  REQUIRE(std::string("BatchId") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("BucketIndex") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("NumEntries") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("TotalBytes") == duckdb_column_name(&result, i));
+  duckdb_destroy_result(&result);
+
+  state = duckdb_query(conn.get(), "SELECT * FROM batches WHERE batches.batchid = 2;", &result);
+  CHECK(state != DuckDBError);
+  CHECK(duckdb_result_error(&result) == nullptr);
+  CHECK(duckdb_row_count(&result) == 1);
   duckdb_destroy_result(&result);
 }

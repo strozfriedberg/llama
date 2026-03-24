@@ -6,6 +6,7 @@
 #include "diskmaphtml.h"
 #include "duckexception.h"
 #include "duckinode.h"
+#include "duckbatch.h"
 #include "duckhash.h"
 #include "easyfut.h"
 #include "extent.h"
@@ -222,6 +223,7 @@ bool Llama::dbInit() {
   DBType<Inode>::createTable(DbConn.get(), "inode");
   DBType<HashRec>::createTable(DbConn.get(), "hash");
   DBType<Extent>::createTable(DbConn.get(), "extents");
+  DBType<BatchRec>::createTable(DbConn.get(), "batches");
   DBType<ExceptionRecord>::createTable(DbConn.get(), "exception_log");
   return true;
 }
