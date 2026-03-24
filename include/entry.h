@@ -18,6 +18,7 @@ public:
   uint32_t    AddrFlags = 0;
   std::string Path;
   uint64_t    FileSize = 0;
+  uint64_t    DiskOffset = 0;
   TSK_FS_TYPE_ENUM FsType = TSK_FS_TYPE_DETECT;
 
 private:
