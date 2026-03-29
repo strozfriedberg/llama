@@ -7,7 +7,7 @@
 
 struct Options {
   std::string Command;
-  std::string Input;
+  std::vector<std::string> Inputs;
   std::string Output;
   std::string RuleFile;
   std::string RuleDir;

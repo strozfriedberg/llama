@@ -37,7 +37,7 @@ TEST_CASE("testCLIDefaultCommand") {
   auto opts = cli.parse(3, args);
   REQUIRE("search" == opts->Command);
   REQUIRE("output" == opts->Output);
-  REQUIRE("nosnits_workstation.E01" == opts->Input);
+  REQUIRE("nosnits_workstation.E01" == opts->Inputs[0]);
 }
 
 TEST_CASE("testNoArgs") {
@@ -114,7 +114,7 @@ TEST_CASE("testCLIReal") {
                         "nosnits_workstation.E01"};
   Cli cli;
   auto opts = cli.parse(5, args);
-  REQUIRE("nosnits_workstation.E01" == opts->Input);
+  REQUIRE("nosnits_workstation.E01" == opts->Inputs[0]);
 }
 
 TEST_CASE("testCLInumThreads") {
@@ -202,4 +202,31 @@ TEST_CASE("testCLISignaturesPath") {
   const char* args2[] = {"llama", "output", "nosnits_workstation.E01"};
   opts = cli.parse(3, args2);
   REQUIRE("./magics.json" == opts->SignaturesPath);
+}
+
+TEST_CASE("testCLIMultipleInputs") {
+  const char* args[] = {"llama", "output", "image1.E01", "usb.dd", "phone.img"};
+  Cli cli;
+  auto opts = cli.parse(5, args);
+  REQUIRE("search" == opts->Command);
+  REQUIRE("output" == opts->Output);
+  REQUIRE(opts->Inputs.size() == 3);
+  REQUIRE("image1.E01" == opts->Inputs[0]);
+  REQUIRE("usb.dd" == opts->Inputs[1]);
+  REQUIRE("phone.img" == opts->Inputs[2]);
+}
+
+TEST_CASE("testCLISingleInputBackcompat") {
+  const char* args[] = {"llama", "output", "nosnits_workstation.E01"};
+  Cli cli;
+  auto opts = cli.parse(3, args);
+  REQUIRE("search" == opts->Command);
+  REQUIRE(opts->Inputs.size() == 1);
+  REQUIRE("nosnits_workstation.E01" == opts->Inputs[0]);
+}
+
+TEST_CASE("testCLIDuplicateFilenameRejection") {
+  const char* args[] = {"llama", "output", "/path/a/image.E01", "/path/b/image.E01"};
+  Cli cli;
+  CHECK_THROWS(cli.parse(4, args));
 }

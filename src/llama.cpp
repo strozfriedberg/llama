@@ -290,7 +290,7 @@ bool Llama::init() {
   });
 
   auto open = make_future(Pool, [this]() {
-    return openInput(this->Opts->Input);
+    return openInput(this->Opts->Inputs[0]);
   });
 
   auto db = make_future(Pool, [this]() {

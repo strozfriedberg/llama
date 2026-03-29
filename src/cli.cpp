@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <ostream>
+#include <set>
 #include <stdexcept>
 #include <thread>
 
@@ -19,7 +20,7 @@ Cli::Cli() : All(), Opts(new Options) {
   ioOpts.add_options()
     ("output", po::value<std::string>(&Opts->Output), "Directory to create for output")
     ("codec", po::value<std::string>(&CodecSelect)->default_value("lz4"), "Output tar compression method (none|gzip|lz4|lzma|bzip2|lzo|xz)")
-    ("input", po::value<std::string>(&Opts->Input), "Evidence file or directory to process")
+    ("input", po::value<std::vector<std::string>>(&Opts->Inputs), "Evidence file(s) or directory(s) to process")
   ;
 
   po::options_description configOpts("Configuration Options");
@@ -87,7 +88,7 @@ void Cli::printVersion(std::ostream& out) const {
 
 void Cli::printHelp(std::ostream& out) const {
   printVersion(out);
-  out << "\nUsage: llama [OPTIONS] OUTPUT_DIRECTORY INPUT_FILE\n"
+  out << "\nUsage: llama [OPTIONS] OUTPUT_DIRECTORY INPUT_FILE [INPUT_FILE ...]\n"
       << All << std::endl;
 }
 
@@ -104,7 +105,7 @@ std::string Cli::figureOutCommand(
   if (optsMap.count("output") == 0) {
     throw std::invalid_argument("No output file was specified");
   }
-  if (optsMap.count("input") == 0) {
+  if (Opts->Inputs.empty()) {
     throw std::invalid_argument("No input file/directory was specified");
   }
   return "search";
@@ -144,5 +145,14 @@ void Cli::validateOpts() const {
   if (!Opts->RuleDir.empty()) {
     THROW_IF(!std::filesystem::exists(Opts->RuleDir), "Rule directory " + Opts->RuleDir + " not found.");
     THROW_IF(!std::filesystem::is_directory(Opts->RuleDir), "Rule directory " + Opts->RuleDir + " is not a directory.");
+  }
+
+  // Check for duplicate evidence filenames
+  std::set<std::string> filenames;
+  for (const auto& input : Opts->Inputs) {
+    std::string name = std::filesystem::path(input).filename().string();
+    if (!filenames.insert(name).second) {
+      throw std::invalid_argument("Duplicate evidence filename: " + name);
+    }
   }
 }
