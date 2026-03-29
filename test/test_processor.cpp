@@ -185,7 +185,7 @@ TEST_CASE("testProcessorContextGetSupportedHashAlgsSameAlgs") {
     MagicsType{}
   };
 
-  REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_SHA_2_256 | SFHASH_MD5));
+  REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_SHA_2_256 | SFHASH_MD5 | SFHASH_SHA_1));
 }
 
 TEST_CASE("testProcessorContextGetSupportedHashAlgsMultipleAlgs") {
@@ -202,7 +202,7 @@ TEST_CASE("testProcessorContextGetSupportedHashAlgsMultipleAlgs") {
     MagicsType{}
   };
 
-  REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_SHA_2_256 | SFHASH_MD5));
+  REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_SHA_2_256 | SFHASH_MD5 | SFHASH_SHA_1));
 }
 
 TEST_CASE("Processor::flush clears batches to prevent duplicates") {

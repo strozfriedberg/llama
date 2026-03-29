@@ -13,7 +13,7 @@ TEST_CASE("testReadDirPopulatesRulesCorrectly") {
   std::string testDir = "test/rules";
   std::shared_ptr<LlamaRuleEngine> engine = std::make_shared<LlamaRuleEngine>(LlamaRuleEngine());
   readRulesFromDir(engine, testDir);
-  REQUIRE(engine->numRulesRead() == 2);
+  REQUIRE(engine->numRulesRead() == 5);
 }
 
 TEST_CASE("Signature reference table is populated from magics") {
