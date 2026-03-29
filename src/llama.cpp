@@ -128,7 +128,7 @@ void Llama::search() {
 #endif
 
       if (!Input->startReading()) {
-        std::cerr << "startReading returned an error for " << Opts->Inputs[i] << std::endl;
+        std::cerr << "\r\033[K" << "startReading returned an error for " << Opts->Inputs[i] << std::endl;
       }
 
       // Wait for all processing to complete
@@ -140,11 +140,11 @@ void Llama::search() {
       }
 
       if (progressInfo.exceptionCount() > 0) {
-        std::cerr << progressInfo.exceptionCount()
+        std::cerr << "\r\033[K" << progressInfo.exceptionCount()
                   << " evidence I/O exceptions encountered -- see exception_log table\n";
       }
 
-      std::cerr << "Hashing Time (" << evidenceName << "): " << scheduler->getProcessorTime() << "s\n";
+      std::cerr << "\r\033[K" << "Hashing Time (" << evidenceName << "): " << scheduler->getProcessorTime() << "s\n";
 
       // Wait for next input to be ready, swap
       if (nextFuture) {

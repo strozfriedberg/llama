@@ -126,13 +126,15 @@ TEST_CASE("ProgressInfo setEvidenceFile resets filesystem counters") {
   REQUIRE(pi.evidenceIndex() == 1);
   REQUIRE(pi.evidenceCount() == 3);
 
-  // setEvidenceFile resets filesystem-level counters
+  // setEvidenceFile resets all per-evidence counters
   pi.setEvidenceFile("usb.dd", 2, 3);
   REQUIRE(pi.filesystemIndex() == 0);
   REQUIRE(pi.evidenceFileName() == "usb.dd");
   REQUIRE(pi.evidenceIndex() == 2);
-  // Processed counters do NOT reset (cumulative across all evidence)
-  REQUIRE(pi.inodesProcessed() == 100);
+  REQUIRE(pi.inodesProcessed() == 0);
+  REQUIRE(pi.bytesProcessed() == 0);
+  REQUIRE(pi.inodeCount() == 0);
+  REQUIRE(pi.totalBytes() == 0);
 }
 
 TEST_CASE("ProgressInfo formatLine shows evidence file for multiple inputs") {

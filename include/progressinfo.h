@@ -5,6 +5,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <mutex>
 #include <string>
 
 class ProgressInfo {
@@ -42,6 +43,7 @@ private:
   std::atomic<bool> Done;
   std::atomic<uint64_t> ExceptionCount;
 
+  mutable std::mutex EvidenceFileNameMutex;
   std::string EvidenceFileName;
   std::atomic<uint32_t> EvidenceIndex;
   std::atomic<uint32_t> EvidenceCount;

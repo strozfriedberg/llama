@@ -64,14 +64,22 @@ uint64_t ProgressInfo::exceptionCount() const {
 }
 
 void ProgressInfo::setEvidenceFile(const std::string& name, uint32_t index, uint32_t total) {
-  EvidenceFileName = name;
+  {
+    std::lock_guard<std::mutex> lock(EvidenceFileNameMutex);
+    EvidenceFileName = name;
+  }
   EvidenceIndex.store(index);
   EvidenceCount.store(total);
   FilesystemIndex.store(0);
   FilesystemCount.store(0);
+  InodeCount.store(0);
+  TotalBytes.store(0);
+  InodesProcessed.store(0);
+  BytesProcessed.store(0);
 }
 
 std::string ProgressInfo::evidenceFileName() const {
+  std::lock_guard<std::mutex> lock(EvidenceFileNameMutex);
   return EvidenceFileName;
 }
 
@@ -148,6 +156,7 @@ std::string ProgressInfo::formatLine(double elapsedSecs) const {
   uint32_t fsCount = filesystemCount();
   uint32_t evIdx = evidenceIndex();
   uint32_t evCount = evidenceCount();
+  std::string evName = evidenceFileName();
 
   double inodesPerSec = (elapsedSecs > 0) ? static_cast<double>(inodes) / elapsedSecs : 0;
   double bytesPerSec = (elapsedSecs > 0) ? static_cast<double>(procBytes) / elapsedSecs : 0;
@@ -159,7 +168,7 @@ std::string ProgressInfo::formatLine(double elapsedSecs) const {
   // Evidence file prefix (only for multiple inputs)
   if (evCount > 1) {
     p += std::snprintf(p, end - p, "[%u/%u] %s | ",
-                       evIdx, evCount, EvidenceFileName.c_str());
+                       evIdx, evCount, evName.c_str());
   }
 
   // Filesystem label
