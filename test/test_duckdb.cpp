@@ -7,6 +7,7 @@
 #include "duckinode.h"
 #include "duckextent.h"
 #include "ducksig.h"
+#include "evidencerec.h"
 #include "inode.h"
 #include "llamaduck.h"
 #include "llamabatch.h"
@@ -365,5 +366,79 @@ TEST_CASE("testDuckBatch") {
   CHECK(state != DuckDBError);
   CHECK(duckdb_result_error(&result) == nullptr);
   CHECK(duckdb_row_count(&result) == 1);
+  duckdb_destroy_result(&result);
+}
+
+TEST_CASE("evidenceFileRecTableCreation") {
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+
+  using DuckEvidenceFile = DBType<EvidenceFileRec>;
+
+  static_assert(DuckEvidenceFile::ColNames.size() == 7);
+  static_assert(DuckEvidenceFile::NumCols == 7);
+  REQUIRE(DuckEvidenceFile::createTable(conn.get(), "evidence_files"));
+
+  EvidenceFileRec rec{"laptop.E01", "/mnt/evidence/laptop.E01", "ewf", "Expert Witness Format", 500000000000, 512, ""};
+
+  DBBatch<EvidenceFileRec> batch;
+  batch.add(rec);
+  REQUIRE(batch.size() == 1);
+
+  LlamaDBAppender appender(conn.get(), "evidence_files");
+  REQUIRE(1 == batch.copyToDB(appender.get()));
+  REQUIRE(appender.flush());
+
+  duckdb_result result;
+  auto state = duckdb_query(conn.get(), "SELECT * FROM evidence_files;", &result);
+  CHECK(state != DuckDBError);
+  CHECK(duckdb_row_count(&result) == 1);
+  REQUIRE(duckdb_column_count(&result) == 7);
+  duckdb_destroy_result(&result);
+}
+
+TEST_CASE("volumeRecTableCreation") {
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+
+  using DuckVolume = DBType<VolumeRec>;
+
+  static_assert(DuckVolume::ColNames.size() == 11);
+  REQUIRE(DuckVolume::createTable(conn.get(), "volumes"));
+
+  VolumeRec rec{"laptop.E01", 0, 0, "NTFS (0x07)", "Allocated", 1024000, 0, 2048, "GPT", "GUID Partition Table", 512};
+
+  DBBatch<VolumeRec> batch;
+  batch.add(rec);
+  LlamaDBAppender appender(conn.get(), "volumes");
+  REQUIRE(1 == batch.copyToDB(appender.get()));
+  REQUIRE(appender.flush());
+
+  duckdb_result result;
+  duckdb_query(conn.get(), "SELECT count(*) FROM volumes", &result);
+  REQUIRE(duckdb_value_int64(&result, 0, 0) == 1);
+  duckdb_destroy_result(&result);
+}
+
+TEST_CASE("filesystemRecTableCreation") {
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+
+  using DuckFs = DBType<FilesystemRec>;
+
+  static_assert(DuckFs::ColNames.size() == 20);
+  REQUIRE(DuckFs::createTable(conn.get(), "filesystems"));
+
+  FilesystemRec rec{"laptop.E01", 1048576, 0, 0, "ntfs", 4096, 262144, 512, "Cluster", 1, 0, 0, 262143, 65535, "", "ABCDEF1234", 0, 5, 65536, ""};
+
+  DBBatch<FilesystemRec> batch;
+  batch.add(rec);
+  LlamaDBAppender appender(conn.get(), "filesystems");
+  REQUIRE(1 == batch.copyToDB(appender.get()));
+  REQUIRE(appender.flush());
+
+  duckdb_result result;
+  duckdb_query(conn.get(), "SELECT count(*) FROM filesystems", &result);
+  REQUIRE(duckdb_value_int64(&result, 0, 0) == 1);
   duckdb_destroy_result(&result);
 }
