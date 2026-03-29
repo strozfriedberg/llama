@@ -9,7 +9,8 @@ struct Inode {
                                     "Type",
                                     "Flags",
                                     "Addr",
-                                    "FsOffset",
+                                    "EvidenceFileName",
+                                    "ByteOffset",
                                     "Filesize",
                                     "Uid",
                                     "Gid",
@@ -27,7 +28,8 @@ struct Inode {
   std::string Flags;
 
   uint64_t Addr;
-  uint64_t FsOffset;
+  std::string EvidenceFileName;
+  uint64_t ByteOffset;
   uint64_t Filesize;
   uint64_t Uid;
   uint64_t Gid;

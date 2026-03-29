@@ -1,5 +1,7 @@
 #include "tskreader.h"
 
+#include <filesystem>
+
 #include "blocksequence_impl.h"
 #include "entry.h"
 #include "inode.h"
@@ -101,7 +103,8 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file, const char* path) {
   if (!InodeTracker.at(meta.addr - fs_file->fs_info->first_inum)) {
     Inode inode;
     TskUtils::convertMetaToInode(meta, *Tsg, inode);
-    inode.FsOffset = CurFsOffset;
+    inode.EvidenceFileName = std::filesystem::path(ImgPath).filename().string();
+    inode.ByteOffset = CurFsOffset;
 
     // handle the attrs
     Tsk->populateAttrs(fs_file);

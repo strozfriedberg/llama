@@ -83,7 +83,7 @@ Inode PosixReader::statToInode(const struct stat& st, const std::string& path) {
     Inode inode;
 
     inode.Addr = st.st_ino;
-    inode.FsOffset = 0;  // Set by caller if needed
+    inode.ByteOffset = 0;
     inode.Filesize = st.st_size;
     inode.Uid = st.st_uid;
     inode.Gid = st.st_gid;
