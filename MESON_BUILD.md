@@ -69,7 +69,6 @@ The Meson build system requires the same dependencies as the autotools build:
 - DuckDB
 - libarchive
 - libhasher
-- pdfextractor
 - jsoncons (header-only)
 
 **Optional:**

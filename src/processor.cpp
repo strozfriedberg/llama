@@ -16,7 +16,6 @@
 #include "readseek_impl.h"
 #include "timer.h"
 #include "util.h"
-#include "pdfreader.h"
 #include "ruleengine.h"
 
 #include "boost/interprocess/file_mapping.hpp"
@@ -149,7 +148,6 @@ void Processor::process(Entry& entry) {
   Hashes->add(HashRecord);
 
   // Detect file signatures
-  bool hasPdfSig = false;
   {
     try {
       std::vector<MagicPtr> sigResults;
@@ -157,9 +155,6 @@ void Processor::process(Entry& entry) {
       SigAnalyzer.getSignatures(entry.getStream(), sigResults);
       for (const auto& sig : sigResults) {
         FileSigs->add(FileSigResult{HashRecord.SHA256, sig->Id});
-        if (sig->Id == "8343f9e2-601f-4e88-8a78-09a3b5f906eb") {
-          hasPdfSig = true;
-        }
       }
     } catch (const EvidenceIOError& e) {
       logException(entry, "signature", e.what());
@@ -169,21 +164,7 @@ void Processor::process(Entry& entry) {
   {
     Timer procTime;
     try {
-      if (hasPdfSig) {
-        PDFReader reader;
-        reader.readTextFromPDF(entry.getStream());
-        char* text = reader.getExtractedText();
-        if (text) {
-          ReadSeekBuf rs(text);
-          search(rs);
-        }
-        else {
-          search(entry.getStream());
-        }
-      }
-      else {
-        search(entry.getStream());
-      }
+      search(entry.getStream());
     } catch (const EvidenceIOError& e) {
       logException(entry, "search", e.what());
     }

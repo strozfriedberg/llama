@@ -22,7 +22,6 @@ llama_sources = [
   'main.cpp',
   'outputtar.cpp',
   'parser.cpp',
-  'pdfreader.cpp',
   'pooloutputhandler.cpp',
   'processor.cpp',
   'progressinfo.cpp',

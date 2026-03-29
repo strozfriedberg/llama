@@ -8,7 +8,6 @@
 #include "duckhash.h"
 #include "llamabatch.h"
 #include "hashset.h"
-#include "pdfreader.h"
 #include "ruleengine.h"
 #include "tsk.h"
 #include <lightgrep/search_hit.h>

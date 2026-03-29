@@ -41,7 +41,6 @@ libarchive_dep = dependency('libarchive', required: true)
 hasher_dep = dependency('hasher', required: true)
 lightgrep_dep = dependency('lightgrep', required: true)
 yara_dep = dependency('yara', required: false)
-pdfextractor_dep = dependency('pdfextractor', required: true)
 
 # Header-only dependencies
 jsoncons_dep = meson.get_compiler('cpp').find_library('', required: false)
@@ -73,7 +72,6 @@ llama_deps = [
   libarchive_dep,
   hasher_dep,
   lightgrep_dep,
-  pdfextractor_dep,
   duckdb_dep
 ]
 
