@@ -12,16 +12,18 @@ TEST_CASE("ProgressInfo update increments counters") {
   REQUIRE(pi.bytesProcessed() == 1536);
 }
 
-TEST_CASE("ProgressInfo setFilesystem resets counters") {
+TEST_CASE("ProgressInfo setFilesystem accumulates counters") {
   ProgressInfo pi;
+  pi.setFilesystem(1, 0, 30000, 1024ULL * 1024 * 1024 * 50);
   pi.update(10, 1024);
-  pi.setFilesystem(2, 3, 50000, 1024ULL * 1024 * 1024 * 100);
-  REQUIRE(pi.inodesProcessed() == 0);
-  REQUIRE(pi.bytesProcessed() == 0);
+  pi.setFilesystem(2, 0, 50000, 1024ULL * 1024 * 1024 * 100);
+  // inodesProcessed and bytesProcessed are NOT reset
+  REQUIRE(pi.inodesProcessed() == 10);
+  REQUIRE(pi.bytesProcessed() == 1024);
   REQUIRE(pi.filesystemIndex() == 2);
-  REQUIRE(pi.filesystemCount() == 3);
-  REQUIRE(pi.inodeCount() == 50000);
-  REQUIRE(pi.totalBytes() == 1024ULL * 1024 * 1024 * 100);
+  // inodeCount and totalBytes accumulate
+  REQUIRE(pi.inodeCount() == 80000);
+  REQUIRE(pi.totalBytes() == 1024ULL * 1024 * 1024 * 150);
 }
 
 TEST_CASE("ProgressInfo done flag") {
@@ -36,11 +38,11 @@ TEST_CASE("ProgressInfo formatLine with known total") {
   pi.setFilesystem(1, 2, 1000, 500ULL * 1024 * 1024);
   pi.update(420, 50ULL * 1024 * 1024);
   std::string line = pi.formatLine(10.0);
-  // Should contain filesystem header with percentage, inode counts, and byte counts
-  REQUIRE(line.find("Filesystem 1/2:") != std::string::npos);
-  REQUIRE(line.find("42%") != std::string::npos);
+  // Filesystem label separated by pipe, percentage in inode section
+  REQUIRE(line.find("Filesystem 1/2 |") != std::string::npos);
   REQUIRE(line.find("420") != std::string::npos);
   REQUIRE(line.find("1,000") != std::string::npos);
+  REQUIRE(line.find("(42%)") != std::string::npos);
   // Rates are cumulative: 420 inodes / 10s = 42 files/s, 50MB / 10s = 5 MB/s
   REQUIRE(line.find("42 files/s") != std::string::npos);
   REQUIRE(line.find("5.0 MB/s") != std::string::npos);
@@ -64,10 +66,10 @@ TEST_CASE("ProgressInfo formatLine with zero filesystem count") {
   pi.setFilesystem(1, 0, 1000, 500ULL * 1024 * 1024);
   pi.update(420, 50ULL * 1024 * 1024);
   std::string line = pi.formatLine(10.0);
-  // Should show "Filesystem 1:" without "/0"
-  REQUIRE(line.find("Filesystem 1:") != std::string::npos);
-  REQUIRE(line.find("Filesystem 1/0:") == std::string::npos);
-  REQUIRE(line.find("42%") != std::string::npos);
+  // Should show "Filesystem 1 |" without "/0"
+  REQUIRE(line.find("Filesystem 1 |") != std::string::npos);
+  REQUIRE(line.find("Filesystem 1/0") == std::string::npos);
+  REQUIRE(line.find("(42%)") != std::string::npos);
 }
 
 TEST_CASE("ProgressInfo formatLine uses cumulative rates") {

@@ -45,17 +45,15 @@ bool TskReader::startReading() {
     [this](TSK_FS_FILE* fs_file, const char* path) { return processFile(fs_file, path); }
   );
 
-  if (ret) {
-    // wrap up the walk
-    while (!Dirents.empty()) {
-      Input->push(Dirents.pop());
-    }
-//    Output->outputImage(Asm.dump());
-
-    // teardown
-    Input->flush();
-    Input->flushAllBuckets();
+  // wrap up the walk
+  while (!Dirents.empty()) {
+    Input->push(Dirents.pop());
   }
+
+  // teardown
+  Input->flush();
+  Input->flushAllBuckets();
+
   return ret;
 }
 

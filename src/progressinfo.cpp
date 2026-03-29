@@ -16,12 +16,10 @@ void ProgressInfo::update(uint64_t inodes, uint64_t bytes) {
 }
 
 void ProgressInfo::setFilesystem(uint32_t index, uint32_t total, uint64_t inodeCount, uint64_t totalBytes) {
-  InodesProcessed.store(0);
-  BytesProcessed.store(0);
   FilesystemIndex.store(index);
   FilesystemCount.store(total);
-  InodeCount.store(inodeCount);
-  TotalBytes.store(totalBytes);
+  InodeCount.fetch_add(inodeCount);
+  TotalBytes.fetch_add(totalBytes);
 }
 
 void ProgressInfo::setDone() {
@@ -135,22 +133,21 @@ std::string ProgressInfo::formatLine(double elapsedSecs) const {
   char* p = buf;
   char* end = buf + sizeof(buf);
 
-  // Filesystem header with percentage
-  if (total > 0) {
-    uint32_t pct = static_cast<uint32_t>(inodes * 100 / total);
-    if (fsCount > 0) {
-      p += std::snprintf(p, end - p, "Filesystem %u/%u: %3u%% | ", fsIdx, fsCount, pct);
-    }
-    else {
-      p += std::snprintf(p, end - p, "Filesystem %u: %3u%% | ", fsIdx, pct);
-    }
+  // Filesystem label
+  if (fsCount > 0) {
+    p += std::snprintf(p, end - p, "Filesystem %u/%u | ", fsIdx, fsCount);
+  }
+  else {
+    p += std::snprintf(p, end - p, "Filesystem %u | ", fsIdx);
   }
 
-  // Inodes: processed/total
+  // Inodes: processed/total (percentage)
   if (total > 0) {
-    p += std::snprintf(p, end - p, "%11s/%s inodes | ",
+    uint32_t pct = static_cast<uint32_t>(inodes * 100 / total);
+    p += std::snprintf(p, end - p, "%11s/%s inodes (%u%%) | ",
                        formatWithCommas(inodes).c_str(),
-                       formatWithCommas(total).c_str());
+                       formatWithCommas(total).c_str(),
+                       pct);
   }
   else {
     p += std::snprintf(p, end - p, "%11s inodes | ",
