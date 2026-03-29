@@ -35,7 +35,13 @@ bool TskReader::open() {
 }
 
 bool TskReader::startReading() {
-  Asm.addImage(Tsk->convertImg(*Img));
+  std::string name = std::filesystem::path(ImgPath).filename().string();
+  const char* type_name = tsk_img_type_toname(Img->itype);
+  const char* type_desc = tsk_img_type_todesc(Img->itype);
+  Asm.addImage(name, ImgPath,
+               type_name ? type_name : "unknown",
+               type_desc ? type_desc : "Unknown image type",
+               Img->size, Img->sector_size, "");
 
   // tell TskAuto to start giving files to processFile
   // std::cerr << "Image is " << getImageSize() << " bytes in size" << std::endl;
@@ -60,17 +66,41 @@ bool TskReader::startReading() {
 }
 
 TSK_FILTER_ENUM TskReader::filterVs(const TSK_VS_INFO* vs_info) {
-  Asm.addVolumeSystem(Tsk->convertVS(*vs_info));
+  Asm.addVolumeSystem(
+    TskUtils::volumeSystemType(vs_info->vstype),
+    tsk_vs_type_todesc(vs_info->vstype),
+    vs_info->block_size
+  );
   return TSK_FILTER_CONT;
 }
 
 TSK_FILTER_ENUM TskReader::filterVol(const TSK_VS_PART_INFO* vs_part) {
-  Asm.addVolume(Tsk->convertVol(*vs_part));
+  Asm.addVolume(
+    vs_part->addr, vs_part->table_num,
+    vs_part->desc,
+    TskUtils::volumeFlags(vs_part->flags),
+    vs_part->len, vs_part->slot_num, vs_part->start
+  );
   return TSK_FILTER_CONT;
 }
 
 TSK_FILTER_ENUM TskReader::filterFs(TSK_FS_INFO* fs_info) {
-  Asm.addFileSystem(Tsk->convertFS(*fs_info));
+  const bool littleEndian = fs_info->endian == TSK_LIT_ENDIAN;
+  Asm.addFileSystem(
+    fs_info->offset,
+    tsk_fs_type_toname(fs_info->ftype),
+    fs_info->block_size,
+    fs_info->block_count,
+    fs_info->dev_bsize,
+    fs_info->duname,
+    littleEndian,
+    fs_info->first_block, fs_info->first_inum,
+    fs_info->last_block, fs_info->last_inum,
+    TskUtils::filesystemFlags(fs_info->flags),
+    TskUtils::filesystemID(fs_info->fs_id, fs_info->fs_id_used, littleEndian),
+    fs_info->journ_inum, fs_info->root_inum,
+    fs_info->inum_count
+  );
   Tsg = Tsk->makeTimestampGetter(fs_info->ftype);
 //  Tracker->setInodeRange(fs_info->first_inum, fs_info->last_inum + 1);
 //  Tracker->setBlockRange(fs_info->first_block * fs_info->block_size, (fs_info->last_block + 1) * fs_info->block_size);
@@ -79,7 +109,7 @@ TSK_FILTER_ENUM TskReader::filterFs(TSK_FS_INFO* fs_info) {
   InodeTracker.clear();
   InodeTracker.resize(fs_info->last_inum - fs_info->first_inum + 1, false);
   if (Progress) {
-    Progress->setFilesystem(++FsIndex, 0, fs_info->inum_count,
+    Progress->setFilesystem(Asm.fsIndex(), 0, fs_info->inum_count,
                             static_cast<uint64_t>(fs_info->block_count) * fs_info->block_size);
   }
   Input->startFilesystem(static_cast<uint64_t>(fs_info->block_count) * fs_info->block_size);
@@ -118,7 +148,7 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file, const char* path) {
     Input->push(inode);
     auto entry = std::make_unique<Entry>(meta.addr);
     entry->EvidenceFile = ImgPath;
-    entry->FsIndex = FsIndex;
+    entry->FsIndex = Asm.fsIndex();
     entry->FsOffset = CurFsOffset;
     entry->FsType = fs_file->fs_info->ftype;
     entry->AddrFlags = meta.flags;

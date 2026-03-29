@@ -1,296 +1,90 @@
 #include <catch2/catch_test_macros.hpp>
-
 #include <stdexcept>
 
 #include "tskimgassembler.h"
+#include "evidencerec.h"
 
-TEST_CASE("testTskImgAssemblerAddImgVolumeSystemVolumeFS") {
+TEST_CASE("assemblerImgVolumeSystemVolumeFS") {
   TskImgAssembler a;
 
-  a.addImage(jsoncons::json(
-    jsoncons::json_object_arg,
-    {
-      { "a", "I'm an Image" }
-    }
-  ));
+  a.addImage("laptop.E01", "/mnt/evidence/laptop.E01", "ewf", "Expert Witness Format", 500000000000, 512, "");
 
-  a.addVolumeSystem(jsoncons::json(
-    jsoncons::json_object_arg,
-    {
-      { "b", "I'm a Volume System" },
-      { "volumes", jsoncons::json(jsoncons::json_array_arg) }
-    }
-  ));
+  a.addVolumeSystem("GPT", "GUID Partition Table", 512);
 
-  a.addVolume(jsoncons::json(
-    jsoncons::json_object_arg,
-    {
-      { "c", "I'm Volume 1" }
-    }
-  ));
+  a.addVolume(0, 0, "NTFS (0x07)", "Allocated", 1024000, 0, 2048);
 
-  a.addFileSystem(jsoncons::json(
-    jsoncons::json_object_arg,
-    {
-      { "d", "I'm a File System" }
-    }
-  ));
+  a.addFileSystem(1048576, "ntfs", 4096, 262144, 512, "Cluster", true,
+                  0, 0, 262143, 65535, "", "ABCDEF", 0, 5, 65536);
 
-  a.addVolume(jsoncons::json(
-    jsoncons::json_object_arg,
-    {
-      { "e", "I'm Volume 2" }
-    }
-  ));
+  a.addVolume(1, 0, "Linux (0x83)", "Allocated", 2048000, 1, 1026048);
 
-  const jsoncons::json exp(
-    jsoncons::json_object_arg,
-    {
-      { "a", "I'm an Image" },
-      {
-        "volumeSystem", jsoncons::json(
-          jsoncons::json_object_arg,
-          {
-            { "b", "I'm a Volume System" },
-            {
-              "volumes", jsoncons::json(
-                jsoncons::json_array_arg,
-                {
-                  jsoncons::json(
-                    jsoncons::json_object_arg,
-                    {
-                      { "c", "I'm Volume 1" },
-                      {
-                        "fileSystem", jsoncons::json(
-                          jsoncons::json_object_arg,
-                          {
-                            { "d", "I'm a File System" }
-                          }
-                        )
-                      }
-                    }
-                  ),
-                  jsoncons::json(
-                    jsoncons::json_object_arg,
-                    {
-                      { "e", "I'm Volume 2" }
-                    }
-                  )
-                }
-              )
-            }
-          }
-        )
-      }
-    }
-  );
+  auto& evidence = a.evidenceFile();
+  REQUIRE(evidence.Name == "laptop.E01");
+  REQUIRE(evidence.ImageType == "ewf");
+  REQUIRE(evidence.ImageSize == 500000000000);
 
-  REQUIRE(exp == a.dump());
+  auto& volumes = a.volumes();
+  REQUIRE(volumes.size() == 2);
+  REQUIRE(volumes[0].Addr == 0);
+  REQUIRE(volumes[0].VsType == "GPT");
+  REQUIRE(volumes[1].Description == "Linux (0x83)");
+
+  auto& filesystems = a.filesystems();
+  REQUIRE(filesystems.size() == 1);
+  REQUIRE(filesystems[0].ByteOffset == 1048576);
+  REQUIRE(filesystems[0].Type == "ntfs");
+  REQUIRE(filesystems[0].EvidenceFileName == "laptop.E01");
+  REQUIRE(filesystems[0].VolumeAddr == 0);
 }
 
-TEST_CASE("testTskImgCollectorAddImgFS") {
+TEST_CASE("assemblerImgFS") {
   TskImgAssembler a;
 
-  a.addImage(jsoncons::json(
-    jsoncons::json_object_arg,
-    {
-      { "a", "I'm an Image" }
-    }
-  ));
+  a.addImage("raw.dd", "/mnt/raw.dd", "raw", "Single raw file", 1000000, 512, "");
+  a.addFileSystem(0, "ext4", 4096, 100000, 512, "Block", false,
+                  0, 2, 99999, 10000, "", "1234ABCD", 8, 2, 10001);
 
-  a.addFileSystem(jsoncons::json(
-    jsoncons::json_object_arg,
-    {
-      { "b", "I'm a File System" }
-    }
-  ));
+  auto& evidence = a.evidenceFile();
+  REQUIRE(evidence.Name == "raw.dd");
 
-  const jsoncons::json exp(
-    jsoncons::json_object_arg,
-    {
-      { "a", "I'm an Image" },
-      {
-        "fileSystem", jsoncons::json(
-          jsoncons::json_object_arg,
-          {
-            { "b", "I'm a File System" }
-          }
-        )
-      }
-    }
-  );
-
-  REQUIRE(exp == a.dump());
+  auto& filesystems = a.filesystems();
+  REQUIRE(filesystems.size() == 1);
+  REQUIRE(filesystems[0].ByteOffset == 0);
+  REQUIRE(filesystems[0].VolumeAddr == 0);
+  REQUIRE(filesystems[0].VolumeTableNum == 0);
 }
 
-TEST_CASE("testTskImgCollectorIllegalTransitionInitToVol") {
-  // INIT -> VOL
+TEST_CASE("assemblerIllegalTransitionInitToVS") {
   TskImgAssembler a;
-  CHECK_THROWS_AS(a.addVolumeSystem(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addVolumeSystem("GPT", "", 512), std::runtime_error);
 }
 
-TEST_CASE("testTskImgCollectorIllegalTransitionInitToVS") {
-  // INIT -> VS
+TEST_CASE("assemblerIllegalTransitionInitToFS") {
   TskImgAssembler a;
-  CHECK_THROWS_AS(a.addVolumeSystem(jsoncons::json()), std::runtime_error);
+  CHECK_THROWS_AS(a.addFileSystem(0, "ntfs", 4096, 100, 512, "", true, 0, 0, 99, 99, "", "", 0, 5, 100), std::runtime_error);
 }
 
-TEST_CASE("testTskImgCollectorIllegalTransitionInitToFS") {
-  // INIT -> { IMG_FS, VOL_FS }
+TEST_CASE("assemblerIllegalTransitionImgToVol") {
   TskImgAssembler a;
-  CHECK_THROWS_AS(a.addFileSystem(jsoncons::json()), std::runtime_error);
+  a.addImage("test.dd", "/test.dd", "raw", "", 100, 512, "");
+  CHECK_THROWS_AS(a.addVolume(0, 0, "", "", 0, 0, 0), std::runtime_error);
 }
 
-TEST_CASE("testTskImgCollectorIllegalTransitionImgToImg") {
-  // IMG -> IMG
+TEST_CASE("assemblerIllegalTransitionImgFSToFS") {
   TskImgAssembler a;
-  a.addImage(jsoncons::json());
-  CHECK_THROWS_AS(a.addImage(jsoncons::json()), std::runtime_error);
+  a.addImage("test.dd", "/test.dd", "raw", "", 100, 512, "");
+  a.addFileSystem(0, "ext4", 4096, 100, 512, "", false, 0, 0, 99, 99, "", "", 0, 2, 100);
+  CHECK_THROWS_AS(a.addFileSystem(1024, "ntfs", 4096, 100, 512, "", true, 0, 0, 99, 99, "", "", 0, 5, 100), std::runtime_error);
 }
 
-TEST_CASE("testTskImgCollectorIllegalTransitionImgToVol") {
-  // IMG -> VOL
+TEST_CASE("assemblerCurrentFsInfo") {
   TskImgAssembler a;
-  a.addImage(jsoncons::json());
-  CHECK_THROWS_AS(a.addVolume(jsoncons::json()), std::runtime_error);
-}
+  a.addImage("laptop.E01", "/mnt/laptop.E01", "ewf", "", 500000000000, 512, "");
+  a.addVolumeSystem("GPT", "", 512);
+  a.addVolume(0, 0, "", "", 0, 0, 0);
+  a.addFileSystem(1048576, "ntfs", 4096, 262144, 512, "", true, 0, 0, 262143, 65535, "", "", 0, 5, 65536);
 
-TEST_CASE("testTskImgCollectorIllegalTransitionVSToVS") {
-  // VS -> VS
-  TskImgAssembler a;
-  a.addImage(jsoncons::json());
-  a.addVolumeSystem(jsoncons::json());
-  CHECK_THROWS_AS(a.addVolumeSystem(jsoncons::json()), std::runtime_error);
-}
-
-TEST_CASE("testTskImgCollectorIllegalTransitionVSToImg") {
-  // VS -> IMG
-  TskImgAssembler a;
-  a.addImage(jsoncons::json());
-  a.addVolumeSystem(jsoncons::json());
-  CHECK_THROWS_AS(a.addImage(jsoncons::json()), std::runtime_error);
-}
-
-
-TEST_CASE("testTskImgCollectorIllegalTransitionVSToFS") {
-  // VS -> { IMG_FS, VOL_FS }
-  TskImgAssembler a;
-  a.addImage(jsoncons::json());
-  a.addVolumeSystem(jsoncons::json());
-  CHECK_THROWS_AS(a.addFileSystem(jsoncons::json()), std::runtime_error);
-}
-
-TEST_CASE("testTskImgCollectorIllegalTransitionVolToImg") {
-  // VOL -> IMG
-  TskImgAssembler a;
-  a.addImage(jsoncons::json());
-  a.addVolumeSystem(
-    jsoncons::json(
-      jsoncons::json_object_arg,
-      {
-        { "volumes", jsoncons::json(jsoncons::json_array_arg) }
-      }
-    )
-  );
-  a.addVolume(jsoncons::json());
-  CHECK_THROWS_AS(a.addImage(jsoncons::json()), std::runtime_error);
-}
-
-TEST_CASE("testTskImgCollectorIllegalTransitionVolToVS") {
-  // VOL -> VS
-  TskImgAssembler a;
-  a.addImage(jsoncons::json());
-  a.addVolumeSystem(
-    jsoncons::json(
-      jsoncons::json_object_arg,
-      {
-        { "volumes", jsoncons::json(jsoncons::json_array_arg) }
-      }
-    )
-  );
-  a.addVolume(jsoncons::json());
-  CHECK_THROWS_AS(a.addVolumeSystem(jsoncons::json()), std::runtime_error);
-}
-
-TEST_CASE("testTskImgCollectorIllegalTransitionImgFSToImgFS") {
-  // IMG_FS -> { VOL_FS, IMG_FS }
-  TskImgAssembler a;
-  a.addImage(jsoncons::json());
-  a.addFileSystem(jsoncons::json());
-  CHECK_THROWS_AS(a.addFileSystem(jsoncons::json()), std::runtime_error);
-}
-
-TEST_CASE("testTskImgCollectorIllegalTransitionImgFSToImg") {
-  // IMG_FS -> IMG
-  TskImgAssembler a;
-  a.addImage(jsoncons::json());
-  a.addFileSystem(jsoncons::json());
-  CHECK_THROWS_AS(a.addImage(jsoncons::json()), std::runtime_error);
-}
-
-TEST_CASE("testTskImgCollectorIllegalTransitionImgFSToVS") {
-  // IMG_FS -> VS
-  TskImgAssembler a;
-  a.addImage(jsoncons::json());
-  a.addFileSystem(jsoncons::json());
-  CHECK_THROWS_AS(a.addVolumeSystem(jsoncons::json()), std::runtime_error);
-}
-
-TEST_CASE("testTskImgCollectorIllegalTransitionImgFSToVol") {
-  // IMG_FS -> VOL
-  TskImgAssembler a;
-  a.addImage(jsoncons::json());
-  a.addFileSystem(jsoncons::json());
-  CHECK_THROWS_AS(a.addVolume(jsoncons::json()), std::runtime_error);
-}
-
-TEST_CASE("testTskImgCollectorIllegalTransitionVolFSToVolFS") {
-  // VOL_FS -> { VOL_FS, IMG_FS }
-  TskImgAssembler a;
-  a.addImage(jsoncons::json());
-  a.addVolumeSystem(
-    jsoncons::json(
-      jsoncons::json_object_arg,
-      {
-        { "volumes", jsoncons::json(jsoncons::json_array_arg) }
-      }
-    )
-  );
-  a.addVolume(jsoncons::json());
-  a.addFileSystem(jsoncons::json());
-  CHECK_THROWS_AS(a.addFileSystem(jsoncons::json()), std::runtime_error);
-}
-
-TEST_CASE("testTskImgCollectorIllegalTransitionVolFSToImg") {
-  // VOL_FS -> IMG
-  TskImgAssembler a;
-  a.addImage(jsoncons::json());
-  a.addVolumeSystem(
-    jsoncons::json(
-      jsoncons::json_object_arg,
-      {
-        { "volumes", jsoncons::json(jsoncons::json_array_arg) }
-      }
-    )
-  );
-  a.addVolume(jsoncons::json());
-  a.addFileSystem(jsoncons::json());
-  CHECK_THROWS_AS(a.addImage(jsoncons::json()), std::runtime_error);
-}
-
-TEST_CASE("testTskImgCollectorIllegalTransitionVolFSToVS") {
-  // VOL_FS -> VS
-  TskImgAssembler a;
-  a.addImage(jsoncons::json());
-  a.addVolumeSystem(
-    jsoncons::json(
-      jsoncons::json_object_arg,
-      {
-        { "volumes", jsoncons::json(jsoncons::json_array_arg) }
-      }
-    )
-  );
-  a.addVolume(jsoncons::json());
-  a.addFileSystem(jsoncons::json());
-  CHECK_THROWS_AS(a.addVolumeSystem(jsoncons::json()), std::runtime_error);
+  REQUIRE(a.currentEvidenceFileName() == "laptop.E01");
+  REQUIRE(a.currentByteOffset() == 1048576);
+  REQUIRE(a.fsIndex() == 1);
 }

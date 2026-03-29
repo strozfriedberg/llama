@@ -76,6 +76,5 @@ private:
 
   uint64_t CurFsOffset;
   uint64_t CurFsBlockSize;
-  uint32_t FsIndex = 0;
 };
 
