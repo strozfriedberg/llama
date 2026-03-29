@@ -17,7 +17,9 @@ FileScheduler::FileScheduler(LlamaDB& db,
                              const std::shared_ptr<Options>& opts)
     : DBConn(db), Pool(pool), Strand(Pool.get_executor()),
       ProcMutex(), ProcCV(),
-      NextBatchId(0), BatchAppender(DBConn.get(), "batches") {
+      NextBatchId(0), BatchAppender(DBConn.get(), "batches"),
+      OutstandingBatches(0), CompletionPromise(), CompletionFuture(CompletionPromise.get_future()),
+      CompletionRequested(false) {
   for (unsigned int i = 0; i < opts->NumThreads; ++i) {
     Processors.push_back(protoProc->clone());
   }
@@ -109,12 +111,28 @@ void FileScheduler::dispatchIfReady() {
     BatchAppender.flush();
     BatchLog.clear();
 
+    OutstandingBatches.fetch_add(1);
     auto entries = std::make_shared<std::vector<std::unique_ptr<Entry>>>(
       std::move(batch.Entries));
     boost::asio::post(Pool, [=, this]() {
       proc->processBatch(entries);
       this->pushProc(proc);
+      if (OutstandingBatches.fetch_sub(1) == 1) {
+        // Last batch done — check completion on strand
+        boost::asio::post(Strand, [this]() {
+          if (CompletionRequested && !Buckets.hasPendingBatches()) {
+            CompletionPromise.set_value();
+            CompletionRequested = false;
+          }
+        });
+      }
     });
+  }
+
+  // Check if all work is done after dispatching
+  if (CompletionRequested && OutstandingBatches.load() == 0 && !Buckets.hasPendingBatches()) {
+    CompletionPromise.set_value();
+    CompletionRequested = false;
   }
 }
 
@@ -156,6 +174,17 @@ void FileScheduler::pushProc(const std::shared_ptr<Processor>& proc) {
     ProcCV.notify_one();
   }
   boost::asio::post(Strand, [this]() { dispatchIfReady(); });
+}
+
+std::future<void> FileScheduler::getCompletionFuture() {
+  // Post to strand to ensure thread-safe check of outstanding count
+  boost::asio::post(Strand, [this]() {
+    CompletionRequested = true;
+    if (OutstandingBatches.load() == 0 && !Buckets.hasPendingBatches()) {
+      CompletionPromise.set_value();
+    }
+  });
+  return std::move(CompletionFuture);
 }
 
 // BucketState implementation

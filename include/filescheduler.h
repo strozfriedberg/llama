@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <atomic>
+#include <future>
 #include <memory>
 #include <queue>
 #include <vector>
@@ -93,6 +95,10 @@ public:
 
   double getProcessorTime();
 
+  // Returns a future that completes when all dispatched batches have finished.
+  // Call after flushAllBuckets() and after all input has been pushed.
+  std::future<void> getCompletionFuture();
+
 private:
   void performScheduling(DirentBatch& dirents,
                          InodeBatch& inodes,
@@ -118,4 +124,9 @@ private:
   uint64_t NextBatchId = 0;
   BatchRecBatch BatchLog;
   LlamaDBAppender BatchAppender;
+
+  std::atomic<uint64_t> OutstandingBatches{0};
+  std::promise<void> CompletionPromise;
+  std::future<void> CompletionFuture;
+  bool CompletionRequested = false;
 };
