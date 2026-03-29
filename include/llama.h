@@ -13,6 +13,7 @@ struct ProgramHandle;
 class Cli;
 class InputReader;
 class OutputWriter;
+class TskImgAssembler;
 
 std::string readfile(const std::string& path);
 std::string readDir(const std::string&);
@@ -30,12 +31,13 @@ public:
 
 private:
   bool readpatterns(const std::vector<std::string>& keyFiles);
-  bool openInput(const std::string& input);
+  std::shared_ptr<InputReader> openInput(const std::string& input);
   bool dbInit();
   bool loadSignatures();
 
   void writeDB(const std::string& outdir);
   void writeReports(const std::string& outdir);
+  void writeEvidenceRecords(const TskImgAssembler& assembler);
   bool createDiskMap();
   bool generateDiskMapVisualization(const std::string& outputDir);
 

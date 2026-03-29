@@ -9,6 +9,7 @@
 #include "duckbatch.h"
 #include "duckhash.h"
 #include "easyfut.h"
+#include "evidencerec.h"
 #include "extent.h"
 #include "filescheduler.h"
 #include "inputhandler.h"
@@ -24,6 +25,7 @@
 #include "ruleengine.h"
 #include "throw.h"
 #include "timer.h"
+#include "tskreader.h"
 
 #include <filesystem>
 #include <fstream>
@@ -92,41 +94,71 @@ void Llama::search() {
     LgProg.reset(lg_create_program(RuleEngine->buildFsm().getFsm(), &opts), lg_destroy_program);
     auto procContext = std::make_shared<ProcessorContext>(&Db, LgProg, RuleEngine, Opts->ExclusionHashset, Opts->InclusionHashset, SigMagics, SigProg, &progressInfo);
     auto protoProc = std::make_shared<Processor>(procContext);
-    auto scheduler = std::make_shared<FileScheduler>(Db, Pool, protoProc, Opts);
-    auto inh = std::shared_ptr<InputHandler>(new BatchHandler(scheduler));
-
-    Input->setInputHandler(inh);
-    Input->setProgressInfo(&progressInfo);
-
-#ifdef __linux__
-    // Set up extent appender for PosixReader
-    if (auto posixReader = std::dynamic_pointer_cast<PosixReader>(Input)) {
-      auto extentAppender = std::make_shared<LlamaDBAppender>(DbConn.get(), "extents");
-      posixReader->setExtentAppender(extentAppender);
-    }
-#endif
 
     ProgressThread progressThread(progressInfo, isatty(STDERR_FILENO));
     progressThread.start();
 
-    if (!Input->startReading()) {
-      std::cerr << "startReading returned an error" << std::endl;
+    for (size_t i = 0; i < Opts->Inputs.size(); ++i) {
+      // Input is already open (from init() or previous iteration's prefetch)
+
+      // Prefetch next input in background
+      std::shared_ptr<InputReader> nextInput;
+      std::unique_ptr<easy_fut<bool>> nextFuture;
+      if (i + 1 < Opts->Inputs.size()) {
+        nextFuture = std::make_unique<easy_fut<bool>>(Pool, [this, i, &nextInput]() {
+          nextInput = openInput(this->Opts->Inputs[i + 1]);
+          return bool(nextInput);
+        });
+      }
+
+      std::string evidenceName = std::filesystem::path(Opts->Inputs[i]).filename().string();
+      progressInfo.setEvidenceFile(evidenceName, i + 1, Opts->Inputs.size());
+
+      auto scheduler = std::make_shared<FileScheduler>(Db, Pool, protoProc, Opts);
+      auto inh = std::shared_ptr<InputHandler>(new BatchHandler(scheduler));
+
+      Input->setInputHandler(inh);
+      Input->setProgressInfo(&progressInfo);
+
+#ifdef __linux__
+      if (auto posixReader = std::dynamic_pointer_cast<PosixReader>(Input)) {
+        auto extentAppender = std::make_shared<LlamaDBAppender>(DbConn.get(), "extents");
+        posixReader->setExtentAppender(extentAppender);
+      }
+#endif
+
+      if (!Input->startReading()) {
+        std::cerr << "startReading returned an error for " << Opts->Inputs[i] << std::endl;
+      }
+
+      // Wait for all processing to complete
+      scheduler->getCompletionFuture().get();
+
+      // Write assembler records to DB (evidence_files, volumes, filesystems)
+      if (auto tskReader = dynamic_cast<TskReader*>(Input.get())) {
+        writeEvidenceRecords(tskReader->getAssembler());
+      }
+
+      if (progressInfo.exceptionCount() > 0) {
+        std::cerr << progressInfo.exceptionCount()
+                  << " evidence I/O exceptions encountered -- see exception_log table\n";
+      }
+
+      std::cerr << "Hashing Time (" << evidenceName << "): " << scheduler->getProcessorTime() << "s\n";
+
+      // Wait for next input to be ready, swap
+      if (nextFuture) {
+        nextFuture->get();
+        Input = nextInput;
+      }
     }
-    Pool.join();
 
     progressThread.stop();
-
-    if (progressInfo.exceptionCount() > 0) {
-      std::cerr << progressInfo.exceptionCount()
-                << " evidence I/O exceptions encountered -- see exception_log table\n";
-    }
-
-    std::cerr << "Hashing Time: " << scheduler->getProcessorTime() << "s\n";
+    Pool.join();  // All evidence files processed -- terminate pool threads
 
     RuleEngine->writeRulesToDb(DbConn);
 
 #ifdef __linux__
-    // Create disk map and visualization for PosixReader
     if (std::dynamic_pointer_cast<PosixReader>(Input)) {
       std::cerr << "Creating disk map from extents..." << std::endl;
       if (createDiskMap()) {
@@ -205,18 +237,19 @@ bool Llama::readpatterns(const std::vector<std::string>& keyFiles) {
   }
 }
 
-bool Llama::openInput(const std::string& input) {
+std::shared_ptr<InputReader> Llama::openInput(const std::string& input) {
 // FIXME: is_directory can throw
+  std::shared_ptr<InputReader> reader;
   if (fs::is_directory(input)) {
 #ifdef __linux__
-    Input = InputReader::createPosix(input);
+    reader = InputReader::createPosix(input);
 #else
-    Input = InputReader::createDir(input);
+    reader = InputReader::createDir(input);
 #endif
   } else {
-    Input = InputReader::createTSK(input);
+    reader = InputReader::createTSK(input);
   }
-  return bool(Input);
+  return reader;
 }
 
 bool Llama::dbInit() {
@@ -226,7 +259,43 @@ bool Llama::dbInit() {
   DBType<Extent>::createTable(DbConn.get(), "extents");
   DBType<BatchRec>::createTable(DbConn.get(), "batches");
   DBType<ExceptionRecord>::createTable(DbConn.get(), "exception_log");
+  DBType<EvidenceFileRec>::createTable(DbConn.get(), "evidence_files");
+  DBType<VolumeRec>::createTable(DbConn.get(), "volumes");
+  DBType<FilesystemRec>::createTable(DbConn.get(), "filesystems");
   return true;
+}
+
+void Llama::writeEvidenceRecords(const TskImgAssembler& assembler) {
+  // Evidence file
+  {
+    LlamaDBAppender appender(DbConn.get(), "evidence_files");
+    EvidenceFileBatch batch;
+    batch.add(assembler.evidenceFile());
+    batch.copyToDB(appender.get());
+    appender.flush();
+  }
+
+  // Volumes
+  if (!assembler.volumes().empty()) {
+    LlamaDBAppender appender(DbConn.get(), "volumes");
+    VolumeBatch batch;
+    for (const auto& vol : assembler.volumes()) {
+      batch.add(vol);
+    }
+    batch.copyToDB(appender.get());
+    appender.flush();
+  }
+
+  // Filesystems
+  if (!assembler.filesystems().empty()) {
+    LlamaDBAppender appender(DbConn.get(), "filesystems");
+    FilesystemBatch batch;
+    for (const auto& fs : assembler.filesystems()) {
+      batch.add(fs);
+    }
+    batch.copyToDB(appender.get());
+    appender.flush();
+  }
 }
 
 bool Llama::loadSignatures() {
@@ -290,7 +359,8 @@ bool Llama::init() {
   });
 
   auto open = make_future(Pool, [this]() {
-    return openInput(this->Opts->Inputs[0]);
+    Input = openInput(this->Opts->Inputs[0]);
+    return bool(Input);
   });
 
   auto db = make_future(Pool, [this]() {

@@ -45,6 +45,8 @@ public:
 
   virtual bool startReading() override;
 
+  const TskImgAssembler& getAssembler() const { return Asm; }
+
 private:
   // callbacks
   TSK_FILTER_ENUM filterVs(const TSK_VS_INFO* vs_info);
