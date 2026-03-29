@@ -115,3 +115,45 @@ TEST_CASE("progressInfoFormatLineShowsExceptions") {
   line = info.formatLine(1.0);
   REQUIRE(line.find("2 exceptions") != std::string::npos);
 }
+
+TEST_CASE("ProgressInfo setEvidenceFile resets filesystem counters") {
+  ProgressInfo pi;
+  pi.setEvidenceFile("laptop.E01", 1, 3);
+  pi.setFilesystem(1, 0, 1000, 500ULL * 1024 * 1024);
+  pi.update(100, 1024);
+
+  REQUIRE(pi.evidenceFileName() == "laptop.E01");
+  REQUIRE(pi.evidenceIndex() == 1);
+  REQUIRE(pi.evidenceCount() == 3);
+
+  // setEvidenceFile resets filesystem-level counters
+  pi.setEvidenceFile("usb.dd", 2, 3);
+  REQUIRE(pi.filesystemIndex() == 0);
+  REQUIRE(pi.evidenceFileName() == "usb.dd");
+  REQUIRE(pi.evidenceIndex() == 2);
+  // Processed counters do NOT reset (cumulative across all evidence)
+  REQUIRE(pi.inodesProcessed() == 100);
+}
+
+TEST_CASE("ProgressInfo formatLine shows evidence file for multiple inputs") {
+  ProgressInfo pi;
+  pi.setEvidenceFile("usb.dd", 2, 3);
+  pi.setFilesystem(1, 2, 1000, 500ULL * 1024 * 1024);
+  pi.update(420, 50ULL * 1024 * 1024);
+  std::string line = pi.formatLine(10.0);
+  REQUIRE(line.find("[2/3] usb.dd") != std::string::npos);
+  REQUIRE(line.find("Filesystem 1/2") != std::string::npos);
+}
+
+TEST_CASE("ProgressInfo formatLine suppresses evidence prefix for single input") {
+  ProgressInfo pi;
+  pi.setEvidenceFile("laptop.E01", 1, 1);
+  pi.setFilesystem(1, 2, 1000, 500ULL * 1024 * 1024);
+  pi.update(420, 50ULL * 1024 * 1024);
+  std::string line = pi.formatLine(10.0);
+  // Should NOT show "[1/1]" prefix
+  REQUIRE(line.find("[1/1]") == std::string::npos);
+  REQUIRE(line.find("laptop.E01") == std::string::npos);
+  // Should still show filesystem info
+  REQUIRE(line.find("Filesystem 1/2") != std::string::npos);
+}

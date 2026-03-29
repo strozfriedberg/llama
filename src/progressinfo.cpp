@@ -8,7 +8,8 @@
 ProgressInfo::ProgressInfo()
   : InodesProcessed(0), BytesProcessed(0),
     FilesystemIndex(0), FilesystemCount(0),
-    InodeCount(0), TotalBytes(0), Done(false), ExceptionCount(0) {}
+    InodeCount(0), TotalBytes(0), Done(false), ExceptionCount(0),
+    EvidenceFileName(), EvidenceIndex(0), EvidenceCount(0) {}
 
 void ProgressInfo::update(uint64_t inodes, uint64_t bytes) {
   InodesProcessed.fetch_add(inodes);
@@ -60,6 +61,26 @@ void ProgressInfo::addException() {
 
 uint64_t ProgressInfo::exceptionCount() const {
   return ExceptionCount.load();
+}
+
+void ProgressInfo::setEvidenceFile(const std::string& name, uint32_t index, uint32_t total) {
+  EvidenceFileName = name;
+  EvidenceIndex.store(index);
+  EvidenceCount.store(total);
+  FilesystemIndex.store(0);
+  FilesystemCount.store(0);
+}
+
+std::string ProgressInfo::evidenceFileName() const {
+  return EvidenceFileName;
+}
+
+uint32_t ProgressInfo::evidenceIndex() const {
+  return EvidenceIndex.load();
+}
+
+uint32_t ProgressInfo::evidenceCount() const {
+  return EvidenceCount.load();
 }
 
 namespace {
@@ -125,13 +146,21 @@ std::string ProgressInfo::formatLine(double elapsedSecs) const {
   uint64_t totBytes = totalBytes();
   uint32_t fsIdx = filesystemIndex();
   uint32_t fsCount = filesystemCount();
+  uint32_t evIdx = evidenceIndex();
+  uint32_t evCount = evidenceCount();
 
   double inodesPerSec = (elapsedSecs > 0) ? static_cast<double>(inodes) / elapsedSecs : 0;
   double bytesPerSec = (elapsedSecs > 0) ? static_cast<double>(procBytes) / elapsedSecs : 0;
 
-  char buf[256];
+  char buf[512];
   char* p = buf;
   char* end = buf + sizeof(buf);
+
+  // Evidence file prefix (only for multiple inputs)
+  if (evCount > 1) {
+    p += std::snprintf(p, end - p, "[%u/%u] %s | ",
+                       evIdx, evCount, EvidenceFileName.c_str());
+  }
 
   // Filesystem label
   if (fsCount > 0) {

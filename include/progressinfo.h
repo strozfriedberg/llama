@@ -13,6 +13,7 @@ public:
 
   void update(uint64_t inodes, uint64_t bytes);
   void setFilesystem(uint32_t index, uint32_t total, uint64_t inodeCount, uint64_t totalBytes);
+  void setEvidenceFile(const std::string& name, uint32_t index, uint32_t total);
   void setDone();
   void addException();
 
@@ -25,8 +26,10 @@ public:
   bool isDone() const;
   uint64_t exceptionCount() const;
 
-  // Format the progress line for display.
-  // Rates are computed as cumulative averages from elapsed time.
+  std::string evidenceFileName() const;
+  uint32_t evidenceIndex() const;
+  uint32_t evidenceCount() const;
+
   std::string formatLine(double elapsedSecs) const;
 
 private:
@@ -38,4 +41,8 @@ private:
   std::atomic<uint64_t> TotalBytes;
   std::atomic<bool> Done;
   std::atomic<uint64_t> ExceptionCount;
+
+  std::string EvidenceFileName;
+  std::atomic<uint32_t> EvidenceIndex;
+  std::atomic<uint32_t> EvidenceCount;
 };
