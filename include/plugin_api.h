@@ -33,11 +33,15 @@ typedef struct {
     const char* version;
 } LlamaPluginInfo;
 
-/* Plugin lifecycle */
+/* Plugin lifecycle.
+   duckdb_handle is a duckdb_connection* for DB access during init only.
+   Plugins needing DB access during process() must create their own connections. */
 LLAMA_PLUGIN_EXPORT LlamaPluginInfo llama_plugin_init(void* duckdb_handle);
 LLAMA_PLUGIN_EXPORT void            llama_plugin_shutdown(void);
 
-/* Per-file processing — returns 0 on success/skip, negative on error */
+/* Per-file processing — returns 0 on success/skip, negative on error.
+   Called from multiple threads concurrently — plugins must be thread-safe.
+   file_signature is the first matched signature, or NULL if none matched. */
 LLAMA_PLUGIN_EXPORT int             llama_plugin_process(const LlamaFileContext* ctx);
 
 /* Error reporting — returns thread-local string describing last error */
