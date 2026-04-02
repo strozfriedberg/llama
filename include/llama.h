@@ -5,6 +5,7 @@
 #include "filesignatures.h"
 #include "llamaduck.h"
 #include "options.h"
+#include "pluginmanager.h"
 #include "rulereader.h"
 #include "ruleengine.h"
 
@@ -34,6 +35,7 @@ private:
   std::shared_ptr<InputReader> openInput(const std::string& input);
   bool dbInit();
   bool loadSignatures();
+  bool loadPlugins();
 
   void writeDB(const std::string& outdir);
   void writeReports(const std::string& outdir);
@@ -54,5 +56,6 @@ private:
   // LlamaRuleEngine RuleEngine;
   LlamaDB Db;
   LlamaDBConnection DbConn;
+  std::unique_ptr<PluginManager> Plugins;
 };
 
