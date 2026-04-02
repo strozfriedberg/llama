@@ -22,3 +22,17 @@ TEST_CASE("testPluginManagerLoadEmptyDir") {
   REQUIRE(mgr.pluginCount() == 0);
   std::filesystem::remove_all(dir);
 }
+
+TEST_CASE("testPluginManagerLoadStub") {
+  // The test stub plugin is built into the test build directory.
+  // Find it relative to the test executable.
+  auto pluginDir = std::filesystem::path(PLUGIN_STUB_DIR);
+  REQUIRE(std::filesystem::exists(pluginDir));
+
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+  PluginManager mgr;
+  mgr.loadPlugins(pluginDir, conn.get());
+  REQUIRE(mgr.pluginCount() == 1);
+  mgr.shutdown();
+}

@@ -104,6 +104,7 @@ if catch2_dep.found()
     llama_common_sources + test_sources,
     include_directories: [inc, include_directories('../src')],
     dependencies: llama_deps + [catch2_dep],
+    cpp_args: ['-DPLUGIN_STUB_DIR="' + meson.current_build_dir() + '"'],
     build_by_default: true
   )
 
