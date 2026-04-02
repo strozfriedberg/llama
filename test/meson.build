@@ -86,6 +86,14 @@ test_sources = [
   'test_progressthread.cpp'
 ]
 
+# Test plugin stub (always built if tests are enabled)
+test_plugin_stub = shared_library('test_plugin_stub',
+  'test_plugin_stub.c',
+  include_directories: inc,
+  name_prefix: '',
+  c_args: ['-std=c11'],
+)
+
 # Only build tests if Catch2 is available
 if catch2_dep.found()
 
