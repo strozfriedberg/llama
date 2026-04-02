@@ -21,6 +21,7 @@ struct ContextHandle;
 struct FileRecord;
 class OutputHandler;
 class ProgressInfo;
+class PluginManager;
 class ReadSeek;
 class Entry;
 
@@ -49,6 +50,7 @@ struct ProcessorContext {
   MagicsType SigMagics;
   std::shared_ptr<ProgramHandle> SigProg;
   ProgressInfo* Progress;
+  PluginManager* Plugins = nullptr;
 };
 
 class Processor {

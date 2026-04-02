@@ -17,6 +17,8 @@
 #include "timer.h"
 #include "util.h"
 #include "ruleengine.h"
+#include "pluginmanager.h"
+#include "plugin_api.h"
 
 #include "boost/interprocess/file_mapping.hpp"
 #include "boost/interprocess/mapped_region.hpp"
@@ -37,6 +39,22 @@ namespace {
       }
     } while (bytesRead > 0);
     sfhash_get_hashes(hasher, &hashes);
+  }
+
+  LlamaReadSeek wrapReadSeek(ReadSeek* rs) {
+    LlamaReadSeek lrs;
+    lrs.opaque = static_cast<void*>(rs);
+    lrs.read = [](void* o, uint8_t* buf, size_t len) -> int64_t {
+      return static_cast<int64_t>(static_cast<ReadSeek*>(o)->read(len, buf));
+    };
+    lrs.seek = [](void* o, size_t pos) -> int64_t {
+      static_cast<ReadSeek*>(o)->seek(pos);
+      return 0;
+    };
+    lrs.size = [](void* o) -> uint64_t {
+      return static_cast<ReadSeek*>(o)->size();
+    };
+    return lrs;
   }
 }
 
@@ -148,9 +166,9 @@ void Processor::process(Entry& entry) {
   Hashes->add(HashRecord);
 
   // Detect file signatures
+  std::vector<MagicPtr> sigResults;
   {
     try {
-      std::vector<MagicPtr> sigResults;
       entry.getStream().seek(0);
       SigAnalyzer.getSignatures(entry.getStream(), sigResults);
       for (const auto& sig : sigResults) {
@@ -158,6 +176,26 @@ void Processor::process(Entry& entry) {
       }
     } catch (const EvidenceIOError& e) {
       logException(entry, "signature", e.what());
+    }
+  }
+
+  // Dispatch to plugins
+  if (Context->Plugins) {
+    try {
+      entry.getStream().seek(0);
+      const char* sigName = sigResults.empty() ? nullptr : sigResults[0]->Name.c_str();
+      LlamaFileContext pluginCtx;
+      pluginCtx.file_signature = sigName;
+      pluginCtx.inode_addr = entry.Addr;
+      pluginCtx.file_size = entry.FileSize;
+      pluginCtx.readseek = wrapReadSeek(&entry.getStream());
+
+      std::string errorPlugin, errorMessage;
+      if (Context->Plugins->processFile(pluginCtx, errorPlugin, errorMessage) < 0) {
+        logException(entry, ("plugin:" + errorPlugin).c_str(), errorMessage.c_str());
+      }
+    } catch (const EvidenceIOError& e) {
+      logException(entry, "plugin", e.what());
     }
   }
 
