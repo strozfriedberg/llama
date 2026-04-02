@@ -23,7 +23,7 @@ endif
 threads_dep = dependency('threads')
 
 # Boost dependencies
-boost_dep = dependency('boost', modules: ['date_time', 'program_options', 'system'])
+boost_dep = dependency('boost', modules: ['date_time', 'filesystem', 'program_options', 'system'])
 
 # Additional system libraries for Windows
 if host_machine.system() == 'windows'
