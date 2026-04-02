@@ -94,6 +94,7 @@ void Cli::printVersion(std::ostream& out) const {
 void Cli::printHelp(std::ostream& out) const {
   printVersion(out);
   out << "\nUsage: llama [OPTIONS] OUTPUT_DIRECTORY INPUT_FILE [INPUT_FILE ...]\n"
+      << "\nPlugins: Use --plugin-dir to load artifact parser plugins from a directory.\n"
       << All << std::endl;
 }
 
