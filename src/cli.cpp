@@ -57,7 +57,12 @@ Cli::Cli() : All(), Opts(new Options) {
         po::value<std::string>(&Opts->InclusionHashset)
         ->default_value("")
         ->value_name("INCLUSION_HASHSET"),
-        "Path to hashset file containing hashes to be included");
+        "Path to hashset file containing hashes to be included")
+      ("plugin-dir",
+        po::value<std::string>(&Opts->PluginDir)
+        ->default_value("")
+        ->value_name("PLUGIN_DIR"),
+        "Directory containing plugin shared libraries");
 
   All.add(commands).add(ioOpts).add(configOpts);
 
@@ -145,6 +150,11 @@ void Cli::validateOpts() const {
   if (!Opts->RuleDir.empty()) {
     THROW_IF(!std::filesystem::exists(Opts->RuleDir), "Rule directory " + Opts->RuleDir + " not found.");
     THROW_IF(!std::filesystem::is_directory(Opts->RuleDir), "Rule directory " + Opts->RuleDir + " is not a directory.");
+  }
+
+  if (!Opts->PluginDir.empty()) {
+    THROW_IF(!std::filesystem::exists(Opts->PluginDir), "Plugin directory " + Opts->PluginDir + " not found.");
+    THROW_IF(!std::filesystem::is_directory(Opts->PluginDir), "Plugin directory " + Opts->PluginDir + " is not a directory.");
   }
 
   // Check for duplicate evidence filenames

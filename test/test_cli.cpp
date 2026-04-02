@@ -230,3 +230,18 @@ TEST_CASE("testCLIDuplicateFilenameRejection") {
   Cli cli;
   CHECK_THROWS(cli.parse(4, args));
 }
+
+TEST_CASE("testCLIPluginDir") {
+  const char* args[] = {"llama", "--plugin-dir", "/tmp/plugins", "output", "input.E01"};
+  Cli cli;
+  auto opts = cli.parse(5, args);
+  REQUIRE("search" == opts->Command);
+  REQUIRE("/tmp/plugins" == opts->PluginDir);
+}
+
+TEST_CASE("testCLIPluginDirEmpty") {
+  const char* args[] = {"llama", "output", "input.E01"};
+  Cli cli;
+  auto opts = cli.parse(3, args);
+  REQUIRE(opts->PluginDir.empty());
+}

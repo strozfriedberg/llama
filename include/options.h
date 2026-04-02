@@ -15,6 +15,7 @@ struct Options {
   std::string ExclusionHashset;
   std::string InclusionHashset;
   std::string SignaturesPath;
+  std::string PluginDir;
   std::vector<std::string> KeyFiles;
   unsigned int NumThreads;
   Codec OutputCodec;
