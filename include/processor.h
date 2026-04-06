@@ -8,6 +8,7 @@
 #include "duckhash.h"
 #include "llamabatch.h"
 #include "hashset.h"
+#include "pluginmanager.h"
 #include "ruleengine.h"
 #include "tsk.h"
 #include <lightgrep/search_hit.h>
@@ -21,7 +22,6 @@ struct ContextHandle;
 struct FileRecord;
 class OutputHandler;
 class ProgressInfo;
-class PluginManager;
 class ReadSeek;
 class Entry;
 
@@ -34,6 +34,7 @@ struct ProcessorContext {
     const std::string& exclusionHsetPath,
     const std::string& inclusionHsetPath,
     const MagicsType& sigMagics,
+    const PluginManager& plugins,
     const std::shared_ptr<ProgramHandle>& sigProg = nullptr,
     ProgressInfo* progress = nullptr
   );
@@ -50,7 +51,7 @@ struct ProcessorContext {
   MagicsType SigMagics;
   std::shared_ptr<ProgramHandle> SigProg;
   ProgressInfo* Progress;
-  PluginManager* Plugins = nullptr;
+  const PluginManager& Plugins;
 };
 
 class Processor {

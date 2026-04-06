@@ -56,6 +56,6 @@ private:
   // LlamaRuleEngine RuleEngine;
   LlamaDB Db;
   LlamaDBConnection DbConn;
-  std::unique_ptr<PluginManager> Plugins;
+  PluginManager Plugins;
 };
 

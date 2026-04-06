@@ -92,10 +92,7 @@ void Llama::search() {
 
     LG_ProgramOptions opts{10};
     LgProg.reset(lg_create_program(RuleEngine->buildFsm().getFsm(), &opts), lg_destroy_program);
-    auto procContext = std::make_shared<ProcessorContext>(&Db, LgProg, RuleEngine, Opts->ExclusionHashset, Opts->InclusionHashset, SigMagics, SigProg, &progressInfo);
-    if (Plugins) {
-      procContext->Plugins = Plugins.get();
-    }
+    auto procContext = std::make_shared<ProcessorContext>(&Db, LgProg, RuleEngine, Opts->ExclusionHashset, Opts->InclusionHashset, SigMagics, Plugins, SigProg, &progressInfo);
     auto protoProc = std::make_shared<Processor>(procContext);
 
     ProgressThread progressThread(progressInfo, isatty(STDERR_FILENO));
@@ -159,9 +156,7 @@ void Llama::search() {
     progressThread.stop();
     Pool.join();  // All evidence files processed -- terminate pool threads
 
-    if (Plugins) {
-      Plugins->shutdown();
-    }
+    Plugins.shutdown();
 
     RuleEngine->writeRulesToDb(DbConn);
 
@@ -362,9 +357,8 @@ bool Llama::loadPlugins() {
   if (Opts->PluginDir.empty()) {
     return true;
   }
-  Plugins = std::make_unique<PluginManager>();
-  Plugins->loadPlugins(Opts->PluginDir, DbConn.get());
-  if (Plugins->pluginCount() == 0) {
+  Plugins.loadPlugins(Opts->PluginDir, DbConn.get());
+  if (Plugins.pluginCount() == 0) {
     std::cerr << "Warning: no plugins found in " << Opts->PluginDir << "\n";
   }
   return true;

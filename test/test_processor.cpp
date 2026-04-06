@@ -12,6 +12,8 @@
 #include "readseek_impl.h"
 #include "patternparser.h"
 
+#include "pluginmanager.h"
+
 #include <hasher/api.h>
 
 #include <iostream>
@@ -93,10 +95,11 @@ private:
     DBType<FileSigResult>::createTable(DbConn.get(), "file_signatures");
     DBType<ExceptionRecord>::createTable(DbConn.get(), "exception_log");
 
-    auto procContext = std::make_shared<ProcessorContext>(&Db, pHandle, RuleEngine, "", "", MagicsType{});
+    auto procContext = std::make_shared<ProcessorContext>(&Db, pHandle, RuleEngine, "", "", MagicsType{}, Plugins);
     return Processor(procContext);
   }
   std::shared_ptr<LlamaRuleEngine> RuleEngine;
+  PluginManager Plugins;
   ReadSeekBuf RsBuf;
   LlamaDB Db;
   LlamaDBConnection DbConn;
@@ -162,13 +165,15 @@ TEST_CASE("testSearchWithMultipleHits") {
 
 TEST_CASE("testProcessorContextGetSupportedHashAlgsDiffAlgs") {
   std::shared_ptr<LlamaRuleEngine> ruleEngine = std::make_shared<LlamaRuleEngine>();
+  PluginManager plugins;
   ProcessorContext procCtx{
     nullptr,
     nullptr,
     ruleEngine,
     "test/hsets/md5.hset",
     "test/hsets/sha1.hset",
-    MagicsType{}
+    MagicsType{},
+    plugins
   };
 
   REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_SHA_2_256 | SFHASH_MD5 | SFHASH_SHA_1));
@@ -176,13 +181,15 @@ TEST_CASE("testProcessorContextGetSupportedHashAlgsDiffAlgs") {
 
 TEST_CASE("testProcessorContextGetSupportedHashAlgsSameAlgs") {
   std::shared_ptr<LlamaRuleEngine> ruleEngine = std::make_shared<LlamaRuleEngine>();
+  PluginManager plugins;
   ProcessorContext procCtx{
     nullptr,
     nullptr,
     ruleEngine,
     "test/hsets/md5.hset",
     "test/hsets/md5.hset",
-    MagicsType{}
+    MagicsType{},
+    plugins
   };
 
   REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_SHA_2_256 | SFHASH_MD5 | SFHASH_SHA_1));
@@ -193,13 +200,15 @@ TEST_CASE("testProcessorContextGetSupportedHashAlgsMultipleAlgs") {
   // dependent on the order of the algs in hashset<anonymous namespace>::searchedHashAlgs.
   // In this case, it's MD5 because MD5 comes first in searchedHashAlgs.
   std::shared_ptr<LlamaRuleEngine> ruleEngine = std::make_shared<LlamaRuleEngine>();
+  PluginManager plugins;
   ProcessorContext procCtx{
     nullptr,
     nullptr,
     ruleEngine,
     "test/hsets/md5.hset",
     "test/hsets/sha1_md5.hset",
-    MagicsType{}
+    MagicsType{},
+    plugins
   };
 
   REQUIRE(procCtx.getSupportedHashAlgsFromContext() == (SFHASH_SHA_2_256 | SFHASH_MD5 | SFHASH_SHA_1));
@@ -220,9 +229,10 @@ TEST_CASE("Processor::flush clears batches to prevent duplicates") {
   DBType<FileSigResult>::createTable(conn.get(), "file_signatures");
   DBType<ExceptionRecord>::createTable(conn.get(), "exception_log");
 
+  PluginManager plugins;
   auto procContext = std::make_shared<ProcessorContext>(
     &db, nullptr, ruleEngine, "", "",
-    MagicsType{}
+    MagicsType{}, plugins
   );
   Processor proc(procContext);
 
@@ -267,8 +277,9 @@ TEST_CASE("ProcessorContext can be constructed with SigMagics") {
   DBType<ExceptionRecord>::createTable(conn.get(), "exception_log");
 
   auto ruleEngine = std::make_shared<LlamaRuleEngine>();
+  PluginManager plugins;
   auto procContext = std::make_shared<ProcessorContext>(
-    &db, nullptr, ruleEngine, "", "", magics, sigProg
+    &db, nullptr, ruleEngine, "", "", magics, plugins, sigProg
   );
 
   // Verify SigMagics and SigProg were stored
@@ -292,9 +303,10 @@ TEST_CASE("processBatch sorts entries by DiskOffset for sequential I/O") {
   DBType<FileSigResult>::createTable(conn.get(), "file_signatures");
   DBType<ExceptionRecord>::createTable(conn.get(), "exception_log");
 
+  PluginManager plugins;
   auto procContext = std::make_shared<ProcessorContext>(
     &db, nullptr, ruleEngine, "", "",
-    MagicsType{}
+    MagicsType{}, plugins
   );
   Processor proc(procContext);
 

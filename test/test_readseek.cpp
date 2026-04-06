@@ -4,6 +4,7 @@
 
 #include "entry.h"
 #include "evidenceioerror.h"
+#include "pluginmanager.h"
 #include "processor.h"
 #include "readseek_impl.h"
 #include "tsk.h"
@@ -563,8 +564,9 @@ TEST_CASE("processorCreatesReadSeekFromEntry") {
   DBType<HashRec>::createTable(dbConn.get(), "hash");
   DBType<ExceptionRecord>::createTable(dbConn.get(), "exception_log");
 
+  PluginManager plugins;
   auto ctx = std::make_shared<ProcessorContext>(
-    &db, nullptr, ruleEngine, "", "", MagicsType{}
+    &db, nullptr, ruleEngine, "", "", MagicsType{}, plugins
   );
   Processor proc(ctx);
 
@@ -583,8 +585,9 @@ TEST_CASE("processBatchCreatesReadSeekWhenMissing") {
   DBType<HashRec>::createTable(dbConn.get(), "hash");
   DBType<ExceptionRecord>::createTable(dbConn.get(), "exception_log");
 
+  PluginManager plugins;
   auto ctx = std::make_shared<ProcessorContext>(
-    &db, nullptr, ruleEngine, "", "", MagicsType{}
+    &db, nullptr, ruleEngine, "", "", MagicsType{}, plugins
   );
   Processor proc(ctx);
 
@@ -616,8 +619,9 @@ TEST_CASE("clonedProcessorOpensIndependentHandles") {
   DBType<HashRec>::createTable(dbConn.get(), "hash");
   DBType<ExceptionRecord>::createTable(dbConn.get(), "exception_log");
 
+  PluginManager plugins;
   auto ctx = std::make_shared<ProcessorContext>(
-    &db, nullptr, ruleEngine, "", "", MagicsType{}
+    &db, nullptr, ruleEngine, "", "", MagicsType{}, plugins
   );
   Processor proc(ctx);
 

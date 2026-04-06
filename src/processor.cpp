@@ -49,9 +49,10 @@ ProcessorContext::ProcessorContext(LlamaDB* db,
                                    const std::string& exclusionHsetPath,
                                    const std::string& inclusionHsetPath,
                                    const MagicsType& sigMagics,
+                                   const PluginManager& plugins,
                                    const std::shared_ptr<ProgramHandle>& sigProg,
                                    ProgressInfo* progress) :
-  Db(db), Prog(prog), RuleEngine(ruleEngine), SigMagics(sigMagics), SigProg(sigProg), Progress(progress) {
+  Db(db), Prog(prog), RuleEngine(ruleEngine), SigMagics(sigMagics), SigProg(sigProg), Progress(progress), Plugins(plugins) {
   if (!exclusionHsetPath.empty()) {
     ExclusionHashset.reset(new LlamaHashset(exclusionHsetPath.c_str()));
   }
@@ -165,22 +166,33 @@ void Processor::process(Entry& entry) {
   }
 
   // Dispatch to plugins
-  if (Context->Plugins) {
-    try {
-      entry.getStream().seek(0);
-      const char* sigName = sigResults.empty() ? nullptr : sigResults[0]->Name.c_str();
-      LlamaFileContext pluginCtx;
-      pluginCtx.file_signature = sigName;
-      pluginCtx.inode_addr = entry.Addr;
-      pluginCtx.file_size = entry.FileSize;
-      pluginCtx.readseek = wrapReadSeek(&entry.getStream());
+  if (!Context->Plugins.empty()) {
+    const char* sigName = sigResults.empty() ? nullptr : sigResults[0]->Name.c_str();
+    LlamaFileContext pluginCtx{};
+    pluginCtx.struct_size = sizeof(LlamaFileContext);
+    pluginCtx.file_signature = sigName;
+    pluginCtx.inode_addr = entry.Addr;
+    pluginCtx.file_size = entry.FileSize;
+    pluginCtx.readseek = wrapReadSeek(&entry.getStream());
 
-      std::string errorPlugin, errorMessage;
-      if (Context->Plugins->processFile(pluginCtx, errorPlugin, errorMessage) < 0) {
-        logException(entry, ("plugin:" + errorPlugin).c_str(), errorMessage.c_str());
+    for (const auto& plugin : Context->Plugins.plugins()) {
+      pluginCtx.readseek.seek(pluginCtx.readseek.opaque, 0);
+      const char* errmsg = nullptr;
+      int rc;
+      try {
+        rc = plugin.process(&pluginCtx, &errmsg);
+      } catch (const std::exception& e) {
+        logException(entry, ("plugin:" + plugin.name).c_str(), e.what());
+        continue;
+      } catch (...) {
+        logException(entry, ("plugin:" + plugin.name).c_str(), "plugin threw unknown exception");
+        continue;
       }
-    } catch (const EvidenceIOError& e) {
-      logException(entry, "plugin", e.what());
+      if (rc < 0) {
+        logException(entry, ("plugin:" + plugin.name).c_str(),
+                     errmsg ? errmsg : "unknown error");
+        if (errmsg) plugin.freeError(errmsg);
+      }
     }
   }
 
