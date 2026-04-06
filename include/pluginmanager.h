@@ -14,27 +14,30 @@ struct LoadedPlugin {
   std::string name;
   std::string version;
   boost::dll::shared_library library;
-  std::function<int(const LlamaFileContext*)>  process;
-  std::function<const char*()>                 lastError;
-  std::function<void()>                        shutdown;
+  std::function<int(const LlamaFileContext*, const char**)> process;
+  std::function<void(const char*)>                         freeError;
+  std::function<void()>                                    shutdown;
 };
 
 class PluginManager {
 public:
+  // Thread-safety contract:
+  //   - loadPlugins() and shutdown() are single-threaded (main thread).
+  //   - plugins(), empty(), pluginCount() are const and safe to call
+  //     concurrently from processing threads.
+  //   - The Plugins vector is never mutated while processing threads are active.
+  //   Lifecycle: loadPlugins() -> [processing...] -> shutdown()
+
   PluginManager() = default;
   ~PluginManager();
 
   PluginManager(const PluginManager&) = delete;
   PluginManager& operator=(const PluginManager&) = delete;
 
-  void loadPlugins(const std::filesystem::path& pluginDir, duckdb_connection& dbConn);
+  void loadPlugins(const std::filesystem::path& pluginDir, duckdb_connection dbConn);
 
-  // Returns 0 if all plugins succeeded/skipped, negative on first error.
-  // On error, errorPlugin and errorMessage are set.
-  int processFile(const LlamaFileContext& ctx,
-                  std::string& errorPlugin,
-                  std::string& errorMessage);
-
+  const std::vector<LoadedPlugin>& plugins() const { return Plugins; }
+  bool empty() const { return Plugins.empty(); }
   size_t pluginCount() const { return Plugins.size(); }
 
   void shutdown();

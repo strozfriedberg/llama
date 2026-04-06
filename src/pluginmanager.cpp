@@ -16,7 +16,7 @@ PluginManager::~PluginManager() {
   shutdown();
 }
 
-void PluginManager::loadPlugins(const std::filesystem::path& pluginDir, duckdb_connection& dbConn) {
+void PluginManager::loadPlugins(const std::filesystem::path& pluginDir, duckdb_connection dbConn) {
   namespace fs = std::filesystem;
   const std::string ext = pluginExtension();
 
@@ -33,19 +33,25 @@ void PluginManager::loadPlugins(const std::filesystem::path& pluginDir, duckdb_c
 
       if (!lib.has("llama_plugin_init") ||
           !lib.has("llama_plugin_process") ||
-          !lib.has("llama_plugin_last_error") ||
+          !lib.has("llama_plugin_free_error") ||
           !lib.has("llama_plugin_shutdown")) {
         std::cerr << "Warning: " << entry.path().filename()
                   << " missing required symbols, skipping\n";
         continue;
       }
 
-      auto initFn = lib.get<LlamaPluginInfo(void*)>("llama_plugin_init");
-      auto processFn = lib.get<int(const LlamaFileContext*)>("llama_plugin_process");
-      auto lastErrorFn = lib.get<const char*()>("llama_plugin_last_error");
+      auto initFn    = lib.get<int(void*, LlamaPluginInfo*)>("llama_plugin_init");
+      auto processFn = lib.get<int(const LlamaFileContext*, const char**)>("llama_plugin_process");
+      auto freeFn    = lib.get<void(const char*)>("llama_plugin_free_error");
       auto shutdownFn = lib.get<void()>("llama_plugin_shutdown");
 
-      LlamaPluginInfo info = initFn(&dbConn);
+      LlamaPluginInfo info{};
+      if (initFn(dbConn, &info) < 0) {
+        std::cerr << "Warning: " << entry.path().filename()
+                  << " init failed, skipping\n";
+        continue;
+      }
+
       if (!info.name) {
         std::cerr << "Warning: " << entry.path().filename()
                   << " init returned null name, skipping\n";
@@ -57,7 +63,7 @@ void PluginManager::loadPlugins(const std::filesystem::path& pluginDir, duckdb_c
       plugin.version = info.version ? info.version : "unknown";
       plugin.library = std::move(lib);
       plugin.process = processFn;
-      plugin.lastError = lastErrorFn;
+      plugin.freeError = freeFn;
       plugin.shutdown = shutdownFn;
 
       std::cerr << "Loaded plugin: " << plugin.name
@@ -70,21 +76,6 @@ void PluginManager::loadPlugins(const std::filesystem::path& pluginDir, duckdb_c
                 << ": " << e.what() << "\n";
     }
   }
-}
-
-int PluginManager::processFile(const LlamaFileContext& ctx,
-                                std::string& errorPlugin,
-                                std::string& errorMessage) {
-  for (auto& plugin : Plugins) {
-    int rc = plugin.process(&ctx);
-    if (rc < 0) {
-      errorPlugin = plugin.name;
-      const char* err = plugin.lastError();
-      errorMessage = err ? err : "unknown error";
-      return rc;
-    }
-  }
-  return 0;
 }
 
 void PluginManager::shutdown() {
