@@ -109,7 +109,9 @@ TSK_FILTER_ENUM TskReader::filterFs(TSK_FS_INFO* fs_info) {
   InodeTracker.clear();
   InodeTracker.resize(fs_info->last_inum - fs_info->first_inum + 1, false);
   if (Progress) {
-    Progress->setFilesystem(Asm.fsIndex(), 0, fs_info->inum_count,
+    // FAT inum_count is derived from cluster count, not real inodes — report 0 to suppress percentage
+    uint64_t inodeCount = (fs_info->ftype & TSK_FS_TYPE_FAT_DETECT) ? 0 : fs_info->inum_count;
+    Progress->setFilesystem(Asm.fsIndex(), 0, inodeCount,
                             static_cast<uint64_t>(fs_info->block_count) * fs_info->block_size);
   }
   Input->startFilesystem(static_cast<uint64_t>(fs_info->block_count) * fs_info->block_size);
