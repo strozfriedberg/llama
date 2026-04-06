@@ -3,37 +3,11 @@
 #include "pluginmanager.h"
 #include "llamaduck.h"
 #include "readseek_impl.h"
-#include "plugin_api.h"
+#include "plugin_bridge.h"
 #include "processor.h"
 #include "entry.h"
 
 #include <filesystem>
-
-namespace {
-  LlamaReadSeek wrapReadSeek(ReadSeek* rs) {
-    LlamaReadSeek lrs;
-    lrs.opaque = static_cast<void*>(rs);
-    lrs.read = [](void* o, uint8_t* buf, size_t len) -> int64_t {
-      try {
-        return static_cast<int64_t>(static_cast<ReadSeek*>(o)->read(len, buf));
-      } catch (...) {
-        return -1;
-      }
-    };
-    lrs.seek = [](void* o, size_t pos) -> int64_t {
-      try {
-        static_cast<ReadSeek*>(o)->seek(pos);
-        return 0;
-      } catch (...) {
-        return -1;
-      }
-    };
-    lrs.size = [](void* o) -> uint64_t {
-      return static_cast<ReadSeek*>(o)->size();
-    };
-    return lrs;
-  }
-}
 
 TEST_CASE("testPluginManagerLoadNoDir") {
   LlamaDB db;
