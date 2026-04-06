@@ -10,10 +10,9 @@
 #include <filesystem>
 
 TEST_CASE("testPluginManagerLoadNoDir") {
-  LlamaDB db;
-  LlamaDBConnection conn(db);
   PluginManager mgr;
   REQUIRE(mgr.pluginCount() == 0);
+  REQUIRE(mgr.empty());
 }
 
 TEST_CASE("testPluginManagerLoadEmptyDir") {
@@ -24,78 +23,201 @@ TEST_CASE("testPluginManagerLoadEmptyDir") {
   PluginManager mgr;
   mgr.loadPlugins(dir, conn.get());
   REQUIRE(mgr.pluginCount() == 0);
+  REQUIRE(mgr.empty());
   std::filesystem::remove_all(dir);
 }
 
 TEST_CASE("testPluginManagerLoadStub") {
-  // The test stub plugin is built into the test build directory.
-  // Find it relative to the test executable.
   auto pluginDir = std::filesystem::path(PLUGIN_STUB_DIR);
   REQUIRE(std::filesystem::exists(pluginDir));
 
+  // Create a temp dir with only the good stub to isolate from error stub
+  auto tempDir = std::filesystem::temp_directory_path() / "llama_test_load_stub";
+  std::filesystem::create_directories(tempDir);
+  std::filesystem::copy_file(
+    std::filesystem::path(PLUGIN_STUB),
+    tempDir / std::filesystem::path(PLUGIN_STUB).filename(),
+    std::filesystem::copy_options::overwrite_existing
+  );
+
   LlamaDB db;
   LlamaDBConnection conn(db);
   PluginManager mgr;
-  mgr.loadPlugins(pluginDir, conn.get());
+  mgr.loadPlugins(tempDir, conn.get());
   REQUIRE(mgr.pluginCount() == 1);
-  mgr.shutdown();
+
+  std::filesystem::remove_all(tempDir);
 }
 
 TEST_CASE("testPluginManagerProcessFile") {
-  auto pluginDir = std::filesystem::path(PLUGIN_STUB_DIR);
+  auto tempDir = std::filesystem::temp_directory_path() / "llama_test_process";
+  std::filesystem::create_directories(tempDir);
+  std::filesystem::copy_file(
+    std::filesystem::path(PLUGIN_STUB),
+    tempDir / std::filesystem::path(PLUGIN_STUB).filename(),
+    std::filesystem::copy_options::overwrite_existing
+  );
+
   LlamaDB db;
   LlamaDBConnection conn(db);
   PluginManager mgr;
-  mgr.loadPlugins(pluginDir, conn.get());
+  mgr.loadPlugins(tempDir, conn.get());
   REQUIRE(mgr.pluginCount() == 1);
 
-  // Create a ReadSeek with some content
   std::string content = "SQLite format 3\x00 fake sqlite content here";
   ReadSeekBuf rs(content);
 
-  LlamaFileContext ctx;
+  LlamaFileContext ctx{};
+  ctx.struct_size = sizeof(LlamaFileContext);
   ctx.file_signature = "SQLite Database";
   ctx.inode_addr = 42;
   ctx.file_size = content.size();
   ctx.readseek = wrapReadSeek(&rs);
 
-  std::string errorPlugin, errorMessage;
-  int rc = mgr.processFile(ctx, errorPlugin, errorMessage);
-  REQUIRE(rc == 0);
+  const char* errmsg = nullptr;
+  for (const auto& plugin : mgr.plugins()) {
+    int rc = plugin.process(&ctx, &errmsg);
+    REQUIRE(rc == 0);
+    REQUIRE(errmsg == nullptr);
+  }
 
-  mgr.shutdown();
+  std::filesystem::remove_all(tempDir);
 }
 
 TEST_CASE("testPluginManagerProcessFileNoMatch") {
-  auto pluginDir = std::filesystem::path(PLUGIN_STUB_DIR);
+  auto tempDir = std::filesystem::temp_directory_path() / "llama_test_nomatch";
+  std::filesystem::create_directories(tempDir);
+  std::filesystem::copy_file(
+    std::filesystem::path(PLUGIN_STUB),
+    tempDir / std::filesystem::path(PLUGIN_STUB).filename(),
+    std::filesystem::copy_options::overwrite_existing
+  );
+
   LlamaDB db;
   LlamaDBConnection conn(db);
   PluginManager mgr;
-  mgr.loadPlugins(pluginDir, conn.get());
+  mgr.loadPlugins(tempDir, conn.get());
 
   std::string content = "just some text";
   ReadSeekBuf rs(content);
 
-  LlamaFileContext ctx;
+  LlamaFileContext ctx{};
+  ctx.struct_size = sizeof(LlamaFileContext);
   ctx.file_signature = "Plain Text";
   ctx.inode_addr = 99;
   ctx.file_size = content.size();
   ctx.readseek = wrapReadSeek(&rs);
 
-  std::string errorPlugin, errorMessage;
-  int rc = mgr.processFile(ctx, errorPlugin, errorMessage);
-  REQUIRE(rc == 0);
+  const char* errmsg = nullptr;
+  for (const auto& plugin : mgr.plugins()) {
+    int rc = plugin.process(&ctx, &errmsg);
+    REQUIRE(rc == 0);
+  }
 
-  mgr.shutdown();
+  std::filesystem::remove_all(tempDir);
+}
+
+TEST_CASE("testPluginErrorReporting") {
+  // Load only the error stub
+  auto tempDir = std::filesystem::temp_directory_path() / "llama_test_error";
+  std::filesystem::create_directories(tempDir);
+  std::filesystem::copy_file(
+    std::filesystem::path(PLUGIN_ERROR_STUB),
+    tempDir / std::filesystem::path(PLUGIN_ERROR_STUB).filename(),
+    std::filesystem::copy_options::overwrite_existing
+  );
+
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+  PluginManager mgr;
+  mgr.loadPlugins(tempDir, conn.get());
+  REQUIRE(mgr.pluginCount() == 1);
+
+  std::string content = "test data";
+  ReadSeekBuf rs(content);
+
+  LlamaFileContext ctx{};
+  ctx.struct_size = sizeof(LlamaFileContext);
+  ctx.file_signature = nullptr;
+  ctx.inode_addr = 1;
+  ctx.file_size = content.size();
+  ctx.readseek = wrapReadSeek(&rs);
+
+  const char* errmsg = nullptr;
+  const auto& plugin = mgr.plugins()[0];
+  int rc = plugin.process(&ctx, &errmsg);
+  REQUIRE(rc < 0);
+  REQUIRE(errmsg != nullptr);
+  REQUIRE(std::string(errmsg) == "deliberate test error");
+  plugin.freeError(errmsg);
+
+  std::filesystem::remove_all(tempDir);
+}
+
+TEST_CASE("testPluginContinuesAfterError") {
+  // Load both error stub and good stub
+  auto tempDir = std::filesystem::temp_directory_path() / "llama_test_continue";
+  std::filesystem::create_directories(tempDir);
+  std::filesystem::copy_file(
+    std::filesystem::path(PLUGIN_ERROR_STUB),
+    tempDir / std::filesystem::path(PLUGIN_ERROR_STUB).filename(),
+    std::filesystem::copy_options::overwrite_existing
+  );
+  std::filesystem::copy_file(
+    std::filesystem::path(PLUGIN_STUB),
+    tempDir / std::filesystem::path(PLUGIN_STUB).filename(),
+    std::filesystem::copy_options::overwrite_existing
+  );
+
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+  PluginManager mgr;
+  mgr.loadPlugins(tempDir, conn.get());
+  REQUIRE(mgr.pluginCount() == 2);
+
+  std::string content = "test data";
+  ReadSeekBuf rs(content);
+
+  LlamaFileContext ctx{};
+  ctx.struct_size = sizeof(LlamaFileContext);
+  ctx.file_signature = nullptr;
+  ctx.inode_addr = 1;
+  ctx.file_size = content.size();
+  ctx.readseek = wrapReadSeek(&rs);
+
+  // Both plugins should be called -- one fails, one succeeds
+  int errorCount = 0;
+  int successCount = 0;
+  for (const auto& plugin : mgr.plugins()) {
+    ctx.readseek.seek(ctx.readseek.opaque, 0);
+    const char* errmsg = nullptr;
+    int rc = plugin.process(&ctx, &errmsg);
+    if (rc < 0) {
+      REQUIRE(errmsg != nullptr);
+      plugin.freeError(errmsg);
+      ++errorCount;
+    } else {
+      ++successCount;
+    }
+  }
+  REQUIRE(errorCount == 1);
+  REQUIRE(successCount == 1);
+
+  std::filesystem::remove_all(tempDir);
 }
 
 TEST_CASE("testProcessorWithPlugin") {
-  auto pluginDir = std::filesystem::path(PLUGIN_STUB_DIR);
+  auto tempDir = std::filesystem::temp_directory_path() / "llama_test_processor";
+  std::filesystem::create_directories(tempDir);
+  std::filesystem::copy_file(
+    std::filesystem::path(PLUGIN_STUB),
+    tempDir / std::filesystem::path(PLUGIN_STUB).filename(),
+    std::filesystem::copy_options::overwrite_existing
+  );
 
   LlamaDB db;
   LlamaDBConnection conn(db);
 
-  // Create tables needed by Processor
   auto ruleEngine = std::make_shared<LlamaRuleEngine>();
   ruleEngine->createTables(conn);
   DBType<HashRec>::createTable(conn.get(), "hash");
@@ -103,21 +225,17 @@ TEST_CASE("testProcessorWithPlugin") {
   DBType<ExceptionRecord>::createTable(conn.get(), "exception_log");
   DBType<FileSigResult>::createTable(conn.get(), "file_signatures");
 
-  // Load plugins
   PluginManager plugins;
-  plugins.loadPlugins(pluginDir, conn.get());
+  plugins.loadPlugins(tempDir, conn.get());
   REQUIRE(plugins.pluginCount() == 1);
 
-  // Create ProcessorContext with no lightgrep, no rules, no sigs
   MagicsType noMagics;
   auto procCtx = std::make_shared<ProcessorContext>(
-    &db, nullptr, ruleEngine, "", "", noMagics
+    &db, nullptr, ruleEngine, "", "", noMagics, plugins
   );
-  procCtx->Plugins = &plugins;
 
   Processor proc(procCtx);
 
-  // Create an Entry with ReadSeek content
   std::string content = "SQLite format 3 fake content";
   auto rs = std::make_unique<ReadSeekBuf>(content);
   Entry entry(42, std::move(rs));
@@ -127,6 +245,5 @@ TEST_CASE("testProcessorWithPlugin") {
   proc.process(entry);
   proc.flush();
 
-  // If we got here without crash/hang, the plugin dispatch worked.
-  plugins.shutdown();
+  std::filesystem::remove_all(tempDir);
 }
