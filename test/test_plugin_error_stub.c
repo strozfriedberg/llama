@@ -1,27 +1,19 @@
 #include "plugin_api.h"
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 LLAMA_PLUGIN_EXPORT int llama_plugin_init(void* duckdb_handle, LlamaPluginInfo* info) {
     (void)duckdb_handle;
     info->struct_size = sizeof(LlamaPluginInfo);
-    info->name = "test-plugin";
+    info->name = "error-plugin";
     info->version = "0.1.0";
     return 0;
 }
 
 LLAMA_PLUGIN_EXPORT int llama_plugin_process(const LlamaFileContext* ctx, const char** errmsg) {
-    if (ctx->file_signature && strcmp(ctx->file_signature, "SQLite Database") == 0) {
-        /* Read first 16 bytes to verify ReadSeek works */
-        uint8_t buf[16];
-        int64_t n = ctx->readseek.read(ctx->readseek.opaque, buf, 16);
-        if (n < 0) {
-            *errmsg = strdup("read failed");
-            return -1;
-        }
-        return 0;
-    }
-    return 0;
+    (void)ctx;
+    *errmsg = strdup("deliberate test error");
+    return -1;
 }
 
 LLAMA_PLUGIN_EXPORT void llama_plugin_free_error(const char* errmsg) {
