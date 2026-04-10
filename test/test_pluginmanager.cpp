@@ -1,13 +1,18 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "pluginmanager.h"
+#include "plugin_table_writer.h"
 #include "llamaduck.h"
 #include "readseek_impl.h"
 #include "plugin_bridge.h"
 #include "processor.h"
 #include "entry.h"
+#include "arrow/c/abi.h"
 
 #include <filesystem>
+
+static void noop_schema_release(struct ArrowSchema*) {}
+static void noop_array_release(struct ArrowArray* a) { a->release = nullptr; }
 
 namespace {
   LlamaWriteContext dummyWriteCtx() {
@@ -259,6 +264,147 @@ TEST_CASE("testPluginManagerCreatesTable") {
   REQUIRE(meta[0].convertedSchema != nullptr);
 
   std::filesystem::remove_all(tempDir);
+}
+
+TEST_CASE("testPluginTableWriterArrowBatch") {
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+  duckdb_query(conn.get(), "CREATE TABLE plugin_test_data (name VARCHAR, value UBIGINT);", nullptr);
+
+  // Build Arrow schema for the table (matching what PluginManager would cache)
+  struct ArrowSchema name_schema{};
+  name_schema.format = "u";
+  name_schema.name = "name";
+  name_schema.n_children = 0;
+  name_schema.children = nullptr;
+  name_schema.release = noop_schema_release;
+
+  struct ArrowSchema value_schema{};
+  value_schema.format = "L";
+  value_schema.name = "value";
+  value_schema.n_children = 0;
+  value_schema.children = nullptr;
+  value_schema.release = noop_schema_release;
+
+  struct ArrowSchema* schema_children[] = {&name_schema, &value_schema};
+
+  struct ArrowSchema batch_schema{};
+  batch_schema.format = "+s";
+  batch_schema.name = "";
+  batch_schema.n_children = 2;
+  batch_schema.children = schema_children;
+  batch_schema.release = noop_schema_release;
+
+  // Convert schema (as PluginManager does)
+  duckdb_arrow_converted_schema converted = nullptr;
+  duckdb_error_data err = duckdb_schema_from_arrow(conn.get(), &batch_schema, &converted);
+  REQUIRE(!err);
+
+  std::vector<PluginTableMeta> meta = {{"plugin_test_data", converted}};
+  PluginTableWriter writer(&db, meta);
+
+  // Build a one-row Arrow batch: name="hello", value=42
+  int32_t offsets[] = {0, 5};
+  const char str_data[] = "hello";
+  const void* string_buffers[] = {nullptr, offsets, str_data};
+
+  struct ArrowArray string_col{};
+  string_col.length = 1;
+  string_col.null_count = 0;
+  string_col.offset = 0;
+  string_col.n_buffers = 3;
+  string_col.buffers = string_buffers;
+  string_col.n_children = 0;
+  string_col.children = nullptr;
+  string_col.release = noop_array_release;
+
+  uint64_t values[] = {42};
+  const void* uint_buffers[] = {nullptr, values};
+
+  struct ArrowArray uint_col{};
+  uint_col.length = 1;
+  uint_col.null_count = 0;
+  uint_col.offset = 0;
+  uint_col.n_buffers = 2;
+  uint_col.buffers = uint_buffers;
+  uint_col.n_children = 0;
+  uint_col.children = nullptr;
+  uint_col.release = noop_array_release;
+
+  struct ArrowArray* batch_children[] = {&string_col, &uint_col};
+  const void* struct_buffers[] = {nullptr};
+
+  struct ArrowArray batch{};
+  batch.length = 1;
+  batch.null_count = 0;
+  batch.offset = 0;
+  batch.n_buffers = 1;
+  batch.buffers = struct_buffers;
+  batch.n_children = 2;
+  batch.children = batch_children;
+  batch.release = noop_array_release;
+
+  // Call write
+  int rc = writer.write("plugin_test_data", &batch_schema, &batch);
+  REQUIRE(rc == 0);
+
+  writer.close();
+
+  // Verify data in DuckDB
+  duckdb_result result;
+  REQUIRE(duckdb_query(conn.get(), "SELECT name, value FROM plugin_test_data", &result) == DuckDBSuccess);
+  REQUIRE(duckdb_row_count(&result) == 1);
+
+  auto name_val = duckdb_value_varchar(&result, 0, 0);
+  REQUIRE(std::string(name_val) == "hello");
+  duckdb_free(name_val);
+
+  auto num_val = duckdb_value_uint64(&result, 1, 0);
+  REQUIRE(num_val == 42);
+
+  duckdb_destroy_result(&result);
+  duckdb_destroy_arrow_converted_schema(&converted);
+}
+
+TEST_CASE("testPluginTableWriterUnknownTable") {
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+  duckdb_query(conn.get(), "CREATE TABLE plugin_test_data (name VARCHAR, value UBIGINT);", nullptr);
+
+  struct ArrowSchema name_schema{};
+  name_schema.format = "u";
+  name_schema.name = "name";
+  name_schema.n_children = 0;
+  name_schema.release = noop_schema_release;
+
+  struct ArrowSchema value_schema{};
+  value_schema.format = "L";
+  value_schema.name = "value";
+  value_schema.n_children = 0;
+  value_schema.release = noop_schema_release;
+
+  struct ArrowSchema* schema_children[] = {&name_schema, &value_schema};
+
+  struct ArrowSchema batch_schema{};
+  batch_schema.format = "+s";
+  batch_schema.name = "";
+  batch_schema.n_children = 2;
+  batch_schema.children = schema_children;
+  batch_schema.release = noop_schema_release;
+
+  duckdb_arrow_converted_schema converted = nullptr;
+  duckdb_error_data e = duckdb_schema_from_arrow(conn.get(), &batch_schema, &converted);
+  REQUIRE(!e);
+
+  std::vector<PluginTableMeta> meta = {{"plugin_test_data", converted}};
+  PluginTableWriter writer(&db, meta);
+
+  struct ArrowArray dummy{};
+  int rc = writer.write("nonexistent_table", &batch_schema, &dummy);
+  REQUIRE(rc < 0);
+
+  writer.close();
+  duckdb_destroy_arrow_converted_schema(&converted);
 }
 
 TEST_CASE("testProcessorWithPlugin") {

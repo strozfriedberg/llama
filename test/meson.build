@@ -23,6 +23,7 @@ llama_common_sources = [
   '../src/outputtar.cpp',
   '../src/parser.cpp',
   '../src/pluginmanager.cpp',
+  '../src/plugin_table_writer.cpp',
   '../src/pooloutputhandler.cpp',
   '../src/processor.cpp',
   '../src/progressinfo.cpp',

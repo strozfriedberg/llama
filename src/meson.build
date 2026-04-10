@@ -23,6 +23,7 @@ llama_sources = [
   'outputtar.cpp',
   'parser.cpp',
   'pluginmanager.cpp',
+  'plugin_table_writer.cpp',
   'pooloutputhandler.cpp',
   'processor.cpp',
   'progressinfo.cpp',
