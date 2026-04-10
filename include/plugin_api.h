@@ -28,6 +28,8 @@ typedef struct {
     const char*   file_signature;  /* NULL if no signature matched */
     uint64_t      inode_addr;
     uint64_t      file_size;
+    const char*   sha256;          /* hex-encoded SHA-256 hash, always set */
+    const char*   path;            /* full path including filename, or NULL */
     LlamaReadSeek readseek;
 } LlamaFileContext;
 

@@ -72,6 +72,8 @@ TEST_CASE("testPluginManagerProcessFile") {
   ctx.file_signature = "SQLite Database";
   ctx.inode_addr = 42;
   ctx.file_size = content.size();
+  ctx.sha256 = "abc123";
+  ctx.path = "/evidence/test.db";
   ctx.readseek = wrapReadSeek(&rs);
 
   const char* errmsg = nullptr;
@@ -106,6 +108,8 @@ TEST_CASE("testPluginManagerProcessFileNoMatch") {
   ctx.file_signature = "Plain Text";
   ctx.inode_addr = 99;
   ctx.file_size = content.size();
+  ctx.sha256 = "def456";
+  ctx.path = "/evidence/readme.txt";
   ctx.readseek = wrapReadSeek(&rs);
 
   const char* errmsg = nullptr;
@@ -141,6 +145,8 @@ TEST_CASE("testPluginErrorReporting") {
   ctx.file_signature = nullptr;
   ctx.inode_addr = 1;
   ctx.file_size = content.size();
+  ctx.sha256 = "aaa111";
+  ctx.path = nullptr;
   ctx.readseek = wrapReadSeek(&rs);
 
   const char* errmsg = nullptr;
@@ -183,6 +189,8 @@ TEST_CASE("testPluginContinuesAfterError") {
   ctx.file_signature = nullptr;
   ctx.inode_addr = 1;
   ctx.file_size = content.size();
+  ctx.sha256 = "bbb222";
+  ctx.path = nullptr;
   ctx.readseek = wrapReadSeek(&rs);
 
   // Both plugins should be called -- one fails, one succeeds

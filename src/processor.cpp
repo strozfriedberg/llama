@@ -173,6 +173,8 @@ void Processor::process(Entry& entry) {
     pluginCtx.file_signature = sigName;
     pluginCtx.inode_addr = entry.Addr;
     pluginCtx.file_size = entry.FileSize;
+    pluginCtx.sha256 = HashRecord.SHA256.c_str();
+    pluginCtx.path = entry.Path.empty() ? nullptr : entry.Path.c_str();
     pluginCtx.readseek = wrapReadSeek(&entry.getStream());
 
     for (const auto& plugin : Context->Plugins.plugins()) {
