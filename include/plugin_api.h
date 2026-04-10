@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "arrow/c/abi.h"
+
 #ifdef _WIN32
   #define LLAMA_PLUGIN_EXPORT __declspec(dllexport)
 #else
@@ -39,17 +41,40 @@ typedef struct {
     const char* version;
 } LlamaPluginInfo;
 
+/* Table declaration: plugin-owned table name and Arrow schema. */
+typedef struct {
+    const char*        table_name;
+    struct ArrowSchema schema;
+} LlamaTableDef;
+
+/* Callback to write one Arrow record batch to a declared table.
+   Returns 0 on success, negative on failure. */
+typedef int (*LlamaWriteArrow)(void* opaque, const char* table_name,
+                               struct ArrowArray* batch);
+
+/* Write context passed to llama_plugin_process. */
+typedef struct {
+    void*           opaque;
+    LlamaWriteArrow write;
+} LlamaWriteContext;
+
 /* Plugin lifecycle.
-   duckdb_handle is a duckdb_connection for DB access during init only.
-   Fills in info with plugin metadata. Returns 0 on success, negative on failure. */
-LLAMA_PLUGIN_EXPORT int  llama_plugin_init(void* duckdb_handle, LlamaPluginInfo* info);
+   Fills in info with plugin metadata.
+   Sets *tables to an array of LlamaTableDef (plugin-owned, valid until shutdown).
+   Sets *num_tables to the number of tables declared.
+   Returns 0 on success, negative on failure. */
+LLAMA_PLUGIN_EXPORT int  llama_plugin_init(LlamaPluginInfo* info,
+                                            const LlamaTableDef** tables,
+                                            size_t* num_tables);
 LLAMA_PLUGIN_EXPORT void llama_plugin_shutdown(void);
 
 /* Per-file processing -- returns 0 on success/skip, negative on error.
    On error, *errmsg is set to a plugin-allocated error string.
    Caller must pass *errmsg to llama_plugin_free_error() when done.
    Called from multiple threads concurrently -- plugins must be thread-safe. */
-LLAMA_PLUGIN_EXPORT int  llama_plugin_process(const LlamaFileContext* ctx, const char** errmsg);
+LLAMA_PLUGIN_EXPORT int  llama_plugin_process(const LlamaFileContext* ctx,
+                                               const LlamaWriteContext* write_ctx,
+                                               const char** errmsg);
 
 /* Free an error string returned via llama_plugin_process. */
 LLAMA_PLUGIN_EXPORT void llama_plugin_free_error(const char* errmsg);
