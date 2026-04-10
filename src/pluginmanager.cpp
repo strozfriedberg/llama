@@ -17,6 +17,7 @@ PluginManager::~PluginManager() {
 }
 
 void PluginManager::loadPlugins(const std::filesystem::path& pluginDir, duckdb_connection dbConn) {
+  (void)dbConn;
   namespace fs = std::filesystem;
   const std::string ext = pluginExtension();
 
@@ -40,13 +41,15 @@ void PluginManager::loadPlugins(const std::filesystem::path& pluginDir, duckdb_c
         continue;
       }
 
-      auto initFn    = lib.get<int(void*, LlamaPluginInfo*)>("llama_plugin_init");
-      auto processFn = lib.get<int(const LlamaFileContext*, const char**)>("llama_plugin_process");
+      auto initFn    = lib.get<int(LlamaPluginInfo*, const LlamaTableDef**, size_t*)>("llama_plugin_init");
+      auto processFn = lib.get<int(const LlamaFileContext*, const LlamaWriteContext*, const char**)>("llama_plugin_process");
       auto freeFn    = lib.get<void(const char*)>("llama_plugin_free_error");
       auto shutdownFn = lib.get<void()>("llama_plugin_shutdown");
 
       LlamaPluginInfo info{};
-      if (initFn(dbConn, &info) < 0) {
+      const LlamaTableDef* tables = nullptr;
+      size_t numTables = 0;
+      if (initFn(&info, &tables, &numTables) < 0) {
         std::cerr << "Warning: " << entry.path().filename()
                   << " init failed, skipping\n";
         continue;
@@ -66,6 +69,10 @@ void PluginManager::loadPlugins(const std::filesystem::path& pluginDir, duckdb_c
       plugin.freeError = freeFn;
       plugin.shutdown = shutdownFn;
 
+      if (numTables > 0) {
+        std::cerr << "  Plugin declares " << numTables << " tables (creation pending)\n";
+      }
+
       std::cerr << "Loaded plugin: " << plugin.name
                 << " v" << plugin.version << "\n";
 
@@ -76,6 +83,14 @@ void PluginManager::loadPlugins(const std::filesystem::path& pluginDir, duckdb_c
                 << ": " << e.what() << "\n";
     }
   }
+}
+
+std::vector<PluginTableMeta> PluginManager::allTableMeta() const {
+  std::vector<PluginTableMeta> all;
+  for (const auto& plugin : Plugins) {
+    all.insert(all.end(), plugin.tableMeta.begin(), plugin.tableMeta.end());
+  }
+  return all;
 }
 
 void PluginManager::shutdown() {

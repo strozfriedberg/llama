@@ -177,12 +177,16 @@ void Processor::process(Entry& entry) {
     pluginCtx.path = entry.Path.empty() ? nullptr : entry.Path.c_str();
     pluginCtx.readseek = wrapReadSeek(&entry.getStream());
 
+    LlamaWriteContext writeCtx{};
+    writeCtx.opaque = nullptr;
+    writeCtx.write = nullptr;
+
     for (const auto& plugin : Context->Plugins.plugins()) {
       pluginCtx.readseek.seek(pluginCtx.readseek.opaque, 0);
       const char* errmsg = nullptr;
       int rc;
       try {
-        rc = plugin.process(&pluginCtx, &errmsg);
+        rc = plugin.process(&pluginCtx, &writeCtx, &errmsg);
       } catch (const std::exception& e) {
         logException(entry, ("plugin:" + plugin.name).c_str(), e.what());
         continue;

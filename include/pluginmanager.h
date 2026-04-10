@@ -10,13 +10,19 @@
 
 #include <duckdb.h>
 
+struct PluginTableMeta {
+  std::string tableName;
+  duckdb_arrow_converted_schema convertedSchema;
+};
+
 struct LoadedPlugin {
   std::string name;
   std::string version;
   boost::dll::shared_library library;
-  std::function<int(const LlamaFileContext*, const char**)> process;
+  std::function<int(const LlamaFileContext*, const LlamaWriteContext*, const char**)> process;
   std::function<void(const char*)>                         freeError;
   std::function<void()>                                    shutdown;
+  std::vector<PluginTableMeta> tableMeta;
 };
 
 class PluginManager {
@@ -39,6 +45,8 @@ public:
   const std::vector<LoadedPlugin>& plugins() const { return Plugins; }
   bool empty() const { return Plugins.empty(); }
   size_t pluginCount() const { return Plugins.size(); }
+
+  std::vector<PluginTableMeta> allTableMeta() const;
 
   void shutdown();
 

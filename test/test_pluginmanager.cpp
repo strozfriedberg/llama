@@ -9,6 +9,15 @@
 
 #include <filesystem>
 
+namespace {
+  LlamaWriteContext dummyWriteCtx() {
+    LlamaWriteContext ctx{};
+    ctx.opaque = nullptr;
+    ctx.write = nullptr;
+    return ctx;
+  }
+}
+
 TEST_CASE("testPluginManagerLoadNoDir") {
   PluginManager mgr;
   REQUIRE(mgr.pluginCount() == 0);
@@ -78,7 +87,8 @@ TEST_CASE("testPluginManagerProcessFile") {
 
   const char* errmsg = nullptr;
   for (const auto& plugin : mgr.plugins()) {
-    int rc = plugin.process(&ctx, &errmsg);
+    auto writeCtx = dummyWriteCtx();
+    int rc = plugin.process(&ctx, &writeCtx, &errmsg);
     REQUIRE(rc == 0);
     REQUIRE(errmsg == nullptr);
   }
@@ -114,7 +124,8 @@ TEST_CASE("testPluginManagerProcessFileNoMatch") {
 
   const char* errmsg = nullptr;
   for (const auto& plugin : mgr.plugins()) {
-    int rc = plugin.process(&ctx, &errmsg);
+    auto writeCtx = dummyWriteCtx();
+    int rc = plugin.process(&ctx, &writeCtx, &errmsg);
     REQUIRE(rc == 0);
   }
 
@@ -151,7 +162,8 @@ TEST_CASE("testPluginErrorReporting") {
 
   const char* errmsg = nullptr;
   const auto& plugin = mgr.plugins()[0];
-  int rc = plugin.process(&ctx, &errmsg);
+  auto writeCtx = dummyWriteCtx();
+  int rc = plugin.process(&ctx, &writeCtx, &errmsg);
   REQUIRE(rc < 0);
   REQUIRE(errmsg != nullptr);
   REQUIRE(std::string(errmsg) == "deliberate test error");
@@ -199,7 +211,8 @@ TEST_CASE("testPluginContinuesAfterError") {
   for (const auto& plugin : mgr.plugins()) {
     ctx.readseek.seek(ctx.readseek.opaque, 0);
     const char* errmsg = nullptr;
-    int rc = plugin.process(&ctx, &errmsg);
+    auto writeCtx = dummyWriteCtx();
+    int rc = plugin.process(&ctx, &writeCtx, &errmsg);
     if (rc < 0) {
       REQUIRE(errmsg != nullptr);
       plugin.freeError(errmsg);
