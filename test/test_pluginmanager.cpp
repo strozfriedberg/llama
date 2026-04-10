@@ -227,6 +227,40 @@ TEST_CASE("testPluginContinuesAfterError") {
   std::filesystem::remove_all(tempDir);
 }
 
+TEST_CASE("testPluginManagerCreatesTable") {
+  auto tempDir = std::filesystem::temp_directory_path() / "llama_test_table_creation";
+  std::filesystem::create_directories(tempDir);
+  std::filesystem::copy_file(
+    std::filesystem::path(PLUGIN_TABLE_STUB),
+    tempDir / std::filesystem::path(PLUGIN_TABLE_STUB).filename(),
+    std::filesystem::copy_options::overwrite_existing
+  );
+
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+  PluginManager mgr;
+  mgr.loadPlugins(tempDir, conn.get());
+  REQUIRE(mgr.pluginCount() == 1);
+
+  // Verify the table was created in DuckDB
+  duckdb_result result;
+  auto rc = duckdb_query(conn.get(), "SELECT * FROM plugin_test_data", &result);
+  REQUIRE(rc == DuckDBSuccess);
+  REQUIRE(duckdb_column_count(&result) == 2);
+  REQUIRE(std::string(duckdb_column_name(&result, 0)) == "name");
+  REQUIRE(std::string(duckdb_column_name(&result, 1)) == "value");
+  REQUIRE(duckdb_row_count(&result) == 0);  // empty table
+  duckdb_destroy_result(&result);
+
+  // Verify table metadata is accessible
+  auto meta = mgr.allTableMeta();
+  REQUIRE(meta.size() == 1);
+  REQUIRE(meta[0].tableName == "plugin_test_data");
+  REQUIRE(meta[0].convertedSchema != nullptr);
+
+  std::filesystem::remove_all(tempDir);
+}
+
 TEST_CASE("testProcessorWithPlugin") {
   auto tempDir = std::filesystem::temp_directory_path() / "llama_test_processor";
   std::filesystem::create_directories(tempDir);

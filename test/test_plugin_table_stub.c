@@ -2,6 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* No-op release callback: static schemas must not be freed */
+static void noop_release(struct ArrowSchema* schema) {
+    schema->release = NULL;
+}
+
 /* Static schema for a table with two columns: name (utf8), value (uint64) */
 static struct ArrowSchema child_schemas[2];
 static struct ArrowSchema* children[2] = { &child_schemas[0], &child_schemas[1] };
@@ -21,7 +26,7 @@ LLAMA_PLUGIN_EXPORT int llama_plugin_init(LlamaPluginInfo* info,
     child_schemas[0].name = "name";
     child_schemas[0].n_children = 0;
     child_schemas[0].children = NULL;
-    child_schemas[0].release = NULL;
+    child_schemas[0].release = noop_release;
 
     /* Column 1: value (uint64) */
     memset(&child_schemas[1], 0, sizeof(struct ArrowSchema));
@@ -29,7 +34,7 @@ LLAMA_PLUGIN_EXPORT int llama_plugin_init(LlamaPluginInfo* info,
     child_schemas[1].name = "value";
     child_schemas[1].n_children = 0;
     child_schemas[1].children = NULL;
-    child_schemas[1].release = NULL;
+    child_schemas[1].release = noop_release;
 
     /* Top-level struct schema */
     memset(&table_schema, 0, sizeof(struct ArrowSchema));
@@ -37,7 +42,7 @@ LLAMA_PLUGIN_EXPORT int llama_plugin_init(LlamaPluginInfo* info,
     table_schema.name = "";
     table_schema.n_children = 2;
     table_schema.children = children;
-    table_schema.release = NULL;
+    table_schema.release = noop_release;
 
     table_defs[0].table_name = "plugin_test_data";
     table_defs[0].schema = table_schema;
