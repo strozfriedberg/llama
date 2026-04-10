@@ -232,11 +232,11 @@ TEST_CASE("testCLIDuplicateFilenameRejection") {
 }
 
 TEST_CASE("testCLIPluginDir") {
-  const char* args[] = {"llama", "--plugin-dir", "/tmp/plugins", "output", "input.E01"};
+  const char* args[] = {"llama", "--plugin-dir", "/test/data", "output", "input.E01"};
   Cli cli;
   auto opts = cli.parse(5, args);
   REQUIRE("search" == opts->Command);
-  REQUIRE("/tmp/plugins" == opts->PluginDir);
+  REQUIRE("/test/data" == opts->PluginDir);
 }
 
 TEST_CASE("testCLIPluginDirEmpty") {
