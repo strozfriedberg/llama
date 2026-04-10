@@ -48,9 +48,16 @@ typedef struct {
 } LlamaTableDef;
 
 /* Callback to write one Arrow record batch to a declared table.
+   table_name:  which table to write to (must match a declared table).
+   schema:      Arrow schema for this batch.
+   array:       Arrow array (record batch) to append.
    Returns 0 on success, negative on failure. */
-typedef int (*LlamaWriteArrow)(void* opaque, const char* table_name,
-                               struct ArrowArray* batch);
+typedef int (*LlamaWriteArrow)(
+    void*                opaque,
+    const char*          table_name,
+    struct ArrowSchema*  schema,
+    struct ArrowArray*   array
+);
 
 /* Write context passed to llama_plugin_process. */
 typedef struct {
