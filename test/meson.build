@@ -105,6 +105,14 @@ test_plugin_error_stub = shared_library('test_plugin_error_stub',
   build_by_default: true,
 )
 
+test_plugin_table_stub = shared_library('test_plugin_table_stub',
+  'test_plugin_table_stub.c',
+  include_directories: inc,
+  name_prefix: '',
+  c_args: ['-std=c11'],
+  build_by_default: true,
+)
+
 # Only build tests if Catch2 is available
 if catch2_dep.found()
 
@@ -117,6 +125,7 @@ if catch2_dep.found()
       '-DPLUGIN_STUB_DIR="' + meson.current_build_dir() + '"',
       '-DPLUGIN_ERROR_STUB="' + test_plugin_error_stub.full_path() + '"',
       '-DPLUGIN_STUB="' + test_plugin_stub.full_path() + '"',
+      '-DPLUGIN_TABLE_STUB="' + test_plugin_table_stub.full_path() + '"',
     ],
     build_by_default: true
   )
