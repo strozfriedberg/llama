@@ -93,6 +93,7 @@ Processor::Processor(std::shared_ptr<ProcessorContext> procContext):
   FileSigs(std::make_unique<FileSigBatch>()),
   Exceptions(std::make_unique<ExceptionBatch>()),
   SigAnalyzer(Context->SigProg, Context->SigMagics),
+  TableWriter(Context->Db, Context->Plugins.allTableMeta()),
   Img(nullptr, tsk_img_close),
   ProcTimeTotal(0),
   HashAlgs(Context->getSupportedHashAlgsFromContext())
@@ -178,8 +179,8 @@ void Processor::process(Entry& entry) {
     pluginCtx.readseek = wrapReadSeek(&entry.getStream());
 
     LlamaWriteContext writeCtx{};
-    writeCtx.opaque = nullptr;
-    writeCtx.write = nullptr;
+    writeCtx.opaque = &TableWriter;
+    writeCtx.write = PluginTableWriter::trampoline;
 
     for (const auto& plugin : Context->Plugins.plugins()) {
       pluginCtx.readseek.seek(pluginCtx.readseek.opaque, 0);
@@ -262,6 +263,7 @@ void Processor::flush(void) {
     ExceptionAppender.flush();
     Exceptions->clear();
   }
+  TableWriter.close();
 }
 
 void Processor::logException(const Entry& entry, const char* operation, const char* message) {

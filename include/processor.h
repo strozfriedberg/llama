@@ -9,6 +9,7 @@
 #include "llamabatch.h"
 #include "hashset.h"
 #include "pluginmanager.h"
+#include "plugin_table_writer.h"
 #include "ruleengine.h"
 #include "tsk.h"
 #include <lightgrep/search_hit.h>
@@ -105,6 +106,7 @@ private:
   std::unique_ptr<ExceptionBatch> Exceptions;
 
   FileSigAnalyzer SigAnalyzer;
+  PluginTableWriter TableWriter;
 
   std::unique_ptr<TSK_IMG_INFO, void(*)(TSK_IMG_INFO*)> Img;
   std::unordered_map<TSK_OFF_T, std::shared_ptr<TSK_FS_INFO>> FsHandles;
