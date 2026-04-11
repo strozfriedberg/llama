@@ -25,13 +25,23 @@ const char* arrowFormatToDuckDBType(const char* format) {
   return nullptr;
 }
 
+std::string quoteIdentifier(const char* name) {
+  std::string q = "\"";
+  for (const char* p = name; *p; ++p) {
+    if (*p == '"') q += "\"\"";
+    else q += *p;
+  }
+  q += "\"";
+  return q;
+}
+
 std::string buildCreateTableSQL(const char* tableName, const struct ArrowSchema& schema) {
   std::string sql = "CREATE TABLE ";
-  sql += tableName;
+  sql += quoteIdentifier(tableName);
   sql += " (";
   for (int64_t c = 0; c < schema.n_children; ++c) {
     if (c > 0) sql += ", ";
-    sql += schema.children[c]->name;
+    sql += quoteIdentifier(schema.children[c]->name);
     sql += " ";
     const char* duckType = arrowFormatToDuckDBType(schema.children[c]->format);
     if (!duckType) return {};  // unsupported type
@@ -130,6 +140,9 @@ void PluginManager::loadPlugins(const std::filesystem::path& pluginDir, duckdb_c
         }
 
         duckdb_arrow_converted_schema converted = nullptr;
+        // Shallow copy: duckdb_schema_from_arrow reads the schema structure
+        // but does not call release on children. Plugin's static schemas
+        // remain valid until shutdown.
         struct ArrowSchema schemaCopy = tableDef.schema;
         duckdb_error_data err = duckdb_schema_from_arrow(dbConn, &schemaCopy, &converted);
         if (err) {

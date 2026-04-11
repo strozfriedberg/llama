@@ -55,6 +55,8 @@ int PluginTableWriter::write(const char* tableName, struct ArrowSchema* schema, 
 }
 
 void PluginTableWriter::close() {
+  if (Closed) return;
+  Closed = true;
   for (auto& [name, ts] : Tables) {
     if (ts.appender) {
       duckdb_appender_close(ts.appender);

@@ -35,4 +35,5 @@ private:
 
   LlamaDBConnection Conn;
   std::unordered_map<std::string, TableState> Tables;
+  bool Closed = false;
 };
