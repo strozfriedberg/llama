@@ -28,6 +28,8 @@ src_llama_common = \
 	src/llama.cpp \
 	src/outputtar.cpp \
 	src/parser.cpp \
+	src/pluginmanager.cpp \
+	src/plugin_table_writer.cpp \
 	src/pooloutputhandler.cpp \
 	src/processor.cpp \
 	src/progressinfo.cpp \
