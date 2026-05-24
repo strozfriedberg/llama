@@ -30,6 +30,8 @@ public:
                      uint64_t journalInum, uint64_t rootInum,
                      uint64_t numInums);
 
+  void setCurrentRootInodeId(const std::string& id);
+
   const EvidenceFileRec& evidenceFile() const { return Evidence; }
   const std::vector<VolumeRec>& volumes() const { return Volumes; }
   const std::vector<FilesystemRec>& filesystems() const { return Filesystems; }

@@ -73,7 +73,8 @@ struct FilesystemRec {
                                     "JournalInum",
                                     "RootInum",
                                     "NumInums",
-                                    "RootDirentId"};
+                                    "RootDirentId",
+                                    "RootInodeId"};
 
   std::string EvidenceFileName;
   uint64_t    ByteOffset;
@@ -95,6 +96,7 @@ struct FilesystemRec {
   uint64_t    RootInum;
   uint64_t    NumInums;
   std::string RootDirentId;
+  std::string RootInodeId;
 };
 
 using FilesystemBatch = DBBatch<FilesystemRec>;

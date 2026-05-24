@@ -432,10 +432,10 @@ TEST_CASE("filesystemRecTableCreation") {
 
   using DuckFs = DBType<FilesystemRec>;
 
-  static_assert(DuckFs::ColNames.size() == 20);
+  static_assert(DuckFs::ColNames.size() == 21);
   REQUIRE(DuckFs::createTable(conn.get(), "filesystems"));
 
-  FilesystemRec rec{"laptop.E01", 1048576, 0, 0, "ntfs", 4096, 262144, 512, "Cluster", 1, 0, 0, 262143, 65535, "", "ABCDEF1234", 0, 5, 65536, ""};
+  FilesystemRec rec{"laptop.E01", 1048576, 0, 0, "ntfs", 4096, 262144, 512, "Cluster", 1, 0, 0, 262143, 65535, "", "ABCDEF1234", 0, 5, 65536, "", ""};
 
   DBBatch<FilesystemRec> batch;
   batch.add(rec);
