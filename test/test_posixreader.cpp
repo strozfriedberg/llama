@@ -89,7 +89,7 @@ TEST_CASE("parseExtents converts FIEMAP buffer to Extent records", "[posixreader
     REQUIRE(extents[0].LogicalEnd == 4096);
     REQUIRE(extents[0].PhysicalStart == 1000);
     REQUIRE(extents[0].PhysicalEnd == 1000 + 4096);
-    REQUIRE(extents[0].Inode == 42);
+    REQUIRE(extents[0].InodeId == "");
     REQUIRE(extents[0].Path == "/test.txt");
     REQUIRE(extents[0].Flags == "");
 
