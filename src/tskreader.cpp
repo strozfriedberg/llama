@@ -137,6 +137,7 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file, const char* path) {
     TskUtils::convertMetaToInode(meta, *Tsg, inode);
     inode.EvidenceFileName = std::filesystem::path(ImgPath).filename().string();
     inode.ByteOffset = CurFsOffset;
+    inode.Id = hexEncode(RecHasher.hashInode(inode).hash, sizeof(FieldHash{}.hash));
 
     // handle the attrs
     Tsk->populateAttrs(fs_file);
@@ -156,6 +157,7 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file, const char* path) {
     entry->AddrFlags = meta.flags;
     entry->Path = path ? path : "";
     entry->FileSize = meta.size;
+    entry->InodeId = inode.Id;
 
     // Extract first non-resident data run offset for disk-locality bucketing
     if (meta.attr) {
