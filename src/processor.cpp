@@ -140,7 +140,7 @@ void Processor::process(Entry& entry) {
     }
     ProcTimeTotal += procTime.elapsed();
   }
-  HashRecord.set(h, entry.Addr, HashAlgs);
+  HashRecord.set(h, entry.InodeId, HashAlgs);
 
   if (Context->ExclusionHashset && Context->ExclusionHashset->lookup(h)) {
     // do something here if hash is in exclusion hset

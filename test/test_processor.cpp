@@ -237,12 +237,12 @@ TEST_CASE("Processor::flush clears batches to prevent duplicates") {
   Processor proc(procContext);
 
   // First batch: add 2 hash records and flush
-  proc.hashBatch()->add(HashRec{1, "md5_1", "sha1_1", "sha256_1", "blake3_1", "ssdeep_1"});
-  proc.hashBatch()->add(HashRec{2, "md5_2", "sha1_2", "sha256_2", "blake3_2", "ssdeep_2"});
+  proc.hashBatch()->add(HashRec{"id_1", "md5_1", "sha1_1", "sha256_1", "blake3_1", "ssdeep_1"});
+  proc.hashBatch()->add(HashRec{"id_2", "md5_2", "sha1_2", "sha256_2", "blake3_2", "ssdeep_2"});
   proc.flush();
 
   // Second batch: add 1 more hash record and flush (same Processor, reused)
-  proc.hashBatch()->add(HashRec{3, "md5_3", "sha1_3", "sha256_3", "blake3_3", "ssdeep_3"});
+  proc.hashBatch()->add(HashRec{"id_3", "md5_3", "sha1_3", "sha256_3", "blake3_3", "ssdeep_3"});
   proc.flush();
 
   // Query the database for total hash row count
@@ -316,28 +316,31 @@ TEST_CASE("processBatch sorts entries by DiskOffset for sequential I/O") {
 
   auto e1 = std::make_unique<Entry>(100, std::make_unique<ReadSeekBuf>("aaa"));
   e1->DiskOffset = 3000;
+  e1->InodeId = "id_100";
   entries->push_back(std::move(e1));
 
   auto e2 = std::make_unique<Entry>(200, std::make_unique<ReadSeekBuf>("bbb"));
   e2->DiskOffset = 1000;
+  e2->InodeId = "id_200";
   entries->push_back(std::move(e2));
 
   auto e3 = std::make_unique<Entry>(300, std::make_unique<ReadSeekBuf>("ccc"));
   e3->DiskOffset = 2000;
+  e3->InodeId = "id_300";
   entries->push_back(std::move(e3));
 
   proc.processBatch(entries);
 
   // Query the hash table; rows are inserted in processing order
   duckdb_result result;
-  duckdb_query(conn.get(), "SELECT MetaAddr FROM hash", &result);
+  duckdb_query(conn.get(), "SELECT InodeId FROM hash", &result);
   auto rowCount = duckdb_row_count(&result);
   REQUIRE(rowCount == 3);
 
   // If sorted by DiskOffset, processing order should be: 1000, 2000, 3000
-  // which corresponds to Addr values: 200, 300, 100
-  REQUIRE(duckdb_value_int64(&result, 0, 0) == 200);
-  REQUIRE(duckdb_value_int64(&result, 0, 1) == 300);
-  REQUIRE(duckdb_value_int64(&result, 0, 2) == 100);
+  // which corresponds to InodeId values: id_200, id_300, id_100
+  REQUIRE(std::string(duckdb_value_varchar(&result, 0, 0)) == "id_200");
+  REQUIRE(std::string(duckdb_value_varchar(&result, 0, 1)) == "id_300");
+  REQUIRE(std::string(duckdb_value_varchar(&result, 0, 2)) == "id_100");
   duckdb_destroy_result(&result);
 }

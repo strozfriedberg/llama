@@ -6,8 +6,8 @@
 #include "llamaduck.h"
 
 struct HashRec {
-  void set(SFHASH_HashValues h, uint32_t metaAddr, uint64_t hashAlgs) {
-    MetaAddr = metaAddr;
+  void set(SFHASH_HashValues h, std::string inodeId, uint64_t hashAlgs) {
+    InodeId = std::move(inodeId);
     MD5 = hashAlgs & SFHASH_MD5 ? hexEncode(h.Md5, h.Md5 + sizeof(h.Md5)) : "";
     SHA1 = hashAlgs & SFHASH_SHA_1 ? hexEncode(h.Sha1, h.Sha1 + sizeof(h.Sha1)): "";
     SHA256 = hashAlgs & SFHASH_SHA_2_256 ? hexEncode(h.Sha2_256, h.Sha2_256 + sizeof(h.Sha2_256)): "";
@@ -15,14 +15,14 @@ struct HashRec {
     Ssdeep = hashAlgs & SFHASH_FUZZY ? hexEncode(h.Fuzzy, h.Fuzzy + sizeof(h.Fuzzy)): "";
   }
 
-  static constexpr auto ColNames = {"MetaAddr",
+  static constexpr auto ColNames = {"InodeId",
                                     "MD5",
                                     "SHA1",
                                     "SHA256",
                                     "Blake3",
                                     "Ssdeep"};
 
-  uint64_t MetaAddr;
+  std::string InodeId;
 
   std::string MD5;
   std::string SHA1;
