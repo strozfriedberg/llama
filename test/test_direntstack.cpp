@@ -2,7 +2,6 @@
 
 #include "direntstack.h"
 #include "fieldhash.h"
-#include "hex.h"
 #include "recordhasher.h"
 
 std::ostream& operator<<(std::ostream& os, const Dirent& dirent) {
@@ -62,6 +61,7 @@ TEST_CASE("testDirentStackPushPop") {
   REQUIRE(out.Path == "the name");
   REQUIRE(out.Name == "the name");
   REQUIRE_FALSE(out.Id.empty());
+  REQUIRE(out.Id == "97ece597bbca827515097c1f8ff18ca2e4170fca28577b152ca0ae9a518b9672");
   REQUIRE_FALSE(out.MetaId.empty());
   REQUIRE_FALSE(out.ParentId.empty());
 

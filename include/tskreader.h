@@ -60,6 +60,7 @@ private:
   std::unique_ptr<ReadSeek> makeReadSeek(TSK_FS_FILE* fs_file);
 
   std::string ImgPath;
+  std::string EvidenceFileName;  // = std::filesystem::path(ImgPath).filename().string(), cached
   std::unique_ptr<TSK_IMG_INFO, void(*)(TSK_IMG_INFO*)> Img;
   std::unordered_map<TSK_OFF_T, std::shared_ptr<TSK_FS_INFO>> Fs;
 

@@ -26,6 +26,7 @@ TskReader::TskReader(const std::string& imgPath):
   RecHasher(),
   Dirents(RecHasher)
 {
+  EvidenceFileName = std::filesystem::path(ImgPath).filename().string();
 }
 
 TskReader::~TskReader() {}
@@ -35,7 +36,7 @@ bool TskReader::open() {
 }
 
 bool TskReader::startReading() {
-  std::string name = std::filesystem::path(ImgPath).filename().string();
+  const std::string& name = EvidenceFileName;
   const char* type_name = tsk_img_type_toname(Img->itype);
   const char* type_desc = tsk_img_type_todesc(Img->itype);
   Asm.addImage(name, ImgPath,
@@ -106,9 +107,7 @@ TSK_FILTER_ENUM TskReader::filterFs(TSK_FS_INFO* fs_info) {
 //  Tracker->setBlockRange(fs_info->first_block * fs_info->block_size, (fs_info->last_block + 1) * fs_info->block_size);
   CurFsOffset = fs_info->offset;
   CurFsBlockSize = fs_info->block_size;
-  Dirents.setFsContext(
-    std::filesystem::path(ImgPath).filename().string(),
-    CurFsOffset);
+  Dirents.setFsContext(EvidenceFileName, CurFsOffset);
   InodeTracker.clear();
   InodeTracker.resize(fs_info->last_inum - fs_info->first_inum + 1, false);
   if (Progress) {
@@ -138,7 +137,7 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file, const char* path) {
   if (!InodeTracker.at(meta.addr - fs_file->fs_info->first_inum)) {
     Inode inode;
     TskUtils::convertMetaToInode(meta, *Tsg, inode);
-    inode.EvidenceFileName = std::filesystem::path(ImgPath).filename().string();
+    inode.EvidenceFileName = EvidenceFileName;
     inode.ByteOffset = CurFsOffset;
     inode.Id = RecHasher.hashInode(inode).to_string();
 

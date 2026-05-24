@@ -1,4 +1,7 @@
 #include "direntstack.h"
+
+#include <cassert>
+
 #include "fieldhash.h"
 #include "hex.h"
 #include "recordhasher.h"
@@ -12,6 +15,7 @@ const Dirent& DirentStack::top() const {
 }
 
 void DirentStack::setFsContext(std::string evidenceFileName, uint64_t fsByteOffset) {
+  assert(Stack.empty() && "DirentStack must be drained before changing FS context");
   CurEvidenceFileName = std::move(evidenceFileName);
   CurFsByteOffset = fsByteOffset;
 }
