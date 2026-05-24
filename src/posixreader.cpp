@@ -128,7 +128,11 @@ Inode PosixReader::statToInode(const struct stat& st, const std::string& path) {
     inode.Created = "";  // POSIX doesn't have birth time
 
     inode.LinkTarget = "";  // Caller can fill if symlink
-    inode.Id = "";  // Caller can generate hash
+    // TODO: PosixReader is suspected broken and will be revisited.
+    // When it is, populate inode.Id via RecordHasher::hashInode(inode) using
+    // a meaningful (EvidenceFileName, FsByteOffset, Addr, SeqNum) tuple. See
+    // docs/superpowers/specs/2026-05-23-inode-id-primary-key-design.md.
+    inode.Id = "";
 
     return inode;
 }
