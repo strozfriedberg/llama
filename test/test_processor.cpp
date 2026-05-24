@@ -339,8 +339,16 @@ TEST_CASE("processBatch sorts entries by DiskOffset for sequential I/O") {
 
   // If sorted by DiskOffset, processing order should be: 1000, 2000, 3000
   // which corresponds to InodeId values: id_200, id_300, id_100
-  REQUIRE(std::string(duckdb_value_varchar(&result, 0, 0)) == "id_200");
-  REQUIRE(std::string(duckdb_value_varchar(&result, 0, 1)) == "id_300");
-  REQUIRE(std::string(duckdb_value_varchar(&result, 0, 2)) == "id_100");
+  auto* s0 = duckdb_value_varchar(&result, 0, 0);
+  REQUIRE(std::string(s0) == "id_200");
+  duckdb_free(s0);
+
+  auto* s1 = duckdb_value_varchar(&result, 0, 1);
+  REQUIRE(std::string(s1) == "id_300");
+  duckdb_free(s1);
+
+  auto* s2 = duckdb_value_varchar(&result, 0, 2);
+  REQUIRE(std::string(s2) == "id_100");
+  duckdb_free(s2);
   duckdb_destroy_result(&result);
 }
