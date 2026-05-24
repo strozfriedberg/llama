@@ -21,7 +21,7 @@ TEST_CASE("buildSqlQueryFromRule") {
   FieldHasher hasher;
   FieldHash hash = rules.at(0).getHash(parser, hasher);
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(qb.buildSqlQuery(hash, rules.at(0)) == "SELECT '" + hash.to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr");
+  REQUIRE(qb.buildSqlQuery(hash, rules.at(0)) == "SELECT '" + hash.to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.MetaId == inode.Id");
 }
 
 TEST_CASE("buildSqlQueryFromRuleWithOneNumberFileMetadataCondition") {
@@ -32,7 +32,7 @@ TEST_CASE("buildSqlQueryFromRuleWithOneNumberFileMetadataCondition") {
   FieldHasher hasher;
   FieldHash hash = rules.at(0).getHash(parser, hasher);
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(qb.buildSqlQuery(hash, rules.at(0)) == "SELECT '" + hash.to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr AND Filesize == 30000");
+  REQUIRE(qb.buildSqlQuery(hash, rules.at(0)) == "SELECT '" + hash.to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.MetaId == inode.Id AND Filesize == 30000");
 }
 
 TEST_CASE("buildSqlQueryFromRuleWithOneStringFileMetadataCondition") {
@@ -43,7 +43,7 @@ TEST_CASE("buildSqlQueryFromRuleWithOneStringFileMetadataCondition") {
   FieldHasher hasher;
   FieldHash hash = rules.at(0).getHash(parser, hasher);
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(qb.buildSqlQuery(hash, rules.at(0)) == "SELECT '" + hash.to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr AND Created > '2023-05-04'");
+  REQUIRE(qb.buildSqlQuery(hash, rules.at(0)) == "SELECT '" + hash.to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.MetaId == inode.Id AND Created > '2023-05-04'");
 }
 
 TEST_CASE("buildSqlQueryFromRuleWithCompoundFileMetadataDef") {
@@ -54,7 +54,7 @@ TEST_CASE("buildSqlQueryFromRuleWithCompoundFileMetadataDef") {
   FieldHasher hasher;
   FieldHash hash = rules.at(0).getHash(parser, hasher);
   REQUIRE(rules.at(0).Name == "MyRule");
-  REQUIRE(qb.buildSqlQuery(hash, rules.at(0)) == "SELECT '" + hash.to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.Metaaddr == inode.Addr AND (Filesize == 123456 OR (((Created > '2023-05-04' AND Modified < '2023-05-06') AND Name == 'test') AND Path == 'test'))");
+  REQUIRE(qb.buildSqlQuery(hash, rules.at(0)) == "SELECT '" + hash.to_string() + "', Path, Name, Addr FROM dirent, inode WHERE dirent.MetaId == inode.Id AND (Filesize == 123456 OR (((Created > '2023-05-04' AND Modified < '2023-05-06') AND Name == 'test') AND Path == 'test'))");
 }
 
 // TEST_CASE("buildSqlQueryFromRuleWithAnyFunc") {
@@ -142,7 +142,7 @@ TEST_CASE("buildSqlQueryFromRuleWithSignatureName") {
   REQUIRE(rules.at(0).Name == "SigRule");
   auto query = qb.buildSqlQuery(hash, rules.at(0));
   // Should join through hash, file_signatures, and signatures tables
-  REQUIRE(query.find("inode.Addr IN (SELECT h.MetaAddr FROM hash h") != std::string::npos);
+  REQUIRE(query.find("inode.Id IN (SELECT h.InodeId FROM hash h") != std::string::npos);
   REQUIRE(query.find("JOIN file_signatures fs ON h.SHA256 = fs.FileHash") != std::string::npos);
   REQUIRE(query.find("JOIN signatures s ON fs.SigId = s.Id") != std::string::npos);
   REQUIRE(query.find("Name == 'PDF'") != std::string::npos);
