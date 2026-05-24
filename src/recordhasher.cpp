@@ -1,6 +1,7 @@
 #include "recordhasher.h"
 
 #include "direntbatch.h"
+#include "inode.h"
 #include <string_view>
 
 FieldHash RecordHasher::hashRun(const jsoncons::json& r) {
@@ -105,5 +106,20 @@ FieldHash RecordHasher::hashDirent(const Dirent& r) {
     r.ParentSeq
   );
   return Hasher.get_hash();
+}
+
+FieldHash RecordHasher::hashInodeIdentity(
+  std::string_view evidenceFileName,
+  uint64_t fsByteOffset,
+  uint64_t addr,
+  uint64_t seqNum)
+{
+  auto h = Hasher.subhash();
+  Hasher.hash_em(evidenceFileName, fsByteOffset, addr, seqNum);
+  return Hasher.get_hash();
+}
+
+FieldHash RecordHasher::hashInode(const Inode& r) {
+  return hashInodeIdentity(r.EvidenceFileName, r.ByteOffset, r.Addr, r.SeqNum);
 }
 

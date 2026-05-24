@@ -2,6 +2,7 @@
 
 #include "direntbatch.h"
 #include "hex.h"
+#include "inode.h"
 #include "recordhasher.h"
 
 TEST_CASE("testHashRun") {
@@ -251,5 +252,32 @@ TEST_CASE("testHashDirentClass") {
 
   RecordHasher hasher;
   REQUIRE(hasher.hashDirent(d1) != hasher.hashDirent(d2));
+}
+
+TEST_CASE("testHashInodeIdentity") {
+  RecordHasher hasher;
+  // Inputs: ("disk.E01", 1048576, 5, 5)
+  const FieldHash got = hasher.hashInodeIdentity("disk.E01", 1048576, 5, 5);
+  // Round-trip: hashing the same inputs again must produce the same bytes.
+  const FieldHash again = hasher.hashInodeIdentity("disk.E01", 1048576, 5, 5);
+  REQUIRE(got == again);
+  // And a different SeqNum must produce a different hash (proves SeqNum is hashed).
+  const FieldHash diffSeq = hasher.hashInodeIdentity("disk.E01", 1048576, 5, 6);
+  REQUIRE(got != diffSeq);
+  // Different EvidenceFileName must also differ.
+  const FieldHash diffEfn = hasher.hashInodeIdentity("other.E01", 1048576, 5, 5);
+  REQUIRE(got != diffEfn);
+}
+
+TEST_CASE("testHashInodeStruct") {
+  RecordHasher hasher;
+  Inode inode{};
+  inode.EvidenceFileName = "disk.E01";
+  inode.ByteOffset = 1048576;
+  inode.Addr = 5;
+  inode.SeqNum = 5;
+  const FieldHash viaStruct = hasher.hashInode(inode);
+  const FieldHash viaHelper = hasher.hashInodeIdentity("disk.E01", 1048576, 5, 5);
+  REQUIRE(viaStruct == viaHelper);
 }
 
