@@ -258,13 +258,35 @@ TEST_CASE("testHashInodeIdentity") {
   RecordHasher hasher;
   // Inputs: ("disk.E01", 1048576, 5, 5)
   const FieldHash got = hasher.hashInodeIdentity("disk.E01", 1048576, 5, 5);
+
+  // Golden vector — pins the wire format before downstream FK consumers
+  // (dirent, hash, extents, filesystems) start depending on byte-identical
+  // reproduction.
+  const FieldHash exp{{
+    0x67, 0x54, 0xce, 0x28, 0xf9, 0xc4, 0x4e, 0xc3,
+    0xb6, 0x89, 0x0e, 0xf6, 0xf6, 0xa0, 0xdf, 0xed,
+    0x94, 0xe3, 0x72, 0xb4, 0xf2, 0xeb, 0xed, 0xc6,
+    0xf5, 0x14, 0x72, 0x98, 0x05, 0x3b, 0xbc, 0x2f
+  }};
+  REQUIRE(exp == got);
+
   // Round-trip: hashing the same inputs again must produce the same bytes.
   const FieldHash again = hasher.hashInodeIdentity("disk.E01", 1048576, 5, 5);
   REQUIRE(got == again);
-  // And a different SeqNum must produce a different hash (proves SeqNum is hashed).
+
+  // Sensitivity: different Addr must produce a different hash.
+  const FieldHash diffAddr = hasher.hashInodeIdentity("disk.E01", 1048576, 6, 5);
+  REQUIRE(got != diffAddr);
+
+  // Sensitivity: different FsByteOffset must produce a different hash.
+  const FieldHash diffOffset = hasher.hashInodeIdentity("disk.E01", 2097152, 5, 5);
+  REQUIRE(got != diffOffset);
+
+  // Sensitivity: different SeqNum must produce a different hash.
   const FieldHash diffSeq = hasher.hashInodeIdentity("disk.E01", 1048576, 5, 6);
   REQUIRE(got != diffSeq);
-  // Different EvidenceFileName must also differ.
+
+  // Sensitivity: different EvidenceFileName must also differ.
   const FieldHash diffEfn = hasher.hashInodeIdentity("other.E01", 1048576, 5, 5);
   REQUIRE(got != diffEfn);
 }
