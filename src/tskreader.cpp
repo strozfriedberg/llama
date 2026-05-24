@@ -137,7 +137,7 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file, const char* path) {
     TskUtils::convertMetaToInode(meta, *Tsg, inode);
     inode.EvidenceFileName = std::filesystem::path(ImgPath).filename().string();
     inode.ByteOffset = CurFsOffset;
-    inode.Id = hexEncode(RecHasher.hashInode(inode).hash, sizeof(FieldHash{}.hash));
+    inode.Id = RecHasher.hashInode(inode).to_string();
 
     // handle the attrs
     Tsk->populateAttrs(fs_file);
