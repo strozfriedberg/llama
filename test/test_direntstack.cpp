@@ -152,3 +152,49 @@ TEST_CASE("DirentStack dot and dotdot do not pollute paths") {
   REQUIRE(dirents.empty());
 }
 
+TEST_CASE("setFsContext throws if stack not drained") {
+  RecordHasher rh;
+  DirentStack dirents(rh);
+  dirents.setFsContext("fs1.E01", 1048576);
+
+  Dirent in(makeDirent("", "leftover"));
+  in.MetaAddr = 5;
+  dirents.push(std::move(in));
+  REQUIRE_FALSE(dirents.empty());
+
+  // Flipping context with a non-empty stack would silently corrupt the
+  // FK hashes of the residual dirents in release builds; require that
+  // callers drain first.
+  REQUIRE_THROWS(dirents.setFsContext("fs2.E01", 2097152));
+}
+
+TEST_CASE("dirents popped after context flip hash under the new context") {
+  RecordHasher rh;
+  DirentStack dirents(rh);
+
+  // First FS context: push a dirent and pop under fs1.
+  dirents.setFsContext("fs1.E01", 1048576);
+  Dirent a(makeDirent("", "alpha"));
+  a.MetaAddr = 100;
+  a.MetaSeq = 1;
+  a.ParentAddr = 5;
+  a.ParentSeq = 5;
+  dirents.push(std::move(a));
+  Dirent outA = dirents.pop();
+  REQUIRE(outA.MetaId == rh.hashInodeIdentity("fs1.E01", 1048576, 100, 1).to_string());
+
+  // Flip context now that the stack is drained.
+  dirents.setFsContext("fs2.E01", 2097152);
+
+  // Second FS: same MetaAddr/MetaSeq must produce a DIFFERENT MetaId
+  // because the context contributes to the hash.
+  Dirent b(makeDirent("", "alpha"));
+  b.MetaAddr = 100;
+  b.MetaSeq = 1;
+  b.ParentAddr = 5;
+  b.ParentSeq = 5;
+  dirents.push(std::move(b));
+  Dirent outB = dirents.pop();
+  REQUIRE(outB.MetaId == rh.hashInodeIdentity("fs2.E01", 2097152, 100, 1).to_string());
+  REQUIRE(outA.MetaId != outB.MetaId);
+}

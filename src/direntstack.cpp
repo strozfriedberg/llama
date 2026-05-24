@@ -1,10 +1,9 @@
 #include "direntstack.h"
 
-#include <cassert>
-
 #include "fieldhash.h"
 #include "hex.h"
 #include "recordhasher.h"
+#include "throw.h"
 
 bool DirentStack::empty() const {
   return Stack.empty();
@@ -15,7 +14,11 @@ const Dirent& DirentStack::top() const {
 }
 
 void DirentStack::setFsContext(std::string evidenceFileName, uint64_t fsByteOffset) {
-  assert(Stack.empty() && "DirentStack must be drained before changing FS context");
+  // Precondition: callers must drain residual dirents under the previous
+  // FS context before flipping. Release-mode catch (debug-only assert
+  // would let multi-FS FK corruption slip past NDEBUG builds).
+  THROW_IF(!Stack.empty(),
+           "DirentStack must be drained before changing FS context");
   CurEvidenceFileName = std::move(evidenceFileName);
   CurFsByteOffset = fsByteOffset;
 }

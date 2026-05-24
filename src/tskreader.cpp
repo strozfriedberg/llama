@@ -86,6 +86,16 @@ TSK_FILTER_ENUM TskReader::filterVol(const TSK_VS_PART_INFO* vs_part) {
 }
 
 TSK_FILTER_ENUM TskReader::filterFs(TSK_FS_INFO* fs_info) {
+  // Drain residual dirents from the previous filesystem under its
+  // own context before flipping. TSK does not emit a "directory done"
+  // event when a filesystem walk completes, so the prior FS's root and
+  // ancestors remain on the stack; popping them here ensures their
+  // MetaId/ParentId hash against the still-current EvidenceFileName /
+  // FsByteOffset, not the next filesystem's.
+  while (!Dirents.empty()) {
+    Input->push(Dirents.pop());
+  }
+
   const bool littleEndian = fs_info->endian == TSK_LIT_ENDIAN;
   Asm.addFileSystem(
     fs_info->offset,
