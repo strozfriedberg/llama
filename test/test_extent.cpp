@@ -8,8 +8,8 @@
 TEST_CASE("Extent struct has correct number of fields", "[extent]") {
     Extent e{};
     constexpr auto numFields = boost::pfr::tuple_size_v<Extent>;
-    REQUIRE(numFields == 9);
-    REQUIRE(Extent::ColNames.size() == 9);
+    REQUIRE(numFields == 8);
+    REQUIRE(Extent::ColNames.size() == 8);
 }
 
 TEST_CASE("Extent struct can be constructed", "[extent]") {
@@ -18,8 +18,7 @@ TEST_CASE("Extent struct can be constructed", "[extent]") {
         .PhysicalEnd = 4096,
         .LogicalStart = 0,
         .LogicalEnd = 4096,
-        .Inode = 12345,
-        .FilesystemOffset = 0,
+        .InodeId = "",
         .Path = "/test/file.txt",
         .Flags = "SHARED,ENCODED",
         .Source = "filesystem"

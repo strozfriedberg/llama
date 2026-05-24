@@ -12,8 +12,7 @@ struct Extent {
         "PhysicalEnd",
         "LogicalStart",
         "LogicalEnd",
-        "Inode",
-        "FilesystemOffset",
+        "InodeId",
         "Path",
         "Flags",
         "Source"
@@ -23,8 +22,7 @@ struct Extent {
     uint64_t PhysicalEnd;
     uint64_t LogicalStart;
     uint64_t LogicalEnd;
-    uint64_t Inode;
-    uint64_t FilesystemOffset;
+    std::string InodeId;
     std::string Path;
     std::string Flags;   // Comma-separated: "SHARED,UNWRITTEN,ENCODED"
     std::string Source;  // "filesystem" or "journal"

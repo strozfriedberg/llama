@@ -164,8 +164,7 @@ void PosixReader::parseExtents(
         ext.LogicalEnd = fe.fe_logical + fe.fe_length;
         ext.PhysicalStart = fe.fe_physical;
         ext.PhysicalEnd = fe.fe_physical + fe.fe_length;
-        ext.Inode = inode;
-        ext.FilesystemOffset = fsOffset;
+        ext.InodeId = "";   // PosixReader cannot compute a real InodeId (inode.Id is left empty by design)
         ext.Path = path;
         ext.Flags = flagsToString(fe.fe_flags);
         ext.Source = "filesystem";

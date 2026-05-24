@@ -297,8 +297,7 @@ TEST_CASE("ExtentBatch can add and retrieve extents", "[duckdb]") {
         .PhysicalEnd = 2000,
         .LogicalStart = 0,
         .LogicalEnd = 1000,
-        .Inode = 42,
-        .FilesystemOffset = 0,
+        .InodeId = "",
         .Path = "/test.txt",
         .Flags = "SHARED",
         .Source = "filesystem"

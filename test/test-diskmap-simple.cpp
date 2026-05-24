@@ -35,8 +35,7 @@ int main() {
         .PhysicalEnd = 102400,
         .LogicalStart = 0,
         .LogicalEnd = 102400,
-        .Inode = 1,
-        .FilesystemOffset = 0,
+        .InodeId = "",
         .Path = "/test/file1.txt",
         .Flags = "",
         .Source = "filesystem"
@@ -48,8 +47,7 @@ int main() {
         .PhysicalEnd = 153600,
         .LogicalStart = 0,
         .LogicalEnd = 51200,
-        .Inode = 2,
-        .FilesystemOffset = 0,
+        .InodeId = "",
         .Path = "/test/file2.txt",
         .Flags = "",
         .Source = "filesystem"
@@ -61,8 +59,7 @@ int main() {
         .PhysicalEnd = 122880,
         .LogicalStart = 0,
         .LogicalEnd = 20480,
-        .Inode = 3,
-        .FilesystemOffset = 0,
+        .InodeId = "",
         .Path = "/test/file3.txt",
         .Flags = "SHARED",
         .Source = "filesystem"
@@ -74,8 +71,7 @@ int main() {
         .PhysicalEnd = 409600,
         .LogicalStart = 0,
         .LogicalEnd = 204800,
-        .Inode = 4,
-        .FilesystemOffset = 0,
+        .InodeId = "",
         .Path = "/test/largefile.dat",
         .Flags = "",
         .Source = "filesystem"
@@ -140,7 +136,7 @@ int main() {
 
     // Debug: Test join directly
     state = duckdb_query(conn.get(),
-        "SELECT i.start, i.\"end\", e.Inode, e.Path "
+        "SELECT i.start, i.\"end\", e.InodeId, e.Path "
         "FROM intervals i "
         "LEFT JOIN extents e "
         "    ON e.PhysicalStart <= i.start "
@@ -153,9 +149,10 @@ int main() {
         for (uint64_t row = 0; row < std::min(rowCount, static_cast<uint64_t>(5)); ++row) {
             uint64_t start = duckdb_value_uint64(&result, 0, row);
             uint64_t end = duckdb_value_uint64(&result, 1, row);
-            uint64_t inode = duckdb_value_uint64(&result, 2, row);
+            auto inodeId = duckdb_value_varchar(&result, 2, row);
             auto path = duckdb_value_varchar(&result, 3, row);
-            std::cout << "  " << start << " - " << end << " => inode " << inode << " " << (path ? path : "NULL") << std::endl;
+            std::cout << "  " << start << " - " << end << " => inodeId " << (inodeId ? inodeId : "NULL") << " " << (path ? path : "NULL") << std::endl;
+            if (inodeId) duckdb_free(inodeId);
             if (path) duckdb_free(path);
         }
         duckdb_destroy_result(&result);
