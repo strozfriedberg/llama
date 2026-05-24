@@ -126,7 +126,7 @@ std::string QueryBuilder::buildSqlQuery(const FieldHash& hash, const Rule& rule)
   query.reserve(256);
   query = "SELECT '";
   query += hash.to_string();
-  query += "', Path, Name, Addr FROM dirent, inode WHERE dirent.MetaId == inode.Id";
+  query += "', Path, Name, inode.Id FROM dirent, inode WHERE dirent.MetaId == inode.Id";
 
   if (rule.FileMetadata) {
     query += " AND ";

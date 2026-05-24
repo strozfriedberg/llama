@@ -19,12 +19,12 @@ struct RuleMatch {
   static constexpr auto ColNames = {"id",
                                     "path",
                                     "name",
-                                    "addr"};
+                                    "inode_id"};
 
   std::string id;
   std::string path;
   std::string name;
-  uint64_t addr;
+  std::string inode_id;
 };
 
 struct SearchHit {
