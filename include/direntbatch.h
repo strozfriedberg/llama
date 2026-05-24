@@ -17,7 +17,9 @@ struct Dirent
                                     "MetaAddr",
                                     "ParentAddr",
                                     "MetaSeq",
-                                    "ParentSeq"};
+                                    "ParentSeq",
+                                    "MetaId",
+                                    "ParentId"};
 
   std::string Id;
   std::string Path;
@@ -31,6 +33,9 @@ struct Dirent
   uint64_t ParentAddr;
   uint64_t MetaSeq;
   uint64_t ParentSeq;
+
+  std::string MetaId;
+  std::string ParentId;
 };
 
 using DirentBatch = DBBatch<Dirent>;

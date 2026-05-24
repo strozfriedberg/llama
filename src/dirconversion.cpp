@@ -154,18 +154,12 @@ jsoncons::json DirConverter::convertName(const fs::directory_entry& de) const {
 }
 
 Dirent DirConverter::convertStdFsDEtoDirent(const fs::directory_entry& de) const {
-  return Dirent{
-    "",
-    de.path().parent_path().generic_string(),
-    de.path().filename().generic_string(),
-    "",
-    DirUtils::fileTypeString(DirUtils::fileType(de)),
-    NAME_FLAG_ALLOC,
-    0,
-    0,
-    0,
-    0
-  };
+  Dirent d{};
+  d.Path = de.path().parent_path().generic_string();
+  d.Name = de.path().filename().generic_string();
+  d.Type = DirUtils::fileTypeString(DirUtils::fileType(de));
+  d.Flags = NAME_FLAG_ALLOC;
+  return d;
 }
 
 Inode DirConverter::convertStdFsDEtoInode(const fs::directory_entry& de) const {

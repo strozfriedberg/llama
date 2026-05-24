@@ -1,4 +1,5 @@
 #include "direntstack.h"
+#include "fieldhash.h"
 #include "hex.h"
 #include "recordhasher.h"
 
@@ -10,6 +11,11 @@ const Dirent& DirentStack::top() const {
   return Stack.top().Rec;
 }
 
+void DirentStack::setFsContext(std::string evidenceFileName, uint64_t fsByteOffset) {
+  CurEvidenceFileName = std::move(evidenceFileName);
+  CurFsByteOffset = fsByteOffset;
+}
+
 Dirent DirentStack::pop() {
   // pop the record and trim back the path
   Element& e = Stack.top();
@@ -17,17 +23,16 @@ Dirent DirentStack::pop() {
   Dirent rec{std::move(e.Rec)};
   Stack.pop();
 
-  // hash the record
-  const FieldHash fhash{RecHasher.hashDirent(rec)};
-  std::string hash = hexEncode(&fhash.hash, sizeof(fhash.hash));
+  // hash the dirent record (existing behavior — drives dirent.Id)
+  rec.Id = RecHasher.hashDirent(rec).to_string();
 
-  // add the hash to the parent, if any
-//  if (!Stack.empty()) {
-//    Stack.top().Record["children"].push_back(hash);
-//  }
+  // compute inode FK hashes via the shared identity helper, using
+  // the per-FS context set by setFsContext.
+  rec.MetaId = RecHasher.hashInodeIdentity(
+    CurEvidenceFileName, CurFsByteOffset, rec.MetaAddr, rec.MetaSeq).to_string();
 
-  // put the hash into the record
-  rec.Id = std::move(hash);
+  rec.ParentId = RecHasher.hashInodeIdentity(
+    CurEvidenceFileName, CurFsByteOffset, rec.ParentAddr, rec.ParentSeq).to_string();
 
   return rec;
 }

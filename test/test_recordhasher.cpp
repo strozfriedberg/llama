@@ -225,30 +225,18 @@ TEST_CASE("testHashDirent") {
 }
 
 TEST_CASE("testHashDirentClass") {
-  Dirent d1{
-    "",
-    "/foo/bar",
-    "baz",
-    "b",
-    "File",
-    "",
-    0x12345678,
-    0x87654321,
-    0x87654321,
-    0x12345678
-  };
-  Dirent d2{
-    "",
-    "/foo/bar",
-    "baz",
-    "b",
-    "File",
-    "Deleted",
-    0x12345678,
-    0x87654321,
-    0x87654321,
-    0x12345678
-  };
+  Dirent d1{};
+  d1.Path = "/foo/bar";
+  d1.Name = "baz";
+  d1.ShortName = "b";
+  d1.Type = "File";
+  d1.MetaAddr = 0x12345678;
+  d1.ParentAddr = 0x87654321;
+  d1.MetaSeq = 0x87654321;
+  d1.ParentSeq = 0x12345678;
+
+  Dirent d2 = d1;
+  d2.Flags = "Deleted";
 
   RecordHasher hasher;
   REQUIRE(hasher.hashDirent(d1) != hasher.hashDirent(d2));

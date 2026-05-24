@@ -26,10 +26,23 @@ TEST_CASE("TestMakeDuckDB") {
 
   REQUIRE(DBType<Dirent>::createTable(conn.get(), "dirent"));
 
+  auto makeDuckDirent = [](const std::string& path, const std::string& name, const std::string& shortName,
+                            const std::string& type, const std::string& flags,
+                            uint64_t metaAddr, uint64_t parentAddr) {
+    Dirent d{};
+    d.Path = path;
+    d.Name = name;
+    d.ShortName = shortName;
+    d.Type = type;
+    d.Flags = flags;
+    d.MetaAddr = metaAddr;
+    d.ParentAddr = parentAddr;
+    return d;
+  };
   std::vector<Dirent> dirents = {
-    {"", "/tmp/", "foo", "f~1", "File", "Allocated", 3, 2, 0, 0},
-    {"", "/tmp/", "bar", "b~1", "File", "Deleted", 4, 2, 0, 0},
-    {"", "/temp/", "bar", "b~2", "File", "Allocated", 6, 5, 0, 0}
+    makeDuckDirent("/tmp/", "foo", "f~1", "File", "Allocated", 3, 2),
+    makeDuckDirent("/tmp/", "bar", "b~1", "File", "Deleted", 4, 2),
+    makeDuckDirent("/temp/", "bar", "b~2", "File", "Allocated", 6, 5)
   };
 
   DirentBatch batch;
@@ -38,7 +51,7 @@ TEST_CASE("TestMakeDuckDB") {
     batch.add(dirent);
   }
   REQUIRE(batch.size() == dirents.size());
-  REQUIRE(batch.Buf.size() == 89);
+  REQUIRE(batch.Buf.size() == 95);
 
   LlamaDBAppender appender(conn.get(), "dirent"); // need an appender object, too, which also doesn't jibe with smart pointers, and destroy must be called even if create returns an error
   // REQUIRE(state != DuckDBError);
@@ -50,7 +63,7 @@ TEST_CASE("TestMakeDuckDB") {
   //REQUIRE(std::string("") == duckdb_result_error(&result));
   REQUIRE(state != DuckDBError);
   REQUIRE(duckdb_row_count(&result) == 2);
-  REQUIRE(duckdb_column_count(&result) == 10);
+  REQUIRE(duckdb_column_count(&result) == 12);
   unsigned int i = 0;
   REQUIRE(std::string("Id") == duckdb_column_name(&result, i++));
   REQUIRE(std::string("Path") == duckdb_column_name(&result, i++));
@@ -61,7 +74,9 @@ TEST_CASE("TestMakeDuckDB") {
   REQUIRE(std::string("MetaAddr") == duckdb_column_name(&result, i++));
   REQUIRE(std::string("ParentAddr") == duckdb_column_name(&result, i++));
   REQUIRE(std::string("MetaSeq") == duckdb_column_name(&result, i++));
-  REQUIRE(std::string("ParentSeq") == duckdb_column_name(&result, i));
+  REQUIRE(std::string("ParentSeq") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("MetaId") == duckdb_column_name(&result, i++));
+  REQUIRE(std::string("ParentId") == duckdb_column_name(&result, i));
 }
 
 struct DuckRecColumns {

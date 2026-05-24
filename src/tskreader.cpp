@@ -106,6 +106,9 @@ TSK_FILTER_ENUM TskReader::filterFs(TSK_FS_INFO* fs_info) {
 //  Tracker->setBlockRange(fs_info->first_block * fs_info->block_size, (fs_info->last_block + 1) * fs_info->block_size);
   CurFsOffset = fs_info->offset;
   CurFsBlockSize = fs_info->block_size;
+  Dirents.setFsContext(
+    std::filesystem::path(ImgPath).filename().string(),
+    CurFsOffset);
   InodeTracker.clear();
   InodeTracker.resize(fs_info->last_inum - fs_info->first_inum + 1, false);
   if (Progress) {
