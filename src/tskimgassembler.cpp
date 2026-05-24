@@ -109,7 +109,8 @@ void TskImgAssembler::addFileSystem(uint64_t byteOffset, const std::string& type
 }
 
 void TskImgAssembler::setCurrentRootInodeId(const std::string& id) {
-  if (!Filesystems.empty() && Filesystems.back().RootInodeId.empty()) {
+  THROW_IF(Filesystems.empty(), "setCurrentRootInodeId called before addFileSystem");
+  if (Filesystems.back().RootInodeId.empty()) {
     Filesystems.back().RootInodeId = id;
   }
 }

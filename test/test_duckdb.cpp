@@ -435,7 +435,28 @@ TEST_CASE("filesystemRecTableCreation") {
   static_assert(DuckFs::ColNames.size() == 21);
   REQUIRE(DuckFs::createTable(conn.get(), "filesystems"));
 
-  FilesystemRec rec{"laptop.E01", 1048576, 0, 0, "ntfs", 4096, 262144, 512, "Cluster", 1, 0, 0, 262143, 65535, "", "ABCDEF1234", 0, 5, 65536, "", ""};
+  FilesystemRec rec{};
+  rec.EvidenceFileName = "laptop.E01";
+  rec.ByteOffset = 1048576;
+  rec.VolumeAddr = 0;
+  rec.VolumeTableNum = 0;
+  rec.Type = "ntfs";
+  rec.BlockSize = 4096;
+  rec.BlockCount = 262144;
+  rec.DeviceBlockSize = 512;
+  rec.BlockName = "Cluster";
+  rec.LittleEndian = 1;
+  rec.FirstBlock = 0;
+  rec.FirstInum = 0;
+  rec.LastBlock = 262143;
+  rec.LastInum = 65535;
+  rec.Flags = "";
+  rec.FsID = "ABCDEF1234";
+  rec.JournalInum = 0;
+  rec.RootInum = 5;
+  rec.NumInums = 65536;
+  rec.RootDirentId = "";
+  rec.RootInodeId = "";
 
   DBBatch<FilesystemRec> batch;
   batch.add(rec);

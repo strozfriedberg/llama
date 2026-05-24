@@ -90,19 +90,25 @@ TEST_CASE("assemblerCurrentFsInfo") {
 }
 
 TEST_CASE("testSetCurrentRootInodeId") {
-  TskImgAssembler asm_;
-  asm_.addImage("disk.E01", "/path/disk.E01", "ewf", "Expert Witness", 1024, 512, "");
-  asm_.addFileSystem(1048576, "ntfs", 4096, 100, 512, "byte",
-                     true, 0, 0, 99, 99, "", "abcd1234",
-                     0, 5, 100);
+  TskImgAssembler a;
+  a.addImage("disk.E01", "/path/disk.E01", "ewf", "Expert Witness", 1024, 512, "");
+  a.addFileSystem(1048576, "ntfs", 4096, 100, 512, "byte",
+                  true, 0, 0, 99, 99, "", "abcd1234",
+                  0, 5, 100);
 
-  REQUIRE(asm_.filesystems().size() == 1);
-  REQUIRE(asm_.filesystems().back().RootInodeId == "");
+  REQUIRE(a.filesystems().size() == 1);
+  REQUIRE(a.filesystems().back().RootInodeId == "");
 
-  asm_.setCurrentRootInodeId("deadbeef");
-  REQUIRE(asm_.filesystems().back().RootInodeId == "deadbeef");
+  a.setCurrentRootInodeId("deadbeef");
+  REQUIRE(a.filesystems().back().RootInodeId == "deadbeef");
 
   // Second call must NOT overwrite the first (idempotent on the same FS).
-  asm_.setCurrentRootInodeId("cafebabe");
-  REQUIRE(asm_.filesystems().back().RootInodeId == "deadbeef");
+  a.setCurrentRootInodeId("cafebabe");
+  REQUIRE(a.filesystems().back().RootInodeId == "deadbeef");
+}
+
+TEST_CASE("testSetCurrentRootInodeIdThrowsBeforeAddFileSystem") {
+  TskImgAssembler a;
+  a.addImage("disk.E01", "/path/disk.E01", "ewf", "Expert Witness", 1024, 512, "");
+  CHECK_THROWS_AS(a.setCurrentRootInodeId("deadbeef"), std::runtime_error);
 }
