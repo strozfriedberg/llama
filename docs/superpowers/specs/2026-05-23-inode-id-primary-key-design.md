@@ -6,10 +6,7 @@
 
 ## Problem
 
-Llama's parquet output collapses inodes from multiple evidence files into rows that share `MetaAddr` values without a per-row disambiguator. On a two-image corpus (the szechuan E01s: 2 evidence files, 5 filesystems, 188,624 inodes, 340,212 dirents):
-
-- 84,146 of 104,260 distinct `MetaAddr` values (~81%) appear in more than one filesystem.
-- Joining `dirent` to `inode` on `MetaAddr` alone is unambiguous for only 32,073 of 340,212 dirent rows (~9.4%). The other 90.6% are ambiguous because `dirent` carries no evidence-file or filesystem-offset column at all.
+Llama's parquet output collapses inodes from multiple evidence files into rows that share `MetaAddr` values without a per-row disambiguator. Joining `dirent` to `inode` on `MetaAddr` alone will be ambiguous as inode numbers (i.e., MetaAddr) are often ordinals for each filesystem.
 - `hash.MetaAddr` and `extents.Inode` have the same problem.
 - `inode.Id` exists in the schema but is never populated.
 
@@ -221,7 +218,6 @@ The file that writes the `extents` table was not located during design. Locating
 
 ### Out of scope for testing
 
-- **Integration test against the szechuan corpus** — not included. Implementer can spot-check manually if desired.
 - **PosixReader** — no tests; Id stays empty by design.
 - **Backwards compat** — parquet schema is regenerated per run; `load.sql` and `schema.sql` are produced from the same writer code path, so they're always in sync with what the writer emits.
 - **Hash stability across llama versions** — not asserted. If we ever want stable Ids across versions for diffing runs, that's a separate design.
