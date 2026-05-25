@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bitsetvar.h"
 #include "throw.h"
 
 #include <duckdb.h>
@@ -36,7 +37,7 @@ public:
     auto state = duckdb_connect(db.get(), &DBConn);
     THROW_IF(state == DuckDBError, "Failed to connect to database");
   }
-  
+
   ~LlamaDBConnection() {
     duckdb_disconnect(&DBConn);
   }
@@ -70,9 +71,21 @@ private:
   duckdb_appender Appender;
 };
 
+// Traits: byte array detection (must precede duckdbType)
+template<typename T> struct is_byte_array : std::false_type {};
+template<size_t N>   struct is_byte_array<std::array<uint8_t, N>> : std::true_type {};
+template<typename T> inline constexpr bool is_byte_array_v = is_byte_array<T>::value;
+
+template<typename T> struct is_optional_byte_array : std::false_type {};
+template<size_t N>   struct is_optional_byte_array<std::optional<std::array<uint8_t, N>>> : std::true_type {};
+template<typename T> inline constexpr bool is_optional_byte_array_v = is_optional_byte_array<T>::value;
+
 template<typename T>
 constexpr const char* duckdbType() {
-  if constexpr (std::is_integral_v<T>) {
+  if constexpr (is_byte_array_v<T> || is_optional_byte_array_v<T>) {
+    return "BLOB";
+  }
+  else if constexpr (std::is_integral_v<T>) {
     return "UBIGINT";
   }
   else if constexpr (std::is_convertible_v<T, std::string>) {
@@ -107,6 +120,7 @@ static std::string createQuery(const char* table) {
 
 void appendVal(duckdb_appender& appender, const char* s);
 void appendVal(duckdb_appender& appender, uint64_t val);
+void appendVal(duckdb_appender& appender, const uint8_t* data, size_t len);
 
 template<typename T>
 size_t totalStringSize(const T& cur) {
@@ -174,15 +188,6 @@ struct DBType {
   }
 };
 
-
-template<typename T> struct is_byte_array : std::false_type {};
-template<size_t N>   struct is_byte_array<std::array<uint8_t, N>> : std::true_type {};
-template<typename T> inline constexpr bool is_byte_array_v = is_byte_array<T>::value;
-
-template<typename T> struct is_optional_byte_array : std::false_type {};
-template<size_t N>   struct is_optional_byte_array<std::optional<std::array<uint8_t, N>>> : std::true_type {};
-template<typename T> inline constexpr bool is_optional_byte_array_v = is_optional_byte_array<T>::value;
-
 template<typename TupleType, size_t I = 0>
 constexpr size_t numNonBinaryCols() {
   if constexpr (I >= std::tuple_size_v<TupleType>) return 0;
@@ -208,12 +213,104 @@ constexpr size_t nonBinaryColIndex() {
   }
 }
 
+// Step 1: binary-column constexpr helpers
+
+template<typename T> struct byte_array_size : std::integral_constant<size_t, 0> {};
+template<size_t N>   struct byte_array_size<std::array<uint8_t, N>> : std::integral_constant<size_t, N> {};
+template<typename T> inline constexpr size_t byte_array_size_v = byte_array_size<T>::value;
+
+template<typename TupleType, size_t I = 0>
+constexpr size_t numBinaryCols() {
+  if constexpr (I >= std::tuple_size_v<TupleType>) return 0;
+  else {
+    using C = std::tuple_element_t<I, TupleType>;
+    if constexpr (is_byte_array_v<C> || is_optional_byte_array_v<C>)
+      return 1 + numBinaryCols<TupleType, I + 1>();
+    else
+      return numBinaryCols<TupleType, I + 1>();
+  }
+}
+
+template<typename TupleType, size_t CurIndex, size_t I = 0>
+constexpr size_t binaryColIndex() {
+  static_assert(CurIndex <= std::tuple_size_v<TupleType>);
+  if constexpr (I >= CurIndex) return 0;
+  else {
+    using C = std::tuple_element_t<I, TupleType>;
+    if constexpr (is_byte_array_v<C> || is_optional_byte_array_v<C>)
+      return 1 + binaryColIndex<TupleType, CurIndex, I + 1>();
+    else
+      return binaryColIndex<TupleType, CurIndex, I + 1>();
+  }
+}
+
+template<typename TupleType, size_t I = 0>
+constexpr size_t numNullableBinaryCols() {
+  if constexpr (I >= std::tuple_size_v<TupleType>) return 0;
+  else {
+    using C = std::tuple_element_t<I, TupleType>;
+    if constexpr (is_optional_byte_array_v<C>)
+      return 1 + numNullableBinaryCols<TupleType, I + 1>();
+    else
+      return numNullableBinaryCols<TupleType, I + 1>();
+  }
+}
+
+template<typename TupleType, size_t CurIndex, size_t I = 0>
+constexpr size_t nullableBinaryColIndex() {
+  static_assert(CurIndex <= std::tuple_size_v<TupleType>);
+  if constexpr (I >= CurIndex) return 0;
+  else {
+    using C = std::tuple_element_t<I, TupleType>;
+    if constexpr (is_optional_byte_array_v<C>)
+      return 1 + nullableBinaryColIndex<TupleType, CurIndex, I + 1>();
+    else
+      return nullableBinaryColIndex<TupleType, CurIndex, I + 1>();
+  }
+}
+
+template<typename TupleType, size_t I = 0>
+constexpr size_t rowBinaryBytes() {
+  if constexpr (I >= std::tuple_size_v<TupleType>) return 0;
+  else {
+    using C = std::tuple_element_t<I, TupleType>;
+    if constexpr (is_byte_array_v<C>)
+      return byte_array_size_v<C> + rowBinaryBytes<TupleType, I + 1>();
+    else if constexpr (is_optional_byte_array_v<C>)
+      return byte_array_size_v<typename C::value_type> + rowBinaryBytes<TupleType, I + 1>();
+    else
+      return rowBinaryBytes<TupleType, I + 1>();
+  }
+}
+
+// J is a binary-column ordinal (0 = first binary col in tuple order).
+template<typename TupleType, size_t J, size_t I = 0, size_t Seen = 0>
+constexpr size_t binaryColOffset() {
+  if constexpr (I >= std::tuple_size_v<TupleType>) return 0;
+  else {
+    using C = std::tuple_element_t<I, TupleType>;
+    if constexpr (is_byte_array_v<C>) {
+      if constexpr (Seen == J) return 0;
+      else return byte_array_size_v<C> + binaryColOffset<TupleType, J, I + 1, Seen + 1>();
+    }
+    else if constexpr (is_optional_byte_array_v<C>) {
+      if constexpr (Seen == J) return 0;
+      else return byte_array_size_v<typename C::value_type> + binaryColOffset<TupleType, J, I + 1, Seen + 1>();
+    }
+    else {
+      return binaryColOffset<TupleType, J, I + 1, Seen>();
+    }
+  }
+}
+
 template<typename T>
 struct DBBatch {
   size_t size() const { return NumRows; }
 
   std::vector<char>    Buf; // strings stored in sequence here
   std::vector<uint64_t> OffsetVals; // offsets to strings OR uint64_t values
+  std::vector<uint8_t> BinaryBuf;   // R * rowBinaryBytes<TupleType>(), zero-filled for nulls
+  BitsetVar            BinaryNull;  // R * numNullableBinaryCols<TupleType>() bits
 
   uint64_t NumRows = 0;
 
@@ -227,6 +324,8 @@ struct DBBatch {
   void clear() {
     Buf.clear();
     OffsetVals.clear();
+    BinaryBuf.clear();
+    BinaryNull.clear();
     NumRows = 0;
   }
 
@@ -237,6 +336,20 @@ struct DBBatch {
     }
     else if constexpr (std::is_integral_v<Cur>) {
       OffsetVals.push_back(cur);
+    }
+    else if constexpr (is_byte_array_v<Cur>) {
+      BinaryBuf.insert(BinaryBuf.end(), cur.begin(), cur.end());
+      // No BinaryNull push: non-optional columns are NOT NULL by type.
+    }
+    else if constexpr (is_optional_byte_array_v<Cur>) {
+      constexpr size_t N = byte_array_size_v<typename Cur::value_type>;
+      if (cur.has_value()) {
+        BinaryBuf.insert(BinaryBuf.end(), cur->begin(), cur->end());
+        BinaryNull.push_back(false);
+      } else {
+        BinaryBuf.insert(BinaryBuf.end(), N, uint8_t(0));
+        BinaryNull.push_back(true);
+      }
     }
   }
 
@@ -262,7 +375,26 @@ struct DBBatch {
       appendRecord<CurIndex - 1>(appender, row);
     }
 
-    if constexpr (std::is_integral_v<ColumnType>) {
+    if constexpr (is_byte_array_v<ColumnType>) {
+      constexpr size_t N = byte_array_size_v<ColumnType>;
+      constexpr size_t colOffset = binaryColOffset<TupleType, binaryColIndex<TupleType, CurIndex>()>();
+      appendVal(appender,
+                BinaryBuf.data() + row * rowBinaryBytes<TupleType>() + colOffset,
+                N);
+    }
+    else if constexpr (is_optional_byte_array_v<ColumnType>) {
+      constexpr size_t N = byte_array_size_v<typename ColumnType::value_type>;
+      constexpr size_t colOffset = binaryColOffset<TupleType, binaryColIndex<TupleType, CurIndex>()>();
+      const size_t bit = row * numNullableBinaryCols<TupleType>() + nullableBinaryColIndex<TupleType, CurIndex>();
+      if (BinaryNull.get(bit)) {
+        duckdb_append_null(appender);
+      } else {
+        appendVal(appender,
+                  BinaryBuf.data() + row * rowBinaryBytes<TupleType>() + colOffset,
+                  N);
+      }
+    }
+    else if constexpr (std::is_integral_v<ColumnType>) {
       const size_t slot = row * numNonBinaryCols<TupleType>() + nonBinaryColIndex<TupleType, CurIndex>();
       appendVal(appender, OffsetVals[slot]);
     }
@@ -281,4 +413,3 @@ struct DBBatch {
     return NumRows;
   }
 };
-

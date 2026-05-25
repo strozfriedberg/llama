@@ -52,6 +52,7 @@ llama_common_sources = [
 test_sources = [
   'test_bitsetvar.cpp',
   'test_blocksequence.cpp',
+  'test_dbbatch_binary.cpp',
   'test_cli.cpp',
   'test_dirconversion.cpp',
   'test_direntstack.cpp',
