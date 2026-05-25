@@ -311,6 +311,28 @@ TEST_CASE("testDuckHash") {
   REQUIRE(duckdb_value_int64(&result, 0, 1) == 32);
   duckdb_destroy_result(&result);
 
+  // IS NULL / IS NOT NULL symmetry: row 0 has all optionals; row 1 has none.
+  // Query returns (MD5 IS NULL, SHA1 IS NULL, SHA256 IS NULL, Blake3 IS NULL)
+  // cast to INT (0 = present, 1 = absent) for easy comparison.
+  state = duckdb_query(conn.get(),
+    "SELECT (MD5 IS NULL)::INT, (SHA1 IS NULL)::INT, "
+    "(SHA256 IS NULL)::INT, (Blake3 IS NULL)::INT "
+    "FROM hash ORDER BY Ssdeep;",
+    &result);
+  CHECK(state != DuckDBError);
+  CHECK(duckdb_row_count(&result) == 2);
+  // Row 0: h1 — all four hash columns are NOT NULL.
+  REQUIRE(duckdb_value_int64(&result, 0, 0) == 0); // MD5 IS NOT NULL
+  REQUIRE(duckdb_value_int64(&result, 1, 0) == 0); // SHA1 IS NOT NULL
+  REQUIRE(duckdb_value_int64(&result, 2, 0) == 0); // SHA256 IS NOT NULL
+  REQUIRE(duckdb_value_int64(&result, 3, 0) == 0); // Blake3 IS NOT NULL
+  // Row 1: h2 — all four hash columns are NULL.
+  REQUIRE(duckdb_value_int64(&result, 0, 1) == 1); // MD5 IS NULL
+  REQUIRE(duckdb_value_int64(&result, 1, 1) == 1); // SHA1 IS NULL
+  REQUIRE(duckdb_value_int64(&result, 2, 1) == 1); // SHA256 IS NULL
+  REQUIRE(duckdb_value_int64(&result, 3, 1) == 1); // Blake3 IS NULL
+  duckdb_destroy_result(&result);
+
   // Filter by binary InodeId. Use unhex on a literal so it stays at the SQL layer.
   const std::string idHex = "01" + std::string(62, '0');
   const std::string q = "SELECT count(*) FROM hash WHERE hash.InodeId = unhex('" + idHex + "');";
