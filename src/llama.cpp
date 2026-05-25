@@ -446,7 +446,7 @@ void Llama::writeReports(const std::string& outdir) {
     "    r.name AS RuleName,\n"
     "    rh.path || rh.name AS FullPath,\n"
     "    rh.name AS FileName,\n"
-    "    rh.inode_id AS InodeId\n"
+    "    lower(hex(rh.inode_id)) AS InodeId\n"
     "  FROM '" + outdir + "/rule_hits.parquet' rh\n"
     "  JOIN '" + outdir + "/rules.parquet' r ON rh.id = r.id\n"
     "  LEFT JOIN '" + outdir + "/inode.parquet' i ON rh.inode_id = i.Id\n"
