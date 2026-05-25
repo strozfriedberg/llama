@@ -5,6 +5,8 @@
 #include <duckdb.h>
 
 #include <algorithm>
+#include <array>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -173,6 +175,39 @@ struct DBType {
 };
 
 
+template<typename T> struct is_byte_array : std::false_type {};
+template<size_t N>   struct is_byte_array<std::array<uint8_t, N>> : std::true_type {};
+template<typename T> inline constexpr bool is_byte_array_v = is_byte_array<T>::value;
+
+template<typename T> struct is_optional_byte_array : std::false_type {};
+template<size_t N>   struct is_optional_byte_array<std::optional<std::array<uint8_t, N>>> : std::true_type {};
+template<typename T> inline constexpr bool is_optional_byte_array_v = is_optional_byte_array<T>::value;
+
+template<typename TupleType, size_t I = 0>
+constexpr size_t numNonBinaryCols() {
+  if constexpr (I >= std::tuple_size_v<TupleType>) return 0;
+  else {
+    using C = std::tuple_element_t<I, TupleType>;
+    if constexpr (is_byte_array_v<C> || is_optional_byte_array_v<C>)
+      return numNonBinaryCols<TupleType, I + 1>();
+    else
+      return 1 + numNonBinaryCols<TupleType, I + 1>();
+  }
+}
+
+template<typename TupleType, size_t CurIndex, size_t I = 0>
+constexpr size_t nonBinaryColIndex() {
+  static_assert(CurIndex <= std::tuple_size_v<TupleType>);
+  if constexpr (I >= CurIndex) return 0;
+  else {
+    using C = std::tuple_element_t<I, TupleType>;
+    if constexpr (is_byte_array_v<C> || is_optional_byte_array_v<C>)
+      return nonBinaryColIndex<TupleType, CurIndex, I + 1>();
+    else
+      return 1 + nonBinaryColIndex<TupleType, CurIndex, I + 1>();
+  }
+}
+
 template<typename T>
 struct DBBatch {
   size_t size() const { return NumRows; }
@@ -219,28 +254,29 @@ struct DBBatch {
   }
 
   template<size_t CurIndex>
-  void appendRecord(duckdb_appender& appender, size_t index) {
-    using ColumnType = typename std::tuple_element<CurIndex, typename DBType<T>::TupleType>::type;
+  void appendRecord(duckdb_appender& appender, size_t row) {
+    using TupleType = typename DBType<T>::TupleType;
+    using ColumnType = typename std::tuple_element<CurIndex, TupleType>::type;
+
     if constexpr (CurIndex > 0) {
-      appendRecord<CurIndex - 1>(appender, index - 1);
+      appendRecord<CurIndex - 1>(appender, row);
     }
+
     if constexpr (std::is_integral_v<ColumnType>) {
-      appendVal(appender, OffsetVals[index]);
+      const size_t slot = row * numNonBinaryCols<TupleType>() + nonBinaryColIndex<TupleType, CurIndex>();
+      appendVal(appender, OffsetVals[slot]);
     }
-    else if constexpr (std::is_convertible_v<ColumnType, std::string>){
-      appendVal(appender, Buf.data() + OffsetVals[index]);
+    else if constexpr (std::is_convertible_v<ColumnType, std::string>) {
+      const size_t slot = row * numNonBinaryCols<TupleType>() + nonBinaryColIndex<TupleType, CurIndex>();
+      appendVal(appender, Buf.data() + OffsetVals[slot]);
     }
   }
 
   size_t copyToDB(duckdb_appender& appender) {
-    size_t index = 0;
-    for (size_t i = 0; i < NumRows; ++i) {
+    for (size_t row = 0; row < NumRows; ++row) {
       duckdb_appender_begin_row(appender);
-
-      appendRecord<DBType<T>::NumCols - 1>(appender, index + DBType<T>::NumCols - 1);
-
+      appendRecord<DBType<T>::NumCols - 1>(appender, row);
       duckdb_appender_end_row(appender);
-      index += DBType<T>::NumCols;
     }
     return NumRows;
   }
