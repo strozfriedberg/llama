@@ -105,7 +105,7 @@ typedef struct {
     const char*   file_signature;  /* NULL if no signature matched */
     uint64_t      inode_addr;
     uint64_t      file_size;
-    const char*   sha256;          /* hex-encoded SHA-256 hash, always set */
+    uint8_t       sha256[32];      /* Always populated; the host guarantees SHA-256 is computed for every dispatched inode. */
     const char*   path;            /* full path including filename, or NULL */
     LlamaReadSeek readseek;
 } LlamaFileContext;
@@ -119,7 +119,7 @@ Per-file context passed to `llama_plugin_process()`. Fields:
 | `file_signature` | Name of the first matched file signature (e.g., `"SQLite Database"`), or `NULL` if no signature matched. |
 | `inode_addr`     | The filesystem inode address (metadata address) of the file.   |
 | `file_size`      | Total size of the file in bytes.                               |
-| `sha256`         | Hex-encoded SHA-256 hash of the file. Always set (never `NULL`). Useful as a primary key for database inserts. |
+| `sha256`         | Raw 32-byte SHA-256 digest. Always populated; the host guarantees SHA-256 is computed for every dispatched inode. |
 | `path`           | Full filesystem path including the filename (e.g., `"/Users/evidence/Documents/report.docx"`), or `NULL` for orphan inodes with no directory entry. Plugins can extract just the filename via their language's path utilities if needed. |
 | `readseek`       | I/O vtable for reading the file's content.                     |
 
@@ -599,7 +599,7 @@ pub struct LlamaFileContext {
     pub file_signature: *const c_char,
     pub inode_addr: u64,
     pub file_size: u64,
-    pub sha256: *const c_char,
+    pub sha256: [u8; 32],
     pub path: *const c_char,
     pub readseek: LlamaReadSeek,
 }
