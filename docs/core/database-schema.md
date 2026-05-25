@@ -6,7 +6,7 @@ Llama exports its results to a DuckDB database (and, optionally, parquet files f
 
 A single forensic run frequently spans **multiple evidence images**, and a single image often contains **multiple filesystems**. The natural per-filesystem inode address (`MetaAddr`) is only unique within its filesystem — across two NTFS partitions, MFT entry 5 means two different files. Joining tables on those integers silently merges unrelated records when more than one filesystem is in play, which masks real findings and produces false ones.
 
-Llama solves this by giving every inode a **64-character lowercase hex identity hash** (`inode.Id`) that is globally unique across all filesystems in all images in a run. Every foreign-key column referencing an inode is a string FK against `inode.Id`, not the per-filesystem integer.
+Llama solves this by giving every inode a **32-byte binary identity hash** (`inode.Id`, stored as `BLOB`) that is globally unique across all filesystems in all images in a run. Every foreign-key column referencing an inode is a BLOB FK against `inode.Id`, not the per-filesystem integer.
 
 ## The identity hash
 
@@ -14,7 +14,7 @@ Llama solves this by giving every inode a **64-character lowercase hex identity 
 inode.Id = SHA256_field_hash(EvidenceFileName, FsByteOffset, Addr, SeqNum)
 ```
 
-The four inputs together pin a specific inode incarnation: which evidence file it lives in, which filesystem within that image (the FS's byte offset), which inode slot (`Addr`), and which generation of that slot (`SeqNum`). The SeqNum component matters because filesystems reuse inode slots — when a file is deleted and the slot is later reallocated, the new file has the same `Addr` but a different `SeqNum`. A stale dirent pointing to the deleted file's `(Addr, oldSeqNum)` produces a different `inode.Id` than the new file's `(Addr, newSeqNum)`, so the dirent correctly resolves to nothing instead of falsely matching the new file.
+The result is stored as a raw 32-byte `BLOB` (not hex text). The four inputs together pin a specific inode incarnation: which evidence file it lives in, which filesystem within that image (the FS's byte offset), which inode slot (`Addr`), and which generation of that slot (`SeqNum`). The SeqNum component matters because filesystems reuse inode slots — when a file is deleted and the slot is later reallocated, the new file has the same `Addr` but a different `SeqNum`. A stale dirent pointing to the deleted file's `(Addr, oldSeqNum)` produces a different `inode.Id` than the new file's `(Addr, newSeqNum)`, so the dirent correctly resolves to nothing instead of falsely matching the new file.
 
 The hash is computed once per inode in `TskReader::addToBatch` and is the canonical reference everywhere else.
 
@@ -57,7 +57,7 @@ Operational / diagnostic tables:
 
 Plugin-defined tables: when llama loads a plugin that declares additional tables, those appear at runtime alongside the core schema. See [`plugin-development.md`](plugin-development.md) for the plugin table contract.
 
-`MetaAddr`, `ParentAddr`, `MetaSeq`, `ParentSeq` are still emitted on `dirent` as integer columns for human readability and for filtering, but **do not use them as join keys** in multi-image or multi-filesystem queries — use the string FK columns.
+`MetaAddr`, `ParentAddr`, `MetaSeq`, `ParentSeq` are still emitted on `dirent` as integer columns for human readability and for filtering, but **do not use them as join keys** in multi-image or multi-filesystem queries — use the BLOB FK columns.
 
 ## Orphans and stale references
 
@@ -70,7 +70,48 @@ Both are forensically interesting and the schema preserves the distinction by *n
 
 ## PosixReader caveat
 
-When llama walks a live filesystem via `PosixReader` (rather than a forensic image via TSK), it does **not** currently compute `inode.Id` — the field is emitted as an empty string, and so are `extents.InodeId`. The TODO at `src/posixreader.cpp:131` documents how to wire it up when PosixReader is revisited. Until then, treat PosixReader-produced rows as un-joinable on the new FKs.
+When llama walks a live filesystem via `PosixReader` (rather than a forensic image via TSK), it does **not** currently compute `inode.Id` — the field is emitted as a zero-length BLOB, and so are `extents.InodeId`. The TODO at `src/posixreader.cpp:131` documents how to wire it up when PosixReader is revisited. Until then, treat PosixReader-produced rows as un-joinable on the new FKs.
+
+## Working with BLOB hash columns
+
+DuckDB BLOB columns store raw bytes. For lookups by a known hex hash,
+use `unhex()`:
+
+```sql
+SELECT * FROM hash
+WHERE SHA256 = unhex('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+```
+
+For human-readable output, hex-encode with `lower(hex(...))`:
+
+```sql
+SELECT lower(hex(SHA256)) AS sha256_hex FROM hash;
+```
+
+BLOB↔BLOB joins (the FK pattern across `inode.Id`, `dirent.MetaId`,
+etc.) work transparently — equality is bytewise.
+
+The following columns are `BLOB`:
+
+| Table           | Column(s)                                 | Notes                          |
+| --------------- | ----------------------------------------- | ------------------------------ |
+| `inode`         | `Id`                                      | 32-byte identity hash; NOT NULL |
+| `dirent`        | `Id`, `MetaId`, `ParentId`                |                                |
+| `extents`       | `InodeId`                                 |                                |
+| `filesystems`   | `RootInodeId`, `RootDirentId`             |                                |
+| `hash`          | `InodeId`, `MD5`, `SHA1`, `SHA256`, `Blake3` | MD5/SHA1/SHA256/Blake3 nullable; InodeId NOT NULL |
+| `rule_hits`     | `inode_id`                                |                                |
+| `search_hits`   | `file_hash`                               |                                |
+| `file_signatures` | `FileHash`                              |                                |
+
+Columns **not** migrated to BLOB (remain VARCHAR):
+
+| Table            | Column              | Reason                                         |
+| ---------------- | ------------------- | ---------------------------------------------- |
+| `hash`           | `Ssdeep`            | Fuzzy-hash text; `""` when absent              |
+| `evidence_files` | `VerificationHash`  | Out of scope per spec non-goals; not FK-joined |
+| `rules`          | `id`                | Content hash of rule body (string PK)          |
+| `signatures`     | `Id`                | Content hash of signature definition (string PK) |
 
 ## Example queries
 
@@ -80,7 +121,7 @@ All examples assume the parquet files have been exported via `EXPORT DATABASE` o
 
 ```sql
 SELECT i.EvidenceFileName, d.Path || d.Name AS FullPath,
-       i.Filesize, h.SHA256
+       i.Filesize, lower(hex(h.SHA256)) AS sha256_hex
 FROM dirent d
 JOIN inode i ON d.MetaId = i.Id
 LEFT JOIN hash h ON d.MetaId = h.InodeId
@@ -90,7 +131,8 @@ WHERE i.Type = 'File';
 **2. Cross-image deduplication: same SHA256 in multiple images**
 
 ```sql
-SELECT h.SHA256, COUNT(DISTINCT i.EvidenceFileName) AS image_count,
+SELECT lower(hex(h.SHA256)) AS sha256_hex,
+       COUNT(DISTINCT i.EvidenceFileName) AS image_count,
        LIST(DISTINCT i.EvidenceFileName) AS images
 FROM hash h
 JOIN inode i ON h.InodeId = i.Id
@@ -128,7 +170,8 @@ LEFT JOIN inode i ON rh.inode_id = i.Id;
 **6. All files matching a signature (e.g., every PDF across all images)**
 
 ```sql
-SELECT i.EvidenceFileName, d.Path || d.Name AS FullPath, h.SHA256
+SELECT i.EvidenceFileName, d.Path || d.Name AS FullPath,
+       lower(hex(h.SHA256)) AS sha256_hex
 FROM file_signatures fs
 JOIN signatures s ON fs.SigId = s.Id
 JOIN hash h ON fs.FileHash = h.SHA256
