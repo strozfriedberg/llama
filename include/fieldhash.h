@@ -1,15 +1,16 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 
 #include "hex.h"
 
 struct FieldHash {
-  uint8_t hash[32];
+  std::array<uint8_t, 32> hash;
 
   bool operator==(const FieldHash& other) const {
-    return std::equal(hash, hash + sizeof(hash), other.hash);
+    return hash == other.hash;
   }
 
   bool operator!=(const FieldHash& other) const {
@@ -17,7 +18,6 @@ struct FieldHash {
   }
 
   std::string to_string() const {
-    return hexEncode(hash, 32);
+    return hexEncode(hash.data(), hash.size());
   }
 };
-

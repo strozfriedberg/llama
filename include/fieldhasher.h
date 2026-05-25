@@ -61,6 +61,11 @@ public:
     hash_it(std::begin(a), std::end(a));
   }
 
+  template <typename T, size_t N>
+  void hash_it(const std::array<T, N>& a) {
+    hash_it(a.data(), a.data() + a.size());
+  }
+
   void hash_it(const char* s);
 
   void hash_it(const std::string& s);
