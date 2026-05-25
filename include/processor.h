@@ -14,6 +14,8 @@
 #include "tsk.h"
 #include <lightgrep/search_hit.h>
 
+#include <array>
+#include <cstdint>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -77,7 +79,7 @@ public:
   void addToSearchHitBatch(const LG_SearchHit* const hit);
 
   // for testing purposes
-  void setSHA256(const std::string& hash) { HashRecord.SHA256 = hash; }
+  void setSHA256(const std::array<uint8_t, 32>& hash) { HashRecord.SHA256 = hash; }
 
   DBBatch<SearchHit>* searchHits() { return SearchHits.get(); }
   HashBatch* hashBatch() { return Hashes.get(); }

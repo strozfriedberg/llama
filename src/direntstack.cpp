@@ -31,15 +31,15 @@ Dirent DirentStack::pop() {
   Stack.pop();
 
   // hash the dirent record (existing behavior — drives dirent.Id)
-  rec.Id = RecHasher.hashDirent(rec).to_string();
+  rec.Id = RecHasher.hashDirent(rec).hash;
 
   // compute inode FK hashes via the shared identity helper, using
   // the per-FS context set by setFsContext.
   rec.MetaId = RecHasher.hashInodeIdentity(
-    CurEvidenceFileName, CurFsByteOffset, rec.MetaAddr, rec.MetaSeq).to_string();
+    CurEvidenceFileName, CurFsByteOffset, rec.MetaAddr, rec.MetaSeq).hash;
 
   rec.ParentId = RecHasher.hashInodeIdentity(
-    CurEvidenceFileName, CurFsByteOffset, rec.ParentAddr, rec.ParentSeq).to_string();
+    CurEvidenceFileName, CurFsByteOffset, rec.ParentAddr, rec.ParentSeq).hash;
 
   return rec;
 }

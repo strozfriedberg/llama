@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <string>
 
@@ -95,8 +96,8 @@ struct FilesystemRec {
   uint64_t    JournalInum;
   uint64_t    RootInum;
   uint64_t    NumInums;
-  std::string RootDirentId;
-  std::string RootInodeId;
+  std::array<uint8_t, 32> RootDirentId;
+  std::array<uint8_t, 32> RootInodeId;
 };
 
 using FilesystemBatch = DBBatch<FilesystemRec>;

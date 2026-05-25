@@ -35,7 +35,7 @@ int main() {
         .PhysicalEnd = 102400,
         .LogicalStart = 0,
         .LogicalEnd = 102400,
-        .InodeId = "",
+        .InodeId = {},
         .Path = "/test/file1.txt",
         .Flags = "",
         .Source = "filesystem"
@@ -47,7 +47,7 @@ int main() {
         .PhysicalEnd = 153600,
         .LogicalStart = 0,
         .LogicalEnd = 51200,
-        .InodeId = "",
+        .InodeId = {},
         .Path = "/test/file2.txt",
         .Flags = "",
         .Source = "filesystem"
@@ -59,7 +59,7 @@ int main() {
         .PhysicalEnd = 122880,
         .LogicalStart = 0,
         .LogicalEnd = 20480,
-        .InodeId = "",
+        .InodeId = {},
         .Path = "/test/file3.txt",
         .Flags = "SHARED",
         .Source = "filesystem"
@@ -71,7 +71,7 @@ int main() {
         .PhysicalEnd = 409600,
         .LogicalStart = 0,
         .LogicalEnd = 204800,
-        .InodeId = "",
+        .InodeId = {},
         .Path = "/test/largefile.dat",
         .Flags = "",
         .Source = "filesystem"

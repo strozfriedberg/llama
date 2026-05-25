@@ -8,6 +8,7 @@
 #include <lightgrep/api.h>
 
 #include <algorithm>
+#include <cstring>
 
 #include "blocksequence.h"
 #include "entry.h"
@@ -159,7 +160,7 @@ void Processor::process(Entry& entry) {
       entry.getStream().seek(0);
       SigAnalyzer.getSignatures(entry.getStream(), sigResults);
       for (const auto& sig : sigResults) {
-        FileSigs->add(FileSigResult{HashRecord.SHA256, sig->Id});
+        FileSigs->add(FileSigResult{*HashRecord.SHA256, sig->Id});
       }
     } catch (const EvidenceIOError& e) {
       logException(entry, "signature", e.what());
@@ -174,7 +175,8 @@ void Processor::process(Entry& entry) {
     pluginCtx.file_signature = sigName;
     pluginCtx.inode_addr = entry.Addr;
     pluginCtx.file_size = entry.FileSize;
-    pluginCtx.sha256 = HashRecord.SHA256.c_str();
+    // SHA-256 is unconditionally enabled by getSupportedHashAlgsFromContext(), so SHA256 always has a value here.
+    std::memcpy(pluginCtx.sha256, HashRecord.SHA256->data(), 32);
     pluginCtx.path = entry.Path.empty() ? nullptr : entry.Path.c_str();
     pluginCtx.readseek = wrapReadSeek(&entry.getStream());
 
@@ -293,7 +295,7 @@ void handleSearchHit(void* userData, const LG_SearchHit* const hit) {
 void Processor::addToSearchHitBatch(const LG_SearchHit* const hit) {
   LG_PatternInfo* info = lg_prog_pattern_info(Context->Prog.get(), hit->KeywordIndex);
   std::string pat(info->Pattern);
-  SearchHits->add(SearchHit{pat, hit->Start, hit->End, Context->RuleEngine->patternToRuleId()[hit->KeywordIndex], HashRecord.SHA256, hit->End - hit->Start});
+  SearchHits->add(SearchHit{pat, hit->Start, hit->End, Context->RuleEngine->patternToRuleId()[hit->KeywordIndex], *HashRecord.SHA256, hit->End - hit->Start});
 }
 
 void Processor::search(ReadSeek& rs) {

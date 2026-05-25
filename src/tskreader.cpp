@@ -149,7 +149,7 @@ bool TskReader::addToBatch(TSK_FS_FILE* fs_file, const char* path) {
     TskUtils::convertMetaToInode(meta, *Tsg, inode);
     inode.EvidenceFileName = EvidenceFileName;
     inode.ByteOffset = CurFsOffset;
-    inode.Id = RecHasher.hashInode(inode).to_string();
+    inode.Id = RecHasher.hashInode(inode).hash;
 
     if (meta.addr == fs_file->fs_info->root_inum) {
       Asm.setCurrentRootInodeId(inode.Id);

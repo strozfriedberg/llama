@@ -9,6 +9,7 @@
 #include "entry.h"
 #include "arrow/c/abi.h"
 
+#include <cstring>
 #include <filesystem>
 
 static void noop_schema_release(struct ArrowSchema*) {}
@@ -86,7 +87,8 @@ TEST_CASE("testPluginManagerProcessFile") {
   ctx.file_signature = "SQLite Database";
   ctx.inode_addr = 42;
   ctx.file_size = content.size();
-  ctx.sha256 = "abc123";
+  std::memset(ctx.sha256, 0, sizeof(ctx.sha256));
+  std::memcpy(ctx.sha256, "abc123", 6);
   ctx.path = "/evidence/test.db";
   ctx.readseek = wrapReadSeek(&rs);
 
@@ -123,7 +125,8 @@ TEST_CASE("testPluginManagerProcessFileNoMatch") {
   ctx.file_signature = "Plain Text";
   ctx.inode_addr = 99;
   ctx.file_size = content.size();
-  ctx.sha256 = "def456";
+  std::memset(ctx.sha256, 0, sizeof(ctx.sha256));
+  std::memcpy(ctx.sha256, "def456", 6);
   ctx.path = "/evidence/readme.txt";
   ctx.readseek = wrapReadSeek(&rs);
 
@@ -161,7 +164,8 @@ TEST_CASE("testPluginErrorReporting") {
   ctx.file_signature = nullptr;
   ctx.inode_addr = 1;
   ctx.file_size = content.size();
-  ctx.sha256 = "aaa111";
+  std::memset(ctx.sha256, 0, sizeof(ctx.sha256));
+  std::memcpy(ctx.sha256, "aaa111", 6);
   ctx.path = nullptr;
   ctx.readseek = wrapReadSeek(&rs);
 
@@ -206,7 +210,8 @@ TEST_CASE("testPluginContinuesAfterError") {
   ctx.file_signature = nullptr;
   ctx.inode_addr = 1;
   ctx.file_size = content.size();
-  ctx.sha256 = "bbb222";
+  std::memset(ctx.sha256, 0, sizeof(ctx.sha256));
+  std::memcpy(ctx.sha256, "bbb222", 6);
   ctx.path = nullptr;
   ctx.readseek = wrapReadSeek(&rs);
 

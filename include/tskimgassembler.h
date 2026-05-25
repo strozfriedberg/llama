@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -30,7 +31,7 @@ public:
                      uint64_t journalInum, uint64_t rootInum,
                      uint64_t numInums);
 
-  void setCurrentRootInodeId(const std::string& id);
+  void setCurrentRootInodeId(const std::array<uint8_t, 32>& id);
 
   const EvidenceFileRec& evidenceFile() const { return Evidence; }
   const std::vector<VolumeRec>& volumes() const { return Volumes; }

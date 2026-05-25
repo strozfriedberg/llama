@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+#include <cstdint>
 #include <string>
 
 #include <duckdb.h>
@@ -21,7 +23,7 @@ struct Dirent
                                     "MetaId",
                                     "ParentId"};
 
-  std::string Id;
+  std::array<uint8_t, 32> Id;
   std::string Path;
   std::string Name;
   std::string ShortName;
@@ -34,8 +36,8 @@ struct Dirent
   uint64_t MetaSeq;
   uint64_t ParentSeq;
 
-  std::string MetaId;
-  std::string ParentId;
+  std::array<uint8_t, 32> MetaId;
+  std::array<uint8_t, 32> ParentId;
 };
 
 using DirentBatch = DBBatch<Dirent>;

@@ -14,6 +14,8 @@
 
 #include <duckdb.h>
 
+#include <array>
+#include <cstdint>
 #include <tuple>
 
 TEST_CASE("testDuckDBVersion") {
@@ -51,7 +53,9 @@ TEST_CASE("TestMakeDuckDB") {
     batch.add(dirent);
   }
   REQUIRE(batch.size() == dirents.size());
-  REQUIRE(batch.Buf.size() == 95);
+  // 5 strings per Dirent (Path, Name, ShortName, Type, Flags), each NUL-terminated.
+  // Id, MetaId, ParentId are now binary columns and live in BinaryBuf.
+  REQUIRE(batch.Buf.size() == 86);
 
   LlamaDBAppender appender(conn.get(), "dirent"); // need an appender object, too, which also doesn't jibe with smart pointers, and destroy must be called even if create returns an error
   // REQUIRE(state != DuckDBError);
@@ -191,8 +195,12 @@ TEST_CASE("inodeWriting") {
   static_assert(DuckInode::colIndex("Modified") == 14);
   REQUIRE(DuckInode::createTable(conn.get(), "inode"));
 
-  Inode i1{"id 1", "File", "Allocated", 16, "laptop.E01", 32768, 12345, 500, 1000, "", 1, 37, "1978-04-01 12:32:25", "2024-08-22 14:45:00", "2024-08-22 22:42:23", "2024-07-13 02:12:59"};
-  Inode i2{"id 2", "File", "Deleted", 17, "laptop.E01", 32768, 987654321098765432u, 501, 1001, "", 2, 38, "1978-04-01 12:32:25", "2024-08-22 14:45:00", "2024-08-22 22:42:23", "2024-07-13 02:12:59"};
+  std::array<uint8_t, 32> inodeId1{};
+  inodeId1[0] = 0x01;
+  std::array<uint8_t, 32> inodeId2{};
+  inodeId2[0] = 0x02;
+  Inode i1{inodeId1, "File", "Allocated", 16, "laptop.E01", 32768, 12345, 500, 1000, "", 1, 37, "1978-04-01 12:32:25", "2024-08-22 14:45:00", "2024-08-22 22:42:23", "2024-07-13 02:12:59"};
+  Inode i2{inodeId2, "File", "Deleted", 17, "laptop.E01", 32768, 987654321098765432u, 501, 1001, "", 2, 38, "1978-04-01 12:32:25", "2024-08-22 14:45:00", "2024-08-22 22:42:23", "2024-07-13 02:12:59"};
 
   InodeBatch batch;
   batch.add(i1);
@@ -227,7 +235,9 @@ TEST_CASE("inodeWriting") {
   REQUIRE(std::string("Metadata") == duckdb_column_name(&result, i));
   duckdb_destroy_result(&result);
 
-  state = duckdb_query(conn.get(), "SELECT * FROM inode WHERE inode.id = 'id 1';", &result);
+  const std::string idHex = "01" + std::string(62, '0');
+  const std::string qInode = "SELECT * FROM inode WHERE inode.Id = unhex('" + idHex + "');";
+  state = duckdb_query(conn.get(), qInode.c_str(), &result);
   CHECK(state != DuckDBError);
   CHECK(duckdb_row_count(&result) == 1);
   duckdb_destroy_result(&result);
@@ -242,8 +252,23 @@ TEST_CASE("testDuckHash") {
   static_assert(DuckHashRec::ColNames.size() == 6);
   REQUIRE(DuckHashRec::createTable(conn.get(), "hash"));
 
-  HashRec h1{"id_1", "an md5", "a sha1", "a sha256", "a blake3", "an ssdeep"};
-  HashRec h2{"id_2", "another md5", "another sha1", "another sha256", "another blake3", "another ssdeep"};
+  std::array<uint8_t, 32> id1{};
+  id1[0] = 0x01;
+  std::array<uint8_t, 32> id2{};
+  id2[0] = 0x02;
+
+  HashRec h1{};
+  h1.InodeId = id1;
+  h1.MD5    = std::array<uint8_t, 16>{0x10};
+  h1.SHA1   = std::array<uint8_t, 20>{0x11};
+  h1.SHA256 = std::array<uint8_t, 32>{0x12};
+  h1.Blake3 = std::array<uint8_t, 32>{0x13};
+  h1.Ssdeep = "an ssdeep";
+
+  HashRec h2{};
+  h2.InodeId = id2;
+  // Leave optionals as std::nullopt to exercise the NULL path.
+  h2.Ssdeep = "another ssdeep";
 
   HashBatch batch;
   batch.add(h1);
@@ -269,10 +294,29 @@ TEST_CASE("testDuckHash") {
   REQUIRE(std::string("Ssdeep") == duckdb_column_name(&result, i));
   duckdb_destroy_result(&result);
 
-  state = duckdb_query(conn.get(), "SELECT * FROM hash WHERE hash.inodeid = 'id_1';", &result);
+  // Round-trip: byte-length of each binary column should match the typed width.
+  state = duckdb_query(conn.get(),
+    "SELECT octet_length(InodeId), octet_length(MD5), octet_length(SHA1), "
+    "octet_length(SHA256), octet_length(Blake3) FROM hash ORDER BY Ssdeep;",
+    &result);
   CHECK(state != DuckDBError);
-  CHECK(duckdb_result_error(&result) == nullptr);
-  CHECK(duckdb_row_count(&result) == 1);
+  CHECK(duckdb_row_count(&result) == 2);
+  // Row 0: h1 (all optionals populated). "an ssdeep" sorts before "another ssdeep".
+  REQUIRE(duckdb_value_int64(&result, 0, 0) == 32);
+  REQUIRE(duckdb_value_int64(&result, 1, 0) == 16);
+  REQUIRE(duckdb_value_int64(&result, 2, 0) == 20);
+  REQUIRE(duckdb_value_int64(&result, 3, 0) == 32);
+  REQUIRE(duckdb_value_int64(&result, 4, 0) == 32);
+  // Row 1: h2 with NULL optionals — only InodeId is present.
+  REQUIRE(duckdb_value_int64(&result, 0, 1) == 32);
+  duckdb_destroy_result(&result);
+
+  // Filter by binary InodeId. Use unhex on a literal so it stays at the SQL layer.
+  const std::string idHex = "01" + std::string(62, '0');
+  const std::string q = "SELECT count(*) FROM hash WHERE hash.InodeId = unhex('" + idHex + "');";
+  state = duckdb_query(conn.get(), q.c_str(), &result);
+  CHECK(state != DuckDBError);
+  CHECK(duckdb_value_int64(&result, 0, 0) == 1);
   duckdb_destroy_result(&result);
 }
 
@@ -297,7 +341,7 @@ TEST_CASE("ExtentBatch can add and retrieve extents", "[duckdb]") {
         .PhysicalEnd = 2000,
         .LogicalStart = 0,
         .LogicalEnd = 1000,
-        .InodeId = "",
+        .InodeId = {},
         .Path = "/test.txt",
         .Flags = "SHARED",
         .Source = "filesystem"
@@ -454,8 +498,8 @@ TEST_CASE("filesystemRecTableCreation") {
   rec.JournalInum = 0;
   rec.RootInum = 5;
   rec.NumInums = 65536;
-  rec.RootDirentId = "";
-  rec.RootInodeId = "";
+  rec.RootDirentId = {};
+  rec.RootInodeId = {};
 
   DBBatch<FilesystemRec> batch;
   batch.add(rec);

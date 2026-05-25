@@ -86,8 +86,8 @@ void TskImgAssembler::addFileSystem(uint64_t byteOffset, const std::string& type
   fs.JournalInum = journalInum;
   fs.RootInum = rootInum;
   fs.NumInums = numInums;
-  fs.RootDirentId = "";
-  fs.RootInodeId = "";
+  fs.RootDirentId = {};
+  fs.RootInodeId = {};
 
   if (State == IMG) {
     fs.VolumeAddr = 0;
@@ -108,9 +108,9 @@ void TskImgAssembler::addFileSystem(uint64_t byteOffset, const std::string& type
   Filesystems.push_back(std::move(fs));
 }
 
-void TskImgAssembler::setCurrentRootInodeId(const std::string& id) {
+void TskImgAssembler::setCurrentRootInodeId(const std::array<uint8_t, 32>& id) {
   THROW_IF(Filesystems.empty(), "setCurrentRootInodeId called before addFileSystem");
-  if (Filesystems.back().RootInodeId.empty()) {
+  if (Filesystems.back().RootInodeId == std::array<uint8_t, 32>{}) {
     Filesystems.back().RootInodeId = id;
   }
 }

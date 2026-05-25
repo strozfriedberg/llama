@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <string>
 
@@ -22,7 +23,7 @@ struct Inode {
                                     "Modified",
                                     "Metadata"};
 
-  std::string Id;
+  std::array<uint8_t, 32> Id;
 
   std::string Type;
   std::string Flags;

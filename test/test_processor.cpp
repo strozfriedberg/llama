@@ -16,12 +16,24 @@
 
 #include <hasher/api.h>
 
+#include <array>
+#include <cstdint>
 #include <iostream>
 #include <fstream>
 #include <thread>
 #include <vector>
 
 #include "boost_asio.h"
+
+namespace {
+  // Fixed 32-byte SHA-256 sentinel for tests that inject a known hash.
+  // First byte 0xfa, rest 0x00 — matches Proc.setSHA256 below.
+  inline std::array<uint8_t, 32> fakeFileHash() {
+    std::array<uint8_t, 32> v{};
+    v[0] = 0xfa;
+    return v;
+  }
+}
 
 TEST_CASE("testBoostThreadPool") {
   unsigned int count = 0;
@@ -40,7 +52,7 @@ class ProcessorSearchTester {
 public:
   ProcessorSearchTester(std::string needle, std::string haystack, uint64_t numExpectedHits) 
   : RuleEngine(new LlamaRuleEngine()), RsBuf(haystack), Db(), DbConn(Db), Proc(createProcessor(needle)) {
-    Proc.setSHA256("file_hash");
+    Proc.setSHA256(fakeFileHash());
     RuleEngine->setPatternToRuleId(std::vector<std::string>(numExpectedHits, "rule_id"));
   }
 
@@ -111,7 +123,7 @@ TEST_CASE("testBasicOneHitSearch") {
   std::string haystack = "this is so foobar";
 
   std::vector<SearchHit> expectedHits = {
-    SearchHit{"foobar", 11, 17, "rule_id", "file_hash", 6}
+    SearchHit{"foobar", 11, 17, "rule_id", fakeFileHash(), 6}
   };
 
   ProcessorSearchTester pst{needle, haystack, expectedHits.size()};
@@ -133,7 +145,7 @@ TEST_CASE("testSearchThatSpansMultipleBuffers") {
   CHECK(hitLength == haystack.size());
 
   std::vector<SearchHit> expectedHits = {
-    SearchHit{needle, 0, hitLength, "rule_id", "file_hash", hitLength}
+    SearchHit{needle, 0, hitLength, "rule_id", fakeFileHash(), hitLength}
   };
 
   ProcessorSearchTester pst{needle, haystack, expectedHits.size()};
@@ -149,9 +161,9 @@ TEST_CASE("testSearchWithMultipleHits") {
   std::string haystack = "foo is foobar is foobaz";
 
   std::vector<SearchHit> expectedHits{
-    SearchHit{"foo", 0, 3, "rule_id", "file_hash", 3},
-    SearchHit{"foo", 7, 10, "rule_id", "file_hash", 3},
-    SearchHit{"foo", 17, 20, "rule_id", "file_hash", 3},
+    SearchHit{"foo", 0, 3, "rule_id", fakeFileHash(), 3},
+    SearchHit{"foo", 7, 10, "rule_id", fakeFileHash(), 3},
+    SearchHit{"foo", 17, 20, "rule_id", fakeFileHash(), 3},
   };
 
   ProcessorSearchTester pst(needle, haystack, expectedHits.size());
@@ -236,13 +248,25 @@ TEST_CASE("Processor::flush clears batches to prevent duplicates") {
   );
   Processor proc(procContext);
 
+  auto makeHashRec = [](uint8_t i, const char* ssdeep) {
+    HashRec h{};
+    h.InodeId = {};
+    h.InodeId[0] = i;
+    h.MD5    = std::array<uint8_t, 16>{i};
+    h.SHA1   = std::array<uint8_t, 20>{i};
+    h.SHA256 = std::array<uint8_t, 32>{i};
+    h.Blake3 = std::array<uint8_t, 32>{i};
+    h.Ssdeep = ssdeep;
+    return h;
+  };
+
   // First batch: add 2 hash records and flush
-  proc.hashBatch()->add(HashRec{"id_1", "md5_1", "sha1_1", "sha256_1", "blake3_1", "ssdeep_1"});
-  proc.hashBatch()->add(HashRec{"id_2", "md5_2", "sha1_2", "sha256_2", "blake3_2", "ssdeep_2"});
+  proc.hashBatch()->add(makeHashRec(0x01, "ssdeep_1"));
+  proc.hashBatch()->add(makeHashRec(0x02, "ssdeep_2"));
   proc.flush();
 
   // Second batch: add 1 more hash record and flush (same Processor, reused)
-  proc.hashBatch()->add(HashRec{"id_3", "md5_3", "sha1_3", "sha256_3", "blake3_3", "ssdeep_3"});
+  proc.hashBatch()->add(makeHashRec(0x03, "ssdeep_3"));
   proc.flush();
 
   // Query the database for total hash row count
@@ -314,41 +338,46 @@ TEST_CASE("processBatch sorts entries by DiskOffset for sequential I/O") {
   // Each entry gets a unique Addr so we can verify order from hash table
   auto entries = std::make_shared<std::vector<std::unique_ptr<Entry>>>();
 
+  std::array<uint8_t, 32> id100{}; id100[0] = 100;
+  std::array<uint8_t, 32> id200{}; id200[0] = 200;
+  std::array<uint8_t, 32> id300{}; id300[0] = 44; // arbitrary sentinel != 100/200
+
   auto e1 = std::make_unique<Entry>(100, std::make_unique<ReadSeekBuf>("aaa"));
   e1->DiskOffset = 3000;
-  e1->InodeId = "id_100";
+  e1->InodeId = id100;
   entries->push_back(std::move(e1));
 
   auto e2 = std::make_unique<Entry>(200, std::make_unique<ReadSeekBuf>("bbb"));
   e2->DiskOffset = 1000;
-  e2->InodeId = "id_200";
+  e2->InodeId = id200;
   entries->push_back(std::move(e2));
 
   auto e3 = std::make_unique<Entry>(300, std::make_unique<ReadSeekBuf>("ccc"));
   e3->DiskOffset = 2000;
-  e3->InodeId = "id_300";
+  e3->InodeId = id300;
   entries->push_back(std::move(e3));
 
   proc.processBatch(entries);
 
-  // Query the hash table; rows are inserted in processing order
+  // Query the hash table; rows are inserted in processing order. Read each
+  // InodeId BLOB and check its first byte to confirm ordering.
   duckdb_result result;
   duckdb_query(conn.get(), "SELECT InodeId FROM hash", &result);
   auto rowCount = duckdb_row_count(&result);
   REQUIRE(rowCount == 3);
 
+  auto firstByte = [&](uint64_t row) -> uint8_t {
+    auto blob = duckdb_value_blob(&result, 0, row);
+    REQUIRE(blob.size >= 1);
+    uint8_t b = static_cast<const uint8_t*>(blob.data)[0];
+    duckdb_free(blob.data);
+    return b;
+  };
+
   // If sorted by DiskOffset, processing order should be: 1000, 2000, 3000
-  // which corresponds to InodeId values: id_200, id_300, id_100
-  auto* s0 = duckdb_value_varchar(&result, 0, 0);
-  REQUIRE(std::string(s0) == "id_200");
-  duckdb_free(s0);
-
-  auto* s1 = duckdb_value_varchar(&result, 0, 1);
-  REQUIRE(std::string(s1) == "id_300");
-  duckdb_free(s1);
-
-  auto* s2 = duckdb_value_varchar(&result, 0, 2);
-  REQUIRE(std::string(s2) == "id_100");
-  duckdb_free(s2);
+  // which corresponds to InodeId sentinels: id200, id300, id100.
+  REQUIRE(firstByte(0) == 200);
+  REQUIRE(firstByte(1) == 44);
+  REQUIRE(firstByte(2) == 100);
   duckdb_destroy_result(&result);
 }

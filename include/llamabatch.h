@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+#include <cstdint>
 #include <string>
 
 #include <duckdb.h>
@@ -24,7 +26,7 @@ struct RuleMatch {
   std::string id;
   std::string path;
   std::string name;
-  std::string inode_id;
+  std::array<uint8_t, 32> inode_id;
 };
 
 struct SearchHit {
@@ -39,7 +41,7 @@ struct SearchHit {
   uint64_t start_offset;
   uint64_t end_offset;
   std::string rule_id;
-  std::string file_hash;
+  std::array<uint8_t, 32> file_hash;
   uint64_t length;
 };
 

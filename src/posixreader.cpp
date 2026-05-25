@@ -132,7 +132,7 @@ Inode PosixReader::statToInode(const struct stat& st, const std::string& path) {
     // When it is, populate inode.Id via RecordHasher::hashInode(inode) using
     // a meaningful (EvidenceFileName, FsByteOffset, Addr, SeqNum) tuple. See
     // docs/superpowers/specs/2026-05-23-inode-id-primary-key-design.md.
-    inode.Id = "";
+    inode.Id = {};
 
     return inode;
 }
@@ -168,7 +168,7 @@ void PosixReader::parseExtents(
         ext.LogicalEnd = fe.fe_logical + fe.fe_length;
         ext.PhysicalStart = fe.fe_physical;
         ext.PhysicalEnd = fe.fe_physical + fe.fe_length;
-        ext.InodeId = "";   // PosixReader cannot compute a real InodeId (inode.Id is left empty by design)
+        ext.InodeId = {};   // PosixReader cannot compute a real InodeId (inode.Id is left empty by design)
         ext.Path = path;
         ext.Flags = flagsToString(fe.fe_flags);
         ext.Source = "filesystem";

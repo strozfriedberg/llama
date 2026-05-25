@@ -1,15 +1,38 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include <array>
+#include <cstdint>
+#include <string>
+
 #include "direntstack.h"
 #include "fieldhash.h"
+#include "hex.h"
 #include "recordhasher.h"
 
+namespace {
+  std::array<uint8_t, 32> bytesFromHex32(const std::string& hex) {
+    std::array<uint8_t, 32> out{};
+    for (size_t i = 0; i < 32; ++i) {
+      auto hexVal = [](char c) -> uint8_t {
+        if (c >= '0' && c <= '9') return c - '0';
+        if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
+        if (c >= 'A' && c <= 'F') return 10 + (c - 'A');
+        return 0;
+      };
+      out[i] = (hexVal(hex[2 * i]) << 4) | hexVal(hex[2 * i + 1]);
+    }
+    return out;
+  }
+}
+
 std::ostream& operator<<(std::ostream& os, const Dirent& dirent) {
-  os << "{\"Id\":\"" << dirent.Id << "\", \"Path\": \"" << dirent.Path << "\", \"Name\": \"" << dirent.Name <<
+  os << "{\"Id\":\"" << hexEncode(dirent.Id.data(), dirent.Id.size())
+     << "\", \"Path\": \"" << dirent.Path << "\", \"Name\": \"" << dirent.Name <<
     "\", \"ShortName\": \"" << dirent.ShortName << "\", \"Type\": \"" << dirent.Type << "\", \"Flags\": \"" << dirent.Flags <<
     "\", \"MetaAddr\": " << dirent.MetaAddr << ", \"ParentAddr\": " << dirent.ParentAddr << ", \"MetaSeq\": " << dirent.MetaSeq <<
     ", \"ParentSeq\": " << dirent.ParentSeq <<
-    ", \"MetaId\": \"" << dirent.MetaId << "\", \"ParentId\": \"" << dirent.ParentId << "\"}";
+    ", \"MetaId\": \"" << hexEncode(dirent.MetaId.data(), dirent.MetaId.size())
+    << "\", \"ParentId\": \"" << hexEncode(dirent.ParentId.data(), dirent.ParentId.size()) << "\"}";
   return os;
 }
 
@@ -60,16 +83,16 @@ TEST_CASE("testDirentStackPushPop") {
   Dirent out = dirents.pop();
   REQUIRE(out.Path == "the name");
   REQUIRE(out.Name == "the name");
-  REQUIRE_FALSE(out.Id.empty());
-  REQUIRE(out.Id == "97ece597bbca827515097c1f8ff18ca2e4170fca28577b152ca0ae9a518b9672");
-  REQUIRE_FALSE(out.MetaId.empty());
-  REQUIRE_FALSE(out.ParentId.empty());
+  REQUIRE(out.Id != std::array<uint8_t, 32>{});
+  REQUIRE(out.Id == bytesFromHex32("97ece597bbca827515097c1f8ff18ca2e4170fca28577b152ca0ae9a518b9672"));
+  REQUIRE(out.MetaId != std::array<uint8_t, 32>{});
+  REQUIRE(out.ParentId != std::array<uint8_t, 32>{});
 
   // MetaId must equal hashInodeIdentity over the same inputs.
-  REQUIRE(out.MetaId == rh.hashInodeIdentity("disk.E01", 1048576, 100, 1).to_string());
+  REQUIRE(out.MetaId == rh.hashInodeIdentity("disk.E01", 1048576, 100, 1).hash);
 
   // ParentId likewise.
-  REQUIRE(out.ParentId == rh.hashInodeIdentity("disk.E01", 1048576, 5, 5).to_string());
+  REQUIRE(out.ParentId == rh.hashInodeIdentity("disk.E01", 1048576, 5, 5).hash);
 }
 
 TEST_CASE("testDirentStackPushPushPopPop") {
@@ -93,10 +116,10 @@ TEST_CASE("testDirentStackPushPushPopPop") {
   REQUIRE(!dirents.empty());
   REQUIRE("a/b" == dirents.top().Path);
 
-  const std::string zeroId = rh.hashInodeIdentity("", 0, 0, 0).to_string();
+  const std::array<uint8_t, 32> zeroId = rh.hashInodeIdentity("", 0, 0, 0).hash;
 
   Dirent outB(makeDirent("a/b", "b"));
-  outB.Id = "4e4a548f1801a79393f9bc25baee4c2209cfee3f558c3ca254688f147b2f6bb5";
+  outB.Id = bytesFromHex32("4e4a548f1801a79393f9bc25baee4c2209cfee3f558c3ca254688f147b2f6bb5");
   outB.MetaId = zeroId;
   outB.ParentId = zeroId;
 
@@ -106,7 +129,7 @@ TEST_CASE("testDirentStackPushPushPopPop") {
   REQUIRE("a" == dirents.top().Path);
 
   Dirent outA(makeDirent("a", "a"));
-  outA.Id = "24e3bc15a787cbd19448a7e3ea0ba762bc50115f121c8e3261dbb023c9245eea";
+  outA.Id = bytesFromHex32("24e3bc15a787cbd19448a7e3ea0ba762bc50115f121c8e3261dbb023c9245eea");
   outA.MetaId = zeroId;
   outA.ParentId = zeroId;
 
@@ -181,7 +204,7 @@ TEST_CASE("dirents popped after context flip hash under the new context") {
   a.ParentSeq = 5;
   dirents.push(std::move(a));
   Dirent outA = dirents.pop();
-  REQUIRE(outA.MetaId == rh.hashInodeIdentity("fs1.E01", 1048576, 100, 1).to_string());
+  REQUIRE(outA.MetaId == rh.hashInodeIdentity("fs1.E01", 1048576, 100, 1).hash);
 
   // Flip context now that the stack is drained.
   dirents.setFsContext("fs2.E01", 2097152);
@@ -195,6 +218,6 @@ TEST_CASE("dirents popped after context flip hash under the new context") {
   b.ParentSeq = 5;
   dirents.push(std::move(b));
   Dirent outB = dirents.pop();
-  REQUIRE(outB.MetaId == rh.hashInodeIdentity("fs2.E01", 2097152, 100, 1).to_string());
+  REQUIRE(outB.MetaId == rh.hashInodeIdentity("fs2.E01", 2097152, 100, 1).hash);
   REQUIRE(outA.MetaId != outB.MetaId);
 }

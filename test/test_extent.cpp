@@ -18,7 +18,7 @@ TEST_CASE("Extent struct can be constructed", "[extent]") {
         .PhysicalEnd = 4096,
         .LogicalStart = 0,
         .LogicalEnd = 4096,
-        .InodeId = "",
+        .InodeId = {},
         .Path = "/test/file.txt",
         .Flags = "SHARED,ENCODED",
         .Source = "filesystem"

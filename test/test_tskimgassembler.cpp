@@ -1,4 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
+#include <array>
+#include <cstdint>
 #include <stdexcept>
 
 #include "tskimgassembler.h"
@@ -97,18 +99,24 @@ TEST_CASE("testSetCurrentRootInodeId") {
                   0, 5, 100);
 
   REQUIRE(a.filesystems().size() == 1);
-  REQUIRE(a.filesystems().back().RootInodeId == "");
+  REQUIRE(a.filesystems().back().RootInodeId == std::array<uint8_t, 32>{});
 
-  a.setCurrentRootInodeId("deadbeef");
-  REQUIRE(a.filesystems().back().RootInodeId == "deadbeef");
+  std::array<uint8_t, 32> id1{};
+  id1[0] = 0xde; id1[1] = 0xad; id1[2] = 0xbe; id1[3] = 0xef;
+  a.setCurrentRootInodeId(id1);
+  REQUIRE(a.filesystems().back().RootInodeId == id1);
 
   // Second call must NOT overwrite the first (idempotent on the same FS).
-  a.setCurrentRootInodeId("cafebabe");
-  REQUIRE(a.filesystems().back().RootInodeId == "deadbeef");
+  std::array<uint8_t, 32> id2{};
+  id2[0] = 0xca; id2[1] = 0xfe; id2[2] = 0xba; id2[3] = 0xbe;
+  a.setCurrentRootInodeId(id2);
+  REQUIRE(a.filesystems().back().RootInodeId == id1);
 }
 
 TEST_CASE("testSetCurrentRootInodeIdThrowsBeforeAddFileSystem") {
   TskImgAssembler a;
   a.addImage("disk.E01", "/path/disk.E01", "ewf", "Expert Witness", 1024, 512, "");
-  CHECK_THROWS_AS(a.setCurrentRootInodeId("deadbeef"), std::runtime_error);
+  std::array<uint8_t, 32> id{};
+  id[0] = 0xde; id[1] = 0xad; id[2] = 0xbe; id[3] = 0xef;
+  CHECK_THROWS_AS(a.setCurrentRootInodeId(id), std::runtime_error);
 }

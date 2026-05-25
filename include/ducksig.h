@@ -1,5 +1,8 @@
 #pragma once
 
+#include <array>
+#include <cstdint>
+
 #include "llamaduck.h"
 
 struct SigRec {
@@ -16,7 +19,7 @@ using SigBatch = DBBatch<SigRec>;
 struct FileSigResult {
   static constexpr auto ColNames = {"FileHash",
                                     "SigId"};
-  std::string FileHash;
+  std::array<uint8_t, 32> FileHash;
   std::string SigId;
 };
 

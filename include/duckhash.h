@@ -1,34 +1,47 @@
 #pragma once
 
+#include <array>
+#include <cstdint>
+#include <cstring>
+#include <optional>
+#include <string>
+
 #include <hasher/api.h>
 
-#include "hex.h"
 #include "llamaduck.h"
 
+template<size_t N>
+std::array<uint8_t, N> toArray(const uint8_t* src) {
+  std::array<uint8_t, N> dst;
+  std::memcpy(dst.data(), src, N);
+  return dst;
+}
+
+inline std::string ssdeepText(const uint8_t* fuzzy) {
+  // ssdeep is a NUL-terminated C string within its fixed Fuzzy buffer.
+  return std::string(reinterpret_cast<const char*>(fuzzy));
+}
+
 struct HashRec {
-  void set(SFHASH_HashValues h, std::string inodeId, uint64_t hashAlgs) {
-    InodeId = std::move(inodeId);
-    MD5 = hashAlgs & SFHASH_MD5 ? hexEncode(h.Md5, h.Md5 + sizeof(h.Md5)) : "";
-    SHA1 = hashAlgs & SFHASH_SHA_1 ? hexEncode(h.Sha1, h.Sha1 + sizeof(h.Sha1)): "";
-    SHA256 = hashAlgs & SFHASH_SHA_2_256 ? hexEncode(h.Sha2_256, h.Sha2_256 + sizeof(h.Sha2_256)): "";
-    Blake3 = hashAlgs & SFHASH_BLAKE3 ? hexEncode(h.Blake3, h.Blake3 + sizeof(h.Blake3)): "";
-    Ssdeep = hashAlgs & SFHASH_FUZZY ? hexEncode(h.Fuzzy, h.Fuzzy + sizeof(h.Fuzzy)): "";
+  static constexpr auto ColNames = {"InodeId", "MD5", "SHA1", "SHA256", "Blake3", "Ssdeep"};
+
+  std::array<uint8_t, 32>                InodeId;          // FK to inode.Id, NOT NULL
+  std::optional<std::array<uint8_t, 16>> MD5;
+  std::optional<std::array<uint8_t, 20>> SHA1;
+  std::optional<std::array<uint8_t, 32>> SHA256;
+  std::optional<std::array<uint8_t, 32>> Blake3;
+  std::string                            Ssdeep;            // "" when absent
+
+  void set(const SFHASH_HashValues& h,
+           const std::array<uint8_t, 32>& inodeId,
+           uint64_t hashAlgs) {
+    InodeId = inodeId;
+    MD5    = (hashAlgs & SFHASH_MD5)       ? std::optional{toArray<16>(h.Md5)}      : std::nullopt;
+    SHA1   = (hashAlgs & SFHASH_SHA_1)     ? std::optional{toArray<20>(h.Sha1)}     : std::nullopt;
+    SHA256 = (hashAlgs & SFHASH_SHA_2_256) ? std::optional{toArray<32>(h.Sha2_256)} : std::nullopt;
+    Blake3 = (hashAlgs & SFHASH_BLAKE3)    ? std::optional{toArray<32>(h.Blake3)}   : std::nullopt;
+    Ssdeep = (hashAlgs & SFHASH_FUZZY)     ? ssdeepText(h.Fuzzy)                    : std::string{};
   }
-
-  static constexpr auto ColNames = {"InodeId",
-                                    "MD5",
-                                    "SHA1",
-                                    "SHA256",
-                                    "Blake3",
-                                    "Ssdeep"};
-
-  std::string InodeId;
-
-  std::string MD5;
-  std::string SHA1;
-  std::string SHA256;
-  std::string Blake3;
-  std::string Ssdeep;
 };
 
 using HashBatch = DBBatch<HashRec>;
