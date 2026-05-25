@@ -4,28 +4,13 @@
 #include <cstdint>
 #include <string>
 
+#include "hex.h"
 #include "ruleengine.h"
 #include "llamaduck.h"
 #include "rulereader.h"
 #include "inode.h"
 #include "direntbatch.h"
 #include "duckinode.h"
-
-namespace {
-  std::array<uint8_t, 32> bytesFromHex32(const std::string& hex) {
-    std::array<uint8_t, 32> out{};
-    for (size_t i = 0; i < 32; ++i) {
-      auto hexVal = [](char c) -> uint8_t {
-        if (c >= '0' && c <= '9') return c - '0';
-        if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
-        if (c >= 'A' && c <= 'F') return 10 + (c - 'A');
-        return 0;
-      };
-      out[i] = (hexVal(hex[2 * i]) << 4) | hexVal(hex[2 * i + 1]);
-    }
-    return out;
-  }
-}
 
 TEST_CASE("TestCreateTables") {
   LlamaRuleEngine engine;
@@ -123,7 +108,7 @@ TEST_CASE("createTables creates signature tables") {
 TEST_CASE("rule_hits insert with real dirent and inode match") {
   // Known 32-byte sentinel for the inode identity (MetaId / inode.Id).
   const std::string knownHex = "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
-  const auto knownId = bytesFromHex32(knownHex);
+  const auto knownId = hexDecode<32>(knownHex);
 
   // A rule whose WHERE clause matches rows with Filesize > 0.
   std::string ruleInput = "rule MatchBigFiles { file_metadata: filesize > 0 }";

@@ -2,6 +2,10 @@
 
 #include "hex.h"
 
+#include <array>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
 #include <vector>
 #include <utility>
 
@@ -19,4 +23,31 @@ TEST_CASE("testHexEncode") {
     REQUIRE(t.second == hexEncode(&t.first[0], t.first.size()));
     REQUIRE(t.second == hexEncode(&t.first[0], &t.first[0] + t.first.size()));
   }
+}
+
+TEST_CASE("testHexDecodeRoundTrip") {
+  // Known 32-byte value: encode to hex then decode back, must match original.
+  const std::array<uint8_t, 32> original = {
+    0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef,
+    0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef,
+    0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef,
+    0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
+  };
+  const std::string encoded = hexEncode(original.data(), original.size());
+  REQUIRE(encoded == "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef");
+
+  const auto decoded = hexDecode<32>(encoded);
+  REQUIRE(decoded == original);
+
+  // Uppercase hex must also decode correctly.
+  const auto decodedUpper = hexDecode<32>("1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF1234567890ABCDEF");
+  REQUIRE(decodedUpper == original);
+
+  // Wrong length must throw.
+  REQUIRE_THROWS_AS(hexDecode<32>("deadbeef"), std::invalid_argument);
+
+  // Invalid character must throw.
+  REQUIRE_THROWS_AS(
+    hexDecode<4>("deadXX00"),
+    std::invalid_argument);
 }

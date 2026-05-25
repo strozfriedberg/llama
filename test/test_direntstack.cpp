@@ -9,21 +9,6 @@
 #include "hex.h"
 #include "recordhasher.h"
 
-namespace {
-  std::array<uint8_t, 32> bytesFromHex32(const std::string& hex) {
-    std::array<uint8_t, 32> out{};
-    for (size_t i = 0; i < 32; ++i) {
-      auto hexVal = [](char c) -> uint8_t {
-        if (c >= '0' && c <= '9') return c - '0';
-        if (c >= 'a' && c <= 'f') return 10 + (c - 'a');
-        if (c >= 'A' && c <= 'F') return 10 + (c - 'A');
-        return 0;
-      };
-      out[i] = (hexVal(hex[2 * i]) << 4) | hexVal(hex[2 * i + 1]);
-    }
-    return out;
-  }
-}
 
 std::ostream& operator<<(std::ostream& os, const Dirent& dirent) {
   os << "{\"Id\":\"" << hexEncode(dirent.Id.data(), dirent.Id.size())
@@ -84,7 +69,7 @@ TEST_CASE("testDirentStackPushPop") {
   REQUIRE(out.Path == "the name");
   REQUIRE(out.Name == "the name");
   REQUIRE(out.Id != std::array<uint8_t, 32>{});
-  REQUIRE(out.Id == bytesFromHex32("97ece597bbca827515097c1f8ff18ca2e4170fca28577b152ca0ae9a518b9672"));
+  REQUIRE(out.Id == hexDecode<32>("97ece597bbca827515097c1f8ff18ca2e4170fca28577b152ca0ae9a518b9672"));
   REQUIRE(out.MetaId != std::array<uint8_t, 32>{});
   REQUIRE(out.ParentId != std::array<uint8_t, 32>{});
 
@@ -119,7 +104,7 @@ TEST_CASE("testDirentStackPushPushPopPop") {
   const std::array<uint8_t, 32> zeroId = rh.hashInodeIdentity("", 0, 0, 0).hash;
 
   Dirent outB(makeDirent("a/b", "b"));
-  outB.Id = bytesFromHex32("4e4a548f1801a79393f9bc25baee4c2209cfee3f558c3ca254688f147b2f6bb5");
+  outB.Id = hexDecode<32>("4e4a548f1801a79393f9bc25baee4c2209cfee3f558c3ca254688f147b2f6bb5");
   outB.MetaId = zeroId;
   outB.ParentId = zeroId;
 
@@ -129,7 +114,7 @@ TEST_CASE("testDirentStackPushPushPopPop") {
   REQUIRE("a" == dirents.top().Path);
 
   Dirent outA(makeDirent("a", "a"));
-  outA.Id = bytesFromHex32("24e3bc15a787cbd19448a7e3ea0ba762bc50115f121c8e3261dbb023c9245eea");
+  outA.Id = hexDecode<32>("24e3bc15a787cbd19448a7e3ea0ba762bc50115f121c8e3261dbb023c9245eea");
   outA.MetaId = zeroId;
   outA.ParentId = zeroId;
 
