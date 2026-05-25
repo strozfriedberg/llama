@@ -23,6 +23,14 @@ void DirentStack::setFsContext(std::string evidenceFileName, uint64_t fsByteOffs
   CurFsByteOffset = fsByteOffset;
 }
 
+void DirentStack::assignIdentityHashes(Dirent& rec) {
+  rec.Id = RecHasher.hashDirent(rec).hash;
+  rec.MetaId = RecHasher.hashInodeIdentity(
+    CurEvidenceFileName, CurFsByteOffset, rec.MetaAddr, rec.MetaSeq).hash;
+  rec.ParentId = RecHasher.hashInodeIdentity(
+    CurEvidenceFileName, CurFsByteOffset, rec.ParentAddr, rec.ParentSeq).hash;
+}
+
 Dirent DirentStack::pop() {
   // pop the record and trim back the path
   Element& e = Stack.top();
@@ -30,23 +38,14 @@ Dirent DirentStack::pop() {
   Dirent rec{std::move(e.Rec)};
   Stack.pop();
 
-  // hash the dirent record (existing behavior — drives dirent.Id)
-  rec.Id = RecHasher.hashDirent(rec).hash;
-
-  // compute inode FK hashes via the shared identity helper, using
-  // the per-FS context set by setFsContext.
-  rec.MetaId = RecHasher.hashInodeIdentity(
-    CurEvidenceFileName, CurFsByteOffset, rec.MetaAddr, rec.MetaSeq).hash;
-
-  rec.ParentId = RecHasher.hashInodeIdentity(
-    CurEvidenceFileName, CurFsByteOffset, rec.ParentAddr, rec.ParentSeq).hash;
-
+  assignIdentityHashes(rec);
   return rec;
 }
 
 std::optional<Dirent> DirentStack::push(Dirent&& rec) {
   if (rec.Name == "." || rec.Name == "..") {
     rec.Path = Path;
+    assignIdentityHashes(rec);
     return rec;
   }
 

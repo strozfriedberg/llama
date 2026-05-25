@@ -20,14 +20,20 @@ public:
   Dirent pop();
 
   // Makes this dirent current. Returns the dirent immediately for "." and
-  // ".." entries without modifying the path or stack.
+  // ".." entries with Id/MetaId/ParentId already computed; does not modify
+  // the internal path or stack for those entries.
   std::optional<Dirent> push(Dirent&& dirent);
 
   // Called once per filesystem before any dirents from that filesystem
-  // are pushed. Drives MetaId/ParentId hashing in pop().
+  // are pushed. Drives MetaId/ParentId hashing in pop() and push().
   void setFsContext(std::string evidenceFileName, uint64_t fsByteOffset);
 
 private:
+  // Computes rec.Id (dirent identity) plus rec.MetaId / rec.ParentId
+  // (inode-identity FKs) under the current FS context. rec.Path must be
+  // set to the final emitted path before calling.
+  void assignIdentityHashes(Dirent& rec);
+
   struct Element {
     Dirent Rec;
     size_t LastPathSepIndex;

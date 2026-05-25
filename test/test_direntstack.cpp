@@ -125,7 +125,7 @@ TEST_CASE("testDirentStackPushPushPopPop") {
 TEST_CASE("DirentStack dot and dotdot do not pollute paths") {
   RecordHasher rh;
   DirentStack dirents(rh);
-  dirents.setFsContext("", 0);
+  dirents.setFsContext("disk.E01", 1048576);
 
   // Push a normal directory
   dirents.push(makeDirent("", "Users"));
@@ -133,19 +133,37 @@ TEST_CASE("DirentStack dot and dotdot do not pollute paths") {
 
   // Push "." — should not change path or stack depth
   Dirent dot(makeDirent("", "."));
+  dot.MetaAddr = 42;
+  dot.MetaSeq = 1;
+  dot.ParentAddr = 42;
+  dot.ParentSeq = 1;
   auto dotResult = dirents.push(std::move(dot));
   REQUIRE(dotResult.has_value());
   REQUIRE("Users" == dotResult->Path);
   REQUIRE("." == dotResult->Name);
+  // Id/MetaId/ParentId are populated, matching the same hashing pipeline
+  // that pop() uses for ordinary dirents.
+  REQUIRE(dotResult->Id != std::array<uint8_t, 32>{});
+  REQUIRE(dotResult->Id == rh.hashDirent(*dotResult).hash);
+  REQUIRE(dotResult->MetaId == rh.hashInodeIdentity("disk.E01", 1048576, 42, 1).hash);
+  REQUIRE(dotResult->ParentId == rh.hashInodeIdentity("disk.E01", 1048576, 42, 1).hash);
   // Stack should still have just "Users"
   REQUIRE("Users" == dirents.top().Path);
 
   // Push ".." — should not change path or stack depth
   Dirent dotdot(makeDirent("", ".."));
+  dotdot.MetaAddr = 7;
+  dotdot.MetaSeq = 1;
+  dotdot.ParentAddr = 42;
+  dotdot.ParentSeq = 1;
   auto dotdotResult = dirents.push(std::move(dotdot));
   REQUIRE(dotdotResult.has_value());
   REQUIRE("Users" == dotdotResult->Path);
   REQUIRE(".." == dotdotResult->Name);
+  REQUIRE(dotdotResult->Id != std::array<uint8_t, 32>{});
+  REQUIRE(dotdotResult->Id == rh.hashDirent(*dotdotResult).hash);
+  REQUIRE(dotdotResult->MetaId == rh.hashInodeIdentity("disk.E01", 1048576, 7, 1).hash);
+  REQUIRE(dotdotResult->ParentId == rh.hashInodeIdentity("disk.E01", 1048576, 42, 1).hash);
   // Stack should still have just "Users"
   REQUIRE("Users" == dirents.top().Path);
 
