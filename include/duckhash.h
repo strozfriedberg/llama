@@ -10,6 +10,8 @@
 
 #include "llamaduck.h"
 
+namespace duckhash_detail {
+
 template<size_t N>
 std::array<uint8_t, N> toArray(const uint8_t* src) {
   std::array<uint8_t, N> dst;
@@ -21,6 +23,8 @@ inline std::string ssdeepText(const uint8_t* fuzzy) {
   // ssdeep is a NUL-terminated C string within its fixed Fuzzy buffer.
   return std::string(reinterpret_cast<const char*>(fuzzy));
 }
+
+} // namespace duckhash_detail
 
 struct HashRec {
   static constexpr auto ColNames = {"InodeId", "MD5", "SHA1", "SHA256", "Blake3", "Ssdeep"};
@@ -36,11 +40,11 @@ struct HashRec {
            const std::array<uint8_t, 32>& inodeId,
            uint64_t hashAlgs) {
     InodeId = inodeId;
-    MD5    = (hashAlgs & SFHASH_MD5)       ? std::optional{toArray<16>(h.Md5)}      : std::nullopt;
-    SHA1   = (hashAlgs & SFHASH_SHA_1)     ? std::optional{toArray<20>(h.Sha1)}     : std::nullopt;
-    SHA256 = (hashAlgs & SFHASH_SHA_2_256) ? std::optional{toArray<32>(h.Sha2_256)} : std::nullopt;
-    Blake3 = (hashAlgs & SFHASH_BLAKE3)    ? std::optional{toArray<32>(h.Blake3)}   : std::nullopt;
-    Ssdeep = (hashAlgs & SFHASH_FUZZY)     ? ssdeepText(h.Fuzzy)                    : std::string{};
+    MD5    = (hashAlgs & SFHASH_MD5)       ? std::optional{duckhash_detail::toArray<16>(h.Md5)}      : std::nullopt;
+    SHA1   = (hashAlgs & SFHASH_SHA_1)     ? std::optional{duckhash_detail::toArray<20>(h.Sha1)}     : std::nullopt;
+    SHA256 = (hashAlgs & SFHASH_SHA_2_256) ? std::optional{duckhash_detail::toArray<32>(h.Sha2_256)} : std::nullopt;
+    Blake3 = (hashAlgs & SFHASH_BLAKE3)    ? std::optional{duckhash_detail::toArray<32>(h.Blake3)}   : std::nullopt;
+    Ssdeep = (hashAlgs & SFHASH_FUZZY)     ? duckhash_detail::ssdeepText(h.Fuzzy)                    : std::string{};
   }
 };
 

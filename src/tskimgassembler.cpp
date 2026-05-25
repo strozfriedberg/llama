@@ -110,6 +110,7 @@ void TskImgAssembler::addFileSystem(uint64_t byteOffset, const std::string& type
 
 void TskImgAssembler::setCurrentRootInodeId(const std::array<uint8_t, 32>& id) {
   THROW_IF(Filesystems.empty(), "setCurrentRootInodeId called before addFileSystem");
+  // All-zero array = sentinel for "RootInodeId not yet set" (was std::string::empty() pre-binary-hash migration)
   if (Filesystems.back().RootInodeId == std::array<uint8_t, 32>{}) {
     Filesystems.back().RootInodeId = id;
   }
