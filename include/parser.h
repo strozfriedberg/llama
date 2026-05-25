@@ -141,6 +141,10 @@ struct MetaSection {
 
 /************************************ HASH SECTION ************************************************/
 
+// Parsed but not currently emitted into SQL. When wired to SQL,
+// decode the hex string_view into bytes here so comparisons can
+// target BLOB columns directly. See spec
+// docs/superpowers/specs/2026-05-25-binary-hash-migration-design.md.
 using FileHashRecord = std::vector<std::pair<SFHASH_HashAlgorithm, std::string_view>>;
 
 FileHashRecord::const_iterator findKey(const FileHashRecord& container, SFHASH_HashAlgorithm alg);
