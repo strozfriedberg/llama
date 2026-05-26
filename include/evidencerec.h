@@ -96,8 +96,8 @@ struct FilesystemRec {
   uint64_t    JournalInum;
   uint64_t    RootInum;
   uint64_t    NumInums;
-  std::array<uint8_t, 32> RootDirentId;
-  std::array<uint8_t, 32> RootInodeId;
+  std::array<uint8_t, 32> RootDirentId{};
+  std::array<uint8_t, 32> RootInodeId{};
 };
 
 using FilesystemBatch = DBBatch<FilesystemRec>;

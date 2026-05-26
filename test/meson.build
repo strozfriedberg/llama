@@ -54,6 +54,7 @@ test_sources = [
   'test_blocksequence.cpp',
   'test_dbbatch_binary.cpp',
   'test_cli.cpp',
+  'test_default_init.cpp',
   'test_dirconversion.cpp',
   'test_direntstack.cpp',
   'test_dirreader.cpp',

@@ -18,7 +18,7 @@ public:
   std::string EvidenceFile;
   uint32_t    FsIndex = 0;
   uint64_t    FsOffset = 0;
-  std::array<uint8_t, 32> InodeId;
+  std::array<uint8_t, 32> InodeId{};
   uint32_t    AddrFlags = 0;
   std::string Path;
   uint64_t    FileSize = 0;

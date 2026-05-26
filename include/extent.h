@@ -23,7 +23,7 @@ struct Extent {
     uint64_t PhysicalEnd;
     uint64_t LogicalStart;
     uint64_t LogicalEnd;
-    std::array<uint8_t, 32> InodeId;
+    std::array<uint8_t, 32> InodeId{};
     std::string Path;
     std::string Flags;   // Comma-separated: "SHARED,UNWRITTEN,ENCODED"
     std::string Source;  // "filesystem" or "journal"

@@ -29,7 +29,7 @@ inline std::string ssdeepText(const uint8_t* fuzzy) {
 struct HashRec {
   static constexpr auto ColNames = {"InodeId", "MD5", "SHA1", "SHA256", "Blake3", "Ssdeep"};
 
-  std::array<uint8_t, 32>                InodeId;          // FK to inode.Id, NOT NULL
+  std::array<uint8_t, 32>                InodeId{};         // FK to inode.Id, NOT NULL
   std::optional<std::array<uint8_t, 16>> MD5;
   std::optional<std::array<uint8_t, 20>> SHA1;
   std::optional<std::array<uint8_t, 32>> SHA256;

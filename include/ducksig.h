@@ -19,7 +19,7 @@ using SigBatch = DBBatch<SigRec>;
 struct FileSigResult {
   static constexpr auto ColNames = {"FileHash",
                                     "SigId"};
-  std::array<uint8_t, 32> FileHash;
+  std::array<uint8_t, 32> FileHash{};
   std::string SigId;
 };
 

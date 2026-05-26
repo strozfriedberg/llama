@@ -23,7 +23,7 @@ struct Inode {
                                     "Modified",
                                     "Metadata"};
 
-  std::array<uint8_t, 32> Id;
+  std::array<uint8_t, 32> Id{};
 
   std::string Type;
   std::string Flags;
