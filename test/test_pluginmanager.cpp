@@ -371,6 +371,122 @@ TEST_CASE("testPluginTableWriterArrowBatch") {
   duckdb_destroy_arrow_converted_schema(&converted);
 }
 
+// Regression test for the orphan-data bug: when Processor::flush() was
+// implemented in terms of TableWriter.close() (idempotent via a Closed
+// flag), rows written in batches after the first never landed in the
+// underlying table. Verifies that PluginTableWriter::flush() actually
+// flushes pending data each time it is called, leaving the appenders
+// usable for further writes.
+TEST_CASE("testPluginTableWriterMultiFlushPersistsAllRows") {
+  LlamaDB db;
+  LlamaDBConnection conn(db);
+  duckdb_query(conn.get(), "CREATE TABLE plugin_test_data (name VARCHAR, value UBIGINT);", nullptr);
+
+  struct ArrowSchema name_schema{};
+  name_schema.format = "u";
+  name_schema.name = "name";
+  name_schema.n_children = 0;
+  name_schema.children = nullptr;
+  name_schema.release = noop_schema_release;
+
+  struct ArrowSchema value_schema{};
+  value_schema.format = "L";
+  value_schema.name = "value";
+  value_schema.n_children = 0;
+  value_schema.children = nullptr;
+  value_schema.release = noop_schema_release;
+
+  struct ArrowSchema* schema_children[] = {&name_schema, &value_schema};
+
+  struct ArrowSchema batch_schema{};
+  batch_schema.format = "+s";
+  batch_schema.name = "";
+  batch_schema.n_children = 2;
+  batch_schema.children = schema_children;
+  batch_schema.release = noop_schema_release;
+
+  duckdb_arrow_converted_schema converted = nullptr;
+  duckdb_error_data err = duckdb_schema_from_arrow(conn.get(), &batch_schema, &converted);
+  REQUIRE(!err);
+
+  std::vector<PluginTableMeta> meta = {{"plugin_test_data", converted}};
+  PluginTableWriter writer(&db, meta);
+
+  // Build a 1-row batch with the given name and value, then write it.
+  // Buffers are kept alive for the duration of the call via local arrays.
+  auto writeOne = [&](const char* name_str, size_t name_len, uint64_t val) {
+    int32_t offsets[] = {0, static_cast<int32_t>(name_len)};
+    const void* string_buffers[] = {nullptr, offsets, name_str};
+
+    struct ArrowArray string_col{};
+    string_col.length = 1;
+    string_col.null_count = 0;
+    string_col.offset = 0;
+    string_col.n_buffers = 3;
+    string_col.buffers = string_buffers;
+    string_col.n_children = 0;
+    string_col.children = nullptr;
+    string_col.release = noop_array_release;
+
+    uint64_t values[] = {val};
+    const void* uint_buffers[] = {nullptr, values};
+
+    struct ArrowArray uint_col{};
+    uint_col.length = 1;
+    uint_col.null_count = 0;
+    uint_col.offset = 0;
+    uint_col.n_buffers = 2;
+    uint_col.buffers = uint_buffers;
+    uint_col.n_children = 0;
+    uint_col.children = nullptr;
+    uint_col.release = noop_array_release;
+
+    struct ArrowArray* batch_children[] = {&string_col, &uint_col};
+    const void* struct_buffers[] = {nullptr};
+
+    struct ArrowArray batch{};
+    batch.length = 1;
+    batch.null_count = 0;
+    batch.offset = 0;
+    batch.n_buffers = 1;
+    batch.buffers = struct_buffers;
+    batch.n_children = 2;
+    batch.children = batch_children;
+    batch.release = noop_array_release;
+
+    REQUIRE(writer.write("plugin_test_data", &batch_schema, &batch) == 0);
+  };
+
+  // Simulate the per-batch flow Processor goes through: write a small
+  // sub-threshold batch, flush, repeat. Each flush must actually land
+  // its row, and the appender must remain usable for the next write.
+  writeOne("first", 5, 1);
+  writer.flush();
+
+  writeOne("second", 6, 2);
+  writer.flush();
+
+  writeOne("third", 5, 3);
+  writer.flush();
+
+  // Query before any explicit close() / destruction to confirm the
+  // flushes — not just the destructor — landed the data.
+  duckdb_result result;
+  REQUIRE(duckdb_query(conn.get(),
+                       "SELECT name, value FROM plugin_test_data ORDER BY value",
+                       &result) == DuckDBSuccess);
+  REQUIRE(duckdb_row_count(&result) == 3);
+
+  for (idx_t row = 0; row < 3; ++row) {
+    auto num_val = duckdb_value_uint64(&result, 1, row);
+    REQUIRE(num_val == row + 1);
+  }
+
+  duckdb_destroy_result(&result);
+  writer.close();
+  duckdb_destroy_arrow_converted_schema(&converted);
+}
+
 TEST_CASE("testPluginTableWriterUnknownTable") {
   LlamaDB db;
   LlamaDBConnection conn(db);

@@ -265,7 +265,7 @@ void Processor::flush(void) {
     ExceptionAppender.flush();
     Exceptions->clear();
   }
-  TableWriter.close();
+  TableWriter.flush();
 }
 
 void Processor::logException(const Entry& entry, const char* operation, const char* message) {

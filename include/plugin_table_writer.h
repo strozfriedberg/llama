@@ -20,6 +20,11 @@ public:
   // Returns 0 on success, negative on error.
   int write(const char* tableName, struct ArrowSchema* schema, struct ArrowArray* array);
 
+  // Flush pending data to the underlying tables without closing the
+  // appenders. Safe to call repeatedly during processing; appenders
+  // remain usable for further writes after a flush.
+  void flush();
+
   // Flush and close all appenders. Call once after all processing is done.
   void close();
 

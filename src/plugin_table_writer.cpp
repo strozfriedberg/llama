@@ -54,6 +54,19 @@ int PluginTableWriter::write(const char* tableName, struct ArrowSchema* schema, 
   return 0;
 }
 
+void PluginTableWriter::flush() {
+  for (auto& [name, ts] : Tables) {
+    if (ts.appender) {
+      auto state = duckdb_appender_flush(ts.appender);
+      if (state == DuckDBError) {
+        const char* msg = duckdb_appender_error(ts.appender);
+        std::cerr << "Warning: flush failed for " << name << ": "
+                  << (msg ? msg : "unknown error") << "\n";
+      }
+    }
+  }
+}
+
 void PluginTableWriter::close() {
   if (Closed) return;
   Closed = true;
