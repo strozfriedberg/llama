@@ -22,6 +22,8 @@ const char* arrowFormatToDuckDBType(const char* format) {
   if (std::strcmp(format, "U") == 0) return "VARCHAR";
   if (std::strcmp(format, "z") == 0) return "BLOB";
   if (std::strcmp(format, "Z") == 0) return "BLOB";
+  // Fixed-size binary: "w:<size>" per Arrow C Data Interface.
+  if (std::strncmp(format, "w:", 2) == 0) return "BLOB";
   // Timestamps: tss: (seconds), tsm: (millis), tsu: (micros), tsn: (nanos)
   // with optional timezone after the colon
   if (std::strncmp(format, "ts", 2) == 0) return "TIMESTAMP";
